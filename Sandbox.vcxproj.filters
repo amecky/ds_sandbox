@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="utils">
+      <UniqueIdentifier>{3dd4c714-0a4e-44e0-a36f-d5373d9c1ea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext">
+      <UniqueIdentifier>{97dbb5f0-ee1c-4b76-938b-3091ec6219ca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Board.h" />
+    <ClInclude Include="src\Constants.h" />
+    <ClInclude Include="src\Dialog.h" />
+    <ClInclude Include="src\GameSettings.h" />
+    <ClInclude Include="src\Grid.h" />
+    <ClInclude Include="src\utils\tweening.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\utils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\HUD.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="src\utils\colors.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\stb_image.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\diesel.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\ds_imgui.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\SpriteBatchBuffer.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sandbox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Board.cpp" />
+    <ClCompile Include="src\Dialog.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\utils\tweening.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\utils.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\HUD.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\colors.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sandbox.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Colors.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="content\TextureArray.png" />
+  </ItemGroup>
+</Project>
