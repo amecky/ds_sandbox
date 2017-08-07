@@ -9,24 +9,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Board.h" />
     <ClInclude Include="src\Constants.h" />
-    <ClInclude Include="src\Dialog.h" />
-    <ClInclude Include="src\GameSettings.h" />
-    <ClInclude Include="src\Grid.h" />
     <ClInclude Include="src\utils\tweening.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\utils.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\HUD.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\utils\colors.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="ext\stb_image.h">
       <Filter>ext</Filter>
     </ClInclude>
@@ -40,10 +30,9 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\Sandbox.h" />
+    <ClInclude Include="src\TweeningTest.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Board.cpp" />
-    <ClCompile Include="src\Dialog.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\tweening.cpp">
       <Filter>utils</Filter>
@@ -51,16 +40,11 @@
     <ClCompile Include="src\utils\utils.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\HUD.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\colors.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sandbox.cpp" />
+    <ClCompile Include="src\TweeningTest.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Colors.rc" />
+    <ResourceCompile Include="Sandbox.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="content\TextureArray.png" />

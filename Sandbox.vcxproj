@@ -24,24 +24,16 @@
     <ClInclude Include="ext\SpriteBatchBuffer.h" />
     <ClInclude Include="ext\stb_image.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\Board.h" />
     <ClInclude Include="src\Constants.h" />
-    <ClInclude Include="src\Dialog.h" />
-    <ClInclude Include="src\GameSettings.h" />
-    <ClInclude Include="src\Grid.h" />
     <ClInclude Include="src\Sandbox.h" />
-    <ClInclude Include="src\utils\colors.h" />
-    <ClInclude Include="src\utils\HUD.h" />
+    <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Board.cpp" />
-    <ClCompile Include="src\Dialog.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
-    <ClCompile Include="src\utils\colors.cpp" />
-    <ClCompile Include="src\utils\HUD.cpp" />
+    <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
   </ItemGroup>

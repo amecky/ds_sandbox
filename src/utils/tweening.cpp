@@ -52,8 +52,9 @@ namespace tweening {
 	// -------------------------------------------------------
 	// 
 	// -------------------------------------------------------
-	float easeInQuart(float start,float end,float t) {
-		return start + (end - start) * pow (t, 4);
+	float easeInQuart(float t, float start,float end,float duration) {
+		float n = t / duration;
+		return start + (end - start) * pow (n, 4);
 	}
 
 	// -------------------------------------------------------
@@ -140,14 +141,14 @@ namespace tweening {
 		return postFix * sin((t*duration - s)*(2 * ds::PI) / p)*.5f + c + start;
 	}
 
-	float easeInBounce(float t, float start, float end, float d) {
+	float easeInBounce(float t, float start, float end, float duration) {
 		float c = end - start;
-		return c - easeOutBounce(d - t, 0, c, d) + start;
+		return c - easeOutBounce(duration - t, 0, c, duration) + start;
 	}
 
-	float easeOutBounce(float t, float start, float end, float d) {
+	float easeOutBounce(float t, float start, float end, float duration) {
 		float c = end - start;
-		if ((t /= d) < (1 / 2.75f)) {
+		if ((t /= duration) < (1 / 2.75f)) {
 			return c*(7.5625f*t*t) + start;
 		}
 		else if (t < (2 / 2.75f)) {
@@ -164,10 +165,10 @@ namespace tweening {
 		}
 	}
 
-	float easeInOutBounce(float t, float start, float end, float d) {
+	float easeInOutBounce(float t, float start, float end, float duration) {
 		float c = end - start;
-		if (t < d / 2) return easeInBounce(t * 2, 0, c, d) * .5f + start;
-		else return easeOutBounce(t * 2 - d, 0, c, d) * .5f + c*.5f + start;
+		if (t < duration / 2) return easeInBounce(t * 2, 0, c, duration) * .5f + start;
+		else return easeOutBounce(t * 2 - duration, 0, c, duration) * .5f + c*.5f + start;
 	}
 	// -------------------------------------------------------
 	// interpolate

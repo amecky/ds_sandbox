@@ -52,6 +52,36 @@ namespace gui {
 		float lineSpacing;
 	};
 
+	class ListBoxModel {
+
+	public:
+		ListBoxModel() : _selection(-1), _offset(0) {}
+		virtual ~ListBoxModel() {}
+		virtual uint32_t size() const = 0;
+		virtual const char* name(uint32_t index) const = 0;
+		int getSelection() const {
+			return _selection;
+		}
+		void setSelection(int s) {
+			_selection = s;
+		}
+		bool hasSelection() const {
+			return _selection != -1;
+		}
+		void clearSelection() {
+			_selection = -1;
+		}
+		int getOffset() const {
+			return _offset;
+		}
+		void setOffset(int o) {
+			_offset = o;
+		}
+	private:
+		int _selection;
+		int _offset;
+	};
+
 	void init(IMGUISettings* settings = 0);
 
 	void start();
@@ -113,6 +143,8 @@ namespace gui {
 	void Checkbox(const char* label, bool* state);
 
 	void ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max);
+
+	void ListBox(const char* label, ListBoxModel& model, int num);
 
 	void DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection = false);
 
@@ -1795,7 +1827,7 @@ namespace gui {
 			p.y -= sideHeight / 2;
 			p.y -= 10;
 			int cy = p.y;
-			renderer::add_box(_guiCtx->uiContext, p, p2i(20, sideHeight), ds::Color(20, 20, 20, 255));
+			renderer::add_box(_guiCtx->uiContext, p, p2i(20, sideHeight), ds::Color(30, 30, 30, 255));
 			popID();
 			
 			// down
@@ -1809,8 +1841,9 @@ namespace gui {
 					*offset += 1;
 				}
 			}
-			float d = 1.0f - static_cast<float>(*offset) / static_cast<float>(max);
-			int dy = d * (sideHeight) - 20;
+
+			float d = 1.0f - static_cast<float>(*offset) / static_cast<float>(size - max);
+			int dy = d * (sideHeight) - 30;
 			p.y = cy + dy;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(20, 6), _guiCtx->settings.scrollSliderColor);
 			popID();
@@ -1844,6 +1877,42 @@ namespace gui {
 			p.y -= 20;
 			popID();
 		}
+		moveForward(p2i(width, height + 4));
+		popID();
+	}
+
+	// -------------------------------------------------------
+	// ListBox using ListBoxModel
+	// -------------------------------------------------------	
+	void ListBox(const char* label, ListBoxModel& model,int max) {
+		pushID(label);
+		int width = 200;
+		int offset = model.getOffset();
+		int num = model.size();
+		prepareComboBox(_guiCtx->idStack.last(), &offset, num, max);
+		int selected = model.getSelection();
+		p2i p = _guiCtx->currentPos;
+		int height = max * 20;
+		int start = offset;
+		int end = offset + max;
+		if (end >= num) {
+			end = num;
+		}
+		for (int i = start; i < end; ++i) {
+			pushID(i);
+			checkItem(p, p2i(width, 20));
+			if (isClicked()) {
+				selected = i;
+			}
+			if (selected == i) {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(width, 20), _guiCtx->settings.boxSelectionColor);
+			}
+			renderer::add_text(_guiCtx->uiContext, p, model.name(i));
+			p.y -= 20;
+			popID();
+		}
+		model.setOffset(offset);
+		model.setSelection(selected);
 		moveForward(p2i(width, height + 4));
 		popID();
 	}
