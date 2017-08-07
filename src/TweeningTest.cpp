@@ -3,7 +3,7 @@
 #include "utils\tweening.h"
 
 uint32_t TweeningListModel::size() const {
-	return 18;
+	return 32;
 }
 
 const char* TweeningListModel::name(uint32_t index) const {
@@ -17,6 +17,7 @@ TweeningTest::TweeningTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
 	_ttl = 1.0f;
 	_startPos = ds::vec2(200, 384);
 	_endPos = ds::vec2(700, 384);
+	_showDiagram = true;
 }
 
 TweeningTest::~TweeningTest() {
@@ -32,6 +33,7 @@ void TweeningTest::renderGUI() {
 		gui::Input("End", &_endPos);
 		gui::Input("TTL", &_ttl);
 		gui::ListBox("Type", _model, 5);
+		gui::Checkbox("Diagram", &_showDiagram);
 		if (gui::Button("Reset timer")) {
 			_timer = 0.0f;
 		}
@@ -54,4 +56,16 @@ void TweeningTest::render() {
 	}
 	p = tweening::interpolate(t, _startPos, _endPos, _timer, _ttl);
 	_sprites->add(p, ds::vec4(0, 0, 40, 42));
+	if (_showDiagram) {
+		_sprites->add(ds::vec2(520, 100), ds::vec4(0, 70, 640, 4));
+		_sprites->add(ds::vec2(520, 300), ds::vec4(0, 70, 640, 4));
+		int steps = 64;
+		for (int i = 0; i < steps; ++i) {
+			float time = static_cast<float>(i) / static_cast<float>(steps - 1) * _ttl;
+			float y = tweening::interpolate(t, 100.0f, 300.0f, time, _ttl);
+			p.x = 200 + i * 10;
+			p.y = y;
+			_sprites->add(p, ds::vec4(165, 0, 20, 20));
+		}
+	}
 }

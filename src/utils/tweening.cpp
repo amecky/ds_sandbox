@@ -26,6 +26,27 @@ namespace tweening {
 	}
 
 	// -------------------------------------------------------
+	// easeInSine
+	// -------------------------------------------------------
+	float easeInSine(float t, float start, float end, float duration) {
+		return -(end - start) * cos(t / duration * (ds::PI * 0.5f)) + (end - start) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeOutSine
+	// -------------------------------------------------------
+	float easeOutSine(float t, float start, float end, float duration) {
+		return (end - start) * sin(t / duration * (ds::PI * 0.5f)) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInOutSine
+	// -------------------------------------------------------
+	float easeInOutSine(float t, float start, float end, float duration) {
+		return -(end - start) * 0.5f * (cos(ds::PI * t / duration) - 1.0f) + start;
+	}
+
+	// -------------------------------------------------------
 	// easeInQuad
 	// -------------------------------------------------------
 	float easeInQuad(float t, float start, float end, float duration) {
@@ -50,11 +71,78 @@ namespace tweening {
 	}
 
 	// -------------------------------------------------------
-	// 
+	// easeInQuart
 	// -------------------------------------------------------
 	float easeInQuart(float t, float start,float end,float duration) {
 		float n = t / duration;
 		return start + (end - start) * pow (n, 4);
+	}
+
+	// -------------------------------------------------------
+	// easeOutQuart
+	// -------------------------------------------------------
+	float easeOutQuart(float t, float start, float end, float duration) {
+		float n = t / duration;
+		n -= 1.0f;
+		return -(end - start) * (n * n * n * n - 1.0f) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInOutQuart
+	// -------------------------------------------------------
+	float easeInOutQuart(float t, float start, float end, float duration) {
+		float c = end - start;
+		if ((t /= duration / 2) < 1) return c / 2 * t*t*t*t + start;
+		return -c / 2 * ((t -= 2)*t*t*t - 2) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInQuint
+	// -------------------------------------------------------
+	float easeInQuint(float t, float start, float end, float duration) {
+		float c = end - start;
+		return c*(t /= duration)*t*t*t*t + start;
+	}
+
+	// -------------------------------------------------------
+	// easeOutQuint
+	// -------------------------------------------------------
+	float easeOutQuint(float t, float start, float end, float duration) {
+		float c = end - start;
+		return c*((t = t / duration - 1.0f)*t*t*t*t + 1.0f) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInOutQuint
+	// -------------------------------------------------------
+	float easeInOutQuint(float t, float start, float end, float duration) {
+		float c = end - start;
+		if ((t /= duration * 0.5f) < 1.0f) return c / 2 * t*t*t*t*t + start;
+		return c * 0.5f * ((t -= 2.0f)*t*t*t*t + 2.0f) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInExpo
+	// -------------------------------------------------------
+	float easeInExpo(float t, float start, float end, float duration) {
+		return (t == 0.0f) ? start : (end - start) * pow(2, 10 * (t / duration - 1.0f)) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeOutExpo
+	// -------------------------------------------------------
+	float easeOutExpo(float t, float start, float end, float duration) {
+		return (t == duration) ? start + (end - start) : (end - start) * (-pow(2, -10.0f * t / duration) + 1.0f) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInOutExpo
+	// -------------------------------------------------------
+	float easeInOutExpo(float t, float start, float end, float duration) {
+		if (t == 0.0f) return start;
+		if (t == duration) return end;
+		if ((t /= duration *0.5f) < 1.0f) return (end - start) * 0.5f * pow(2, 10.0f * (t - 1.0f)) + start;
+		return (end - start) * 0.5f * (-pow(2, -10.0f * --t) + 2.0f) + start;
 	}
 
 	// -------------------------------------------------------
@@ -89,21 +177,34 @@ namespace tweening {
 		return c / 2.0f * ((postFix)*t*(((s *= (1.525f)) + 1.0f)*t + s) + 2.0f) + start;
 	}
 
+	// -------------------------------------------------------
+	// easeInCubic
+	// -------------------------------------------------------
 	float easeInCubic(float t, float start, float end, float duration) {
 		float c = end - start;
 		return c*(t /= duration)*t*t + start;
 	}
+
+	// -------------------------------------------------------
+	// easeOutCubic
+	// -------------------------------------------------------
 	float easeOutCubic(float t, float start, float end, float duration) {
 		float c = end - start;
 		return c*((t = t / duration - 1)*t*t + 1) + start;
 	}
 
+	// -------------------------------------------------------
+	// easeInOutCubic
+	// -------------------------------------------------------
 	float easeInOutCubic(float t, float start, float end, float duration) {
 		float c = end - start;
 		if ((t /= duration / 2) < 1) return c / 2 * t*t*t + start;
 		return c / 2 * ((t -= 2)*t*t + 2) + start;
 	}
 
+	// -------------------------------------------------------
+	// easeInElastic
+	// -------------------------------------------------------
 	float easeInElastic(float t, float start, float end, float duration) {
 		float c = end - start;
 		if (t == 0) return start;  
@@ -115,6 +216,9 @@ namespace tweening {
 		return -(postFix * sin((t*duration - s)*(2 * ds::PI) / p)) + start;
 	}
 
+	// -------------------------------------------------------
+	// easeOutElastic
+	// -------------------------------------------------------
 	float easeOutElastic(float t, float start, float end, float duration) {
 		float c = end - start;
 		if (t == 0) return start;  
@@ -125,6 +229,9 @@ namespace tweening {
 		return (a*pow(2, -10 * t) * sin((t*duration - s)*(2 * ds::PI) / p) + c + start);
 	}
 
+	// -------------------------------------------------------
+	// easeInOutElastic
+	// -------------------------------------------------------
 	float easeInOutElastic(float t, float start, float end, float duration) {
 		float c = end - start;
 		if (t == 0) return start;  
@@ -141,11 +248,17 @@ namespace tweening {
 		return postFix * sin((t*duration - s)*(2 * ds::PI) / p)*.5f + c + start;
 	}
 
+	// -------------------------------------------------------
+	// easeInBounce
+	// -------------------------------------------------------
 	float easeInBounce(float t, float start, float end, float duration) {
 		float c = end - start;
 		return c - easeOutBounce(duration - t, 0, c, duration) + start;
 	}
 
+	// -------------------------------------------------------
+	// easeOutBounce
+	// -------------------------------------------------------
 	float easeOutBounce(float t, float start, float end, float duration) {
 		float c = end - start;
 		if ((t /= duration) < (1 / 2.75f)) {
@@ -165,11 +278,40 @@ namespace tweening {
 		}
 	}
 
+	// -------------------------------------------------------
+	// easeInOutBounce
+	// -------------------------------------------------------
 	float easeInOutBounce(float t, float start, float end, float duration) {
 		float c = end - start;
 		if (t < duration / 2) return easeInBounce(t * 2, 0, c, duration) * .5f + start;
 		else return easeOutBounce(t * 2 - duration, 0, c, duration) * .5f + c*.5f + start;
 	}
+
+	// -------------------------------------------------------
+	// easeInCirc
+	// -------------------------------------------------------
+	float easeInCirc(float t, float start, float end, float duration) {
+		float c = end - start;
+		return -c * (sqrt(1.0f - (t /= duration)*t) - 1.0f) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeOutCirc
+	// -------------------------------------------------------
+	float easeOutCirc(float t, float start, float end, float duration) {
+		float c = end - start;
+		return c * sqrt(1.0f - (t = t / duration - 1.0f)*t) + start;
+	}
+
+	// -------------------------------------------------------
+	// easeInOutCirc
+	// -------------------------------------------------------
+	float easeInOutCirc(float t, float start, float end, float duration) {
+		float c = end - start;
+		if ((t /= duration *0.5f) < 1) return -c * 0.5f * (sqrt(1.0f - t*t) - 1.0f) + start;
+		return c * 0.5f * (sqrt(1.0f - t*(t -= 2.0f)) + 1.0f) + start;
+	}
+
 	// -------------------------------------------------------
 	// interpolate
 	// -------------------------------------------------------

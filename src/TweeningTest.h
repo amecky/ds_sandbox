@@ -27,6 +27,6 @@ private:
 	int _dialogState;
 	p2i _dialogPos;
 	TweeningListModel _model;
-	
+	bool _showDiagram;
 };
 
