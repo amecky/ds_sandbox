@@ -31,6 +31,8 @@
     </ClInclude>
     <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\TweeningTest.h" />
+    <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\AABBox.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />

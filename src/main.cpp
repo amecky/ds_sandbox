@@ -79,6 +79,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		
 		spriteBuffer.flush();
 
+		ds::Event event;
+		while (ds::get_event(&event)) {
+			if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
+				tweeningTest.onButtonClicked(event.mouse.button);
+			}
+		}
+
 		tweeningTest.renderGUI();
 
 		ds::end();
