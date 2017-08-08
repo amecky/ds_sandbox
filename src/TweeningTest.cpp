@@ -32,7 +32,7 @@ void TweeningTest::renderGUI() {
 	
 	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 300)) {
+	if (gui::begin("Debug", &_dialogState, &_dialogPos, 380)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Input("Start", &_startPos);
 		gui::Input("End", &_endPos);
@@ -47,11 +47,12 @@ void TweeningTest::renderGUI() {
 			_spriteArray.add({ INVALID_ID,ds::vec2(ds::random(100.0f,900.0f),ds::random(100.0f,700.0f)),ds::vec4(0,100,20,20),ds::vec2(1.0f) });
 		}
 		if (_selected != INVALID_ID) {
+			gui::begin("Sprite",380);
 			gui::Value("Selected", _selected);
-			const MySprite& sp = _spriteArray.get(_selected);
-			gui::Value("Pos", sp.position);
-			gui::Value("TR", sp.textureRect);
-			gui::Value("Scale", sp.scale);
+			MySprite& sp = _spriteArray.get(_selected);
+			gui::Input("Pos", &sp.position);
+			gui::Input("TR", &sp.textureRect);
+			gui::Input("Scale", &sp.scale);
 			if (gui::Button("Remove")) {
 				_spriteArray.remove(_selected);
 				_selected = INVALID_ID;

@@ -86,6 +86,8 @@ namespace gui {
 
 	void start();
 
+	void begin(const char* header, int width = 200);
+
 	bool begin(const char* header, int* state, int width = 200);
 
 	bool begin(const char* header, int* state, p2i* position, int width = 200);
@@ -1110,6 +1112,21 @@ namespace gui {
 		moveForward(p2i(10, advance));
 		popID();
 		return *state == 1;
+	}
+
+	// --------------------------------------------------------
+	// begin
+	// --------------------------------------------------------
+	void begin(const char* header, int width) {
+		pushID(header);
+		p2i pos = _guiCtx->currentPos;
+		// header
+		renderer::add_box(_guiCtx->uiContext, pos, width, 20, _guiCtx->settings.headerBoxColor);
+		pos.x += 30;
+		renderer::add_text(_guiCtx->uiContext, pos, header);
+		int advance = 20 + _guiCtx->settings.lineSpacing;
+		moveForward(p2i(10, advance));
+		popID();
 	}
 	// --------------------------------------------------------
 	// begin with header
