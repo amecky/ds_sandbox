@@ -8,7 +8,8 @@
 enum AnimationType {
 	ANIM_JUMP,
 	ANIM_ROTATION,
-	ANIM_SQUEEZE
+	ANIM_SQUEEZE,
+	ANIM_MOVE_BY
 };
 
 enum AnimationState {
@@ -81,6 +82,7 @@ public:
 	AbstractAnimation(DataArray<MySprite, 256>* sprites) : _sprites(sprites) {}
 	virtual ~AbstractAnimation() {}
 	virtual void tick(float dt, EventQueue& queue) = 0;
+	virtual void stop(ID id) = 0;
 protected:
 	DataArray<MySprite, 256>* _sprites;
 };
@@ -104,7 +106,10 @@ public:
 	virtual ~JumpAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, float height, float ttl);
+	void stop(ID id);
 private:
+	void remove(ID id);
+	ID findBySpriteID(ID id);
 	DataArray<JumpData, 256> _jumpData;
 };
 
@@ -127,7 +132,10 @@ public:
 	virtual ~RotationAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, float angle, float ttl);
+	void stop(ID id);
 private:
+	void remove(ID id);
+	ID findBySpriteID(ID id);
 	DataArray<RotateByData, 256> _rotateByData;
 };
 
@@ -148,8 +156,33 @@ public:
 	virtual ~SqueezeAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, const ds::vec2& amplitude, float ttl);
+	void stop(ID id);
 private:
+	void remove(ID id);
+	ID findBySpriteID(ID id);
 	DataArray<SqueezeData, 256> _squeezeData;
+};
+
+// ---------------------------------------------------------------
+// Move
+// ---------------------------------------------------------------
+struct MoveByData {
+	ID id;
+	ID sprite;
+	ds::vec2 velocity;
+};
+class MoveByAnimation : public AbstractAnimation {
+
+public:
+	MoveByAnimation(DataArray<MySprite, 256>* sprites) : AbstractAnimation(sprites) {}
+	virtual ~MoveByAnimation() {}
+	void tick(float dt, EventQueue& queue);
+	void start(ID id, const ds::vec2& velocity);
+	void stop(ID id);
+private:
+	void remove(ID id);
+	ID findBySpriteID(ID id);
+	DataArray<MoveByData, 256> _moveByData;
 };
 
 
@@ -182,9 +215,11 @@ public:
 	void rotateBy(ID id, float angle, float ttl);
 	void jump(ID id, float height, float ttl);
 	void squeeze(ID id, const ds::vec2& amplitude, float ttl);
+	void moveBy(ID id, const ds::vec2& velocity);
 	bool getEvent(Event* e) {
 		return _queue.get(e);
 	}
+	void stopAll(ID id);
 private:
 	SpriteBatchBuffer* _buffer;
 	DataArray<MySprite, 256> _spriteArray;	

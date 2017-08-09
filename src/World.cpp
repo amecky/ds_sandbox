@@ -10,10 +10,8 @@ void JumpAnimation::tick(float dt, EventQueue& queue) {
 		JumpData& data = _jumpData.objects[i];
 		data.timer += dt;
 		if (data.timer >= data.ttl) {
-			MySprite& sp = _sprites->get(data.sprite);
-			sp.position.y = data.startPos.y;
 			queue.push_event({ ANIM_JUMP,AS_FINISHED,data.sprite });
-			_jumpData.remove(data.id);
+			remove(data.id);
 		}
 		else {
 			MySprite& sp = _sprites->get(data.sprite);
@@ -34,6 +32,30 @@ void JumpAnimation::start(ID id, float height, float ttl) {
 	data.height = height;
 }
 
+void JumpAnimation::stop(ID id) {
+	ID jid = findBySpriteID(id);
+	if (jid != INVALID_ID) {
+		remove(jid);
+	}
+}
+
+void JumpAnimation::remove(ID jid) {
+	JumpData& data = _jumpData.get(jid);
+	MySprite& sp = _sprites->get(data.sprite);
+	sp.position.y = data.startPos.y;
+	_jumpData.remove(jid);
+}
+
+ID JumpAnimation::findBySpriteID(ID id) {
+	int i = 0;
+	while (i < _jumpData.numObjects) {
+		if (_jumpData.objects[i].sprite == id) {
+			return _jumpData.objects[i].id;
+		}
+		++i;
+	}
+	return INVALID_ID;
+}
 // ---------------------------------------------------------------
 // Rotation animation
 // ---------------------------------------------------------------
@@ -43,10 +65,8 @@ void RotationAnimation::tick(float dt, EventQueue& queue) {
 		RotateByData& data = _rotateByData.objects[i];
 		data.timer += dt;
 		if (data.timer >= data.ttl) {
-			MySprite& sp = _sprites->get(data.sprite);
-			sp.rotation = data.rotation + data.angle;
+			remove(data.id);
 			queue.push_event({ ANIM_ROTATION,AS_FINISHED,data.sprite });
-			_rotateByData.remove(data.id);			
 		}
 		else {
 			MySprite& sp = _sprites->get(data.sprite);
@@ -68,6 +88,31 @@ void RotationAnimation::start(ID id, float angle, float ttl) {
 	data.rotation = sp.rotation;
 }
 
+void RotationAnimation::stop(ID id) {
+	ID jid = findBySpriteID(id);
+	if (jid != INVALID_ID) {
+		remove(jid);
+	}
+}
+
+void RotationAnimation::remove(ID jid) {
+	RotateByData& data = _rotateByData.get(jid);
+	MySprite& sp = _sprites->get(data.sprite);
+	sp.rotation = data.rotation + data.angle;
+	_rotateByData.remove(data.id);
+}
+
+ID RotationAnimation::findBySpriteID(ID id) {
+	int i = 0;
+	while (i < _rotateByData.numObjects) {
+		if (_rotateByData.objects[i].sprite == id) {
+			return _rotateByData.objects[i].id;
+		}
+		++i;
+	}
+	return INVALID_ID;
+}
+
 // ---------------------------------------------------------------
 // Squeeze animation
 // ---------------------------------------------------------------
@@ -77,10 +122,8 @@ void SqueezeAnimation::tick(float dt, EventQueue& queue) {
 		SqueezeData& data = _squeezeData.objects[i];
 		data.timer += dt;
 		if (data.timer >= data.ttl) {
-			MySprite& sp = _sprites->get(data.sprite);
-			sp.scaling = ds::vec2(1.0f);
+			remove(data.id);
 			queue.push_event({ ANIM_SQUEEZE,AS_FINISHED,data.sprite });
-			_squeezeData.remove(data.id);
 		}
 		else {
 			MySprite& sp = _sprites->get(data.sprite);
@@ -99,13 +142,85 @@ void SqueezeAnimation::start(ID id, const ds::vec2& amplitude, float ttl) {
 	data.amplitude = amplitude;
 }
 
+void SqueezeAnimation::stop(ID id) {
+	ID jid = findBySpriteID(id);
+	if (jid != INVALID_ID) {
+		remove(jid);
+	}
+}
+
+void SqueezeAnimation::remove(ID jid) {
+	SqueezeData& data = _squeezeData.get(jid);
+	MySprite& sp = _sprites->get(data.sprite);
+	sp.scaling = ds::vec2(1.0f);
+	_squeezeData.remove(data.id);
+}
+
+ID SqueezeAnimation::findBySpriteID(ID id) {
+	int i = 0;
+	while (i < _squeezeData.numObjects) {
+		if (_squeezeData.objects[i].sprite == id) {
+			return _squeezeData.objects[i].id;
+		}
+		++i;
+	}
+	return INVALID_ID;
+}
+
+// ---------------------------------------------------------------
+// Move by animation
+// ---------------------------------------------------------------
+void MoveByAnimation::tick(float dt, EventQueue& queue) {
+	int i = 0;
+	while (i < _moveByData.numObjects) {
+		MoveByData& data = _moveByData.objects[i];
+		MySprite& sp = _sprites->get(data.sprite);
+		sp.position += data.velocity * dt;
+		if (sp.position.x < 0.0f || sp.position.x > 1024.0f || sp.position.y < 0.0f || sp.position.y > 770.0f) {
+			queue.push_event({ ANIM_MOVE_BY,AS_FINISHED,data.sprite });
+			//_moveByData.remove(data.id);
+		}		
+		++i;
+	}
+}
+
+void MoveByAnimation::start(ID id, const ds::vec2& velocity) {
+	ID jid = _moveByData.add();
+	MoveByData& data = _moveByData.get(jid);
+	data.sprite = id;
+	data.velocity = velocity;
+}
+
+void MoveByAnimation::stop(ID id) {
+	ID jid = findBySpriteID(id);
+	if (jid != INVALID_ID) {
+		remove(jid);
+	}
+}
+
+void MoveByAnimation::remove(ID jid) {
+	_moveByData.remove(jid);
+}
+
+ID MoveByAnimation::findBySpriteID(ID id) {
+	int i = 0;
+	while (i < _moveByData.numObjects) {
+		if (_moveByData.objects[i].sprite == id) {
+			return _moveByData.objects[i].id;
+		}
+		++i;
+	}
+	return INVALID_ID;
+}
+
 // ---------------------------------------------------------------
 // World
 // ---------------------------------------------------------------
 World::World(SpriteBatchBuffer* buffer) : _buffer(buffer) {
-	_animations[0] = new JumpAnimation(&_spriteArray);
-	_animations[1] = new RotationAnimation(&_spriteArray);
-	_animations[2] = new SqueezeAnimation(&_spriteArray);
+	_animations[ANIM_JUMP]     = new JumpAnimation(&_spriteArray);
+	_animations[ANIM_ROTATION] = new RotationAnimation(&_spriteArray);
+	_animations[ANIM_SQUEEZE]  = new SqueezeAnimation(&_spriteArray);
+	_animations[ANIM_MOVE_BY]  = new MoveByAnimation(&_spriteArray);
 }
 
 
@@ -113,6 +228,7 @@ World::~World() {
 	delete _animations[0];
 	delete _animations[1];
 	delete _animations[2];
+	delete _animations[3];
 }
 
 // ---------------------------------------------------------------
@@ -130,7 +246,7 @@ ID World::add(const ds::vec2& pos, const ds::vec4& rect) {
 // ---------------------------------------------------------------
 void World::tick(float elapsed) {
 	
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 0; i < 4; ++i) {
 		_animations[i]->tick(elapsed, _queue);
 	}	
 }
@@ -174,8 +290,25 @@ void World::jump(ID id, float height, float ttl) {
 	ja->start(id, height, ttl);
 }
 
+// ---------------------------------------------------------------
+// squeeze
+// ---------------------------------------------------------------
 void World::squeeze(ID id, const ds::vec2& amplitude, float ttl) {
 	SqueezeAnimation* ja = (SqueezeAnimation*)_animations[ANIM_SQUEEZE];
 	ja->start(id, amplitude, ttl);
+}
+
+// ---------------------------------------------------------------
+// move by
+// ---------------------------------------------------------------
+void World::moveBy(ID id, const ds::vec2& velocity) {
+	MoveByAnimation* anim = (MoveByAnimation*)_animations[ANIM_MOVE_BY];
+	anim->start(id, velocity);
+}
+
+void World::stopAll(ID id) {
+	for (int i = 0; i < 4; ++i) {
+		_animations[i]->stop(id);
+	}
 }
 
