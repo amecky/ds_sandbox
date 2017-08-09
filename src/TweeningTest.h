@@ -3,6 +3,7 @@
 #include <ds_imgui.h>
 #include <SpriteBatchBuffer.h>
 #include "DataArray.h"
+#include "World.h"
 
 class TweeningListModel : public gui::ListBoxModel {
 
@@ -21,13 +22,6 @@ struct TweeningData {
 	bool scaling;
 };
 
-struct MySprite {
-	ID id;
-	ds::vec2 position;
-	ds::vec4 textureRect;
-	ds::vec2 scale;
-};
-
 class TweeningTest {
 
 public:
@@ -36,6 +30,7 @@ public:
 	void render();
 	void renderGUI();
 	void onButtonClicked(int button);
+
 private:
 	SpriteBatchBuffer* _sprites;
 	ds::vec2 _startPos;
@@ -47,7 +42,11 @@ private:
 	TweeningListModel _model;
 	bool _showDiagram;
 	Sprite _sprite;
-	DataArray<MySprite, 128> _spriteArray;
 	ID _selected;
+	World _world;
+	float _rotationTTL;
+	float _height;
+	float _jumpTTL;
+	float _updateTimer;
 };
 

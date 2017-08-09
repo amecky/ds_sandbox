@@ -31,6 +31,7 @@
     <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
+    <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -38,6 +39,7 @@
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
+    <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

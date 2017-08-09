@@ -20,13 +20,13 @@ struct AABBox {
 		bottom = center.y - extent;
 	}
 
-	bool intersects(const AABBox& other) {
+	bool intersects(const AABBox& other) const {
 		if (right < other.left || left > other.right) return false;
 		if (bottom < other.top || top > other.bottom) return false;
 		return true;
 	}
 
-	bool isInside(const ds::vec2& p) {
+	bool isInside(const ds::vec2& p) const {
 		if ( p.x > right || p.x < left) return false;
 		if ( p.y < bottom || p.y > top) return false;
 		return true;

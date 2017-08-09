@@ -47,7 +47,7 @@ struct DataArray {
 	}
 
 	const U& get(ID id) const {
-		assert(id != UINT_MAX);
+		assert(id != UINT32_MAX);
 		unsigned short index = indices[id].index;
 		assert(index != UINT16_MAX);
 		return objects[index];
