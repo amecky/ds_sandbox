@@ -74,17 +74,47 @@ struct MySprite : Sprite {
 };
 
 // ---------------------------------------------------------------
-// Abstract Action
+// BaseAnimation
 // ---------------------------------------------------------------
-class AbstractAnimation {
+class BaseAnimation {
 
 public:
-	AbstractAnimation(DataArray<MySprite, 256>* sprites) : _sprites(sprites) {}
-	virtual ~AbstractAnimation() {}
+	BaseAnimation(DataArray<MySprite, 256>* sprites) : _sprites(sprites) {}
+	virtual ~BaseAnimation() {}
 	virtual void tick(float dt, EventQueue& queue) = 0;
 	virtual void stop(ID id) = 0;
+	virtual void remove(ID dataID) = 0;
 protected:
 	DataArray<MySprite, 256>* _sprites;
+};
+
+// ---------------------------------------------------------------
+// AbstractAnimation
+// ---------------------------------------------------------------
+template<class T>
+class AbstractAnimation : public BaseAnimation {
+
+public:
+	AbstractAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
+	virtual ~AbstractAnimation() {}
+	void stop(ID id) {
+		ID dataID = findBySpriteID(id);
+		if (dataID != INVALID_ID) {
+			remove(dataID);
+		}
+	}
+	ID findBySpriteID(ID id) {
+		int i = 0;
+		while (i < _data.numObjects) {
+			if (_data.objects[i].sprite == id) {
+				return _data.objects[i].id;
+			}
+			++i;
+		}
+		return INVALID_ID;
+	}
+protected:
+	DataArray<T, 256> _data;
 };
 
 // ---------------------------------------------------------------
@@ -99,18 +129,15 @@ struct JumpData {
 	float timer;
 };
 
-class JumpAnimation : public AbstractAnimation {
+class JumpAnimation : public AbstractAnimation<JumpData>{
 
 public:
 	JumpAnimation(DataArray<MySprite, 256>* sprites) : AbstractAnimation(sprites) {}
 	virtual ~JumpAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, float height, float ttl);
-	void stop(ID id);
 private:
 	void remove(ID id);
-	ID findBySpriteID(ID id);
-	DataArray<JumpData, 256> _jumpData;
 };
 
 // ---------------------------------------------------------------
@@ -125,18 +152,15 @@ struct RotateByData {
 	float timer;
 	float ttl;
 };
-class RotationAnimation : public AbstractAnimation {
+class RotationAnimation : public AbstractAnimation<RotateByData> {
 
 public:
 	RotationAnimation(DataArray<MySprite, 256>* sprites) : AbstractAnimation(sprites) {}
 	virtual ~RotationAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, float angle, float ttl);
-	void stop(ID id);
 private:
 	void remove(ID id);
-	ID findBySpriteID(ID id);
-	DataArray<RotateByData, 256> _rotateByData;
 };
 
 // ---------------------------------------------------------------
@@ -149,18 +173,15 @@ struct SqueezeData {
 	float timer;
 	float ttl;
 };
-class SqueezeAnimation : public AbstractAnimation {
+class SqueezeAnimation : public AbstractAnimation<SqueezeData> {
 
 public:
 	SqueezeAnimation(DataArray<MySprite, 256>* sprites) : AbstractAnimation(sprites) {}
 	virtual ~SqueezeAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, const ds::vec2& amplitude, float ttl);
-	void stop(ID id);
 private:
 	void remove(ID id);
-	ID findBySpriteID(ID id);
-	DataArray<SqueezeData, 256> _squeezeData;
 };
 
 // ---------------------------------------------------------------
@@ -171,18 +192,15 @@ struct MoveByData {
 	ID sprite;
 	ds::vec2 velocity;
 };
-class MoveByAnimation : public AbstractAnimation {
+class MoveByAnimation : public AbstractAnimation<MoveByData> {
 
 public:
 	MoveByAnimation(DataArray<MySprite, 256>* sprites) : AbstractAnimation(sprites) {}
 	virtual ~MoveByAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void start(ID id, const ds::vec2& velocity);
-	void stop(ID id);
 private:
 	void remove(ID id);
-	ID findBySpriteID(ID id);
-	DataArray<MoveByData, 256> _moveByData;
 };
 
 
@@ -223,7 +241,7 @@ public:
 private:
 	SpriteBatchBuffer* _buffer;
 	DataArray<MySprite, 256> _spriteArray;	
-	AbstractAnimation* _animations[4];
+	BaseAnimation* _animations[4];
 	EventQueue _queue;
 };
 

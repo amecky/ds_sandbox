@@ -34,6 +34,7 @@
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\World.h" />
+    <ClInclude Include="src\AnimationTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -46,6 +47,7 @@
     <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\World.cpp" />
+    <ClCompile Include="src\AnimationTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

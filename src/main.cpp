@@ -9,7 +9,7 @@
 #include "..\resource.h"
 #include "utils\tweening.h"
 #include "TweeningTest.h"
-
+#include "AnimationTest.h"
 // ---------------------------------------------------------------
 // load image from the resources
 // ---------------------------------------------------------------
@@ -67,6 +67,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	TweeningTest tweeningTest(&spriteBuffer);
 
+	AnimationTest animationTest(&spriteBuffer);
+
 	while (ds::isRunning() && running) {
 
 		ds::begin();
@@ -74,6 +76,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		spriteBuffer.begin();		
 		
 		tweeningTest.render();
+		//animationTest.render();
+
 		//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
 		//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
 		
@@ -81,12 +85,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		ds::Event event;
 		while (ds::get_event(&event)) {
-			if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
-				tweeningTest.onButtonClicked(event.mouse.button);
+			if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {				
+				animationTest.onButtonClicked(event.mouse.button);
 			}
 		}
 
 		tweeningTest.renderGUI();
+		//animationTest.renderGUI();
 
 		ds::end();
 	}

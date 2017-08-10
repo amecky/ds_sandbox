@@ -144,9 +144,9 @@ namespace gui {
 
 	void Checkbox(const char* label, bool* state);
 
-	void ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max);
+	bool ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max);
 
-	void ListBox(const char* label, ListBoxModel& model, int num);
+	bool ListBox(const char* label, ListBoxModel& model, int num);
 
 	void DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection = false);
 
@@ -1870,7 +1870,8 @@ namespace gui {
 	// -------------------------------------------------------
 	// ListBox
 	// -------------------------------------------------------	
-	void ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max) {
+	bool ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max) {
+		bool changed = false;
 		pushID(label);
 		prepareComboBox(_guiCtx->idStack.last(), offset, num, max);
 		int width = 200;
@@ -1885,6 +1886,9 @@ namespace gui {
 			pushID(i);
 			checkItem(p, p2i(width, 20));
 			if ( isClicked()) {
+				if (i != *selected) {
+					changed = true;
+				}
 				*selected = i;
 			}
 			if (*selected == i) {
@@ -1896,12 +1900,14 @@ namespace gui {
 		}
 		moveForward(p2i(width, height + 4));
 		popID();
+		return false;
 	}
 
 	// -------------------------------------------------------
 	// ListBox using ListBoxModel
 	// -------------------------------------------------------	
-	void ListBox(const char* label, ListBoxModel& model,int max) {
+	bool ListBox(const char* label, ListBoxModel& model,int max) {
+		bool changed = false;
 		pushID(label);
 		int width = 200;
 		int offset = model.getOffset();
@@ -1929,9 +1935,13 @@ namespace gui {
 			popID();
 		}
 		model.setOffset(offset);
+		if (selected != model.getSelection()) {
+			changed = true;
+		}
 		model.setSelection(selected);
 		moveForward(p2i(width, height + 4));
 		popID();
+		return changed;
 	}
 
 	// -------------------------------------------------------

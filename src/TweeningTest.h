@@ -29,8 +29,6 @@ public:
 	~TweeningTest();
 	void render();
 	void renderGUI();
-	void onButtonClicked(int button);
-
 private:
 	SpriteBatchBuffer* _sprites;
 	ds::vec2 _startPos;
@@ -42,19 +40,5 @@ private:
 	TweeningListModel _model;
 	bool _showDiagram;
 	Sprite _sprite;
-	ID _selected;
-	World _world;
-	float _rotationTTL;
-	float _height;
-	float _jumpTTL;
-	float _squeezeTTL;
-	ds::vec2 _squeezeAmplitude;
-	float _updateTimer;
-	ds::vec2 _velocity;
-	int _spriteDialogState;
-	p2i _spriteDialogPos;
-	int _spriteAnimDialogState;
-	ID _player;
-	bool _jumping;
 };
 
