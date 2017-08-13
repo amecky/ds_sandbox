@@ -28,14 +28,17 @@
     <ClInclude Include="src\AnimationTest.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\TweeningTest.h" />
+    <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
+    <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />

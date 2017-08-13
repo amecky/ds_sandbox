@@ -39,8 +39,8 @@ RID loadImage(const char* name) {
 // ---------------------------------------------------------------
 void initialize() {
 	ds::RenderSettings rs;
-	rs.width = 1024;
-	rs.height = 768;
+	rs.width = 1280;
+	rs.height = 960;
 	rs.title = "ds_sandbox";
 	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	rs.multisampling = 4;
@@ -52,6 +52,8 @@ void initialize() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 	
+	//_CrtSetBreakAlloc(237);
+
 	initialize();
 	
 	gui::init();
@@ -69,14 +71,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	AnimationTest animationTest(&spriteBuffer);
 
+	
 	while (ds::isRunning() && running) {
 
 		ds::begin();
 
 		spriteBuffer.begin();		
 		
-		tweeningTest.render();
-		//animationTest.render();
+		//tweeningTest.render();
+		animationTest.render();
 
 		//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
 		//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
@@ -90,10 +93,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 		}
 
-		tweeningTest.renderGUI();
-		//animationTest.renderGUI();
+		//tweeningTest.renderGUI();
+		animationTest.renderGUI();
 
 		ds::end();
+
+		
 	}
+	gui::shutdown();
 	ds::shutdown();
 }

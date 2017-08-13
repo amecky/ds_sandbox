@@ -77,9 +77,10 @@ struct DataArray {
 	bool remove(ID id) {
 		Index &in = indices[id];
 		assert(in.index != UINT16_MAX);
-		int current = in.index;
+		int current = in.index;	
+		// safer since the real object might not have the assignment operator
+		memcpy(&objects[in.index], &objects[--numObjects], sizeof(U));
 		U& o = objects[in.index];
-		o = objects[--numObjects];
 		indices[o.id].index = in.index;
 		in.index = UINT16_MAX;
 		indices[free_enqueue].next = id;

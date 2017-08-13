@@ -4,6 +4,7 @@
 #include <SpriteBatchBuffer.h>
 #include "DataArray.h"
 #include "World.h"
+#include "KeyFrameAnimation.h"
 
 class AnimationTest {
 
@@ -32,5 +33,11 @@ private:
 	int _spriteAnimDialogState;
 	ID _player;
 	bool _jumping;
+	ID _box;
+	ID _cursorID;
+	Collision _collisions[256];
+	float _scalePathTTL;
+	ds::Vec2Path _scalePath;
+	KeyFrameAnimation _keyFrameAnimation;
 };
 

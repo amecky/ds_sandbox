@@ -148,7 +148,7 @@ namespace gui {
 
 	bool ListBox(const char* label, ListBoxModel& model, int num);
 
-	void DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection = false);
+	bool DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection = false);
 
 	void Slider(const char* label, int* v, int minValue, int maxValue, int width = 200);
 
@@ -1947,7 +1947,8 @@ namespace gui {
 	// -------------------------------------------------------
 	// DropDownBox
 	// -------------------------------------------------------	
-	void DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection) {
+	bool DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection) {
+		bool changed = false;
 		pushID(label);
 		p2i p = _guiCtx->currentPos;
 		if (*state == 0) {
@@ -2009,6 +2010,9 @@ namespace gui {
 				pushID(i);
 				checkItem(p, p2i(width, 20));
 				if ( isClicked()) {
+					if (*selected != i) {
+						changed = true;
+					}
 					*selected = i;
 					if (closeOnSelection) {
 						*state = 0;
@@ -2027,6 +2031,7 @@ namespace gui {
 			moveForward(p2i(300, 4));
 		}
 		popID();
+		return changed;
 	}
 
 	// --------------------------------------------------------

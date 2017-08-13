@@ -35,6 +35,10 @@
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\World.h" />
     <ClInclude Include="src\AnimationTest.h" />
+    <ClInclude Include="src\utils\DynamicPath.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KeyFrameAnimation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -48,6 +52,7 @@
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
+    <ClCompile Include="src\KeyFrameAnimation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />
