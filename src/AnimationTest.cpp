@@ -5,43 +5,46 @@
 AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _world(buffer) {
 	_dialogPos = p2i(10, 950);
 	_dialogState = 1;
-	_player = _world.add(ds::vec2(100, 250), ds::vec4(310, 0, 30, 30));
+	_player = _world.add(ds::vec2(640, 250), ds::vec4(310, 0, 30, 30));
 	_selected = INVALID_ID;
-	_rotationTTL = 1.0f;
 	_updateTimer = 0.0f;
-	_jumpTTL = 1.0f;
-	_height = 200.0f;
-	_squeezeAmplitude = ds::vec2(1.0f, 0.4f);
-	_squeezeTTL = 0.1f;
-	_velocity = ds::vec2(200, 0);
 	_spriteDialogPos = p2i(700, 750);
 	_spriteDialogState = 1;
 	_spriteAnimDialogState = 1;
-	_jumping = false;
-	_box = _world.add(ds::vec2(400, 280), ds::vec4(40, 100, 80, 80));
-	_world.add(ds::vec2(700, 280), ds::vec4(60, 100, 40, 80));
-	_world.add(ds::vec2(1100, 260), ds::vec4(40, 100, 80, 40));
+	//_box = _world.add(ds::vec2(400, 280), ds::vec4(40, 100, 80, 80));
+	//_world.add(ds::vec2(700, 280), ds::vec4(60, 100, 40, 80));
+	//_world.add(ds::vec2(1100, 260), ds::vec4(40, 100, 80, 40));
 	_cursorID = _world.add(ds::vec2(600, 280), ds::vec4(175, 30, 20, 20));
-	_scalePath.add( 0.0f, ds::vec2(0.1f, 0.1f));
-	_scalePath.add(0.25f, ds::vec2(0.5f, 0.5f));
-	_scalePath.add( 0.5f, ds::vec2(1.5f, 1.5f));
-	_scalePath.add(0.75f, ds::vec2(0.8f, 0.8f));
-	_scalePath.add( 1.0f, ds::vec2(1.0f, 1.0f));
-	_scalePathTTL = 0.4f;
+	_ttl = 0.4f;
 
-	_keyFrameAnimation.addScaling(0.0f, ds::vec2(0.1f, 0.1f));
+	_keyFrameAnimations[0].addScaling(0.0f, ds::vec2(0.1f, 0.1f));
 	//_keyFrameAnimation.addScaling(0.25f, ds::vec2(0.5f, 0.5f));
-	_keyFrameAnimation.addScaling(0.5f, ds::vec2(1.5f, 1.5f));
-	_keyFrameAnimation.addScaling(0.75f, ds::vec2(0.8f, 0.8f));
-	_keyFrameAnimation.addScaling(1.0f, ds::vec2(1.0f, 1.0f));
-	_keyFrameAnimation.addRotation(0.0f, 0.0f);
-	_keyFrameAnimation.addRotation(0.5f, 0.0f);
-	_keyFrameAnimation.addRotation(0.75f, ds::PI * 0.5f);
-	_keyFrameAnimation.addRotation(1.0f, 0.0f);
-	_keyFrameAnimation.addTranslation(0.0f, ds::vec2(0.0f));
-	_keyFrameAnimation.addTranslation(0.5f, ds::vec2(0.0f,120.0f));
-	_keyFrameAnimation.addTranslation(1.0f, ds::vec2(0.0f,-120.0f));
-	_keyFrameAnimation.setTTL(2.0f);
+	_keyFrameAnimations[0].addScaling(0.5f, ds::vec2(1.5f, 1.5f));
+	_keyFrameAnimations[0].addScaling(0.75f, ds::vec2(0.8f, 0.8f));
+	_keyFrameAnimations[0].addScaling(1.0f, ds::vec2(1.0f, 1.0f));
+	_keyFrameAnimations[0].addRotation(0.0f, 0.0f);
+	_keyFrameAnimations[0].addRotation(0.5f, 0.0f);
+	_keyFrameAnimations[0].addRotation(0.75f, ds::PI * 0.5f);
+	_keyFrameAnimations[0].addRotation(1.0f, 0.0f);
+	_keyFrameAnimations[0].addTranslation(0.0f, ds::vec2(0.0f));
+	_keyFrameAnimations[0].addTranslation(0.5f, ds::vec2(0.0f,120.0f));
+	_keyFrameAnimations[0].addTranslation(1.0f, ds::vec2(0.0f,0.0f));
+
+	_keyFrameAnimations[1].addTranslation(0.0f, ds::vec2(0.0f));
+	_keyFrameAnimations[1].addTranslation(0.25f, ds::vec2(0.0f,30.0f));
+	_keyFrameAnimations[1].addTranslation(0.5f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[1].addTranslation(0.75f, ds::vec2(0.0f, 30.0f));
+	_keyFrameAnimations[1].addTranslation(1.0f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[1].addScaling(0.0f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[1].addScaling(0.5f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[1].addScaling(0.6f, ds::vec2(0.0f, -0.2f));
+	_keyFrameAnimations[1].addScaling(0.75f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[1].addScaling(1.0f, ds::vec2(0.0f, 0.0f));
+
+	_listModel.add("Test", &_keyFrameAnimations[0]);
+	_listModel.add("Idle", &_keyFrameAnimations[1]);
+
+	_animTypeSelection = 0;
 }
 
 AnimationTest::~AnimationTest() {
@@ -65,59 +68,98 @@ void AnimationTest::renderGUI() {
 			gui::Input("Pos", &sp.position);
 			gui::Input("TR", &sp.textureRect);
 			gui::Input("Scale", &sp.scaling);
+			float rot = sp.rotation / ds::TWO_PI * 360.0f;
+			gui::Input("Rotation", &rot);
+			sp.rotation = rot / 360.0f * ds::TWO_PI;
 			if (gui::Button("Remove")) {
 				_world.remove(_selected);
 				_selected = INVALID_ID;
 			}
-			gui::Input("Rotation-TTL", &_rotationTTL);
-			gui::Input("Jump TTL", &_jumpTTL);
-			gui::Input("Height", &_height);
-			gui::Input("Squeeze TTL", &_squeezeTTL);
-			gui::Input("Squeeze Amp", &_squeezeAmplitude);
-			gui::Input("Velocity", &_velocity);
-			gui::Input("Scale Path TTL", &_scalePathTTL);
-			
 		}
 		if (gui::begin("Animations", &_spriteAnimDialogState, 540)) {
-			gui::beginGroup();
-			if (gui::Button("Rotate")) {
-				_world.rotateBy(_selected, -ds::PI * 0.5f, _rotationTTL);
-			}
-			if (gui::Button("Jump")) {
-				if (!_jumping) {
-					_jumping = true;
-					_world.jump(_selected, _height, _jumpTTL);
+			gui::Input("TTL", &_ttl);
+			gui::ListBox("Animations", _listModel, 5);
+			if (_listModel.hasSelection()) {
+				const char* LABELS[] = { "Position","Scaling","Rotation" };
+				gui::RadioButtons(LABELS, 3, &_animTypeSelection);
+				KeyFrameAnimation* kfa = _listModel.getAnimation(_listModel.getSelection());
+				if (_animTypeSelection == 0) {
+					KeyFrameData* positionData = kfa->getTranslationData();
+					uint16_t num = kfa->getNumTranslationData();
+					for (int i = 0; i < num; ++i) {
+						ds::vec3 tmp = ds::vec3(positionData[i].start, positionData[i].translation.x, positionData[i].translation.y);
+						if (gui::Input("Step", &tmp)) {
+							positionData[i].start = tmp.x;
+							positionData[i].translation.x = tmp.y;
+							positionData[i].translation.y = tmp.z;
+						}
+					}
+				}
+				if (_animTypeSelection == 1) {
+					KeyFrameData* scalingData = kfa->getScalingData();
+					uint16_t num = kfa->getNumScalingData();
+					for (int i = 0; i < num; ++i) {
+						ds::vec3 tmp = ds::vec3(scalingData[i].start, scalingData[i].scaling.x, scalingData[i].scaling.y);
+						if (gui::Input("Step", &tmp)) {
+							scalingData[i].start = tmp.x;
+							scalingData[i].scaling.x = tmp.y;
+							scalingData[i].scaling.y = tmp.z;
+						}
+					}
+				}
+				if (_animTypeSelection == 2) {
+					KeyFrameData* scalingData = kfa->getRotationData();
+					uint16_t num = kfa->getNumRotationData();
+					for (int i = 0; i < num; ++i) {
+						float r = scalingData[i].rotation / ds::TWO_PI * 360.0f;
+						ds::vec2 tmp = ds::vec2(scalingData[i].start, r);
+						if (gui::Input("Step", &tmp)) {
+							scalingData[i].start = tmp.x;
+							scalingData[i].rotation = tmp.y * ds::TWO_PI / 360.0f;
+						}
+					}
+				}
+				p2i p = gui::getCurrentPosition();
+				p.x += 20;
+				KeyFrameData* positionData = kfa->getTranslationData();
+				uint16_t num = kfa->getNumTranslationData();
+				for (int i = 0; i < num; ++i) {
+					p2i cp = p;
+					cp.x = p.x + 400.0f * positionData[i].start;
+					gui::draw_box(cp, p2i(8, 8), ds::Color(192, 0, 0, 255));
+				}
+				p.y -= 30.0f;
+				KeyFrameData* scalingData = kfa->getScalingData();
+				num = kfa->getNumScalingData();
+				for (int i = 0; i < num; ++i) {
+					p2i cp = p;
+					cp.x = p.x + 400.0f * scalingData[i].start;
+					gui::draw_box(cp, p2i(8, 8), ds::Color(0, 192, 0, 255));
+				}
+				p.y -= 30.0f;
+				KeyFrameData* rotationData = kfa->getRotationData();
+				num = kfa->getNumRotationData();
+				for (int i = 0; i < num; ++i) {
+					p2i cp = p;
+					cp.x = p.x + 400.0f * rotationData[i].start;
+					gui::draw_box(cp, p2i(8, 8), ds::Color(0, 0, 192, 255));
+				}
+
+				gui::moveForward(p2i(40, 200));
+				if (gui::Button("Add step")) {
+					kfa->addScaling(1.0f, ds::vec2(1.0f));
 				}
 			}
-			if (gui::Button("Squeeze")) {
-				_world.squeeze(_selected, _squeezeAmplitude, _squeezeTTL);
-			}
-			if (gui::Button("Move")) {
-				_world.moveBy(_selected, _velocity);
-			}
-			gui::endGroup();
 			gui::beginGroup();
-			if (gui::Button("Wiggle")) {
-				_world.wiggle(_selected, ds::PI*0.25f, 2.0f);
-			}
-			if (gui::Button("Follow")) {
-				_world.follow(_selected, _cursorID, 200.0f);
-			}
-			if (gui::Button("Both")) {
-				if (!_jumping) {
-					_jumping = true;
-					_world.rotateBy(_selected, -ds::PI * 0.5f, _rotationTTL);
-					_world.jump(_selected, _height, _jumpTTL);
-				}
-			}
 			if (gui::Button("Stop all")) {
 				_world.stopAll(_selected);
+			}			
+			if (gui::Button("Start animation")) {
+				if (_listModel.hasSelection()) {
+					_world.animate(_selected, _listModel.getAnimation(_listModel.getSelection()), _ttl,3);
+				}
 			}
 			gui::endGroup();
-			if (gui::Button("ScaleByPath")) {
-				//_world.scaleByPath(_selected, &_scalePath, _scalePathTTL);
-				_world.animate(_selected, &_keyFrameAnimation);
-			}
 		}
 	}
 	gui::end();
@@ -131,6 +173,7 @@ void AnimationTest::render() {
 		_world.tick(step);
 		_updateTimer -= step;
 		while (_world.getEvent(&ev)) {
+			/*
 			if (ev.type == AnimationType::ANIM_ROTATION && ev.sprite == _player) {
 				MySprite& sp = _world.get(ev.sprite);
 				sp.rotation = 0.0f;
@@ -145,11 +188,13 @@ void AnimationTest::render() {
 				sp.position.x = 20.0f;
 				_world.moveBy(ev.sprite, _velocity);
 			}
+			*/
 		}
 	}
 
 	MySprite& cursor = _world.get(_cursorID);
-	cursor.position = ds::getMousePosition();
+	cursor.basic.position = ds::getMousePosition();
+	cursor.box.position = cursor.basic.position;
 	
 	int num = _world.findIntersections(_collisions, 256);
 	for (int i = 0; i < num; ++i) {
@@ -159,7 +204,6 @@ void AnimationTest::render() {
 				_world.stopAll(_player);
 				MySprite& ps = _world.get(_player);
 				ps.position.x = 100.0f;
-				_jumping = false;
 			}
 		}
 	}

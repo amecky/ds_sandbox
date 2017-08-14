@@ -132,9 +132,9 @@ namespace gui {
 
 	void Input(const char* label, float* v);
 
-	void Input(const char* label, ds::vec2* v);
+	bool Input(const char* label, ds::vec2* v);
 
-	void Input(const char* label, ds::vec3* v);
+	bool Input(const char* label, ds::vec3* v);
 
 	void Input(const char* label, ds::vec4* v);
 
@@ -143,6 +143,8 @@ namespace gui {
 	void StepInput(const char* label, int* v, int minValue, int maxValue, int steps);
 
 	void Checkbox(const char* label, bool* state);
+
+	void RadioButtons(const char** items, int num, int* selected);
 
 	bool ListBox(const char* label, const char** entries, int num, int* selected, int *offset, int max);
 
@@ -1246,6 +1248,34 @@ namespace gui {
 		popID();
 	}
 
+	void RadioButtons(const char** items, int num, int* selected) {		
+		p2i p = _guiCtx->currentPos;
+		int totalWidth = 0;
+		for (int i = 0; i < num; ++i) {
+			pushID(items[i]);
+			checkItem(p, p2i(16, 16));
+			renderer::add_box(_guiCtx->uiContext, p, p2i(16, 16), _guiCtx->settings.buttonColor);
+			p.x += 4;
+			if (*selected == i) {
+				renderer::add_box(_guiCtx->uiContext, p, 8, 8, _guiCtx->settings.enabledBoxColor);
+			}
+			else {
+				renderer::add_box(_guiCtx->uiContext, p, 8, 8, _guiCtx->settings.disabledBoxColor);
+			}
+			if (isClicked()) {
+				*selected = i;
+			}
+			p.x += 10;
+			p2i size = renderer::add_text(_guiCtx->uiContext, p, items[i]);
+			p.x += size.x + 10;
+			totalWidth += 16 + size.x + 10;
+			popID();
+		}
+		int advance = 16 + _guiCtx->settings.lineSpacing;
+		moveForward(p2i(totalWidth, advance));
+		
+	}
+
 	// --------------------------------------------------------
 	// Label
 	// --------------------------------------------------------
@@ -1443,36 +1473,38 @@ namespace gui {
 	// -------------------------------------------------------
 	// input vec2
 	// -------------------------------------------------------
-	void Input(const char* label, ds::vec2* v) {
+	bool Input(const char* label, ds::vec2* v) {
 		pushID(label, "##X");
-		InputScalar(0, &v->x, "%g", 70);
+		bool fr = InputScalar(0, &v->x, "%g", 70);
 		_guiCtx->idStack.pop();
 		pushID(label, "##Y");
-		InputScalar(1, &v->y, "%g", 70);
+		bool sr = InputScalar(1, &v->y, "%g", 70);
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x += 160;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
+		return fr || sr;
 	}
 
 	// -------------------------------------------------------
 	// input vec3
 	// -------------------------------------------------------
-	void Input(const char* label, ds::vec3* v) {
+	bool Input(const char* label, ds::vec3* v) {
 		pushID(label, "##X");
-		InputScalar(0, &v->x, "%g", 70);
+		bool fr = InputScalar(0, &v->x, "%g", 70);
 		popID();
 		pushID(label, "##Y");
-		InputScalar(1, &v->y, "%g", 70);
+		bool sr = InputScalar(1, &v->y, "%g", 70);
 		popID();
 		pushID(label, "##Z");
-		InputScalar(2, &v->z, "%g", 70);
+		bool tr = InputScalar(2, &v->z, "%g", 70);
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x += 240;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
+		return fr || sr || tr;
 	}
 
 	// -------------------------------------------------------
@@ -1908,10 +1940,14 @@ namespace gui {
 	// -------------------------------------------------------	
 	bool ListBox(const char* label, ListBoxModel& model,int max) {
 		bool changed = false;
+		bool scrolling = false;
 		pushID(label);
 		int width = 200;
 		int offset = model.getOffset();
 		int num = model.size();
+		if (num > max) {
+			scrolling = true;
+		}
 		prepareComboBox(_guiCtx->idStack.last(), &offset, num, max);
 		int selected = model.getSelection();
 		p2i p = _guiCtx->currentPos;
@@ -1928,7 +1964,11 @@ namespace gui {
 				selected = i;
 			}
 			if (selected == i) {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(width, 20), _guiCtx->settings.boxSelectionColor);
+				int ww = width;
+				if (!scrolling) {
+					ww += 20;
+				}
+				renderer::add_box(_guiCtx->uiContext, p, p2i(ww, 20), _guiCtx->settings.boxSelectionColor);
 			}
 			renderer::add_text(_guiCtx->uiContext, p, model.name(i));
 			p.y -= 20;

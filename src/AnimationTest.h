@@ -5,6 +5,33 @@
 #include "DataArray.h"
 #include "World.h"
 #include "KeyFrameAnimation.h"
+#include <vector>
+
+class AnimationListBoxModel : public gui::ListBoxModel {
+
+	struct InternalData {
+		const char* name;
+		KeyFrameAnimation* data;
+	};
+
+public:
+	AnimationListBoxModel() {}
+	virtual ~AnimationListBoxModel() {}
+	void add(const char* name, KeyFrameAnimation* anim) {
+		_data.push_back({ name,anim });
+	}
+	uint32_t size() const {
+		return _data.size();
+	}
+	const char* name(uint32_t index) const {
+		return _data[index].name;
+	}
+	KeyFrameAnimation* getAnimation(uint32_t index) {
+		return _data[index].data;
+	}
+private:
+	std::vector<InternalData> _data;
+};
 
 class AnimationTest {
 
@@ -20,24 +47,18 @@ private:
 	int _dialogState;
 	p2i _dialogPos;	
 	ID _selected;
+	float _ttl;
 	World _world;
-	float _rotationTTL;
-	float _height;
-	float _jumpTTL;
-	float _squeezeTTL;
-	ds::vec2 _squeezeAmplitude;
 	float _updateTimer;
-	ds::vec2 _velocity;
 	int _spriteDialogState;
 	p2i _spriteDialogPos;
 	int _spriteAnimDialogState;
 	ID _player;
-	bool _jumping;
 	ID _box;
 	ID _cursorID;
 	Collision _collisions[256];
-	float _scalePathTTL;
-	ds::Vec2Path _scalePath;
-	KeyFrameAnimation _keyFrameAnimation;
+	KeyFrameAnimation _keyFrameAnimations[16];
+	AnimationListBoxModel _listModel;
+	int _animTypeSelection;
 };
 

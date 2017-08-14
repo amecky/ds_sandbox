@@ -66,70 +66,50 @@ struct EventQueue {
 	}
 };
 
+struct SpriteSRT {
+	ds::vec2 position;
+	ds::vec2 scale;
+	float rotation;
+
+	SpriteSRT() : position(0.0f), scale(1.0f), rotation(0.0f) {}
+};
 // ---------------------------------------------------------------
 // MySprite
 // ---------------------------------------------------------------
 struct MySprite : Sprite {
 
 	ID id;
-	ds::vec2 basePosition;
+	SpriteSRT basic;
+	SpriteSRT animation;
 	ds::vec2 force;
 	int group;
 	AABBox box;
 	int state;
 
-	MySprite() : Sprite(), id(INVALID_ID) , force(0.0f) , group(-1) , state(0) , offset(0.0f) {
+	MySprite() : Sprite(), id(INVALID_ID) , force(0.0f) , group(-1) , state(0) {
 	}
 
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect)
 		: Sprite({ position,textureRect,ds::vec2(1.0f),0.0f,ds::Color(255,255,255,255) }), id(id), force(0.0f) , group(-1), state(0) {
 		box = AABBox(position, textureRect);
+		basic.position = position;
+		animation.scale = ds::vec2(0.0f);
 	}
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect, const ds::vec2& s)
 		: Sprite({ position,textureRect,s,0.0f,ds::Color(255,255,255,255) }), id(id), force(0.0f), state(0) {
 		box = AABBox(position, textureRect);
+		basic.position = position;
+		basic.scale = s;
+		animation.scale = ds::vec2(0.0f);
 	}
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect, const ds::vec2& scaling, float rotation, const ds::Color& color)
 		: Sprite({ position,textureRect,scaling,rotation,color }), id(id), force(0.0f), state(0) {
 		box = AABBox(position, textureRect);
+		basic.position = position;
+		basic.scale = scaling;
+		basic.rotation = rotation;
+		animation.scale = ds::vec2(0.0f);
 	}
-};
-
-struct JumpData {
-	ds::vec2 startPos;
-	float height;
-};
-
-struct RotateByData {
-	float rotation;
-	float angle;
-	float step;
-};
-
-struct SqueezeData {
-	ds::vec2 amplitude;
-};
-
-struct ScaleByPathData {
-	ds::Vec2Path* path;
-};
-
-struct MoveByData {
-	ds::vec2 velocity;
-};
-
-struct WiggleData {
-	float angle;
-	float frequency;
-};
-
-struct FollowData {
-	ID target;
-	float velocity;
-};
-
-struct KFData {
-	KeyFrameAnimation* keyframe;
 };
 
 struct AnimationData {
@@ -139,22 +119,11 @@ struct AnimationData {
 	float ttl;
 	float timer;
 	AnimationType animationType;
+	KeyFrameAnimation* animation;
+	int repeat;
 
 	AnimationData() {}
-
-	union {
-		JumpData jump;
-		RotateByData rotateBy;
-		SqueezeData squeeze;
-		ScaleByPathData scaleByPath;
-		MoveByData moveBy;
-		WiggleData wiggle;
-		FollowData follow;
-		KFData keyFrame;
-	};
-
-	//AnimationData() : id(INVALID_ID), sprite(INVALID_ID), ttl(0.0f), timer(0.0f) {}
-	//AnimationData(ID sprite, float ttl) : id(INVALID_ID), sprite(sprite), ttl(ttl), timer(0.0f) {}
+	
 };
 
 // ---------------------------------------------------------------
@@ -183,16 +152,8 @@ public:
 		data.timer = 0.0f;
 		data.ttl = animData.ttl;
 		data.animationType = animData.animationType;
-		switch (animData.animationType) {
-			case ANIM_JUMP: data.jump = animData.jump; break;
-			case ANIM_ROTATION: data.rotateBy = animData.rotateBy; break;
-			case ANIM_SQUEEZE: data.squeeze = animData.squeeze; break;
-			case ANIM_MOVE_BY: data.moveBy = animData.moveBy; break;
-			case ANIM_WIGGLE: data.wiggle = animData.wiggle; break;
-			case ANIM_FOLLOW_TARGET: data.follow = animData.follow; break;
-			case ANIM_SCALE_BY_PATH: data.scaleByPath = animData.scaleByPath; break;
-			case ANIM_KEYFRAME: data.keyFrame = animData.keyFrame; break;
-		}
+		data.animation = animData.animation;
+		data.repeat = animData.repeat;
 	}
 protected:	
 	ID findBySpriteID(ID id) {
@@ -208,90 +169,6 @@ protected:
 	ds::vec4 _boundingRect;
 	DataArray<MySprite, 256>* _sprites;
 	DataArray<AnimationData, 256> _data;
-};
-
-// ---------------------------------------------------------------
-// Jump
-// ---------------------------------------------------------------
-class JumpAnimation : public BaseAnimation {
-
-public:
-	JumpAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~JumpAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// rotate
-// ---------------------------------------------------------------
-class RotationAnimation : public BaseAnimation {
-
-public:
-	RotationAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~RotationAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// squeeze
-// ---------------------------------------------------------------
-class SqueezeAnimation : public BaseAnimation {
-
-public:
-	SqueezeAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~SqueezeAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// squeeze
-// ---------------------------------------------------------------
-class ScaleByPathAnimation : public BaseAnimation {
-
-public:
-	ScaleByPathAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~ScaleByPathAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// Move
-// ---------------------------------------------------------------
-class MoveByAnimation : public BaseAnimation {
-
-public:
-	MoveByAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~MoveByAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// Wiggle
-// ---------------------------------------------------------------
-class WiggleAnimation : public BaseAnimation {
-
-public:
-	WiggleAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~WiggleAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
-};
-
-// ---------------------------------------------------------------
-// Follow
-// ---------------------------------------------------------------
-class FollowAnimation : public BaseAnimation {
-
-public:
-	FollowAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
-	virtual ~FollowAnimation() {}
-	void tick(float dt, EventQueue& queue);
-	void remove(ID id);
 };
 
 // ---------------------------------------------------------------
@@ -372,14 +249,7 @@ public:
 	}
 	ID findIntersection(const AABBox& box) const;
 	int findIntersections(Collision* collisions, int max);
-	void rotateBy(ID id, float angle, float ttl);
-	void jump(ID id, float height, float ttl);
-	void squeeze(ID id, const ds::vec2& amplitude, float ttl);
-	void moveBy(ID id, const ds::vec2& velocity);
-	void wiggle(ID id, float angle, float frequency);
-	void follow(ID id, ID target, float velocity);
-	void scaleByPath(ID id, ds::Vec2Path* path, float ttl);
-	void animate(ID id, KeyFrameAnimation* animation);
+	void animate(ID id, KeyFrameAnimation* animation, float ttl, int repeat = 0);
 	bool getEvent(Event* e) {
 		return _queue.get(e);
 	}
@@ -388,7 +258,7 @@ private:
 	ds::vec4 _boundingRect;
 	SpriteBatchBuffer* _buffer;
 	DataArray<MySprite, 256> _spriteArray;	
-	BaseAnimation* _animations[MAX_ANIMATIONS];
+	KFAnimation _animations;
 	EventQueue _queue;
 };
 

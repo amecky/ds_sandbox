@@ -28,22 +28,33 @@ class KeyFrameAnimation {
 public:
 	KeyFrameAnimation();
 	~KeyFrameAnimation();
-	void setTTL(float ttl);
-	float getTTL() const {
-		return _ttl;
-	}
 	void addScaling(float start, const ds::vec2& scale, tweening::TweeningType = tweening::linear);
 	void addRotation(float start, float angle, tweening::TweeningType = tweening::linear);
 	void addTranslation(float start, const ds::vec2& position, tweening::TweeningType = tweening::linear);
 	void get(float t, ds::vec2* scale, float* rotation, ds::vec2* translation);
+	KeyFrameData* getScalingData() {
+		return &_scalings[0];
+	}
+	uint16_t getNumScalingData() const {
+		return _num[KAT_SCALING];
+	}
+	KeyFrameData* getTranslationData() {
+		return &_translations[0];
+	}
+	uint16_t getNumTranslationData() const {
+		return _num[KAT_TRANSLATION];
+	}
+	KeyFrameData* getRotationData() {
+		return &_rotations[0];
+	}
+	uint16_t getNumRotationData() const {
+		return _num[KAT_ROTATION];
+	}
 private:
-	float _ttl;
 	KeyFrameData _scalings[32];
-	uint16_t _numScalings;
 	KeyFrameData _rotations[32];
-	uint16_t _numRotations;
 	KeyFrameData _translations[32];
-	uint16_t _numTranslations;
+	uint16_t _num[3];
 
 };
 
