@@ -50,9 +50,9 @@ World::~World() {
 // ---------------------------------------------------------------
 // add
 // ---------------------------------------------------------------
-ID World::add(const ds::vec2& pos, const ds::vec4& rect) {
+ID World::add(const ds::vec2& pos, const ds::vec4& rect, ID parent) {
 	if (_spriteArray.numObjects < 256) {
-		return _spriteArray.add(MySprite(INVALID_ID, pos, rect));
+		return _spriteArray.add(MySprite(INVALID_ID, parent, pos, rect));
 	}
 	return INVALID_ID;
 }
@@ -68,9 +68,24 @@ void World::tick(float elapsed) {
 	_animations.tick(elapsed, _queue);
 
 	for (uint16_t i = 0; i < _spriteArray.numObjects; ++i) {
-		_spriteArray.objects[i].position = _spriteArray.objects[i].basic.position + _spriteArray.objects[i].animation.position;
-		_spriteArray.objects[i].scaling = _spriteArray.objects[i].basic.scale + _spriteArray.objects[i].animation.scale;
 		_spriteArray.objects[i].rotation = _spriteArray.objects[i].basic.rotation + _spriteArray.objects[i].animation.rotation;
+		if (_spriteArray.objects[i].parent == INVALID_ID) {
+			if (sqr_length(_spriteArray.objects[i].offset) != 0.0f && _spriteArray.objects[i].rotation != 0.0f) {
+				ds::vec2 rot_point = _spriteArray.objects[i].basic.position + _spriteArray.objects[i].offset;
+				ds::vec2 delta = _spriteArray.objects[i].basic.position - rot_point;
+				float px = cos(_spriteArray.objects[i].rotation) * delta.x - sin(_spriteArray.objects[i].rotation) * delta.y + rot_point.x;
+				float py = sin(_spriteArray.objects[i].rotation) * delta.x + cos(_spriteArray.objects[i].rotation) * delta.y + rot_point.y;
+				_spriteArray.objects[i].position = ds::vec2(px,py) + _spriteArray.objects[i].animation.position;
+			}
+			else {
+				_spriteArray.objects[i].position = _spriteArray.objects[i].basic.position + _spriteArray.objects[i].animation.position;
+			}
+		}
+		else {
+			const MySprite& parent = _spriteArray.get(_spriteArray.objects[i].parent);
+			_spriteArray.objects[i].position = parent.position + _spriteArray.objects[i].basic.position + _spriteArray.objects[i].animation.position;
+		}
+		_spriteArray.objects[i].scaling = _spriteArray.objects[i].basic.scale + _spriteArray.objects[i].animation.scale;
 		_spriteArray.objects[i].box.position = _spriteArray.objects[i].position;
 	}
 }
@@ -122,11 +137,12 @@ int World::findIntersections(Collision* collisions,int max) {
 }
 
 void World::animate(ID id, KeyFrameAnimation* animation, float ttl, int repeat) {
+	const MySprite& sp = _spriteArray.get(id);
 	AnimationData data;
-	data.animationType = ANIM_KEYFRAME;
 	data.ttl = ttl;
 	data.animation = animation;
 	data.repeat = repeat;
+	data.parent = sp.parent;
 	_animations.start(id, data);
 }
 

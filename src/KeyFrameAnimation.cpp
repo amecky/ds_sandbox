@@ -1,10 +1,13 @@
 #include "KeyFrameAnimation.h"
 #include "utils\tweening.h"
 //#include <Windows.h>
-KeyFrameAnimation::KeyFrameAnimation() : _numScalings(0) , _numRotations(0) , _numTranslations(0) {
+KeyFrameAnimation::KeyFrameAnimation() {
 	for (int i = 0; i < 3; ++i) {
 		_num[i] = 0;
+		_indices[i] = 0;
 	}
+	_capacity = 0;
+	_numBones = 0;
 }
 
 KeyFrameAnimation::~KeyFrameAnimation() {

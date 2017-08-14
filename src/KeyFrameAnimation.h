@@ -6,7 +6,8 @@
 enum KeyAnimationtype {
 	KAT_SCALING,
 	KAT_ROTATION,
-	KAT_TRANSLATION
+	KAT_TRANSLATION,
+	KAT_NONE
 };
 
 struct KeyFrameData {
@@ -23,6 +24,13 @@ struct KeyFrameData {
 	KeyFrameData() {}
 };
 
+struct Bone {
+	ID parent;
+	ID child;
+	float scale;
+	float angle;
+};
+
 class KeyFrameAnimation {
 
 public:
@@ -35,6 +43,15 @@ public:
 	KeyFrameData* getScalingData() {
 		return &_scalings[0];
 	}
+
+	KeyFrameData* getData(KeyAnimationtype type) {
+		return &_data[_indices[type]];
+	}
+
+	uint16_t getNum(KeyAnimationtype type) {
+		return _num[type];
+	}
+
 	uint16_t getNumScalingData() const {
 		return _num[KAT_SCALING];
 	}
@@ -54,7 +71,12 @@ private:
 	KeyFrameData _scalings[32];
 	KeyFrameData _rotations[32];
 	KeyFrameData _translations[32];
+	KeyFrameData _data[256];
+	Bone _bones[128];
+	uint16_t _numBones;
 	uint16_t _num[3];
+	uint16_t _indices[3];
+	uint16_t _capacity;
 
 };
 

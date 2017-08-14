@@ -54,10 +54,16 @@ private:
 	p2i _spriteDialogPos;
 	int _spriteAnimDialogState;
 	ID _player;
+	ID _arm;
 	ID _box;
 	ID _cursorID;
+	ID _testCube;
+	float _cubeAngle;
+	int _repeat;
 	Collision _collisions[256];
 	KeyFrameAnimation _keyFrameAnimations[16];
+	KeyAnimationtype _selectedAnimationType;
+	int _selectedFrame;
 	AnimationListBoxModel _listModel;
 	int _animTypeSelection;
 };

@@ -7,17 +7,6 @@
 #include "utils\DynamicPath.h"
 #include "KeyFrameAnimation.h"
 
-enum AnimationType {
-	ANIM_JUMP,
-	ANIM_ROTATION,
-	ANIM_SQUEEZE,
-	ANIM_MOVE_BY,
-	ANIM_WIGGLE,
-	ANIM_FOLLOW_TARGET,
-	ANIM_SCALE_BY_PATH,
-	ANIM_KEYFRAME
-};
-
 enum AnimationState {
 	AS_STARTED,
 	AS_FINISHED
@@ -27,7 +16,6 @@ enum AnimationState {
 // Event
 // ---------------------------------------------------------------
 struct Event {
-	AnimationType type;
 	AnimationState state;
 	ID sprite;
 };
@@ -79,31 +67,40 @@ struct SpriteSRT {
 struct MySprite : Sprite {
 
 	ID id;
+	ID parent;
 	SpriteSRT basic;
 	SpriteSRT animation;
 	ds::vec2 force;
+	ds::vec2 offset;
 	int group;
 	AABBox box;
-	int state;
 
-	MySprite() : Sprite(), id(INVALID_ID) , force(0.0f) , group(-1) , state(0) {
+	MySprite() : Sprite(), id(INVALID_ID) , parent(INVALID_ID), force(0.0f) , group(-1) , offset(0.0f) {
 	}
 
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect)
-		: Sprite({ position,textureRect,ds::vec2(1.0f),0.0f,ds::Color(255,255,255,255) }), id(id), force(0.0f) , group(-1), state(0) {
+		: Sprite({ position,textureRect,ds::vec2(1.0f),0.0f,ds::Color(255,255,255,255) }), id(id), parent(INVALID_ID), force(0.0f) , group(-1), offset(0.0f) {
 		box = AABBox(position, textureRect);
 		basic.position = position;
 		animation.scale = ds::vec2(0.0f);
 	}
+
+	MySprite(ID id, ID parent, const ds::vec2& position, const ds::vec4& textureRect)
+		: Sprite({ position,textureRect,ds::vec2(1.0f),0.0f,ds::Color(255,255,255,255) }), id(id), parent(parent), force(0.0f), group(-1), offset(0.0f) {
+		box = AABBox(position, textureRect);
+		basic.position = position;
+		animation.scale = ds::vec2(0.0f);
+	}
+
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect, const ds::vec2& s)
-		: Sprite({ position,textureRect,s,0.0f,ds::Color(255,255,255,255) }), id(id), force(0.0f), state(0) {
+		: Sprite({ position,textureRect,s,0.0f,ds::Color(255,255,255,255) }), id(id), parent(INVALID_ID), force(0.0f), offset(0.0f) {
 		box = AABBox(position, textureRect);
 		basic.position = position;
 		basic.scale = s;
 		animation.scale = ds::vec2(0.0f);
 	}
 	MySprite(ID id, const ds::vec2& position, const ds::vec4& textureRect, const ds::vec2& scaling, float rotation, const ds::Color& color)
-		: Sprite({ position,textureRect,scaling,rotation,color }), id(id), force(0.0f), state(0) {
+		: Sprite({ position,textureRect,scaling,rotation,color }), id(id), parent(INVALID_ID), force(0.0f), offset(0.0f) {
 		box = AABBox(position, textureRect);
 		basic.position = position;
 		basic.scale = scaling;
@@ -115,14 +112,14 @@ struct MySprite : Sprite {
 struct AnimationData {
 
 	ID id;
+	ID parent;
 	ID sprite;
 	float ttl;
 	float timer;
-	AnimationType animationType;
 	KeyFrameAnimation* animation;
 	int repeat;
 
-	AnimationData() {}
+	AnimationData() : id(INVALID_ID) , parent(INVALID_ID), sprite(INVALID_ID) , ttl(1.0f) , timer(0.0f) , animation(0) , repeat(0) {}
 	
 };
 
@@ -151,7 +148,6 @@ public:
 		data.sprite = id;
 		data.timer = 0.0f;
 		data.ttl = animData.ttl;
-		data.animationType = animData.animationType;
 		data.animation = animData.animation;
 		data.repeat = animData.repeat;
 	}
@@ -236,7 +232,7 @@ public:
 		return _spriteArray.numObjects;
 	}
 	void render();
-	ID add(const ds::vec2& pos, const ds::vec4& rect);
+	ID add(const ds::vec2& pos, const ds::vec4& rect, ID parent = INVALID_ID);
 	void tick(float elapsed);
 	MySprite& get(ID id) {
 		return _spriteArray.get(id);
