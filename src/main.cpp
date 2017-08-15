@@ -62,7 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	RID textureID = loadImage("content\\TextureArray.png");
 
 	// create the sprite batch buffer
-	SpriteBatchBufferInfo sbbInfo = { 2048, textureID, ds::TextureFilters::LINEAR };
+	SpriteBatchBufferInfo sbbInfo = { 2048, textureID, ds::TextureFilters::POINT };
 	SpriteBatchBuffer spriteBuffer(sbbInfo);
 	
 	bool running = true;

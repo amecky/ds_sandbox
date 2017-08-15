@@ -8,9 +8,17 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	_player = _world.add(ds::vec2(640, 250), ds::vec4(310, 0, 30, 30));
 	_arm = _world.add(ds::vec2(40, 40), ds::vec4(310, 0, 30, 30), _player);
 
-	_testCube = _world.add(ds::vec2(300, 300), ds::vec4(0, 220, 20, 60));
+	uint16_t body = _object.add(ds::vec2(900, 600), ds::vec4(175, 440, 102, 96));
+	uint16_t head = _object.add(ds::vec2(0, 80), ds::vec4(0, 300, 215, 140),body);
+	_object.add(ds::vec2(-20, 0), ds::vec4(220, 300, 72, 68), head);
+	_object.add(ds::vec2(30, 0), ds::vec4(220, 370, 52, 68), head);
+
+	_testCube = _world.add(ds::vec2(310, 300), ds::vec4(0,300,215,140));
+	_world.add(ds::vec2(-20, 0), ds::vec4(220, 300, 72, 68), _testCube);
+	_world.add(ds::vec2(20, 0), ds::vec4(220, 370, 52, 68), _testCube);
+
 	MySprite& cube = _world.get(_testCube);
-	cube.offset = ds::vec2(0, -15);
+	cube.offset = ds::vec2(0, -20);
 	_cubeAngle = 0.0f;
 
 	_selected = INVALID_ID;
@@ -49,13 +57,21 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	_keyFrameAnimations[1].addScaling(1.0f, ds::vec2(0.0f, 0.0f));
 
 	_keyFrameAnimations[2].addRotation(0.0f, 0.0f);
-	_keyFrameAnimations[2].addRotation(0.25f, ds::PI * 0.5f);
-	_keyFrameAnimations[2].addRotation(0.75f, -ds::PI *0.5f);
+	_keyFrameAnimations[2].addRotation(0.25f, ds::PI * 0.1f);
+	_keyFrameAnimations[2].addRotation(0.75f, -ds::PI *0.1f);
 	_keyFrameAnimations[2].addRotation(1.0f, 0.0f);
+
+	_keyFrameAnimations[3].addScaling(0.0f, ds::vec2(0.0f, 0.0f));
+	_keyFrameAnimations[3].addScaling(0.2f, ds::vec2(0.0f, -0.6f));
+	_keyFrameAnimations[3].addScaling(0.8f, ds::vec2(0.0f, -0.6f));
+	_keyFrameAnimations[3].addScaling(1.0f, ds::vec2(0.0f, 0.0f));
 
 	_listModel.add("Test", &_keyFrameAnimations[0]);
 	_listModel.add("Idle", &_keyFrameAnimations[1]);
 	_listModel.add("Wave", &_keyFrameAnimations[2]);
+	_listModel.add("Eyes", &_keyFrameAnimations[3]);
+
+	
 
 	_animTypeSelection = 0;
 	_selectedAnimationType = KAT_NONE;
@@ -71,7 +87,8 @@ void AnimationTest::renderGUI() {
 	gui::start();
 	p2i sp = p2i(10, 760);
 	if (gui::begin("Debug", &_dialogState, &_dialogPos, 540)) {
-		gui::Value("FPS", ds::getFramesPerSecond());		
+		gui::Value("FPS", ds::getFramesPerSecond());	
+		gui::Value("Mouse", ds::getMousePosition());
 		gui::Value("Sprites", _world.numSprites());
 		if (gui::Button("Add sprite")) {
 			_world.add(ds::vec2(ds::random(100.0f, 900.0f), ds::random(100.0f, 700.0f)), ds::vec4(0, 100, 20, 20));
@@ -119,8 +136,8 @@ void AnimationTest::renderGUI() {
 					gui::draw_box(lp, p2i(1, 60), ds::Color(64, 64, 64, 255));
 					lp.x += 20.0f;
 				}
-				KeyFrameData* positionData = kfa->getTranslationData();
-				uint16_t num = kfa->getNumTranslationData();
+				KeyFrameData* positionData = kfa->getData(KAT_TRANSLATION);
+				uint16_t num = kfa->getNum(KAT_TRANSLATION);
 				for (int i = 0; i < num; ++i) {
 					gui::pushID("KeyFramePos", i);
 					p2i cp = p;
@@ -134,8 +151,8 @@ void AnimationTest::renderGUI() {
 					gui::popID();
 				}
 				p.y -= 20.0f;
-				KeyFrameData* scalingData = kfa->getScalingData();
-				num = kfa->getNumScalingData();
+				KeyFrameData* scalingData = kfa->getData(KAT_SCALING);
+				num = kfa->getNum(KAT_TRANSLATION);
 				for (int i = 0; i < num; ++i) {
 					gui::pushID("KeyFrameScale", i);
 					p2i cp = p;
@@ -149,8 +166,8 @@ void AnimationTest::renderGUI() {
 					gui::popID();
 				}
 				p.y -= 20.0f;
-				KeyFrameData* rotationData = kfa->getRotationData();
-				num = kfa->getNumRotationData();
+				KeyFrameData* rotationData = kfa->getData(KAT_ROTATION);
+				num = kfa->getNum(KAT_ROTATION);
 				for (int i = 0; i < num; ++i) {
 					gui::pushID("KeyFrameRot", i);
 					p2i cp = p;
@@ -169,7 +186,7 @@ void AnimationTest::renderGUI() {
 				
 
 				if (_selectedAnimationType == KAT_TRANSLATION) {
-					KeyFrameData* positionData = kfa->getTranslationData();
+					KeyFrameData* positionData = kfa->getData(KAT_TRANSLATION);
 					ds::vec3 tmp = ds::vec3(positionData[_selectedFrame].start, positionData[_selectedFrame].translation.x, positionData[_selectedFrame].translation.y);
 					if (gui::Input("Step", &tmp)) {
 						positionData[_selectedFrame].start = tmp.x;
@@ -178,8 +195,8 @@ void AnimationTest::renderGUI() {
 					}
 				}
 				else if (_selectedAnimationType == KAT_SCALING) {
-					KeyFrameData* scalingData = kfa->getScalingData();
-					uint16_t num = kfa->getNumScalingData();
+					KeyFrameData* scalingData = kfa->getData(KAT_SCALING);
+					uint16_t num = kfa->getNum(KAT_SCALING);
 					for (int i = 0; i < num; ++i) {
 						ds::vec3 tmp = ds::vec3(scalingData[i].start, scalingData[i].scaling.x, scalingData[i].scaling.y);
 						if (gui::Input("Step", &tmp)) {
@@ -190,8 +207,8 @@ void AnimationTest::renderGUI() {
 					}
 				}
 				else if (_selectedAnimationType == KAT_ROTATION) {
-					KeyFrameData* scalingData = kfa->getRotationData();
-					uint16_t num = kfa->getNumRotationData();
+					KeyFrameData* scalingData = kfa->getData(KAT_ROTATION);
+					uint16_t num = kfa->getNum(KAT_ROTATION);
 					for (int i = 0; i < num; ++i) {
 						float r = scalingData[i].rotation / ds::TWO_PI * 360.0f;
 						ds::vec2 tmp = ds::vec2(scalingData[i].start, r);
@@ -213,6 +230,9 @@ void AnimationTest::renderGUI() {
 			if (gui::Button("Start animation")) {
 				if (_listModel.hasSelection()) {
 					_world.animate(_selected, _listModel.getAnimation(_listModel.getSelection()), _ttl, _repeat);
+					_object.start(1, _listModel.getAnimation(_listModel.getSelection()), _ttl);
+					_object.start(2, &_keyFrameAnimations[3], _ttl);
+					_object.start(3, &_keyFrameAnimations[3], _ttl);
 				}
 			}
 			gui::endGroup();
@@ -222,10 +242,25 @@ void AnimationTest::renderGUI() {
 }
 
 void AnimationTest::render() {
+	// background
+	for (int y = 0; y < 4; ++y) {
+		for (int x = 0; x < 5; ++x) {
+			_sprites->add(ds::vec2(150 + x * 300, 120 + y * 240), ds::vec4(400, 100, 300, 240));
+		}
+	}
+
+	if (_selected != INVALID_ID) {
+		const MySprite& sp = _world.get(_selected);
+		float sx = (sp.textureRect.z + 8.0f) / 100.0f;
+		float sy = (sp.textureRect.w + 8.0f) / 100.0f;
+		_sprites->add(sp.position, ds::vec4(800, 100, 100, 100), ds::vec2(sx,sy));
+	}
+
 	Event ev;
 	float step = 1.0f / 60.0f;
 	_updateTimer += static_cast<float>(ds::getElapsedSeconds());
 	if (_updateTimer >= step) {
+		_object.tick(step);
 		_world.tick(step);
 		_updateTimer -= step;
 		while (_world.getEvent(&ev)) {
@@ -265,6 +300,8 @@ void AnimationTest::render() {
 	}
 	
 	_world.render();
+
+	_object.render(_sprites);
 }
 
 void AnimationTest::onButtonClicked(int button) {

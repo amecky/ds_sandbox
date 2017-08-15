@@ -66,5 +66,7 @@ private:
 	int _selectedFrame;
 	AnimationListBoxModel _listModel;
 	int _animTypeSelection;
+
+	AnimationObject _object;
 };
 
