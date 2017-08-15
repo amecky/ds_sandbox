@@ -61,32 +61,35 @@ ID World::add(const ds::vec2& pos, const ds::vec4& rect, ID parent) {
 // tick
 // ---------------------------------------------------------------
 void World::tick(float elapsed) {
+
 	for (uint16_t i = 0; i < _spriteArray.numObjects; ++i) {
 		_spriteArray.objects[i].force = ds::vec2(0.0f, 0.0f);
 		_spriteArray.objects[i].box.previous = _spriteArray.objects[i].position;
 	}
+
 	_animations.tick(elapsed, _queue);
 
 	for (uint16_t i = 0; i < _spriteArray.numObjects; ++i) {
-		_spriteArray.objects[i].rotation = _spriteArray.objects[i].basic.rotation + _spriteArray.objects[i].animation.rotation;
-		if (_spriteArray.objects[i].parent == INVALID_ID) {
-			if (sqr_length(_spriteArray.objects[i].offset) != 0.0f && _spriteArray.objects[i].rotation != 0.0f) {
-				ds::vec2 rot_point = _spriteArray.objects[i].basic.position + _spriteArray.objects[i].offset;
-				ds::vec2 delta = _spriteArray.objects[i].basic.position - rot_point;
-				float px = cos(_spriteArray.objects[i].rotation) * delta.x - sin(_spriteArray.objects[i].rotation) * delta.y + rot_point.x;
-				float py = sin(_spriteArray.objects[i].rotation) * delta.x + cos(_spriteArray.objects[i].rotation) * delta.y + rot_point.y;
-				_spriteArray.objects[i].position = ds::vec2(px,py) + _spriteArray.objects[i].animation.position;
+		MySprite& current = _spriteArray.objects[i];
+		current.rotation = current.basic.rotation + current.animation.rotation;
+		if (current.parent == INVALID_ID) {
+			if (sqr_length(current.offset) != 0.0f && current.rotation != 0.0f) {
+				ds::vec2 rot_point = current.basic.position + current.offset;
+				ds::vec2 delta = current.basic.position - rot_point;
+				float px = cos(current.rotation) * delta.x - sin(current.rotation) * delta.y + rot_point.x;
+				float py = sin(current.rotation) * delta.x + cos(current.rotation) * delta.y + rot_point.y;
+				current.position = ds::vec2(px,py) + current.animation.position;
 			}
 			else {
-				_spriteArray.objects[i].position = _spriteArray.objects[i].basic.position + _spriteArray.objects[i].animation.position;
+				current.position = current.basic.position + current.animation.position;
 			}
 		}
 		else {
-			const MySprite& parent = _spriteArray.get(_spriteArray.objects[i].parent);
-			_spriteArray.objects[i].position = parent.position + _spriteArray.objects[i].basic.position + _spriteArray.objects[i].animation.position;
+			const MySprite& parent = _spriteArray.get(current.parent);
+			current.position = parent.position + current.basic.position + current.animation.position;
 		}
-		_spriteArray.objects[i].scaling = _spriteArray.objects[i].basic.scale + _spriteArray.objects[i].animation.scale;
-		_spriteArray.objects[i].box.position = _spriteArray.objects[i].position;
+		current.scaling = current.basic.scale + current.animation.scale;
+		current.box.position = current.position;
 	}
 }
 
