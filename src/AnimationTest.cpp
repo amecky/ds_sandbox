@@ -74,12 +74,21 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	
 
 	_animTypeSelection = 0;
-	_selectedAnimationType = KAT_NONE;
+	_selectedAnimationType = -1;
 	_selectedFrame = 0;
 	_repeat = 0;
 }
 
 AnimationTest::~AnimationTest() {
+}
+
+void showTimeline(AnimationTimeline& data, int selectedFrame) {
+	ds::vec3 tmp = ds::vec3(data.entries[selectedFrame].start, data.entries[selectedFrame].value.x, data.entries[selectedFrame].value.y);
+	if (gui::Input("Step", &tmp)) {
+		data.entries[selectedFrame].start = tmp.x;
+		data.entries[selectedFrame].value.x = tmp.y;
+		data.entries[selectedFrame].value.y = tmp.z;
+	}
 }
 
 void AnimationTest::renderGUI() {
@@ -96,11 +105,6 @@ void AnimationTest::renderGUI() {
 		if (gui::Button("TestRot")) {
 			_cubeAngle += ds::PI * 0.5f;
 			MySprite& sp = _world.get(_testCube);
-			//ds::vec2 offset(0, -15);
-			//ds::vec2 rot_point = sp.basic.position + offset;
-			//float px = cos(_cubeAngle) * rot_point.x - sin(_cubeAngle) * rot_point.y + rot_point.x;
-			//float py = sin(_cubeAngle) * rot_point.x + cos(_cubeAngle) * rot_point.y + rot_point.y;
-			//sp.position = ds::vec2(px,py);
 			sp.basic.rotation = _cubeAngle;
 		}
 	}
@@ -136,46 +140,43 @@ void AnimationTest::renderGUI() {
 					gui::draw_box(lp, p2i(1, 60), ds::Color(64, 64, 64, 255));
 					lp.x += 20.0f;
 				}
-				KeyFrameData* positionData = kfa->getData(KAT_TRANSLATION);
-				uint16_t num = kfa->getNum(KAT_TRANSLATION);
-				for (int i = 0; i < num; ++i) {
+				const AnimationTimeline& positionData = kfa->translationTimeline;
+				for (int i = 0; i < positionData.num; ++i) {
 					gui::pushID("KeyFramePos", i);
 					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * positionData[i].start;
+					cp.x = p.x - 3.0f + 400.0f * positionData.entries[i].start;
 					gui::checkItem(cp, p2i(6, 10));
 					gui::draw_box(cp, p2i(6, 10), ds::Color(192, 0, 0, 255));
 					if (gui::isClicked()) {
-						_selectedAnimationType = KAT_TRANSLATION;
+						_selectedAnimationType = 2;
 						_selectedFrame = i;
 					}
 					gui::popID();
 				}
 				p.y -= 20.0f;
-				KeyFrameData* scalingData = kfa->getData(KAT_SCALING);
-				num = kfa->getNum(KAT_TRANSLATION);
-				for (int i = 0; i < num; ++i) {
+				const AnimationTimeline& scalingData = kfa->scalingTimeline;
+				for (int i = 0; i < scalingData.num; ++i) {
 					gui::pushID("KeyFrameScale", i);
 					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * scalingData[i].start;
+					cp.x = p.x - 3.0f + 400.0f * scalingData.entries[i].start;
 					gui::checkItem(cp, p2i(6, 10));
 					gui::draw_box(cp, p2i(6, 10), ds::Color(0, 192, 0, 255));
 					if (gui::isClicked()) {
-						_selectedAnimationType = KAT_SCALING;
+						_selectedAnimationType = 0;
 						_selectedFrame = i;
 					}
 					gui::popID();
 				}
 				p.y -= 20.0f;
-				KeyFrameData* rotationData = kfa->getData(KAT_ROTATION);
-				num = kfa->getNum(KAT_ROTATION);
-				for (int i = 0; i < num; ++i) {
+				const AnimationTimeline& rotationData = kfa->rotationTimeline;
+				for (int i = 0; i < rotationData.num; ++i) {
 					gui::pushID("KeyFrameRot", i);
 					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * rotationData[i].start;
+					cp.x = p.x - 3.0f + 400.0f * rotationData.entries[i].start;
 					gui::checkItem(cp, p2i(6, 10));
 					gui::draw_box(cp, p2i(6, 10), ds::Color(0, 0, 192, 255));
 					if (gui::isClicked()) {
-						_selectedAnimationType = KAT_ROTATION;
+						_selectedAnimationType = 1;
 						_selectedFrame = i;
 					}
 					gui::popID();
@@ -184,41 +185,15 @@ void AnimationTest::renderGUI() {
 				gui::moveForward(p2i(40, 80));
 
 				
-
-				if (_selectedAnimationType == KAT_TRANSLATION) {
-					KeyFrameData* positionData = kfa->getData(KAT_TRANSLATION);
-					ds::vec3 tmp = ds::vec3(positionData[_selectedFrame].start, positionData[_selectedFrame].translation.x, positionData[_selectedFrame].translation.y);
-					if (gui::Input("Step", &tmp)) {
-						positionData[_selectedFrame].start = tmp.x;
-						positionData[_selectedFrame].translation.x = tmp.y;
-						positionData[_selectedFrame].translation.y = tmp.z;
-					}
+				if (_selectedAnimationType == 0) {
+					showTimeline(kfa->scalingTimeline, _selectedFrame);
 				}
-				else if (_selectedAnimationType == KAT_SCALING) {
-					KeyFrameData* scalingData = kfa->getData(KAT_SCALING);
-					uint16_t num = kfa->getNum(KAT_SCALING);
-					for (int i = 0; i < num; ++i) {
-						ds::vec3 tmp = ds::vec3(scalingData[i].start, scalingData[i].scaling.x, scalingData[i].scaling.y);
-						if (gui::Input("Step", &tmp)) {
-							scalingData[i].start = tmp.x;
-							scalingData[i].scaling.x = tmp.y;
-							scalingData[i].scaling.y = tmp.z;
-						}
-					}
+				if (_selectedAnimationType == 1) {
+					showTimeline(kfa->rotationTimeline, _selectedFrame);
 				}
-				else if (_selectedAnimationType == KAT_ROTATION) {
-					KeyFrameData* scalingData = kfa->getData(KAT_ROTATION);
-					uint16_t num = kfa->getNum(KAT_ROTATION);
-					for (int i = 0; i < num; ++i) {
-						float r = scalingData[i].rotation / ds::TWO_PI * 360.0f;
-						ds::vec2 tmp = ds::vec2(scalingData[i].start, r);
-						if (gui::Input("Step", &tmp)) {
-							scalingData[i].start = tmp.x;
-							scalingData[i].rotation = tmp.y * ds::TWO_PI / 360.0f;
-						}
-					}
+				if (_selectedAnimationType == 2) {
+					showTimeline(kfa->translationTimeline, _selectedFrame);
 				}
-
 				if (gui::Button("Add step")) {
 					kfa->addScaling(1.0f, ds::vec2(1.0f));
 				}

@@ -62,7 +62,7 @@ private:
 	int _repeat;
 	Collision _collisions[256];
 	KeyFrameAnimation _keyFrameAnimations[16];
-	KeyAnimationtype _selectedAnimationType;
+	int _selectedAnimationType;
 	int _selectedFrame;
 	AnimationListBoxModel _listModel;
 	int _animTypeSelection;

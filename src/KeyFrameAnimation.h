@@ -4,68 +4,137 @@
 #include "utils\tweening.h"
 #include <vector>
 #include <SpriteBatchBuffer.h>
-// ---------------------------------------------------------------
-// Animation type
-// ---------------------------------------------------------------
-enum KeyAnimationtype {
-	KAT_SCALING,
-	KAT_ROTATION,
-	KAT_TRANSLATION,
-	KAT_NONE
-};
 
-// ---------------------------------------------------------------
-// Keyframe data
-// ---------------------------------------------------------------
-struct KeyFrameData {
+struct AnimationTimelineEntry {
+
 	float start;
 	tweening::TweeningType tweening;
-	union {
-		ds::vec2 scaling;
-		float rotation;
-		ds::vec2 translation;
-	};
+	ds::vec2 value;
 
-	KeyFrameData() {}
+	AnimationTimelineEntry() {}
+
+	AnimationTimelineEntry(float s, const float v) : start(s), tweening(tweening::linear), value(v) {}
+
+	AnimationTimelineEntry(float s, const ds::vec2& v) : start(s), tweening(tweening::linear), value(v) {}
+
+	AnimationTimelineEntry(float s, tweening::TweeningType t, const ds::vec2& v) : start(s), tweening(t), value(v) {}
 };
 
-struct Bone {
-	ID parent;
-	ID child;
-	float scale;
-	float angle;
+struct AnimationTimeline {
+
+	AnimationTimelineEntry* entries;
+	uint16_t num;
+	uint16_t capacity;
+
+	AnimationTimeline() : entries(0), num(0), capacity(0) {}
+
+	~AnimationTimeline() {
+		if (entries != 0) {
+			delete[] entries;
+		}
+	}
+
+	float getStepAt(uint16_t idx) const {
+		return entries[idx].start;
+	}
+
+	void add(float start, float value, tweening::TweeningType type = tweening::linear) {
+		add(start, ds::vec2(value), type);
+	}
+
+	void add(float start, const ds::vec2& value, tweening::TweeningType type = tweening::linear) {
+		if (start >= 0.0f && start <= 1.0f) {
+			if ((num + 1) > capacity) {
+				alloc(capacity * 2 + 8);
+			}
+			int idx = -1;
+			for (uint16_t i = 0; i < num; ++i) {
+				if (entries[i].start > start && idx == -1) {
+					idx = i;
+				}
+			}
+			if (idx == -1) {
+				entries[num++] = { start, type, value };
+			}
+			else {
+				for (int i = num - 1; i >= idx; --i) {
+					entries[i + 1] = entries[i];
+					entries[idx] = { start, type, value };
+				}
+				++num;
+			}
+		}
+	}
+
+	bool get(float normTime, float* ret) const {
+		ds::vec2 r(0.0f);
+		if (get(normTime, &r)) {
+			*ret = r.x;
+			return true;
+		}
+		return false;
+	}
+
+	bool get(float normTime, ds::vec2* ret) const {
+		if (num == 0) {
+			return false;
+		}
+		if (normTime <= 0.0f) {
+			*ret = entries[0].value;
+			return true;
+		}
+		if (normTime >= 1.0f) {
+			*ret = entries[num - 1].value;
+			return true;
+		}
+		for (uint16_t i = 0; i < num - 1; ++i) {
+			AnimationTimelineEntry& current = entries[i];
+			AnimationTimelineEntry& next = entries[i + 1];
+			if (normTime >= current.start && normTime <= next.start) {
+				float nt = (normTime - current.start) / (next.start - current.start);
+				*ret = tweening::interpolate(current.tweening, current.value, next.value, nt, 1.0f);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void alloc(int newCapacity) {
+		AnimationTimelineEntry* tmp = new AnimationTimelineEntry[newCapacity];
+		if (entries != 0) {
+			memcpy(tmp, entries, num * sizeof(AnimationTimelineEntry));
+			delete[] entries;
+		}
+		capacity = newCapacity;
+		entries = tmp;
+	}
 };
 
-// ---------------------------------------------------------------
-// Keyframe animation
-// ---------------------------------------------------------------
-class KeyFrameAnimation {
+struct KeyFrameAnimation {
 
-public:
-	KeyFrameAnimation();
-	
-	~KeyFrameAnimation();
+	AnimationTimeline scalingTimeline;
+	AnimationTimeline rotationTimeline;
+	AnimationTimeline translationTimeline;
 
-	void addScaling(float start, const ds::vec2& scale, tweening::TweeningType = tweening::linear);
-	
-	void addRotation(float start, float angle, tweening::TweeningType = tweening::linear);
-	
-	void addTranslation(float start, const ds::vec2& position, tweening::TweeningType = tweening::linear);
-	
-	void get(float t, ds::vec2* scale, float* rotation, ds::vec2* translation);
+	KeyFrameAnimation() {}
 
-	KeyFrameData* getData(KeyAnimationtype type) {
-		return &_data[type * 32];
+	void addScaling(float start, const ds::vec2& scale, tweening::TweeningType tweeningType = tweening::linear) {
+		scalingTimeline.add(start, scale, tweeningType);
 	}
 
-	uint16_t getNum(KeyAnimationtype type) {
-		return _num[type];
+	void addRotation(float start, float angle, tweening::TweeningType tweeningType = tweening::linear) {
+		rotationTimeline.add(start, angle, tweeningType);
 	}
-private:
-	KeyFrameData _data[96];
-	Bone _bones[128];
-	uint16_t _numBones;
-	uint16_t _num[3];
+
+	void addTranslation(float start, const ds::vec2& position, tweening::TweeningType tweeningType = tweening::linear) {
+		translationTimeline.add(start, position, tweeningType);
+	}
+
+	void get(float t, ds::vec2* scale, float* rotation, ds::vec2* translation) {
+		scalingTimeline.get(t, scale);
+		rotationTimeline.get(t, rotation);
+		translationTimeline.get(t, translation);
+	}
 };
 
 struct AnimationPart {
@@ -169,14 +238,13 @@ struct AnimationObject {
 				const AnimationPart& parent = parts[current.parent];
 				
 				ds::vec2 rot_point = parent.finalPosition;
-				ds::vec2 delta = current.basePosition;// -rot_point;
+				ds::vec2 delta = current.basePosition;
 				float px = cos(current.finalRotation) * delta.x - sin(current.finalRotation) * delta.y + rot_point.x;
 				float py = sin(current.finalRotation) * delta.x + cos(current.finalRotation) * delta.y + rot_point.y;
 
 				current.finalPosition = ds::vec2(px,py) + current.animationPosition;
 			}
 			current.finalScale = current.baseScale + current.animationScale;
-			//current.box.position = current.position;
 		}
 	}
 
