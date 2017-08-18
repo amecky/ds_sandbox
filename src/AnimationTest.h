@@ -11,20 +11,24 @@ class AnimationListBoxModel : public gui::ListBoxModel {
 
 	struct InternalData {
 		const char* name;
+		const char* fileName;
 		KeyFrameAnimation* data;
 	};
 
 public:
 	AnimationListBoxModel() {}
 	virtual ~AnimationListBoxModel() {}
-	void add(const char* name, KeyFrameAnimation* anim) {
-		_data.push_back({ name,anim });
+	void add(const char* name, const char* fileName,KeyFrameAnimation* anim) {
+		_data.push_back({ name, fileName, anim });
 	}
 	uint32_t size() const {
 		return _data.size();
 	}
 	const char* name(uint32_t index) const {
 		return _data[index].name;
+	}
+	const char* fileName(uint32_t index) const {
+		return _data[index].fileName;
 	}
 	KeyFrameAnimation* getAnimation(uint32_t index) {
 		return _data[index].data;

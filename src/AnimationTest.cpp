@@ -8,11 +8,6 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	_player = _world.add(ds::vec2(640, 250), ds::vec4(310, 0, 30, 30));
 	_arm = _world.add(ds::vec2(40, 40), ds::vec4(310, 0, 30, 30), _player);
 
-	uint16_t body = _object.add(ds::vec2(900, 600), ds::vec4(175, 440, 102, 96));
-	uint16_t head = _object.add(ds::vec2(0, 80), ds::vec4(0, 300, 215, 140),body);
-	_object.add(ds::vec2(-20, 0), ds::vec4(220, 300, 72, 68), head);
-	_object.add(ds::vec2(30, 0), ds::vec4(220, 370, 52, 68), head);
-
 	_testCube = _world.add(ds::vec2(310, 300), ds::vec4(0,300,215,140));
 	_world.add(ds::vec2(-20, 0), ds::vec4(220, 300, 72, 68), _testCube);
 	_world.add(ds::vec2(20, 0), ds::vec4(220, 370, 52, 68), _testCube);
@@ -26,50 +21,21 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	_spriteDialogPos = p2i(700, 750);
 	_spriteDialogState = 1;
 	_spriteAnimDialogState = 1;
-	//_box = _world.add(ds::vec2(400, 280), ds::vec4(40, 100, 80, 80));
-	//_world.add(ds::vec2(700, 280), ds::vec4(60, 100, 40, 80));
-	//_world.add(ds::vec2(1100, 260), ds::vec4(40, 100, 80, 40));
 	_cursorID = _world.add(ds::vec2(600, 280), ds::vec4(175, 30, 20, 20));
 	_ttl = 0.4f;
 
-	_keyFrameAnimations[0].addScaling(0.0f, ds::vec2(0.1f, 0.1f));
-	//_keyFrameAnimation.addScaling(0.25f, ds::vec2(0.5f, 0.5f));
-	_keyFrameAnimations[0].addScaling(0.5f, ds::vec2(1.5f, 1.5f));
-	_keyFrameAnimations[0].addScaling(0.75f, ds::vec2(0.8f, 0.8f));
-	_keyFrameAnimations[0].addScaling(1.0f, ds::vec2(1.0f, 1.0f));
-	_keyFrameAnimations[0].addRotation(0.0f, 0.0f);
-	_keyFrameAnimations[0].addRotation(0.5f, 0.0f);
-	_keyFrameAnimations[0].addRotation(0.75f, ds::PI * 0.5f);
-	_keyFrameAnimations[0].addRotation(1.0f, 0.0f);
-	_keyFrameAnimations[0].addTranslation(0.0f, ds::vec2(0.0f));
-	_keyFrameAnimations[0].addTranslation(0.5f, ds::vec2(0.0f,120.0f));
-	_keyFrameAnimations[0].addTranslation(1.0f, ds::vec2(0.0f,0.0f));
-
-	_keyFrameAnimations[1].addTranslation(0.0f, ds::vec2(0.0f));
-	_keyFrameAnimations[1].addTranslation(0.25f, ds::vec2(0.0f,30.0f));
-	_keyFrameAnimations[1].addTranslation(0.5f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[1].addTranslation(0.75f, ds::vec2(0.0f, 30.0f));
-	_keyFrameAnimations[1].addTranslation(1.0f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[1].addScaling(0.0f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[1].addScaling(0.5f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[1].addScaling(0.6f, ds::vec2(0.0f, -0.2f));
-	_keyFrameAnimations[1].addScaling(0.75f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[1].addScaling(1.0f, ds::vec2(0.0f, 0.0f));
-
-	_keyFrameAnimations[2].addRotation(0.0f, 0.0f);
-	_keyFrameAnimations[2].addRotation(0.25f, ds::PI * 0.1f);
-	_keyFrameAnimations[2].addRotation(0.75f, -ds::PI *0.1f);
-	_keyFrameAnimations[2].addRotation(1.0f, 0.0f);
-
-	_keyFrameAnimations[3].addScaling(0.0f, ds::vec2(0.0f, 0.0f));
-	_keyFrameAnimations[3].addScaling(0.2f, ds::vec2(0.0f, -0.6f));
-	_keyFrameAnimations[3].addScaling(0.8f, ds::vec2(0.0f, -0.6f));
-	_keyFrameAnimations[3].addScaling(1.0f, ds::vec2(0.0f, 0.0f));
-
-	_listModel.add("Test", &_keyFrameAnimations[0]);
-	_listModel.add("Idle", &_keyFrameAnimations[1]);
-	_listModel.add("Wave", &_keyFrameAnimations[2]);
-	_listModel.add("Eyes", &_keyFrameAnimations[3]);
+	// load objects
+	animation::load_animation_object("animations\\robot.txt", &_object);
+	// load animations
+	animation::load_text("animations\\test.txt", &_keyFrameAnimations[0]);
+	animation::load_text("animations\\idle.txt", &_keyFrameAnimations[1]);
+	animation::load_text("animations\\wave.txt", &_keyFrameAnimations[2]);
+	animation::load_text("animations\\eyes.txt", &_keyFrameAnimations[3]);
+	// build list box model
+	_listModel.add("Test", "animations\\test.txt", &_keyFrameAnimations[0]);
+	_listModel.add("Idle", "animations\\idle.txt", &_keyFrameAnimations[1]);
+	_listModel.add("Wave", "animations\\wave.txt", &_keyFrameAnimations[2]);
+	_listModel.add("Eyes", "animations\\eyes.txt", &_keyFrameAnimations[3]);
 
 	
 
@@ -82,14 +48,34 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 AnimationTest::~AnimationTest() {
 }
 
-void showTimeline(AnimationTimeline& data, int selectedFrame) {
-	ds::vec3 tmp = ds::vec3(data.entries[selectedFrame].start, data.entries[selectedFrame].value.x, data.entries[selectedFrame].value.y);
-	if (gui::Input("Step", &tmp)) {
-		data.entries[selectedFrame].start = tmp.x;
-		data.entries[selectedFrame].value.x = tmp.y;
-		data.entries[selectedFrame].value.y = tmp.z;
+void showTimeline(AnimationTimeline& data) {
+	int num = data.num;
+	char buffer[32];
+	for (int i = 0; i < num; ++i) {
+		sprintf_s(buffer, "Step %d", (i + 1));
+		ds::vec3 tmp = ds::vec3(data.entries[i].start, data.entries[i].value.x, data.entries[i].value.y);
+		if (gui::Input(buffer, &tmp)) {
+			data.entries[i].start = tmp.x;
+			data.entries[i].value.x = tmp.y;
+			data.entries[i].value.y = tmp.z;
+		}
 	}
 }
+
+void showRotationTimeline(AnimationTimeline& data) {
+	int num = data.num;
+	char buffer[32];
+	for (int i = 0; i < num; ++i) {
+		sprintf_s(buffer, "Step %d", (i + 1));
+		float rot = data.entries[i].value.x / ds::TWO_PI * 360.0f;
+		ds::vec2 tmp = ds::vec2(data.entries[i].start, rot);
+		if (gui::Input(buffer, &tmp)) {
+			data.entries[i].start = tmp.x;
+			data.entries[i].value.x = tmp.y * ds::TWO_PI / 360.0f;
+		}
+	}
+}
+
 
 void AnimationTest::renderGUI() {
 	
@@ -129,71 +115,19 @@ void AnimationTest::renderGUI() {
 			gui::Input("Repeat", &_repeat);
 			gui::ListBox("Animations", _listModel, 5);
 			if (_listModel.hasSelection()) {
-				//const char* LABELS[] = { "Position","Scaling","Rotation" };
+				const char* LABELS[] = { "Position","Scaling","Rotation" };
 				KeyFrameAnimation* kfa = _listModel.getAnimation(_listModel.getSelection());
-				//gui::RadioButtons(LABELS, 3, &_animTypeSelection);
-				p2i p = gui::getCurrentPosition();
-				p.x += 20;
-				p2i lp = p;
-				lp.y -= 30;
-				for (int i = 0; i < 21; ++i) {
-					gui::draw_box(lp, p2i(1, 60), ds::Color(64, 64, 64, 255));
-					lp.x += 20.0f;
+				gui::RadioButtons(LABELS, 3, &_animTypeSelection);
+				if (_animTypeSelection == 0) {
+					showTimeline(kfa->translationTimeline);
 				}
-				const AnimationTimeline& positionData = kfa->translationTimeline;
-				for (int i = 0; i < positionData.num; ++i) {
-					gui::pushID("KeyFramePos", i);
-					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * positionData.entries[i].start;
-					gui::checkItem(cp, p2i(6, 10));
-					gui::draw_box(cp, p2i(6, 10), ds::Color(192, 0, 0, 255));
-					if (gui::isClicked()) {
-						_selectedAnimationType = 2;
-						_selectedFrame = i;
-					}
-					gui::popID();
+				if (_animTypeSelection == 1) {
+					showTimeline(kfa->scalingTimeline);
 				}
-				p.y -= 20.0f;
-				const AnimationTimeline& scalingData = kfa->scalingTimeline;
-				for (int i = 0; i < scalingData.num; ++i) {
-					gui::pushID("KeyFrameScale", i);
-					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * scalingData.entries[i].start;
-					gui::checkItem(cp, p2i(6, 10));
-					gui::draw_box(cp, p2i(6, 10), ds::Color(0, 192, 0, 255));
-					if (gui::isClicked()) {
-						_selectedAnimationType = 0;
-						_selectedFrame = i;
-					}
-					gui::popID();
+				if (_animTypeSelection == 2) {
+					showRotationTimeline(kfa->rotationTimeline);
 				}
-				p.y -= 20.0f;
-				const AnimationTimeline& rotationData = kfa->rotationTimeline;
-				for (int i = 0; i < rotationData.num; ++i) {
-					gui::pushID("KeyFrameRot", i);
-					p2i cp = p;
-					cp.x = p.x - 3.0f + 400.0f * rotationData.entries[i].start;
-					gui::checkItem(cp, p2i(6, 10));
-					gui::draw_box(cp, p2i(6, 10), ds::Color(0, 0, 192, 255));
-					if (gui::isClicked()) {
-						_selectedAnimationType = 1;
-						_selectedFrame = i;
-					}
-					gui::popID();
-				}
-
-				gui::moveForward(p2i(40, 80));
-
 				
-				if (_selectedAnimationType == 0) {
-					showTimeline(kfa->scalingTimeline, _selectedFrame);
-				}
-				if (_selectedAnimationType == 1) {
-					showTimeline(kfa->rotationTimeline, _selectedFrame);
-				}
-				if (_selectedAnimationType == 2) {
-					showTimeline(kfa->translationTimeline, _selectedFrame);
-				}
 				if (gui::Button("Add step")) {
 					kfa->addScaling(1.0f, ds::vec2(1.0f));
 				}

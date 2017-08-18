@@ -34,6 +34,10 @@ struct AnimationTimeline {
 		}
 	}
 
+	void clear() {
+		num = 0;
+	}
+
 	float getStepAt(uint16_t idx) const {
 		return entries[idx].start;
 	}
@@ -130,6 +134,12 @@ struct KeyFrameAnimation {
 		translationTimeline.add(start, position, tweeningType);
 	}
 
+	void clear() {
+		scalingTimeline.clear();
+		rotationTimeline.clear();
+		translationTimeline.clear();
+	}
+
 	void get(float t, ds::vec2* scale, float* rotation, ds::vec2* translation) {
 		scalingTimeline.get(t, scale);
 		rotationTimeline.get(t, rotation);
@@ -181,6 +191,10 @@ struct AnimationObject {
 		part.repeat = 0;
 		parts.push_back(part);
 		return parts.size() - 1;
+	}
+
+	AnimationPart& getPart(uint16_t idx) {
+		return parts[idx];
 	}
 
 	void start(uint16_t id, KeyFrameAnimation* anim, float ttl) {
@@ -255,3 +269,12 @@ struct AnimationObject {
 		}
 	}
 };
+
+namespace animation {
+
+	bool load_text(const char* name, KeyFrameAnimation* animation);
+
+	bool save_text(const char* name, KeyFrameAnimation* animation);
+
+	bool load_animation_object(const char* name, AnimationObject* object);
+}
