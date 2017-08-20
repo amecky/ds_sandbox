@@ -88,6 +88,8 @@ namespace gui {
 
 	void begin(const char* header, int width = 200);
 
+	void begin(const p2i& pos);
+
 	bool begin(const char* header, int* state, int width = 200);
 
 	bool begin(const char* header, int* state, p2i* position, int width = 200);
@@ -1114,6 +1116,14 @@ namespace gui {
 		moveForward(p2i(10, advance));
 		popID();
 		return *state == 1;
+	}
+
+	// --------------------------------------------------------
+	// begin
+	// --------------------------------------------------------
+	void begin(const p2i& pos) {
+		end();
+		_guiCtx->currentPos = pos;
 	}
 
 	// --------------------------------------------------------

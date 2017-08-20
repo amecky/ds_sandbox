@@ -116,11 +116,15 @@ struct AnimationTimeline {
 
 struct KeyFrameAnimation {
 
+	char name[32];
+
 	AnimationTimeline scalingTimeline;
 	AnimationTimeline rotationTimeline;
 	AnimationTimeline translationTimeline;
 
-	KeyFrameAnimation() {}
+	KeyFrameAnimation() {
+		name[0] = '\0';
+	}
 
 	void addScaling(float start, const ds::vec2& scale, tweening::TweeningType tweeningType = tweening::linear) {
 		scalingTimeline.add(start, scale, tweeningType);
@@ -148,6 +152,7 @@ struct KeyFrameAnimation {
 };
 
 struct AnimationPart {
+	char name[32];
 	uint16_t id;
 	uint16_t parent;
 	ds::vec4 textureRect;
@@ -171,7 +176,7 @@ struct AnimationObject {
 
 	std::vector<AnimationPart> parts;
 
-	uint16_t add(const ds::vec2& position, const ds::vec4& rect, uint16_t parent = UINT16_MAX) {
+	uint16_t add(const char* name,const ds::vec2& position, const ds::vec4& rect, uint16_t parent = UINT16_MAX) {
 		AnimationPart part;
 		part.parent = parent;
 		part.textureRect = rect;
@@ -189,12 +194,21 @@ struct AnimationObject {
 		part.timer = 0.0f;
 		part.ttl = 1.0f;
 		part.repeat = 0;
+		sprintf_s(part.name, "%s", name);
 		parts.push_back(part);
 		return parts.size() - 1;
 	}
 
 	AnimationPart& getPart(uint16_t idx) {
 		return parts[idx];
+	}
+
+	const AnimationPart& getPart(uint16_t idx) const {
+		return parts[idx];
+	}
+
+	uint16_t numParts() const {
+		return parts.size();
 	}
 
 	void start(uint16_t id, KeyFrameAnimation* anim, float ttl) {

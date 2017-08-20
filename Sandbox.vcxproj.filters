@@ -39,6 +39,10 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\KeyFrameAnimation.h" />
+    <ClInclude Include="ext\ds_profiler.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LogPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -53,6 +57,7 @@
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
+    <ClCompile Include="src\LogPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

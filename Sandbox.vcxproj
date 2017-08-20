@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_imgui.h" />
+    <ClInclude Include="ext\ds_profiler.h" />
     <ClInclude Include="ext\SpriteBatchBuffer.h" />
     <ClInclude Include="ext\stb_image.h" />
     <ClInclude Include="resource.h" />
@@ -29,6 +30,7 @@
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
+    <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
@@ -39,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
+    <ClCompile Include="src\LogPanel.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />

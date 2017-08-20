@@ -10,6 +10,7 @@
 #include "utils\tweening.h"
 #include "TweeningTest.h"
 #include "AnimationTest.h"
+#include "LogPanel.h"
 // ---------------------------------------------------------------
 // load image from the resources
 // ---------------------------------------------------------------
@@ -34,6 +35,12 @@ RID loadImage(const char* name) {
 	return textureID;
 }
 
+void myLogging(const logging::LogLevel&, const char* message) {
+	OutputDebugString(message);
+	OutputDebugString("\n");
+	logpanel::add_line(message);
+}
+
 // ---------------------------------------------------------------
 // initialize rendering system
 // ---------------------------------------------------------------
@@ -52,6 +59,8 @@ void initialize() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 	
+	logging::logHandler = myLogging;
+	logpanel::init();
 	//_CrtSetBreakAlloc(237);
 
 	initialize();
@@ -71,6 +80,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	AnimationTest animationTest(&spriteBuffer);
 
+	int l_count = 0;
 	
 	while (ds::isRunning() && running) {
 
@@ -91,6 +101,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {				
 				animationTest.onButtonClicked(event.mouse.button);
 			}
+			if (event.type == ds::EventType::ET_KEY_PRESSED) {
+				if (event.key.key == 'l') {
+					LOG_DEBUG("L pressed %d",l_count++);
+				}
+				if (event.key.key == 'd') {
+					int end = logpanel::get_num_lines();
+					int start = end - 5;
+					if (start < 0) {
+						start = 0;
+					}
+					OutputDebugString("----------------------------------------------\n");
+					for (uint16_t i = start; i < end; ++i) {
+						OutputDebugString(logpanel::get_line(i));
+						OutputDebugString("\n");
+					}
+				}
+			}
 		}
 
 		//tweeningTest.renderGUI();
@@ -101,5 +128,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		
 	}
 	gui::shutdown();
+	logpanel::shutdown();
 	ds::shutdown();
 }

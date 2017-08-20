@@ -21,6 +21,9 @@ public:
 	void add(const char* name, const char* fileName,KeyFrameAnimation* anim) {
 		_data.push_back({ name, fileName, anim });
 	}
+	void add(const char* fileName, KeyFrameAnimation* anim) {
+		_data.push_back({ anim->name, fileName, anim });
+	}
 	uint32_t size() const {
 		return _data.size();
 	}
@@ -32,6 +35,42 @@ public:
 	}
 	KeyFrameAnimation* getAnimation(uint32_t index) {
 		return _data[index].data;
+	}
+private:
+	std::vector<InternalData> _data;
+};
+
+class AnimationObjectListBoxModel : public gui::ListBoxModel {
+
+	struct InternalData {
+		const char* name;
+		uint16_t id;
+	};
+
+public:
+	AnimationObjectListBoxModel() {}
+	virtual ~AnimationObjectListBoxModel() {}
+	void add(const char* name, uint16_t id) {
+		_data.push_back({ name, id });
+	}
+	void add(const AnimationObject& object) {
+		_data.clear();
+		for (int i = 0; i < object.numParts(); ++i) {
+			const AnimationPart& part = object.getPart(i);
+			_data.push_back({ part.name, part.id });
+		}
+	}
+	uint32_t size() const {
+		return _data.size();
+	}
+	const char* name(uint32_t index) const {
+		return _data[index].name;
+	}
+	uint16_t getID(uint32_t index) {
+		return _data[index].id;
+	}
+	void clear() {
+		_data.clear();
 	}
 private:
 	std::vector<InternalData> _data;
@@ -72,5 +111,6 @@ private:
 	int _animTypeSelection;
 
 	AnimationObject _object;
+	AnimationObjectListBoxModel _objectModel;
 };
 

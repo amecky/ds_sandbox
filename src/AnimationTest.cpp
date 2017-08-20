@@ -1,6 +1,7 @@
 #include "AnimationTest.h"
 #include "utils\tweening.h"
 #include "AABBox.h"
+#include "LogPanel.h"
 
 AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _world(buffer) {
 	_dialogPos = p2i(10, 950);
@@ -32,12 +33,12 @@ AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _wo
 	animation::load_text("animations\\wave.txt", &_keyFrameAnimations[2]);
 	animation::load_text("animations\\eyes.txt", &_keyFrameAnimations[3]);
 	// build list box model
-	_listModel.add("Test", "animations\\test.txt", &_keyFrameAnimations[0]);
-	_listModel.add("Idle", "animations\\idle.txt", &_keyFrameAnimations[1]);
-	_listModel.add("Wave", "animations\\wave.txt", &_keyFrameAnimations[2]);
-	_listModel.add("Eyes", "animations\\eyes.txt", &_keyFrameAnimations[3]);
+	_listModel.add("animations\\test.txt", &_keyFrameAnimations[0]);
+	_listModel.add("animations\\idle.txt", &_keyFrameAnimations[1]);
+	_listModel.add("animations\\wave.txt", &_keyFrameAnimations[2]);
+	_listModel.add("animations\\eyes.txt", &_keyFrameAnimations[3]);
 
-	
+	_objectModel.add(_object);
 
 	_animTypeSelection = 0;
 	_selectedAnimationType = -1;
@@ -94,6 +95,7 @@ void AnimationTest::renderGUI() {
 			sp.basic.rotation = _cubeAngle;
 		}
 	}
+	gui::ListBox("AnimationParts", _objectModel, 5);
 	if (_selected != INVALID_ID) {
 		if (gui::begin("Sprite", &_spriteDialogState, 540)) {
 			gui::Value("Selected", _selected);
@@ -147,7 +149,8 @@ void AnimationTest::renderGUI() {
 			gui::endGroup();
 		}
 	}
-	gui::end();
+	logpanel::draw_gui(8);
+	gui::end();	
 }
 
 void AnimationTest::render() {

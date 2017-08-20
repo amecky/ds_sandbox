@@ -48,6 +48,9 @@ namespace animation {
 				file >> ty;
 				animation->addTranslation(t, ds::vec2(tx, ty));
 			}
+			else if (strcmp(cmd, "n:") == 0) {
+				file >> animation->name;
+			}
 		}
 		return true;
 	}
@@ -86,6 +89,7 @@ namespace animation {
 	}
 
 	struct AnimationImportData {
+		char name[32];
 		ds::vec2 pos;		
 		ds::vec4 rect;
 		ds::vec2 scale;
@@ -118,12 +122,7 @@ namespace animation {
 				file >> sx;
 				file.ignore();
 				file >> sy;
-				AnimationImportData data;
-				data.pos = ds::vec2(sx, sy);
-				data.scale = ds::vec2(1.0);
-				data.rotation = 0.0f;
-				importData.push_back(data);
-				current = importData.size() - 1;
+				importData[current].pos = ds::vec2(sx, sy);
 			}
 			else if (strcmp(cmd, "rect:") == 0) {
 				float l, t, w, h;
@@ -153,10 +152,21 @@ namespace animation {
 				file >> p;
 				importData[current].parent = p;
 			}
+			else if (strcmp(cmd, "n:") == 0) {
+				char tmp[32];
+				AnimationImportData data;
+				data.pos = ds::vec2(0.0f);
+				data.scale = ds::vec2(1.0);
+				data.rotation = 0.0f;
+				file >> tmp;
+				sprintf_s(data.name, "%s", tmp);
+				importData.push_back(data);
+				current = importData.size() - 1;				
+			}
 		}
 		for (size_t i = 0; i < importData.size(); ++i) {
 			AnimationImportData& data = importData[i];
-			data.id = object->add(data.pos, data.rect);				
+			data.id = object->add(data.name, data.pos, data.rect);				
 			AnimationPart& part = object->getPart(data.id);
 			part.baseRotation = data.rotation;
 			part.baseScale = data.scale;

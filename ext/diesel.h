@@ -63,13 +63,29 @@ const uint16_t NO_RID = UINT16_MAX - 1;
 #define RADTODEG( radian ) ((radian) * (180.0f / 3.141592654f))
 #endif
 
-enum LogLevel {
-	LL_DEBUG,
-	LL_INFO,
-	LL_ERROR
-};
+namespace logging {
 
-typedef void(*dsLogHandler)(const LogLevel&, const char* message);
+	enum LogLevel {
+		LL_TRACE, LL_DEBUG, LL_INFO, LL_WARN, LL_ERROR
+	};
+
+	typedef void(*LogHandler)(const LogLevel&, const char* message);
+
+	void writeOutputDebugString(const LogLevel&, const char* message);
+
+	static LogHandler logHandler = writeOutputDebugString;
+
+	static LogLevel currentLevel = LL_DEBUG;
+
+	void log(LogLevel level, const char* file, int line, char* format, ...);
+
+}
+
+#define LOG_TRACE(...) do { logging::log(logging::LogLevel::LL_TRACE,__FILE__,__LINE__,__VA_ARGS__);} while(0)
+#define LOG_DEBUG(...) do { logging::log(logging::LogLevel::LL_DEBUG,__FILE__,__LINE__,__VA_ARGS__);} while(0)
+#define LOG_INFO(...) do { logging::log(logging::LogLevel::LL_INFO,__FILE__,__LINE__,__VA_ARGS__);} while(0)
+#define LOG_WARN(...) do { logging::log(logging::LogLevel::LL_WARN,__FILE__,__LINE__,__VA_ARGS__);} while(0)
+#define LOG_ERROR(...) do { logging::log(logging::LogLevel::LL_ERROR,__FILE__,__LINE__,__VA_ARGS__);} while(0)
 
 namespace ds {
 
@@ -948,7 +964,6 @@ namespace ds {
 		const char* title;
 		bool useGPUProfiling;
 		bool supportDebug;
-		dsLogHandler logHandler;
 
 		RenderSettings() {
 			width = 1024;
@@ -958,7 +973,6 @@ namespace ds {
 			title = "No title";
 			useGPUProfiling = false;
 			supportDebug = true;
-			logHandler = 0;
 		}
 	};
 
@@ -1364,11 +1378,62 @@ namespace ds {
 #include <thread>
 #include <chrono>
 
+namespace logging {
+
+	static const char* LEVEL_NAMES[] = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" };
+
+	void writeOutputDebugString(const LogLevel&, const char* message) {
+		OutputDebugString(message);
+		OutputDebugString("\n");
+	}
+
+	static int fill_time_stamp(char* ret, int max) {
+		char buffer[200];
+		if (GetTimeFormat(LOCALE_USER_DEFAULT, 0, 0, "HH':'mm':'ss", buffer, 200) == 0) {
+			return sprintf_s(ret, max, "00:00:00");
+		}
+		DWORD first = GetTickCount();
+		return sprintf_s(ret, max, "%s.%03ld", buffer, (long)(GetTickCount() - first) % 1000);
+	}
+
+	static const char* extract_file_name(const char* file) {
+		int l = strlen(file);
+		for (int i = l - 1; i >= 0; --i) {
+			if (file[i] == '\\') {
+				return file + i + 1;
+			}
+		}
+		return file;
+	}
+
+	static void log_internal(const char *file, int line, LogLevel level, char* format, va_list args) {
+		char buffer[128];
+		fill_time_stamp(buffer, 128);
+		const char* name = extract_file_name(file);
+		char msg[256];
+		memset(msg, 0, sizeof(msg));
+		int written = vsnprintf_s(msg, sizeof(msg), _TRUNCATE, format, args);
+		char total[512];
+		sprintf_s(total, sizeof(total), "%s [%s] %s:%d : %s", buffer, LEVEL_NAMES[level], name, line, msg);
+		(*logHandler)(level, total);
+	}
+
+
+	void log(LogLevel level, const char* file, int line, char* format, ...) {
+		if (level >= currentLevel) {
+			va_list args;
+			va_start(args, format);
+			log_internal(file, line, level, format, args);
+			va_end(args);
+		}
+	}
+
+}
+
 namespace ds {
 
 	static void assert_fmt(char* expr_str, bool expr, char* format, ...);
 
-	static void log(const LogLevel& level, char* format,...);
 
 	static void assert_result(HRESULT result, const char* msg);
 }
@@ -1377,12 +1442,8 @@ namespace ds {
 #define XASSERT(Expr, s, ...) do { ds::assert_fmt(#Expr, Expr,s,__VA_ARGS__); } while(false);
 #endif
 
-#ifndef DBG_LOG
-#define DBG_LOG(s, ...) do { ds::log(LogLevel::LL_DEBUG,s,__VA_ARGS__); } while(false);
-#endif
-
 #ifndef REPORT
-#define REPORT(s, ...) do { ds::log(LogLevel::LL_ERROR,s,__VA_ARGS__); } while(false);
+#define REPORT(s, ...) do { LOG_ERROR(s,__VA_ARGS__); } while(false);
 #endif
 
 namespace ds {
@@ -2177,7 +2238,9 @@ namespace ds {
 		virtual ~DrawItemResource() {}
 		void release() {
 			if (_data != 0) {
-				delete[] _data->groups;
+				//for (int i = 0; i < _data->num; ++i) {
+					//delete _data->groups[i];
+				//}
 				delete _data;
 			}
 		}
@@ -2196,7 +2259,6 @@ namespace ds {
 		virtual ~StateGroupResource() {}
 		void release() {
 			if (_data != 0) {
-				delete[] _data->items;
 				delete _data;
 			}
 		}
@@ -2282,7 +2344,6 @@ namespace ds {
 		uint16_t screenHeight;
 		Color clearColor;
 		uint8_t multisampling;
-		dsLogHandler logHandler;
 
 		bool running;
 		D3D_DRIVER_TYPE driverType;
@@ -2379,7 +2440,7 @@ namespace ds {
 		RID rid = buildRID(static_cast<uint16_t>(_ctx->_resources.size() - 1), type);
 		res->setRID(rid);		
 		res->setNameIndex(_ctx->charBuffer->append(name), SID(name));
-		DBG_LOG("Resource %s (%s) created - id: %d", name, RESOURCE_NAMES[type], id_mask(rid));
+		LOG_DEBUG("Resource %s (%s) created - id: %d", name, RESOURCE_NAMES[type], id_mask(rid));
 		return rid;
 	}
 
@@ -2464,32 +2525,15 @@ namespace ds {
 			char buffer[1024];
 			memset(buffer, 0, sizeof(buffer));
 			int written = vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, args);		
-			if (_ctx->logHandler != 0) {
-				(*_ctx->logHandler)(LogLevel::LL_ERROR, buffer);
-			}
+			LOG_ERROR(buffer);
 			va_end(args);
 			exit(-1);
 		}
 	}
 
-	// ------------------------------------------------------
-	// assert functions
-	// ------------------------------------------------------
-	static void log(const LogLevel& level,char* format, ...) {
-		va_list args;
-		va_start(args, format);
-		char buffer[1024];
-		memset(buffer, 0, sizeof(buffer));
-		int written = vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, args);
-		if (_ctx->logHandler != 0) {
-			(*_ctx->logHandler)(level, buffer);
-		}
-		va_end(args);
-	}
-
 	static void assert_result(HRESULT result, const char* msg) {
 		if (FAILED(result)) {
-			log(LogLevel::LL_ERROR,"%s",msg);
+			LOG_ERROR("%s",msg);
 		}
 		//exit(-1);
 	}
@@ -2551,7 +2595,6 @@ namespace ds {
 		_ctx->clearColor = settings.clearColor;
 		_ctx->multisampling = settings.multisampling;
 		_ctx->supportDebug = settings.supportDebug;
-		_ctx->logHandler = settings.logHandler;
 
 		RECT dimensions;
 		GetClientRect(_ctx->hwnd, &dimensions);
@@ -5242,35 +5285,35 @@ namespace ds {
 	}
 
 	void logResources() {
-		DBG_LOG(" index | resource type       | Name");
-		DBG_LOG("--------------------------------------------------------------");
+		LOG_DEBUG(" index | resource type       | Name");
+		LOG_DEBUG("--------------------------------------------------------------");
 		for (size_t i = 0; i < _ctx->_resources.size(); ++i) {
 			const BaseResource* res = _ctx->_resources[i];
 			RID rid = res->getRID();
-			DBG_LOG(" %3d  | %-20s | %s", id_mask(rid), RESOURCE_NAMES[type_mask(rid)], _ctx->charBuffer->get(res->getNameIndex()));
+			LOG_DEBUG(" %3d  | %-20s | %s", id_mask(rid), RESOURCE_NAMES[type_mask(rid)], _ctx->charBuffer->get(res->getNameIndex()));
 		}
-		DBG_LOG("\n");
+		LOG_DEBUG("\n");
 		for (size_t i = 0; i < _ctx->_resources.size(); ++i) {
 			const BaseResource* br = _ctx->_resources[i];
 			if (br->getType() == RT_DRAW_ITEM) {
 				const DrawItemResource* dir = (DrawItemResource*)_ctx->_resources[i];
 				const DrawItem* item = dir->get();
-				DBG_LOG("DrawItem %d (%s) - groups: %d", id_mask(br->getRID()), _ctx->charBuffer->get(item->nameIndex), item->num);
+				LOG_DEBUG("DrawItem %d (%s) - groups: %d", id_mask(br->getRID()), _ctx->charBuffer->get(item->nameIndex), item->num);
 				for (int j = 0; j < item->num; ++j) {
 					RID groupID = item->groups[j];
 					StateGroupResource* res = (StateGroupResource*)_ctx->_resources[id_mask(groupID)];
 					StateGroup* group = res->get();
-					DBG_LOG("Group: %d (%s)", id_mask(group->rid), _ctx->charBuffer->get(res->getNameIndex()));
-					DBG_LOG("resource type        | id    | stage    | slot | Name");
-					DBG_LOG("------------------------------------------------------------------------------------------");
+					LOG_DEBUG("Group: %d (%s)", id_mask(group->rid), _ctx->charBuffer->get(res->getNameIndex()));
+					LOG_DEBUG("resource type        | id    | stage    | slot | Name");
+					LOG_DEBUG("------------------------------------------------------------------------------------------");
 					for (int k = 0; k < group->num; ++k) {
 						RID current = group->items[k];
 						if (id_mask(current) != NO_RID) {
 							BaseResource* res = _ctx->_resources[id_mask(current)];
-							DBG_LOG("%-20s | %5d | %-8s | %2d   | %s", RESOURCE_NAMES[type_mask(current)], id_mask(current), PIPELINE_STAGE_NAMES[stage_mask(current)], slot_mask(current), _ctx->charBuffer->get(res->getNameIndex()));
+							LOG_DEBUG("%-20s | %5d | %-8s | %2d   | %s", RESOURCE_NAMES[type_mask(current)], id_mask(current), PIPELINE_STAGE_NAMES[stage_mask(current)], slot_mask(current), _ctx->charBuffer->get(res->getNameIndex()));
 						}
 						else {
-							DBG_LOG("%-20s | %5d | %-8s | %2d   | NO_RID", RESOURCE_NAMES[type_mask(current)], id_mask(current), PIPELINE_STAGE_NAMES[stage_mask(current)], slot_mask(current));
+							LOG_DEBUG("%-20s | %5d | %-8s | %2d   | NO_RID", RESOURCE_NAMES[type_mask(current)], id_mask(current), PIPELINE_STAGE_NAMES[stage_mask(current)], slot_mask(current));
 						}
 					}
 				}
