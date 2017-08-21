@@ -41,7 +41,6 @@
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
-    <ClCompile Include="src\LogPanel.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />

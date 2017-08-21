@@ -10,6 +10,7 @@
 #include "utils\tweening.h"
 #include "TweeningTest.h"
 #include "AnimationTest.h"
+#define DS_LOG_PANEL
 #include "LogPanel.h"
 // ---------------------------------------------------------------
 // load image from the resources
@@ -60,7 +61,8 @@ void initialize() {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 	
 	logging::logHandler = myLogging;
-	logpanel::init();
+	logging::currentLevel = logging::LL_INFO;
+	logpanel::init(32);
 	//_CrtSetBreakAlloc(237);
 
 	initialize();
@@ -103,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 			if (event.type == ds::EventType::ET_KEY_PRESSED) {
 				if (event.key.key == 'l') {
-					LOG_DEBUG("L pressed %d",l_count++);
+					LOG_INFO("L pressed %d",l_count++);
 				}
 				if (event.key.key == 'd') {
 					int end = logpanel::get_num_lines();
