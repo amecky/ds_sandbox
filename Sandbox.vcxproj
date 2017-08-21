@@ -32,6 +32,7 @@
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\Sandbox.h" />
+    <ClInclude Include="src\tiny_expression.h" />
     <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\tweening.h" />
@@ -43,6 +44,7 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
+    <ClCompile Include="src\tiny_expression.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />

@@ -12,6 +12,7 @@
 #include "AnimationTest.h"
 #define DS_LOG_PANEL
 #include "LogPanel.h"
+
 // ---------------------------------------------------------------
 // load image from the resources
 // ---------------------------------------------------------------

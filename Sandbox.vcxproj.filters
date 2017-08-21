@@ -43,6 +43,7 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\LogPanel.h" />
+    <ClInclude Include="src\tiny_expression.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -57,6 +58,7 @@
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
+    <ClCompile Include="src\tiny_expression.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />
