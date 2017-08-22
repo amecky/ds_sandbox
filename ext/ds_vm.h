@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 namespace vm {
-
+	
 	struct Token {
 
 		enum TokenType {EMPTY, NUMBER,FUNCTION,VARIABLE,LEFT_PARENTHESIS, RIGHT_PARENTHESIS};
@@ -42,6 +42,7 @@ namespace vm {
 	float run(Token* byteCode, uint16_t capacity, const Context& ctx);
 
 	void print_bytecode(Token* byteCode, uint16_t num);
+
 }
 
 #ifdef DS_VM_IMPLEMENTATION
@@ -57,14 +58,7 @@ namespace vm {
 	// token names
 	// ------------------------------------------------------------------
 	const char* TOKEN_NAMES[] = { "EMPTY", "NUMBER", "FUNCTION", "VARIABLE", "LEFT_PARENTHESIS", "RIGHT_PARENTHESIS" };
-
-	// ------------------------------------------------------------------
-	// constants
-	// ------------------------------------------------------------------
-	const char* CONSTANT_NAMES[] = { "pi","two_pi" };
-
-	const float CONSTANT_VALUES[] = { PI, 2.0f * PI };
-
+	
 	// ------------------------------------------------------------------
 	// get token name
 	// ------------------------------------------------------------------
@@ -75,7 +69,7 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// op codes
 	// ------------------------------------------------------------------
-	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP };
+	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE };
 
 	// ------------------------------------------------------------------
 	// Function definition
@@ -102,10 +96,11 @@ namespace vm {
 		{ "cos", OP_COS, 17, 1 },
 		{ "abs", OP_ABS, 17, 1 },
 		{ "ramp", OP_RAMP, 17, 2 },
-		{ "lerp", OP_LERP, 17, 3 }
+		{ "lerp", OP_LERP, 17, 3 },
+		{ "range", OP_RANGE, 17, 3 }
 	};
 
-	const uint16_t NUM_FUNCTIONS = 12;
+	const uint16_t NUM_FUNCTIONS = 13;
 
 	// ------------------------------------------------------------------
 	// find variable
@@ -320,23 +315,23 @@ namespace vm {
 		for (unsigned i = 0; i<num_tokens; ++i) {
 			Token &token = tokens[i];
 			switch (token.type) {
-			case Token::NUMBER:
-			case Token::VARIABLE:
-				byteCode[num_rpl++] = token;
-				break;
-			case Token::LEFT_PARENTHESIS:
-				++par_level;
-				break;
-			case Token::RIGHT_PARENTHESIS:
-				--par_level;
-				break;
-			case Token::FUNCTION: {
-				FunctionStackItem f(token, FUNCTIONS[token.id].precedence, par_level);
-				while (num_function_stack>0 && function_stack[num_function_stack - 1] >= f)
-					byteCode[num_rpl++] = function_stack[--num_function_stack].token;
-				function_stack[num_function_stack++] = f;
-				break;
-			}
+				case Token::NUMBER:
+				case Token::VARIABLE:
+					byteCode[num_rpl++] = token;
+					break;
+				case Token::LEFT_PARENTHESIS:
+					++par_level;
+					break;
+				case Token::RIGHT_PARENTHESIS:
+					--par_level;
+					break;
+				case Token::FUNCTION: {
+					FunctionStackItem f(token, FUNCTIONS[token.id].precedence, par_level);
+					while (num_function_stack>0 && function_stack[num_function_stack - 1] >= f)
+						byteCode[num_rpl++] = function_stack[--num_function_stack].token;
+					function_stack[num_function_stack++] = f;
+					break;
+				}
 			}
 		}
 
@@ -375,6 +370,7 @@ namespace vm {
 	float run(Token* byteCode, uint16_t capacity, const Context& ctx) {
 		float stack_data[32] = { 0.0f };
 		Stack stack = { stack_data, 0, 32 };
+		float a, b, t;
 		for (uint16_t i = 0; i < capacity; ++i) {
 			if (byteCode[i].type == vm::Token::NUMBER) {
 				stack.push(byteCode[i].value);
@@ -386,35 +382,20 @@ namespace vm {
 				uint16_t id = byteCode[i].id;
 				const Function& f = FUNCTIONS[id];
 				switch (f.code) {
-				case OP_ADD: stack.push(stack.pop() + stack.pop()); break;
-				case OP_SUB: stack.push(stack.pop() - stack.pop()); break;
-				case OP_MUL: stack.push(stack.pop() * stack.pop()); break;
-				case OP_DIV: stack.push(stack.pop() / stack.pop()); break;
-				case OP_SIN: stack.push(sin(stack.pop())); break;
-				case OP_RAMP: {
-					float v = stack.pop();
-					float t = stack.pop();
-					if (v >= t) {
-						stack.push(1.0f);
-					}
-					else {
-						stack.push(0.0f);
-					}
-					break;
-				}
-				case OP_LERP: {
-					float min = stack.pop();
-					float max = stack.pop();
-					float t = stack.pop();
-					stack.push((t - 1.0f) * min + t * max);
-					break;
-				}
+					case OP_ADD: stack.push(stack.pop() + stack.pop()); break;
+					case OP_SUB: a = stack.pop(); b = stack.pop(); stack.push(b - a);break;
+					case OP_MUL: stack.push(stack.pop() * stack.pop()); break;
+					case OP_DIV: a = stack.pop(); b = stack.pop(); stack.push(b / a); break;
+					case OP_SIN: stack.push(sin(stack.pop())); break;
+					case OP_COS: stack.push(cos(stack.pop())); break;
+					case OP_ABS: stack.push(abs(stack.pop())); break;
+					case OP_RAMP: a = stack.pop(); t = stack.pop(); stack.push(a >= t ? 1.0f : 0.0f); break;
+					case OP_RANGE: t = stack.pop(); b = stack.pop(); a = stack.pop(); stack.push(t >= a && t <= b ? 1.0f : 0.0f); break;
+					case OP_LERP: t = stack.pop(); a = stack.pop(); b= stack.pop(); stack.push((1.0f - t) * b + t * a); break;
 				}
 			}
 		}
-		float r = stack.pop();
-		printf("result: %g\n", r);
-		return r;
+		return stack.pop();
 	}
 
 }

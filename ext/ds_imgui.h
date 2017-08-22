@@ -968,6 +968,7 @@ namespace gui {
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width, 16), _guiCtx->settings.activeInputBoxColor);
 			if (handleTextInput(false)) {
 				strncpy(v, _guiCtx->inputText, maxLength);
+				ret = true;
 			}
 			p2i textDim = textSize(_guiCtx->inputText);
 			p2i cp = p;

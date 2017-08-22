@@ -28,5 +28,8 @@ private:
 	vm::Token _byteCode[256];
 	uint16_t _numTokens;
 	float _result;
+	float _values[65];
+	float _min;
+	float _max;
 };
 
