@@ -12,6 +12,9 @@
 #include "AnimationTest.h"
 #define DS_LOG_PANEL
 #include "LogPanel.h"
+#define DS_VM_IMPLEMENTATION
+#include <ds_vm.h>
+#include "VMTest.h"
 
 // ---------------------------------------------------------------
 // load image from the resources
@@ -83,6 +86,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	AnimationTest animationTest(&spriteBuffer);
 
+	VMTest vmTest(&spriteBuffer);
+
 	int l_count = 0;
 	
 	while (ds::isRunning() && running) {
@@ -92,7 +97,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		spriteBuffer.begin();		
 		
 		//tweeningTest.render();
-		animationTest.render();
+		//animationTest.render();
+		vmTest.render();
 
 		//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
 		//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
@@ -124,7 +130,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		}
 
 		//tweeningTest.renderGUI();
-		animationTest.renderGUI();
+		//animationTest.renderGUI();
+		vmTest.renderGUI();
 
 		ds::end();
 

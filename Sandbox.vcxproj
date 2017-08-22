@@ -22,6 +22,7 @@
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_imgui.h" />
     <ClInclude Include="ext\ds_profiler.h" />
+    <ClInclude Include="ext\ds_vm.h" />
     <ClInclude Include="ext\SpriteBatchBuffer.h" />
     <ClInclude Include="ext\stb_image.h" />
     <ClInclude Include="resource.h" />
@@ -32,11 +33,11 @@
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\Sandbox.h" />
-    <ClInclude Include="src\tiny_expression.h" />
     <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
+    <ClInclude Include="src\VMTest.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
@@ -44,10 +45,10 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
-    <ClCompile Include="src\tiny_expression.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
+    <ClCompile Include="src\VMTest.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>

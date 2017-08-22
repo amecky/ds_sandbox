@@ -721,7 +721,7 @@ namespace gui {
 		p2i startPos;
 		p2i currentPos;
 		bool grouping;
-		char inputText[32];
+		char inputText[256];
 		char tmpBuffer[256];
 		int caretPos;
 		p2i size;
@@ -813,18 +813,8 @@ namespace gui {
 	p2i textSize(const char* txt) {
 		int l = strlen(txt);
 		p2i p(0);
-		for (int i = 0; i < l; ++i) {
-			int idx = (int)txt[i] - 32;
-			if (idx >= 0 && idx < 127) {
-				int c = idx / 16;
-				int r = c - idx * 16;
-				ds::vec4 rect = ds::vec4(r, c, 7, 10);
-				p.x += rect.z;
-				if (rect.w > p.y) {
-					p.y = rect.w;
-				}
-			}
-		}
+		p.x = l * 8;
+		p.y = 14;
 		return p;
 	}
 
@@ -837,18 +827,8 @@ namespace gui {
 			l = maxLength;
 		}
 		p2i p(0);
-		for (int i = 0; i < l; ++i) {
-			int idx = (int)txt[i] - 32;
-			if (idx >= 0 && idx < 127) {
-				int c = idx / 16;
-				int r = c - idx * 16;
-				ds::vec4 rect = ds::vec4(r, c, 7, 10);
-				p.x += rect.z;
-				if (rect.w > p.y) {
-					p.y = rect.w;
-				}
-			}
-		}
+		p.x = l * 8;
+		p.y = 14;
 		return p;
 	}
 
@@ -946,8 +926,8 @@ namespace gui {
 				}
 			}
 			else {
-				if ((key.value > 47 && key.value < 128) || key.value == '.' || key.value == '-') {
-					if (len < 32) {
+				if ((key.value >= 32 && key.value < 128) || key.value == '.' || key.value == '-') {
+					if (len < 256) {
 						if (_guiCtx->caretPos < len) {
 							memmove(_guiCtx->inputText + _guiCtx->caretPos + 1, _guiCtx->inputText + _guiCtx->caretPos, len - _guiCtx->caretPos);
 						}
@@ -979,7 +959,7 @@ namespace gui {
 		p2i p = _guiCtx->currentPos;
 		checkItem(p, p2i(width, 20));
 		if (isClicked()) {
-			sprintf_s(_guiCtx->inputText, 32, "%s", v);
+			sprintf_s(_guiCtx->inputText, 256, "%s", v);
 			_guiCtx->caretPos = strlen(_guiCtx->inputText);
 			_guiCtx->inputItem = _guiCtx->idStack.last();
 			_guiCtx->activeItem = _guiCtx->idStack.last();
@@ -1001,7 +981,7 @@ namespace gui {
 			sprintf_s(v, maxLength, "%s", _guiCtx->inputText);
 		}
 		else {
-			sprintf_s(_guiCtx->tmpBuffer, 64, "%s", v);
+			sprintf_s(_guiCtx->tmpBuffer, 256, "%s", v);
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width, 16), _guiCtx->settings.inputBoxColor);
 			p2i textDim = textSize(_guiCtx->tmpBuffer);
 			p.y -= 1;
@@ -1443,9 +1423,9 @@ namespace gui {
 	// -------------------------------------------------------
 	bool Input(const char* label, char* str, int maxLength) {
 		pushID(label);
-		bool ret = InputScalar(0, str, maxLength, 150);
+		bool ret = InputScalar(0, str, maxLength, 500);
 		p2i p = _guiCtx->currentPos;
-		p.x += 160;
+		p.x += 560;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
 		popID();
