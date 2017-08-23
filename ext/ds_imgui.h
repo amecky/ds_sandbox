@@ -130,6 +130,8 @@ namespace gui {
 
 	bool Input(const char* label, char* str, int maxLength);
 
+	bool TextBox(const char* label, char* str, int maxLength);
+
 	void Input(const char* label, int* v);
 
 	void Input(const char* label, float* v);
@@ -1423,6 +1425,20 @@ namespace gui {
 	// input string
 	// -------------------------------------------------------
 	bool Input(const char* label, char* str, int maxLength) {
+		pushID(label);
+		bool ret = InputScalar(0, str, maxLength, 500);
+		p2i p = _guiCtx->currentPos;
+		p.x += 560;
+		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
+		moveForward(p2i(150 + ts.x + 10, 22));
+		popID();
+		return ret;
+	}
+
+	// -------------------------------------------------------
+	// input string
+	// -------------------------------------------------------
+	bool TextBox(const char* label, char* str, int maxLength) {
 		pushID(label);
 		bool ret = InputScalar(0, str, maxLength, 500);
 		p2i p = _guiCtx->currentPos;

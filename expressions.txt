@@ -1,0 +1,5 @@
+3 * 4 + sin(2 * TWO_PI * DT) * 10
+3 * 5 + sin(2 * TWO_PI * DT) * 10
+ramp(0.5,DT) * 5
+range(0.0,0.4,DT) * lerp(0.0,2.0,DT/0.4) + range(0.4,0.8,DT) * 2 + range(0.8,1.0,DT) * lerp(2.0,0.0,(DT-0.8)/0.2)
+saturate(sin( 2 * TWO_PI * DT) * 1.2)

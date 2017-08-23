@@ -2,6 +2,25 @@
 #include <stdint.h>
 
 namespace vm {
+
+	struct CharBuffer {
+
+		char* data;
+		uint16_t size;
+		uint16_t capacity;
+		uint16_t num;
+
+		CharBuffer();
+		~CharBuffer();
+
+		void* alloc(uint16_t sz);
+		void resize(uint16_t newCap);
+		uint16_t append(const char* s, int len);
+		uint16_t append(const char* s);
+		uint16_t append(char s);
+		const char* get(uint16_t index) const;
+
+	};
 	
 	struct Token {
 
@@ -25,23 +44,51 @@ namespace vm {
 
 	struct Variable {
 		ValueType type;
-		const char* name;
+		uint16_t nameIndex;
 		float value;
 	};
 
 	struct Context {
 
 		uint16_t num_variables;
-		Variable* variables;
+		Variable variables[32];
+		CharBuffer names;
+
+		Context() : num_variables(0) {}
+
+		uint16_t add_variable(const char* name, float value = 0.0f) {
+			Variable& v = variables[num_variables++];
+			v.nameIndex = names.append(name);
+			v.type = VT_VARIABLE;
+			v.value = value;
+			return num_variables - 1;
+		}
+
+		uint16_t add_variable(const char* name, int length, float value = 0.0f) {
+			Variable& v = variables[num_variables++];
+			v.nameIndex = names.append(name, length);
+			v.type = VT_VARIABLE;
+			v.value = value;
+			return num_variables - 1;
+		}
+
+		uint16_t add_constant(const char* name, float value) {
+			Variable& v = variables[num_variables++];
+			v.nameIndex = names.append(name);
+			v.type = VT_CONSTANT;
+			v.value = value;
+			return num_variables - 1;
+		}
+
 	};
 
 	const char* get_token_name(Token::TokenType type);
 
-	uint16_t parse(const char* source, const Context& ctx, Token* tokens, uint16_t capacity);
+	uint16_t parse(const char* source, Context& ctx, Token* tokens, uint16_t capacity);
 
-	float run(Token* byteCode, uint16_t capacity, const Context& ctx);
+	float run(Token* byteCode, uint16_t capacity, Context& ctx, const char* result_name = 0);
 
-	void print_bytecode(Token* byteCode, uint16_t num);
+	void print_bytecode(const Context& ctx, Token* byteCode, uint16_t num);
 
 }
 
@@ -69,7 +116,7 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// op codes
 	// ------------------------------------------------------------------
-	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE };
+	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE, OP_SATURATE };
 
 	// ------------------------------------------------------------------
 	// Function definition
@@ -97,17 +144,36 @@ namespace vm {
 		{ "abs", OP_ABS, 17, 1 },
 		{ "ramp", OP_RAMP, 17, 2 },
 		{ "lerp", OP_LERP, 17, 3 },
-		{ "range", OP_RANGE, 17, 3 }
+		{ "range", OP_RANGE, 17, 3 },
+		{ "saturate", OP_SATURATE, 17, 3 }
 	};
 
-	const uint16_t NUM_FUNCTIONS = 13;
+	const uint16_t NUM_FUNCTIONS = 14;
+
+	// ------------------------------------------------------------------
+	// is numeric
+	// ------------------------------------------------------------------
+	static bool isNumeric(const char c) {
+		return ((c >= '0' && c <= '9'));
+	}
+
+	// ------------------------------------------------------------------
+	// is whitespace
+	// ------------------------------------------------------------------
+	static bool isWhitespace(const char c) {
+		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+			return true;
+		}
+		return false;
+	}
 
 	// ------------------------------------------------------------------
 	// find variable
 	// ------------------------------------------------------------------
 	static uint16_t find_variable(const char *s, uint16_t len, const Context& ctx) {
 		for (uint16_t i = 0; i < ctx.num_variables; ++i) {
-			if (strncmp(s, ctx.variables[i].name, len) == 0 && strlen(ctx.variables[i].name) == len) {
+			const char* varName = ctx.names.get(ctx.variables[i].nameIndex);
+			if (strncmp(s, varName, len) == 0 && strlen(varName) == len) {
 				return i;
 			}
 		}
@@ -129,7 +195,7 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// get token for identifier
 	// ------------------------------------------------------------------
-	static Token token_for_identifier(const char *identifier, unsigned len, const Context& ctx) {
+	static Token token_for_identifier(const char *identifier, unsigned len, Context& ctx) {
 		uint16_t i;
 		if ((i = find_variable(identifier, len, ctx)) != UINT16_MAX) {
 			return Token(Token::VARIABLE, i);
@@ -138,14 +204,21 @@ namespace vm {
 			return Token(Token::FUNCTION, i);
 		}
 		else {
-			return Token();
+			int l = 0;
+			const char* p = identifier;
+			while (!isWhitespace(*p)) {
+				++l;
+				++p;
+			}
+			i = ctx.add_variable(identifier, l);
+			return Token(Token::VARIABLE, i);
 		}
 	}
 
 	// ------------------------------------------------------------------
 	// get token for identifier
 	// ------------------------------------------------------------------
-	static Token token_for_identifier(const char *identifier, const Context& ctx) {
+	static Token token_for_identifier(const char *identifier, Context& ctx) {
 		return token_for_identifier(identifier, strlen(identifier), ctx);
 	}
 
@@ -154,23 +227,6 @@ namespace vm {
 	// ------------------------------------------------------------------
 	static bool has_function(char * identifier) {
 		return find_function(identifier, strlen(identifier)) != UINT16_MAX;
-	}
-
-	// ------------------------------------------------------------------
-	// is numeric
-	// ------------------------------------------------------------------
-	static bool isNumeric(const char c) {
-		return ((c >= '0' && c <= '9'));
-	}
-
-	// ------------------------------------------------------------------
-	// is whitespace
-	// ------------------------------------------------------------------
-	static bool isWhitespace(const char c) {
-		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-			return true;
-		}
-		return false;
 	}
 
 	// ------------------------------------------------------------------
@@ -252,8 +308,7 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// parse
 	// ------------------------------------------------------------------
-	uint16_t parse(const char * source, const Context& ctx, Token * byteCode, uint16_t capacity) {
-		printf("source: '%s'\n", source);
+	uint16_t parse(const char * source, Context& ctx, Token * byteCode, uint16_t capacity) {
 		bool binary = false;
 		const char* p = source;
 		unsigned num_tokens = 0;
@@ -367,7 +422,7 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// run
 	// ------------------------------------------------------------------
-	float run(Token* byteCode, uint16_t capacity, const Context& ctx) {
+	float run(Token* byteCode, uint16_t capacity, Context& ctx, const char* result_name) {
 		float stack_data[32] = { 0.0f };
 		Stack stack = { stack_data, 0, 32 };
 		float a, b, t;
@@ -392,10 +447,92 @@ namespace vm {
 					case OP_RAMP: a = stack.pop(); t = stack.pop(); stack.push(a >= t ? 1.0f : 0.0f); break;
 					case OP_RANGE: t = stack.pop(); b = stack.pop(); a = stack.pop(); stack.push(t >= a && t <= b ? 1.0f : 0.0f); break;
 					case OP_LERP: t = stack.pop(); a = stack.pop(); b= stack.pop(); stack.push((1.0f - t) * b + t * a); break;
+					case OP_SATURATE: a = stack.pop(); if (a < 0.0f) stack.push(0.0f); else if (a > 1.0f) stack.push(1.0f); else stack.push(a); break;
 				}
 			}
 		}
-		return stack.pop();
+		float r = 0.0f;
+		if (stack.size > 0) {
+			r = stack.pop();
+		}
+		if (result_name != 0) {
+			uint16_t id = find_variable(result_name, strlen(result_name), ctx);
+			if (id != UINT16_MAX) {
+				ctx.variables[id].value = r;
+			}
+		}
+		return r;
+	}
+
+	CharBuffer::CharBuffer() : data(nullptr), size(0), capacity(0), num(0) {}
+
+	CharBuffer::~CharBuffer() {
+		if (data != nullptr) {
+			delete[] data;
+		}
+	}
+
+	void* CharBuffer::alloc(uint16_t sz) {
+		if (size + sz > capacity) {
+			int d = capacity * 2 + 8;
+			if (d < sz) {
+				d = sz * 2 + 8;
+			}
+			resize(d);
+		}
+		auto res = data + size;
+		size += sz;
+		int d = sz / 4;
+		if (d == 0) {
+			d = 1;
+		}
+		num += d;
+		return res;
+	}
+
+	void CharBuffer::resize(uint16_t newCap) {
+		if (newCap > capacity) {
+			char* tmp = new char[newCap];
+			if (data != nullptr) {
+				memcpy(tmp, data, size);
+				delete[] data;
+			}
+			capacity = newCap;
+			data = tmp;
+		}
+	}
+
+	const char* CharBuffer::get(uint16_t index) const {
+		return data + index;
+	}
+
+	uint16_t CharBuffer::append(const char* s, int len) {
+		if (size + len + 1 > capacity) {
+			resize(capacity + len + 1 + 8);
+		}
+		const char* t = s;
+		uint16_t ret = size;
+		for (int i = 0; i < len; ++i) {
+			data[size++] = *t;
+			++t;
+		}
+		data[size++] = '\0';
+		return ret;
+	}
+
+	uint16_t CharBuffer::append(const char* s) {
+		int len = strlen(s);
+		return append(s, len);
+	}
+
+	uint16_t CharBuffer::append(char s) {
+		if (size + 1 > capacity) {
+			resize(capacity + 9);
+		}
+		uint16_t ret = size;
+		data[size++] = s;
+		data[size++] = '\0';
+		return ret;
 	}
 
 }
