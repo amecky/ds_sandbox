@@ -47,6 +47,8 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\VMTest.h" />
+    <ClInclude Include="src\ParticleExpressionTest.h" />
+    <ClInclude Include="src\Particles.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -62,6 +64,7 @@
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\VMTest.cpp" />
+    <ClCompile Include="src\ParticleExpressionTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

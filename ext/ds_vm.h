@@ -21,13 +21,13 @@ namespace vm {
 		const char* get(uint16_t index) const;
 
 	};
-	
+
 	struct Token {
 
-		enum TokenType {EMPTY, NUMBER,FUNCTION,VARIABLE,LEFT_PARENTHESIS, RIGHT_PARENTHESIS};
+		enum TokenType { EMPTY, NUMBER, FUNCTION, VARIABLE, LEFT_PARENTHESIS, RIGHT_PARENTHESIS };
 
 		Token() : type(EMPTY), value(0.0f) {}
-		Token(TokenType t) : type(t) , value(0.0f) {}
+		Token(TokenType t) : type(t), value(0.0f) {}
 		Token(TokenType type, uint16_t id) : type(type), id(id) {}
 		Token(TokenType type, float value) : type(type), value(value) {}
 
@@ -39,7 +39,7 @@ namespace vm {
 	};
 
 	enum ValueType {
-		VT_VARIABLE,VT_CONSTANT
+		VT_VARIABLE, VT_CONSTANT
 	};
 
 	struct Variable {
@@ -82,30 +82,39 @@ namespace vm {
 
 	};
 
+	struct Expression {
+		vm::Token* tokens;
+		uint16_t num;
+		uint16_t id;
+	};
+
 	const char* get_token_name(Token::TokenType type);
 
 	uint16_t parse(const char* source, Context& ctx, Token* tokens, uint16_t capacity);
+
+	void parse(const char* source, Context& ctx, Expression& e);
 
 	float run(Token* byteCode, uint16_t capacity, Context& ctx, const char* result_name = 0);
 
 	void print_bytecode(const Context& ctx, Token* byteCode, uint16_t num);
 
+	void print_bytecode(const Context& ctx, const Expression& exp);
+
 }
 
 #ifdef DS_VM_IMPLEMENTATION
-
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-namespace vm {
+#include <random>
 
-	const static float PI = 3.141592654f;
+namespace vm {
 
 	// ------------------------------------------------------------------
 	// token names
 	// ------------------------------------------------------------------
 	const char* TOKEN_NAMES[] = { "EMPTY", "NUMBER", "FUNCTION", "VARIABLE", "LEFT_PARENTHESIS", "RIGHT_PARENTHESIS" };
-	
+
 	// ------------------------------------------------------------------
 	// get token name
 	// ------------------------------------------------------------------
@@ -116,8 +125,9 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// op codes
 	// ------------------------------------------------------------------
-	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE, OP_SATURATE };
+	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE, OP_SATURATE, OP_RANDOM };
 
+	const char* FUNCTION_NAMES[] = { ",","+","-","*","/","u-","u+","sin","cos","abs","ramp","lerp","range","saturate","random" };
 	// ------------------------------------------------------------------
 	// Function definition
 	// ------------------------------------------------------------------
@@ -132,39 +142,27 @@ namespace vm {
 	// Functions
 	// ------------------------------------------------------------------
 	const static Function FUNCTIONS[] = {
-		{ ",", OP_NOP, 1, 0 },
-		{ "+", OP_ADD, 12,2 },
-		{ "-", OP_SUB, 12, 2 },
-		{ "*", OP_MUL, 13,2 },
-		{ "/", OP_DIV, 13,2 },
-		{ "u-", OP_UNARY_MINUS, 16, 1 },
-		{ "u+", OP_NOP, 1, 0 },
-		{ "sin", OP_SIN, 17, 1 },
-		{ "cos", OP_COS, 17, 1 },
-		{ "abs", OP_ABS, 17, 1 },
-		{ "ramp", OP_RAMP, 17, 2 },
-		{ "lerp", OP_LERP, 17, 3 },
-		{ "range", OP_RANGE, 17, 3 },
-		{ "saturate", OP_SATURATE, 17, 3 }
+		{ FUNCTION_NAMES[0], OP_NOP, 1, 0 },
+		{ FUNCTION_NAMES[1], OP_ADD, 12,2 },
+		{ FUNCTION_NAMES[2], OP_SUB, 12, 2 },
+		{ FUNCTION_NAMES[3], OP_MUL, 13,2 },
+		{ FUNCTION_NAMES[4], OP_DIV, 13,2 },
+		{ FUNCTION_NAMES[5], OP_UNARY_MINUS, 16, 1 },
+		{ FUNCTION_NAMES[6], OP_NOP, 1, 0 },
+		{ FUNCTION_NAMES[7], OP_SIN, 17, 1 },
+		{ FUNCTION_NAMES[8], OP_COS, 17, 1 },
+		{ FUNCTION_NAMES[9], OP_ABS, 17, 1 },
+		{ FUNCTION_NAMES[10], OP_RAMP, 17, 2 },
+		{ FUNCTION_NAMES[11], OP_LERP, 17, 3 },
+		{ FUNCTION_NAMES[12], OP_RANGE, 17, 3 },
+		{ FUNCTION_NAMES[13], OP_SATURATE, 17, 3 },
+		{ FUNCTION_NAMES[14], OP_RANDOM, 17, 2 }
 	};
 
-	const uint16_t NUM_FUNCTIONS = 14;
+	const uint16_t NUM_FUNCTIONS = 15;
 
-	// ------------------------------------------------------------------
-	// is numeric
-	// ------------------------------------------------------------------
-	static bool isNumeric(const char c) {
-		return ((c >= '0' && c <= '9'));
-	}
-
-	// ------------------------------------------------------------------
-	// is whitespace
-	// ------------------------------------------------------------------
-	static bool isWhitespace(const char c) {
-		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-			return true;
-		}
-		return false;
+	const char* get_function_name(uint16_t id) {
+		return FUNCTIONS[id].name;
 	}
 
 	// ------------------------------------------------------------------
@@ -190,6 +188,23 @@ namespace vm {
 			}
 		}
 		return UINT16_MAX;
+	}
+
+	// ------------------------------------------------------------------
+	// is numeric
+	// ------------------------------------------------------------------
+	static bool isNumeric(const char c) {
+		return ((c >= '0' && c <= '9'));
+	}
+
+	// ------------------------------------------------------------------
+	// is whitespace
+	// ------------------------------------------------------------------
+	static bool isWhitespace(const char c) {
+		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+			return true;
+		}
+		return false;
 	}
 
 	// ------------------------------------------------------------------
@@ -228,6 +243,8 @@ namespace vm {
 	static bool has_function(char * identifier) {
 		return find_function(identifier, strlen(identifier)) != UINT16_MAX;
 	}
+
+
 
 	// ------------------------------------------------------------------
 	// strtof
@@ -292,6 +309,27 @@ namespace vm {
 		int par_level;
 	};
 
+	// -------------------------------------------------------
+	// random
+	// -------------------------------------------------------
+	static std::mt19937 mt;
+	static bool rnd_first = true;
+
+	static void init_random(unsigned long seed) {
+		std::random_device r;
+		std::seed_seq new_seed{ r(), r(), r(), r(), r(), r(), r(), r() };
+		mt.seed(new_seed);
+	}
+
+
+	float random(float min, float max) {
+		if (rnd_first) {
+			rnd_first = false;
+			init_random(0);
+		}
+		std::uniform_real_distribution<float> dist(min, max);
+		return dist(mt);
+	}
 	// ------------------------------------------------------------------
 	// Stack
 	// ------------------------------------------------------------------
@@ -309,6 +347,7 @@ namespace vm {
 	// parse
 	// ------------------------------------------------------------------
 	uint16_t parse(const char * source, Context& ctx, Token * byteCode, uint16_t capacity) {
+		printf("source: '%s'\n", source);
 		bool binary = false;
 		const char* p = source;
 		unsigned num_tokens = 0;
@@ -336,7 +375,6 @@ namespace vm {
 				case ' ': case '\t': case '\n': case '\r': break;
 				case '-': token = token_for_identifier(binary ? "-" : "u-", ctx); binary = false; break;
 				case '+': token = token_for_identifier(binary ? "+" : "u+", ctx); binary = false; break;
-
 				default: {
 					char s1[2] = { *p,0 };
 					char s2[3] = { *p, *(p + 1), 0 };
@@ -344,8 +382,9 @@ namespace vm {
 						token = token_for_identifier(s2, ctx);
 						++p;
 					}
-					else
+					else {
 						token = token_for_identifier(s1, ctx);
+					}
 					binary = false;
 					break;
 				}
@@ -370,23 +409,23 @@ namespace vm {
 		for (unsigned i = 0; i<num_tokens; ++i) {
 			Token &token = tokens[i];
 			switch (token.type) {
-				case Token::NUMBER:
-				case Token::VARIABLE:
-					byteCode[num_rpl++] = token;
-					break;
-				case Token::LEFT_PARENTHESIS:
-					++par_level;
-					break;
-				case Token::RIGHT_PARENTHESIS:
-					--par_level;
-					break;
-				case Token::FUNCTION: {
-					FunctionStackItem f(token, FUNCTIONS[token.id].precedence, par_level);
-					while (num_function_stack>0 && function_stack[num_function_stack - 1] >= f)
-						byteCode[num_rpl++] = function_stack[--num_function_stack].token;
-					function_stack[num_function_stack++] = f;
-					break;
-				}
+			case Token::NUMBER:
+			case Token::VARIABLE:
+				byteCode[num_rpl++] = token;
+				break;
+			case Token::LEFT_PARENTHESIS:
+				++par_level;
+				break;
+			case Token::RIGHT_PARENTHESIS:
+				--par_level;
+				break;
+			case Token::FUNCTION: {
+				FunctionStackItem f(token, FUNCTIONS[token.id].precedence, par_level);
+				while (num_function_stack>0 && function_stack[num_function_stack - 1] >= f)
+					byteCode[num_rpl++] = function_stack[--num_function_stack].token;
+				function_stack[num_function_stack++] = f;
+				break;
+			}
 			}
 		}
 
@@ -399,11 +438,109 @@ namespace vm {
 	}
 
 	// ------------------------------------------------------------------
+	// parse
+	// ------------------------------------------------------------------
+	void parse(const char * source, Context& ctx, Expression& exp) {
+		printf("source: '%s'\n", source);
+		bool binary = false;
+		const char* p = source;
+		uint16_t num_tokens = 0;
+		uint16_t overflow_tokens = 0;
+		Token tokens[512];
+		while (*p != 0) {
+			Token token(Token::EMPTY);
+			if (*p >= '0' && *p <= '9') {
+				char *out;
+				token = Token(Token::NUMBER, strtof(p, &out));
+				p = out;
+				binary = true;
+			}
+			else if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p == '_')) {
+				const char *identifier = p;
+				while ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p == '_') || (*p >= '0' && *p <= '9'))
+					p++;
+				token = token_for_identifier(identifier, p - identifier, ctx);
+				binary = true;
+			}
+			else {
+				switch (*p) {
+				case '(': token = Token(Token::LEFT_PARENTHESIS); binary = false; break;
+				case ')': token = Token(Token::RIGHT_PARENTHESIS); binary = true; break;
+				case ' ': case '\t': case '\n': case '\r': break;
+				case '-': token = token_for_identifier(binary ? "-" : "u-", ctx); binary = false; break;
+				case '+': token = token_for_identifier(binary ? "+" : "u+", ctx); binary = false; break;
+				default: {
+					char s1[2] = { *p,0 };
+					char s2[3] = { *p, *(p + 1), 0 };
+					if (s2[1] && has_function(s2)) {
+						token = token_for_identifier(s2, ctx);
+						++p;
+					}
+					else {
+						token = token_for_identifier(s1, ctx);
+					}
+					binary = false;
+					break;
+				}
+				}
+				++p;
+			}
+
+			if (token.type != Token::EMPTY) {
+				if (num_tokens == 512)
+					++overflow_tokens;
+				else
+					tokens[num_tokens++] = token;
+			}
+		}
+
+		exp.tokens = new Token[num_tokens];
+
+		uint16_t num_rpl = 0;
+		FunctionStackItem function_stack[256];
+
+		unsigned num_function_stack = 0;
+
+		int par_level = 0;
+		for (unsigned i = 0; i<num_tokens; ++i) {
+			Token &token = tokens[i];
+			switch (token.type) {
+			case Token::NUMBER:
+			case Token::VARIABLE:
+				exp.tokens[num_rpl++] = token;
+				break;
+			case Token::LEFT_PARENTHESIS:
+				++par_level;
+				break;
+			case Token::RIGHT_PARENTHESIS:
+				--par_level;
+				break;
+			case Token::FUNCTION: {
+				FunctionStackItem f(token, FUNCTIONS[token.id].precedence, par_level);
+				while (num_function_stack>0 && function_stack[num_function_stack - 1] >= f)
+					exp.tokens[num_rpl++] = function_stack[--num_function_stack].token;
+				function_stack[num_function_stack++] = f;
+				break;
+			}
+			}
+		}
+
+		while (num_function_stack > 0) {
+			exp.tokens[num_rpl++] = function_stack[--num_function_stack].token;
+		}
+		exp.num = num_rpl;
+	}
+
+	// ------------------------------------------------------------------
 	// print byte code
 	// ------------------------------------------------------------------
-	void print_bytecode(Token* byteCode, uint16_t num) {
+	void print_bytecode(const Context& ctx, Token* byteCode, uint16_t num) {
 		printf("--------------------------------------\n");
 		printf("num: %d\n", num);
+		printf("variables:\n");
+		for (uint16_t i = 0; i < ctx.num_variables; ++i) {
+			printf("%d = %s : %g\n", i, ctx.names.get(ctx.variables[i].nameIndex), ctx.variables[i].value);
+		}
 		for (uint16_t i = 0; i < num; ++i) {
 			byteCode[i] = byteCode[i];
 			if (byteCode[i].type == Token::NUMBER) {
@@ -413,10 +550,14 @@ namespace vm {
 				printf("%d = %s (%d)\n", i, get_token_name(byteCode[i].type), byteCode[i].id);
 			}
 			else {
-				printf("%d = %s\n", i, get_token_name(byteCode[i].type));
+				printf("%d = %s (%s)\n", i, get_token_name(byteCode[i].type), get_function_name(byteCode[i].id));
 			}
 		}
 		printf("--------------------------------------\n");
+	}
+
+	void print_bytecode(const Context& ctx, const Expression& exp) {
+		print_bytecode(ctx, exp.tokens, exp.num);
 	}
 
 	// ------------------------------------------------------------------
@@ -437,17 +578,18 @@ namespace vm {
 				uint16_t id = byteCode[i].id;
 				const Function& f = FUNCTIONS[id];
 				switch (f.code) {
-					case OP_ADD: stack.push(stack.pop() + stack.pop()); break;
-					case OP_SUB: a = stack.pop(); b = stack.pop(); stack.push(b - a);break;
-					case OP_MUL: stack.push(stack.pop() * stack.pop()); break;
-					case OP_DIV: a = stack.pop(); b = stack.pop(); stack.push(b / a); break;
-					case OP_SIN: stack.push(sin(stack.pop())); break;
-					case OP_COS: stack.push(cos(stack.pop())); break;
-					case OP_ABS: stack.push(abs(stack.pop())); break;
-					case OP_RAMP: a = stack.pop(); t = stack.pop(); stack.push(a >= t ? 1.0f : 0.0f); break;
-					case OP_RANGE: t = stack.pop(); b = stack.pop(); a = stack.pop(); stack.push(t >= a && t <= b ? 1.0f : 0.0f); break;
-					case OP_LERP: t = stack.pop(); a = stack.pop(); b= stack.pop(); stack.push((1.0f - t) * b + t * a); break;
-					case OP_SATURATE: a = stack.pop(); if (a < 0.0f) stack.push(0.0f); else if (a > 1.0f) stack.push(1.0f); else stack.push(a); break;
+				case OP_ADD: stack.push(stack.pop() + stack.pop()); break;
+				case OP_SUB: a = stack.pop(); b = stack.pop(); stack.push(b - a); break;
+				case OP_MUL: stack.push(stack.pop() * stack.pop()); break;
+				case OP_DIV: a = stack.pop(); b = stack.pop(); stack.push(b / a); break;
+				case OP_SIN: stack.push(sin(stack.pop())); break;
+				case OP_COS: stack.push(cos(stack.pop())); break;
+				case OP_ABS: stack.push(abs(stack.pop())); break;
+				case OP_RAMP: a = stack.pop(); t = stack.pop(); stack.push(a >= t ? 1.0f : 0.0f); break;
+				case OP_RANGE: t = stack.pop(); b = stack.pop(); a = stack.pop(); stack.push(t >= a && t <= b ? 1.0f : 0.0f); break;
+				case OP_LERP: t = stack.pop(); a = stack.pop(); b = stack.pop(); stack.push((1.0f - t) * b + t * a); break;
+				case OP_SATURATE: a = stack.pop(); if (a < 0.0f) stack.push(0.0f); else if (a > 1.0f) stack.push(1.0f); else stack.push(a); break;
+				case OP_RANDOM: a = stack.pop(); b = stack.pop(); stack.push(random(b, a)); break;
 				}
 			}
 		}
@@ -534,7 +676,6 @@ namespace vm {
 		data[size++] = '\0';
 		return ret;
 	}
-
 }
 
 #endif
