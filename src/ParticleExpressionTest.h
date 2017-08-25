@@ -5,6 +5,11 @@
 #include <ds_vm.h>
 #include "Particles.h"
 
+struct ParticleExpression {
+	char source[256];
+	vm::Expression expression;
+};
+
 class ParticleExpressionTest {
 
 public:
@@ -13,18 +18,21 @@ public:
 	void render();
 	void renderGUI();
 private:
-	void emitt(uint16_t);
+	void loadExpressionsFile(const char* name, ParticleExpression* expressions, ParticleEmitter* ret);
+	void emitt(uint16_t num, const ds::vec2& pos);
+	void renderExpressions(ParticleEmitter& emitter, ParticleExpression* expressions);
 	SpriteBatchBuffer* _sprites;	
 	int _dialogState;
 	p2i _dialogPos;
+	int _numParticles;
+	bool _showParticleInfo;
+	int _selectedType;
+	int _selectedExpression;
 	Particles _particles;
 	vm::Context _vmCtx;
-	vm::Expression pxExp;
-	vm::Expression pyExp;
-	vm::Expression ttlExp;
-	vm::Expression scaleExp;
-	vm::Expression fadeExp;
 	ParticleEmitter emitter;
 	ParticleEmitter modules;
+	ParticleExpression _moduleExpressions[NUM_CHANNELS];
+	ParticleExpression _emitterExpressions[NUM_CHANNELS];
 };
 

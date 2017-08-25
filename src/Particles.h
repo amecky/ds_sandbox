@@ -15,16 +15,19 @@ enum ParticleChannel {
 	PC_COLOR_B,
 	PC_COLOR_A,
 	PC_TTL,
-	PC_TIMER
+	PC_TIMER,
+	PC_RAND,
+	PC_VELOCITY_X,
+	PC_VELOCITY_Y
 };
 
-const static ParticleChannel ALL_CHANNELS[] = { PC_POS_X,PC_POS_Y,PC_SCALE_X,PC_SCALE_Y,PC_ROTATION,PC_COLOR_R,PC_COLOR_G,PC_COLOR_B,PC_COLOR_A,PC_TTL,PC_TIMER };
+const static ParticleChannel ALL_CHANNELS[] = { PC_POS_X,PC_POS_Y,PC_SCALE_X,PC_SCALE_Y,PC_ROTATION,PC_COLOR_R,PC_COLOR_G,PC_COLOR_B,PC_COLOR_A,PC_TTL,PC_TIMER,PC_RAND,PC_VELOCITY_X,PC_VELOCITY_Y };
 
-const static char* CHANNEL_NAMES[] = { "PC_POS_X","PC_POS_Y","PC_SCALE_X","PC_SCALE_Y","PC_ROTATION","PC_COLOR_R","PC_COLOR_G","PC_COLOR_B","PC_COLOR_A","PC_TTL","PC_TIMER" };
+const static char* CHANNEL_NAMES[] = { "POS_X","POS_Y","SCALE_X","SCALE_Y","ROTATION","COLOR_R","COLOR_G","COLOR_B","COLOR_A","TTL","TIMER","RAND","VELOCITY_X","VELOCITY_Y" };
 
-const static uint16_t NUM_CHANNELS = 11;
+const static uint16_t NUM_CHANNELS = 14;
 
-const static float DEFAULT_VALUES[] = { 0.0f,0.0f,1.0f,1.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,0.0f };
+const static float DEFAULT_VALUES[] = { 0.0f,0.0f,1.0f,1.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,0.0f,0.0f };
 
 struct Particles {
 
@@ -94,10 +97,11 @@ struct ChannelConnection {
 
 	ParticleChannel channel;
 	vm::Expression* expression;
+	uint16_t id;
 
-	ChannelConnection() : channel(ParticleChannel::PC_POS_X), expression(0) {}
+	ChannelConnection() : channel(ParticleChannel::PC_POS_X), expression(0) , id(0) {}
 
-	ChannelConnection(ParticleChannel c, vm::Expression* e) : channel(c), expression(e) {}
+	ChannelConnection(ParticleChannel c, vm::Expression* e, uint16_t id) : channel(c), expression(e) , id(id) {}
 };
 
 struct ParticleEmitter {

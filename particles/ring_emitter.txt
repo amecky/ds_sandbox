@@ -1,0 +1,14 @@
+10 * cos(TWO_PI * IDX / COUNT) * random(1.0,2.0)
+10 * sin(TWO_PI * IDX / COUNT) * random(1.0,2.0)
+-
+-
+TWO_PI * IDX / COUNT
+-
+-
+-
+-
+0.5 + 1.2 * IDX / COUNT
+-
+TWO_PI * IDX / COUNT
+200 * cos(TWO_PI * IDX / COUNT) * random(0.5,1.5)
+200 * sin(TWO_PI * IDX / COUNT) * random(0.5,1.5)

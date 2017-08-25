@@ -1,0 +1,14 @@
+-
+-
+1.0 + abs(sin(TIMER/TTL * TWO_PI)) * 2
+1.0 + abs(sin(TIMER/TTL * TWO_PI)) * 2
+-
+-
+-
+-
+1.0 - TIMER/TTL
+-
+-
+-
+lerp(200,20,TIMER/TTL) * cos(RND)
+lerp(200,20,TIMER/TTL) * sin(RND)
