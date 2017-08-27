@@ -22,6 +22,12 @@ namespace perf {
 
 	void incFrame();
 
+	size_t num_events();
+
+	float get_duration(size_t i);
+
+	const char* get_name(size_t i);
+
 	float get_current_total_time();
 
 	class ZoneTracker {
@@ -108,9 +114,13 @@ namespace perf {
 
 	const StaticHash INVALID_HASH = StaticHash(static_cast<unsigned int>(0));
 
-	const bool operator==(const StaticHash& lhs, const StaticHash &rhs);
+	const bool operator==(const StaticHash& lhs, const StaticHash &rhs) {
+		return lhs.get() == rhs.get();
+	}
 
-	const bool operator!=(const StaticHash& lhs, const StaticHash &rhs);
+	const bool operator!=(const StaticHash& lhs, const StaticHash &rhs) {
+		return lhs.get() != rhs.get();
+	}
 
 	// -----------------------------------------------------------
 	// zone tracker event
@@ -185,6 +195,21 @@ namespace perf {
 		end(zoneTrackerCtx->root_event);
 	}
 
+	size_t num_events() {
+		return zoneTrackerCtx->events.size();
+	}
+
+	const ZoneTrackerEvent& get_event(size_t i) {
+		return zoneTrackerCtx->events[i];
+	}
+
+	const char* get_name(size_t i) {
+		return zoneTrackerCtx->names.data + zoneTrackerCtx->events[i].name_index;
+	}
+
+	float get_duration(size_t i) {
+		return zoneTrackerCtx->events[i].duration;
+	}
 	// -----------------------------------------------------------
 	// debug
 	// -----------------------------------------------------------
@@ -299,14 +324,7 @@ namespace perf {
 	}
 
 	CharBuffer::CharBuffer() : data(nullptr), size(0), capacity(0), num(0) {}
-
-	CharBuffer& CharBuffer::operator =(const CharBuffer& b) {
-		int sz = b.size;
-		resize(sz);
-		memcpy(data, b.data, sz);
-		return *this;
-	}
-
+	
 	CharBuffer::~CharBuffer() {
 		if (data != nullptr) {
 			delete[] data;

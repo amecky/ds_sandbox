@@ -15,6 +15,8 @@
 #define DS_VM_IMPLEMENTATION
 #include <ds_vm.h>
 #include "VMTest.h"
+#define DS_PROFILER_IMPLEMENTATION
+#include <ds_profiler.h>
 #include "ParticleExpressionTest.h"
 // ---------------------------------------------------------------
 // load image from the resources
@@ -65,8 +67,9 @@ void initialize() {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 	
 	logging::logHandler = myLogging;
-	logging::currentLevel = logging::LL_INFO;
+	logging::currentLevel = logging::LL_DEBUG;
 	logpanel::init(32);
+	perf::init();
 	//_CrtSetBreakAlloc(237);
 
 	initialize();
@@ -95,6 +98,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	while (ds::isRunning() && running) {
 
 		ds::begin();
+
+		perf::reset();
 
 		spriteBuffer.begin();		
 		
@@ -135,11 +140,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		//animationTest.renderGUI();
 		//vmTest.renderGUI();
 		particleTest.renderGUI();
+		perf::tickFPS(ds::getElapsedSeconds());
+		perf::finalize();
 
 		ds::end();
 
 		
 	}
+	perf::shutdown();
 	gui::shutdown();
 	logpanel::shutdown();
 	ds::shutdown();

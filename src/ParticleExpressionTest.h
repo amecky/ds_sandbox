@@ -4,6 +4,7 @@
 #include <SpriteBatchBuffer.h>
 #include <ds_vm.h>
 #include "Particles.h"
+#include <ds_profiler.h>
 
 struct ParticleExpression {
 	char source[256];
@@ -21,6 +22,9 @@ private:
 	void loadExpressionsFile(const char* name, ParticleExpression* expressions, ParticleEmitter* ret);
 	void emitt(uint16_t num, const ds::vec2& pos);
 	void renderExpressions(ParticleEmitter& emitter, ParticleExpression* expressions);
+	void moveParticles();
+	void manageLifecycles();
+	void updateParticles();
 	SpriteBatchBuffer* _sprites;	
 	int _dialogState;
 	p2i _dialogPos;

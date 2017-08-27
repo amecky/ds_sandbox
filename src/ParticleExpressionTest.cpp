@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <fstream>
 #include <string>
+#include "LogPanel.h"
 
 ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _particles(256) {
 
@@ -19,6 +20,7 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 	_vmCtx.add_variable("TIMER", 0.0f);
 	_vmCtx.add_variable("TTL", 1.0f);
 	_vmCtx.add_variable("RND", 1.0f);
+	_vmCtx.add_variable("NORM", 1.0f);
 
 	loadExpressionsFile("particles\\ring_emitter.txt", _emitterExpressions, &emitter);
 	loadExpressionsFile("particles\\motion.txt", _moduleExpressions, &modules);
@@ -77,13 +79,13 @@ void ParticleExpressionTest::emitt(uint16_t num, const ds::vec2& pos) {
 void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, ParticleExpression* expressions) {
 	p2i p = gui::getCurrentPosition();
 	p2i t = p;
-	for (int i = 0; i < NUM_CHANNELS; ++i) {
+	for (uint16_t i = 0; i < NUM_CHANNELS; ++i) {
 		gui::draw_text(t, CHANNEL_NAMES[i]);
 		t.x += 100;
 		const ChannelConnection& cc = emitter.connections[i];
 		if (cc.expression != 0) {
 			uint16_t id = cc.id;
-			gui::pushID(CHANNEL_NAMES[i]);
+			gui::pushID(CHANNEL_NAMES[i],i);
 			gui::checkItem(t, p2i(60, 16));
 			if (gui::isClicked()) {
 				_selectedExpression = i;
@@ -91,22 +93,40 @@ void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, Particl
 			gui::draw_box(t, p2i(60, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "edit");
 			t.x += 80;
+			gui::popID();
+			gui::pushID("-",i);
+			gui::checkItem(t, p2i(20, 16));
+			if (gui::isClicked()) {
+				emitter.connections[i].expression = 0;
+			}
 			gui::draw_box(t, p2i(20, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "-");
+			gui::popID();
 		}
 		else {
 			t.x += 80;
+			gui::pushID("-", i);
+			gui::checkItem(t, p2i(20, 16));
+			if (gui::isClicked()) {
+				ParticleExpression& exp = expressions[i];
+				snprintf(exp.source, 256, "1");
+				vm::parse(exp.source, _vmCtx, exp.expression);
+				emitter.connections[i] = { ALL_CHANNELS[i],&exp.expression, i };
+			}
 			gui::draw_box(t, p2i(20, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "+");
+			gui::popID();
 		}
 		t.x = p.x;
 		t.y -= 22;
 	}
 	gui::moveForward(p2i(200, NUM_CHANNELS * 22));
 	if (_selectedExpression != -1) {
-		const ChannelConnection& cc = emitter.connections[_selectedExpression];
-		ParticleExpression pexp = expressions[cc.id];
-		gui::Input("Source",pexp.source,256);			
+		ChannelConnection& cc = emitter.connections[_selectedExpression];
+		ParticleExpression& pexp = expressions[cc.id];
+		if (gui::Input("Source", pexp.source, 256)) {
+			vm::parse(pexp.source, _vmCtx, pexp.expression);
+		}
 	}
 }
 
@@ -140,17 +160,65 @@ void ParticleExpressionTest::renderGUI() {
 			}
 		}
 	}
+
+	float total = 0.0f;
+	if (perf::num_events() > 0) {
+		for (size_t i = 1; i < perf::num_events(); ++i) {
+			float ct = perf::get_duration(i) * 1000.0f;
+			total += ct;
+			gui::Value(perf::get_name(i), ct);
+		}
+		gui::Value("Total", total);
+	}
+	if (gui::Button("save")) {
+		FILE* fp = fopen("perf.txt", "w");
+		if (fp) {
+			for (size_t i = 0; i < perf::num_events(); ++i) {
+				fprintf(fp, "%s %g\n", perf::get_name(i), perf::get_duration(i) * 1000.0f);
+				LOG_DEBUG("%s %g", perf::get_name(i), perf::get_duration(i) * 1000.0f);
+			}
+			fclose(fp);
+		}
+	}
+	logpanel::draw_gui(8);
 	gui::end();
 	
 }
 
-void ParticleExpressionTest::render() {
+// ----------------------------------------------------
+// move by particles by velocity
+// ----------------------------------------------------
+void ParticleExpressionTest::moveParticles() {
+	perf::ZoneTracker("moveParticles");
 	uint16_t cnt = 0;
-	// handle lifetime
+	float elapsed = ds::getElapsedSeconds();
+	uint16_t num = _particles.num;
+	float* px = _particles.get_channel(PC_POS_X);
+	float* py = _particles.get_channel(PC_POS_Y);
+	float* vx = _particles.get_channel(PC_VELOCITY_X);
+	float* vy = _particles.get_channel(PC_VELOCITY_Y);
+	while (cnt < num) {
+		*px += *vx * elapsed;
+		*py += *vy * elapsed;
+		++cnt;
+		++px;
+		++py;
+		++vx;
+		++vy;
+	}
+}
+
+// ----------------------------------------------------
+// kill dead particles
+// ----------------------------------------------------
+void ParticleExpressionTest::manageLifecycles() {
+	perf::ZoneTracker("manageLifecycles");
+	uint16_t cnt = 0;
+	float elapsed = ds::getElapsedSeconds();
 	float* timer = _particles.get_channel(PC_TIMER);
 	float* ttl = _particles.get_channel(PC_TTL);
 	while (cnt < _particles.num) {
-		*timer += ds::getElapsedSeconds();
+		*timer += elapsed;
 		if (*timer > *ttl) {
 			_particles.remove(cnt);
 		}
@@ -160,54 +228,63 @@ void ParticleExpressionTest::render() {
 			++cnt;
 		}
 	}
+}
 
-	// move
-	cnt = 0;
-	float* px = _particles.get_channel(PC_POS_X);
-	float* py = _particles.get_channel(PC_POS_Y);
-	float* vx = _particles.get_channel(PC_VELOCITY_X);
-	float* vy = _particles.get_channel(PC_VELOCITY_Y);
-	while (cnt < _particles.num) {
-		*px += *vx * ds::getElapsedSeconds();
-		*py += *vy * ds::getElapsedSeconds();
-		++cnt;
-		++px;
-		++py;
-		++vx;
-		++vy;
-	}
-
-	// update others
+// ----------------------------------------------------
+// update particles
+// ----------------------------------------------------
+void ParticleExpressionTest::updateParticles() {
+	perf::ZoneTracker("updateParticles");
 	for (int j = 0; j < NUM_CHANNELS; ++j) {
 		if (modules.connections[j].expression != 0) {
 			const ChannelConnection& cc = modules.connections[j];
 			float* c = _particles.get_channel(cc.channel);
 			for (int i = 0; i < _particles.num; ++i) {
 				_vmCtx.variables[5].value = ds::getElapsedSeconds();
-				_vmCtx.variables[6].value = _particles.get_value(PC_TIMER,i);
+				_vmCtx.variables[6].value = _particles.get_value(PC_TIMER, i);
 				_vmCtx.variables[7].value = _particles.get_value(PC_TTL, i);
 				_vmCtx.variables[8].value = _particles.get_value(PC_RAND, i);
+				_vmCtx.variables[9].value = _vmCtx.variables[6].value / _vmCtx.variables[7].value;
 				*c = vm::run(cc.expression->tokens, cc.expression->num, _vmCtx);
 				++c;
 			}
 		}
 	}
+}
 
+// ----------------------------------------------------
+// render
+// ----------------------------------------------------
+void ParticleExpressionTest::render() {
+
+	manageLifecycles();
+	
+	moveParticles();
+
+	updateParticles();
+
+	perf::ZoneTracker("render");
 	// render
-	cnt = 0;
-	px = _particles.get_channel(PC_POS_X);
-	py = _particles.get_channel(PC_POS_Y);
+	uint16_t cnt = 0;
+	float* px = _particles.get_channel(PC_POS_X);
+	float* py = _particles.get_channel(PC_POS_Y);
 	float* r = _particles.get_channel(PC_ROTATION);
 	float* sx = _particles.get_channel(PC_SCALE_X);
 	float* sy = _particles.get_channel(PC_SCALE_Y);
+	float* cr = _particles.get_channel(PC_COLOR_R);
+	float* cg = _particles.get_channel(PC_COLOR_G);
+	float* cb = _particles.get_channel(PC_COLOR_B);
 	float* ca = _particles.get_channel(PC_COLOR_A);
 	while ( cnt < _particles.num) {
-		_sprites->add(ds::vec2(*px, *py), ds::vec4(0, 100, 4, 4),ds::vec2(*sx,*sy),*r,ds::Color(1.0f,1.0f,1.0f,*ca));
+		_sprites->add(ds::vec2(*px, *py), ds::vec4(200, 0, 4, 4),ds::vec2(*sx,*sy),*r,ds::Color(*cr,*cg,*cb,*ca));
 		++cnt;
 		++px;
 		++py;
 		++sx;
 		++sy;
+		++cr;
+		++cg;
+		++cb;
 		++ca;
 		++r;
 	}
