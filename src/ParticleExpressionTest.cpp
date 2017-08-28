@@ -6,7 +6,7 @@
 #include <string>
 #include "LogPanel.h"
 
-ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _particles(256) {
+ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _particles(4096) {
 
 	_dialogPos = p2i(10, 950);
 	_dialogState = 1;
@@ -77,6 +77,7 @@ void ParticleExpressionTest::emitt(uint16_t num, const ds::vec2& pos) {
 }
 
 void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, ParticleExpression* expressions) {
+	perf::ZoneTracker("renderExpressions");
 	p2i p = gui::getCurrentPosition();
 	p2i t = p;
 	for (uint16_t i = 0; i < NUM_CHANNELS; ++i) {
@@ -161,7 +162,7 @@ void ParticleExpressionTest::convertFloat(float v,int precision) {
 }
 
 void ParticleExpressionTest::renderGUI() {
-	
+	perf::ZoneTracker("renderGUI");
 	gui::start();
 	p2i sp = p2i(10, 760);
 	if (gui::begin("Debug", &_dialogState, &_dialogPos, 300)) {
@@ -192,17 +193,14 @@ void ParticleExpressionTest::renderGUI() {
 	}
 
 	float total = 0.0f;
+	gui::Value("Test", 12.3455f, 2, 4);
 	if (perf::num_events() > 0) {
-		for (size_t i = 1; i < perf::num_events(); ++i) {
+		for (size_t i = 0; i < perf::num_events(); ++i) {
 			float ct = perf::avg(i) * 1000.0f;
 			total += ct;
-			//gui::Value(perf::get_name(i), ct);
-			convertFloat(ct,4);
-			gui::Value(perf::get_name(i), perf::avg(i) * 1000.0f, 2, 4);
-
+			gui::Value(perf::get_name(i), ct, 3, 4);
 		}
-		convertFloat(total, 4);
-		gui::Label("Total", _tmpBuffer);
+		//gui::Value("Total", total, 3, 4);
 	}
 	if (gui::Button("save")) {
 		FILE* fp = fopen("perf.txt", "w");

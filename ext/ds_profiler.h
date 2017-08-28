@@ -32,7 +32,7 @@ namespace perf {
 
 	const char* get_name(uint16_t i);
 
-	float get_current_total_time();
+	float avg_total();
 
 	class ZoneTracker {
 
@@ -95,19 +95,20 @@ namespace perf {
 		int name_index;
 	};
 
+	const static uint16_t MAX_ENTRIES = 256;
 	// -----------------------------------------------------------
 	// Zone tracker context
 	// -----------------------------------------------------------
 	struct ZoneTrackerContext {
 
-		ZoneTrackerEvent trackerEvents[256];
-		float adT[256 * 16];
-		float totalAverage[16];
-		float average[256];
-		uint16_t currentMax;
+		ZoneTrackerEvent trackerEvents[MAX_ENTRIES];
+		float current[MAX_ENTRIES];
+		float accu[MAX_ENTRIES];
+		float average[MAX_ENTRIES];
+		uint16_t frameCount;
 		float beginAverage;
-		uint16_t current_frame;
 		uint16_t num_entries;
+		
 		LARGE_INTEGER frequency;
 		CharBuffer names;
 		int current_parent;
@@ -119,19 +120,18 @@ namespace perf {
 		LONGLONG overhead;
 
 
-		LARGE_INTEGER timerFrequency;
+		//LARGE_INTEGER timerFrequency;
 		LARGE_INTEGER lastTime;
 		// Derived timing data uses a canonical tick format. 
-		uint64_t elapsedTicks;
+		//uint64_t elapsedTicks;
 		uint64_t totalTicks;
-		uint64_t leftOverTicks;
+		//uint64_t leftOverTicks;
 
 		// Members for tracking the framerate. 
-		uint32_t frameCount;
-		uint32_t framesPerSecond;
-		uint32_t framesThisSecond;
-		uint64_t secondCounter;
-		uint64_t maxDelta;
+		//uint32_t framesPerSecond;
+		//uint32_t framesThisSecond;
+		//uint64_t secondCounter;
+		//uint64_t maxDelta;
 	};
 
 	static ZoneTrackerContext* zoneTrackerCtx = 0;
@@ -162,22 +162,14 @@ namespace perf {
 		zoneTrackerCtx->frames = 0;
 		zoneTrackerCtx->fpsTimer = 0.0f;
 		zoneTrackerCtx->fps = 0;
-		zoneTrackerCtx->current_frame = 0;
 		zoneTrackerCtx->num_entries = 0;
-		zoneTrackerCtx->currentMax = 0;
-		for (int i = 0; i < 256; ++i) {
+		for (int i = 0; i < MAX_ENTRIES; ++i) {
 			zoneTrackerCtx->average[i] = 0.0f;
 		}
 
-		QueryPerformanceFrequency(&zoneTrackerCtx->timerFrequency);
-		QueryPerformanceCounter(&zoneTrackerCtx->lastTime);
-		zoneTrackerCtx->leftOverTicks = 0;
-		zoneTrackerCtx->framesPerSecond = 0;
-		zoneTrackerCtx->framesThisSecond = 0;
-		zoneTrackerCtx->secondCounter = 0;
 		zoneTrackerCtx->totalTicks = 0;
-		zoneTrackerCtx->maxDelta = zoneTrackerCtx->timerFrequency.QuadPart / 10;
 		zoneTrackerCtx->beginAverage = TicksToSeconds(zoneTrackerCtx->totalTicks);
+		zoneTrackerCtx->frameCount = 0;
 	}
 
 
@@ -189,34 +181,15 @@ namespace perf {
 		uint64_t timeDelta = currentTime.QuadPart - zoneTrackerCtx->lastTime.QuadPart;
 
 		zoneTrackerCtx->lastTime = currentTime;
-		zoneTrackerCtx->secondCounter += timeDelta;
-
-		// Clamp excessively large time deltas (e.g. after paused in the debugger). 
-		if (timeDelta > zoneTrackerCtx->maxDelta) {
-			timeDelta = zoneTrackerCtx->maxDelta;
-		}
-
 		// Convert QPC units into a canonical tick format. This cannot overflow due to the previous clamp. 
 		timeDelta *= TicksPerSecond;
-		timeDelta /= zoneTrackerCtx->timerFrequency.QuadPart;
+		timeDelta /= zoneTrackerCtx->frequency.QuadPart;
 
 		uint32_t lastFrameCount = zoneTrackerCtx->frameCount;
 
 		// Variable timestep update logic. 
-		zoneTrackerCtx->elapsedTicks = timeDelta;
 		zoneTrackerCtx->totalTicks += timeDelta;
-		zoneTrackerCtx->leftOverTicks = 0;
-		zoneTrackerCtx->frameCount++;
-		// zoneTrackerCtx the current framerate. 
-		if (zoneTrackerCtx->frameCount != lastFrameCount) {
-			zoneTrackerCtx->framesThisSecond++;
-		}
-
-		if (zoneTrackerCtx->secondCounter >= static_cast<uint64_t>(zoneTrackerCtx->timerFrequency.QuadPart)) {
-			zoneTrackerCtx->framesPerSecond = zoneTrackerCtx->framesThisSecond;
-			zoneTrackerCtx->framesThisSecond = 0;
-			zoneTrackerCtx->secondCounter %= zoneTrackerCtx->timerFrequency.QuadPart;
-		}
+		
 	}
 
 	static double get_total_seconds() {
@@ -228,10 +201,10 @@ namespace perf {
 	// -----------------------------------------------------------
 	void reset() {
 		tick_timers();
-		for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
-			zoneTrackerCtx->adT[256 * zoneTrackerCtx->current_frame + i] = 0.0f;
-		}
-		zoneTrackerCtx->names.size = 0;
+		//for (int i = 0; i < MAX_ENTRIES; ++i) {
+			//zoneTrackerCtx->current[i] = 0.0f;
+		//}
+		//zoneTrackerCtx->names.size = 0;
 		zoneTrackerCtx->ident = 0;
 		// create root event
 		zoneTrackerCtx->current_parent = -1;
@@ -244,25 +217,23 @@ namespace perf {
 	// -----------------------------------------------------------
 	void finalize() {
 		end(zoneTrackerCtx->root_event);
-		zoneTrackerCtx->current_frame = (zoneTrackerCtx->current_frame + 1) & 15;
-		++zoneTrackerCtx->currentMax;
-		if (zoneTrackerCtx->currentMax >= 15) {
-			zoneTrackerCtx->currentMax = 15;
-		}
-		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.25f) {
-			printf("==> calculation average\n");
-			for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
-				for (int j = 0; j < zoneTrackerCtx->currentMax; ++j) {
-					zoneTrackerCtx->average[i] += zoneTrackerCtx->adT[i + 256 * j];
-				}
-				zoneTrackerCtx->average[i] /= static_cast<float>(zoneTrackerCtx->currentMax);
+		++zoneTrackerCtx->frameCount;
+		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5f) {
+			for (int i = 0; i < MAX_ENTRIES; ++i) {
+				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);				
+				zoneTrackerCtx->accu[i] = 0.0f;
 			}
 			zoneTrackerCtx->beginAverage = get_total_seconds();
+			zoneTrackerCtx->frameCount = 0;
 		}
 	}
 
 	float avg(uint16_t idx) {
 		return zoneTrackerCtx->average[idx];
+	}
+
+	float avg_total(uint16_t idx) {
+		return zoneTrackerCtx->average[0];
 	}
 
 	uint16_t num_events() {
@@ -278,7 +249,7 @@ namespace perf {
 	}
 
 	float dt(uint16_t i) {
-		return zoneTrackerCtx->adT[256 * zoneTrackerCtx->current_frame + i];
+		return zoneTrackerCtx->current[i];
 	}
 	// -----------------------------------------------------------
 	// debug
@@ -347,13 +318,13 @@ namespace perf {
 	uint16_t start(const char* name) {
 		uint32_t hash = fnv1a(name);
 		int idx = findHash(hash);
-		int event_idx = zoneTrackerCtx->current_frame * 256;
 		if (idx == -1) {
 			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->num_entries++];
+			event.hash = fnv1a(name);
 			event.name_index = zoneTrackerCtx->names.size;
 			int l = strlen(name);
 			if (zoneTrackerCtx->names.size + l > zoneTrackerCtx->names.capacity) {
-				zoneTrackerCtx->names.resize(zoneTrackerCtx->names.capacity + 256);
+				zoneTrackerCtx->names.resize(zoneTrackerCtx->names.capacity + MAX_ENTRIES);
 			}
 			zoneTrackerCtx->names.append(name, l);
 			idx = zoneTrackerCtx->num_entries - 1;
@@ -361,7 +332,6 @@ namespace perf {
 		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[idx];
 		event.parent = zoneTrackerCtx->current_parent;
 		QueryPerformanceCounter(&event.started);
-		event.hash = fnv1a(name);
 		zoneTrackerCtx->current_parent = idx;
 		return idx;
 	}
@@ -370,14 +340,13 @@ namespace perf {
 	// end zone tracking
 	// -----------------------------------------------------------
 	void end(uint16_t index) {
-
 		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[index];
 		LARGE_INTEGER EndingTime;
 		QueryPerformanceCounter(&EndingTime);
 		LARGE_INTEGER time;
 		time.QuadPart = EndingTime.QuadPart - event.started.QuadPart;
-		int pos = zoneTrackerCtx->current_frame * 256 + index;
-		zoneTrackerCtx->adT[pos] = LIToSecs(time);
+		zoneTrackerCtx->current[index] = LIToSecs(time);
+		zoneTrackerCtx->accu[index] += zoneTrackerCtx->current[index];
 		if (zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent != -1) {
 			zoneTrackerCtx->current_parent = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent;
 		}

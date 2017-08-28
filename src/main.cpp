@@ -101,36 +101,42 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		perf::reset();
 
-		spriteBuffer.begin();		
-		
-		//tweeningTest.render();
-		//animationTest.render();
-		//vmTest.render();
-		particleTest.render();
-		//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
-		//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
-		
-		spriteBuffer.flush();
+		{
+			perf::ZoneTracker("main::render");
+			spriteBuffer.begin();
 
-		ds::Event event;
-		while (ds::get_event(&event)) {
-			if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {				
-				animationTest.onButtonClicked(event.mouse.button);
-			}
-			if (event.type == ds::EventType::ET_KEY_PRESSED) {
-				if (event.key.key == 'l') {
-					LOG_INFO("L pressed %d",l_count++);
+			//tweeningTest.render();
+			//animationTest.render();
+			//vmTest.render();
+			particleTest.render();
+			//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
+			//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
+
+			spriteBuffer.flush();
+		}
+
+		{
+			perf::ZoneTracker("main::events");
+			ds::Event event;
+			while (ds::get_event(&event)) {
+				if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
+					animationTest.onButtonClicked(event.mouse.button);
 				}
-				if (event.key.key == 'd') {
-					int end = logpanel::get_num_lines();
-					int start = end - 5;
-					if (start < 0) {
-						start = 0;
+				if (event.type == ds::EventType::ET_KEY_PRESSED) {
+					if (event.key.key == 'l') {
+						LOG_INFO("L pressed %d", l_count++);
 					}
-					OutputDebugString("----------------------------------------------\n");
-					for (uint16_t i = start; i < end; ++i) {
-						OutputDebugString(logpanel::get_line(i));
-						OutputDebugString("\n");
+					if (event.key.key == 'd') {
+						int end = logpanel::get_num_lines();
+						int start = end - 5;
+						if (start < 0) {
+							start = 0;
+						}
+						OutputDebugString("----------------------------------------------\n");
+						for (uint16_t i = start; i < end; ++i) {
+							OutputDebugString(logpanel::get_line(i));
+							OutputDebugString("\n");
+						}
 					}
 				}
 			}
@@ -139,12 +145,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		//tweeningTest.renderGUI();
 		//animationTest.renderGUI();
 		//vmTest.renderGUI();
-		particleTest.renderGUI();
-		perf::tickFPS(ds::getElapsedSeconds());
-		perf::finalize();
+		{
+			perf::ZoneTracker("main::renderGUI");
+			particleTest.renderGUI();
+		}
+		perf::tickFPS(ds::getElapsedSeconds());		
 
 		ds::end();
-
+		perf::finalize();
 		
 	}
 	perf::shutdown();
