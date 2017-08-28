@@ -25,6 +25,7 @@ private:
 	void moveParticles();
 	void manageLifecycles();
 	void updateParticles();
+	void convertFloat(float v,int precision);
 	SpriteBatchBuffer* _sprites;	
 	int _dialogState;
 	p2i _dialogPos;
@@ -38,5 +39,6 @@ private:
 	ParticleEmitter modules;
 	ParticleExpression _moduleExpressions[NUM_CHANNELS];
 	ParticleExpression _emitterExpressions[NUM_CHANNELS];
+	char _tmpBuffer[64];
 };
 

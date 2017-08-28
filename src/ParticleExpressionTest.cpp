@@ -130,6 +130,36 @@ void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, Particl
 	}
 }
 
+void ParticleExpressionTest::convertFloat(float v,int precision) {
+	int cnt = 0;
+	if (v < 0.0f) {
+		_tmpBuffer[cnt++] = '-';
+	}
+	int t = static_cast<int>(v);
+	int f = t / 10;
+	if (f > 0) {
+		_tmpBuffer[cnt++] = 48 + f;
+	}
+	t -= f * 10;
+	_tmpBuffer[cnt++] = 48 + t;
+	_tmpBuffer[cnt++] = '.';
+
+
+	double r = 0.0;
+	int start = pow(10, precision - 1);
+	float frac = modf(v, &r) * start;
+	t = static_cast<int>(frac);
+	for (int i = 0; i < precision; ++i) {
+		f = t / start;
+		if (f >= 0) {
+			_tmpBuffer[cnt++] = 48 + f;
+		}
+		t -= f * start;
+		start /= 10;
+	}
+	_tmpBuffer[cnt++] = '\0';
+}
+
 void ParticleExpressionTest::renderGUI() {
 	
 	gui::start();
@@ -164,18 +194,22 @@ void ParticleExpressionTest::renderGUI() {
 	float total = 0.0f;
 	if (perf::num_events() > 0) {
 		for (size_t i = 1; i < perf::num_events(); ++i) {
-			float ct = perf::get_duration(i) * 1000.0f;
+			float ct = perf::avg(i) * 1000.0f;
 			total += ct;
-			gui::Value(perf::get_name(i), ct);
+			//gui::Value(perf::get_name(i), ct);
+			convertFloat(ct,4);
+			gui::Value(perf::get_name(i), perf::avg(i) * 1000.0f, 2, 4);
+
 		}
-		gui::Value("Total", total);
+		convertFloat(total, 4);
+		gui::Label("Total", _tmpBuffer);
 	}
 	if (gui::Button("save")) {
 		FILE* fp = fopen("perf.txt", "w");
 		if (fp) {
 			for (size_t i = 0; i < perf::num_events(); ++i) {
-				fprintf(fp, "%s %g\n", perf::get_name(i), perf::get_duration(i) * 1000.0f);
-				LOG_DEBUG("%s %g", perf::get_name(i), perf::get_duration(i) * 1000.0f);
+				fprintf(fp, "%s %g\n", perf::get_name(i), perf::avg(i) * 1000.0f);
+				LOG_DEBUG("%s %g", perf::get_name(i), perf::avg(i) * 1000.0f);
 			}
 			fclose(fp);
 		}

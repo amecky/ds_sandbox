@@ -110,6 +110,8 @@ namespace gui {
 
 	void Value(const char* label, float v);
 
+	void Value(const char* label, float v, uint8_t integers, uint8_t fractions);
+
 	void Value(const char* label, float v, const char* format);
 
 	void Value(const char* label, const p2i& v);
@@ -1312,6 +1314,48 @@ namespace gui {
 		Label(label, _guiCtx->tmpBuffer);
 	}
 
+	static void simple_print(char* buffer, float value, int integers, int prec) {
+		char* _tmpBuffer = buffer;
+		int cnt = 0;
+		if (value < 0.0f) {
+			_tmpBuffer[cnt++] = '-';
+		}
+
+		int start = pow(10, integers - 1);
+		int t = static_cast<int>(value);
+		bool leading = true;
+		for (int i = 0; i < integers; ++i) {
+			int f = t / start;
+			if (f > 0 || !leading) {
+				_tmpBuffer[cnt++] = 48 + f;
+				leading = false;
+			}
+			t -= f * start;
+			start /= 10;
+		}
+		if (leading) {
+			_tmpBuffer[cnt++] = '0';
+		}
+		_tmpBuffer[cnt++] = '.';
+		double r = 0.0;
+		start = pow(10, prec - 1);
+		float frac = modf(value, &r) * start;
+		t = static_cast<int>(frac);
+		for (int i = 0; i < prec; ++i) {
+			int f = t / start;
+			if (f >= 0) {
+				_tmpBuffer[cnt++] = 48 + f;
+			}
+			t -= f * start;
+			start /= 10;
+		}
+		_tmpBuffer[cnt++] = '\0';
+	}
+
+	void Value(const char* label, float v, uint8_t integers, uint8_t fractions) {
+		simple_print(_guiCtx->tmpBuffer, v, integers,fractions);
+		Label(label, _guiCtx->tmpBuffer);
+	}
 	// --------------------------------------------------------
 	// Value - float
 	// --------------------------------------------------------
