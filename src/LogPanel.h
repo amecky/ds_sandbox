@@ -100,7 +100,7 @@ namespace logpanel {
 		p2i dp = p;
 		dp.y -= (lines * 20) / 2 - 10;
 		int height = lines * 20;
-		gui::draw_box(dp, p2i(900, lines * 20), ds::Color(32, 32, 32, 64));
+		gui::draw_box(dp, p2i(900, lines * 20), ds::Color(48, 48, 48, 64));
 
 		if (lines < get_num_lines()) {
 			int current = get_num_lines();

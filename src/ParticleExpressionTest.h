@@ -40,5 +40,9 @@ private:
 	ParticleExpression _moduleExpressions[NUM_CHANNELS];
 	ParticleExpression _emitterExpressions[NUM_CHANNELS];
 	char _tmpBuffer[64];
+	float _perfValues[32];
+	uint16_t _perfIndex;
+	uint16_t _perfMax;
+	float _perfTimer;
 };
 

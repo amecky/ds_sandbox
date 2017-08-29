@@ -1803,8 +1803,12 @@ namespace gui {
 		if (delta == 0.0f) {
 			delta = 1.0f;
 		}
+		// make sure bw is at least 2
 		float st = width / static_cast<float>(num - 1);
 		float bw = width / static_cast<float>(num);
+		if (bw < 2.0f) {
+			bw = 2.0f;
+		}
 		renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, height), ds::Color(51, 51, 51, 255));
 		p.x += width + 20.0f;
 		p.y += height / 2.0f;
@@ -1824,7 +1828,7 @@ namespace gui {
 			p = _guiCtx->currentPos;
 			p.y -= (height - yp / 2);
 			p.x += i * bw + 2;
-			renderer::add_box(_guiCtx->uiContext, p, p2i(bw - 4, yp), ds::Color(192, 0, 0, 255));
+			renderer::add_box(_guiCtx->uiContext, p, p2i(bw - 1, yp), ds::Color(192, 0, 0, 255));
 		}
 		step = delta / 10.0f;
 		int d = static_cast<int>(delta / step) + 1;

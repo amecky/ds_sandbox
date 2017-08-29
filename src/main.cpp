@@ -45,7 +45,7 @@ RID loadImage(const char* name) {
 void myLogging(const logging::LogLevel&, const char* message) {
 	OutputDebugString(message);
 	OutputDebugString("\n");
-	logpanel::add_line(message);
+	//logpanel::add_line(message);
 }
 
 // ---------------------------------------------------------------
@@ -56,7 +56,7 @@ void initialize() {
 	rs.width = 1280;
 	rs.height = 960;
 	rs.title = "ds_sandbox";
-	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
+	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
 	rs.multisampling = 4;
 	ds::init(rs);
 }
@@ -132,10 +132,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 						if (start < 0) {
 							start = 0;
 						}
-						OutputDebugString("----------------------------------------------\n");
+						LOG_INFO("----------------------------------------------\n");
 						for (uint16_t i = start; i < end; ++i) {
-							OutputDebugString(logpanel::get_line(i));
-							OutputDebugString("\n");
+							LOG_INFO("%s",logpanel::get_line(i));
 						}
 					}
 				}
@@ -149,10 +148,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			perf::ZoneTracker("main::renderGUI");
 			particleTest.renderGUI();
 		}
-		perf::tickFPS(ds::getElapsedSeconds());		
+		//perf::tickFPS(ds::getElapsedSeconds());		
+		perf::finalize();
 
 		ds::end();
-		perf::finalize();
+		
 		
 	}
 	perf::shutdown();

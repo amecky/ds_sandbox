@@ -26,13 +26,13 @@ namespace perf {
 
 	uint16_t num_events();
 
-	float dt(uint16_t i);
+	double dt(uint16_t i);
 
-	float avg(uint16_t i);
+	double avg(uint16_t i);
 
 	const char* get_name(uint16_t i);
 
-	float avg_total();
+	double avg_total();
 
 	class ZoneTracker {
 
@@ -102,11 +102,12 @@ namespace perf {
 	struct ZoneTrackerContext {
 
 		ZoneTrackerEvent trackerEvents[MAX_ENTRIES];
-		float current[MAX_ENTRIES];
-		float accu[MAX_ENTRIES];
-		float average[MAX_ENTRIES];
+		double current[MAX_ENTRIES];
+		double accu[MAX_ENTRIES];
+		double average[MAX_ENTRIES];
+		double totalAverage;
 		uint16_t frameCount;
-		float beginAverage;
+		double beginAverage;
 		uint16_t num_entries;
 		
 		LARGE_INTEGER frequency;
@@ -117,27 +118,14 @@ namespace perf {
 		int frames;
 		float fpsTimer;
 		int fps;
-		LONGLONG overhead;
-
-
-		//LARGE_INTEGER timerFrequency;
 		LARGE_INTEGER lastTime;
-		// Derived timing data uses a canonical tick format. 
-		//uint64_t elapsedTicks;
 		uint64_t totalTicks;
-		//uint64_t leftOverTicks;
-
-		// Members for tracking the framerate. 
-		//uint32_t framesPerSecond;
-		//uint32_t framesThisSecond;
-		//uint64_t secondCounter;
-		//uint64_t maxDelta;
 	};
 
 	static ZoneTrackerContext* zoneTrackerCtx = 0;
 
 	static double LIToSecs(LARGE_INTEGER & L) {
-		return (L.QuadPart - zoneTrackerCtx->overhead) * 1000.0 / zoneTrackerCtx->frequency.QuadPart;
+		return (L.QuadPart) * 1000000.0 / zoneTrackerCtx->frequency.QuadPart;
 	}
 
 	static const uint64_t TicksPerSecond = 10000000;
@@ -153,43 +141,30 @@ namespace perf {
 		if (zoneTrackerCtx == 0) {
 			zoneTrackerCtx = new ZoneTrackerContext;
 			QueryPerformanceFrequency(&zoneTrackerCtx->frequency);
-			LARGE_INTEGER start;
-			LARGE_INTEGER stop;
-			QueryPerformanceCounter(&start);
-			QueryPerformanceCounter(&stop);
-			zoneTrackerCtx->overhead = stop.QuadPart - start.QuadPart;
 		}
 		zoneTrackerCtx->frames = 0;
 		zoneTrackerCtx->fpsTimer = 0.0f;
 		zoneTrackerCtx->fps = 0;
 		zoneTrackerCtx->num_entries = 0;
 		for (int i = 0; i < MAX_ENTRIES; ++i) {
+			zoneTrackerCtx->current[i] = 0.0f;
+			zoneTrackerCtx->accu[i] = 0.0f;
 			zoneTrackerCtx->average[i] = 0.0f;
 		}
-
 		zoneTrackerCtx->totalTicks = 0;
 		zoneTrackerCtx->beginAverage = TicksToSeconds(zoneTrackerCtx->totalTicks);
 		zoneTrackerCtx->frameCount = 0;
+		zoneTrackerCtx->totalAverage = 0.0;
 	}
-
-
 
 	static void tick_timers() {
 		LARGE_INTEGER currentTime;
 		QueryPerformanceCounter(&currentTime);
-
 		uint64_t timeDelta = currentTime.QuadPart - zoneTrackerCtx->lastTime.QuadPart;
-
 		zoneTrackerCtx->lastTime = currentTime;
-		// Convert QPC units into a canonical tick format. This cannot overflow due to the previous clamp. 
 		timeDelta *= TicksPerSecond;
 		timeDelta /= zoneTrackerCtx->frequency.QuadPart;
-
-		uint32_t lastFrameCount = zoneTrackerCtx->frameCount;
-
-		// Variable timestep update logic. 
 		zoneTrackerCtx->totalTicks += timeDelta;
-		
 	}
 
 	static double get_total_seconds() {
@@ -201,10 +176,6 @@ namespace perf {
 	// -----------------------------------------------------------
 	void reset() {
 		tick_timers();
-		//for (int i = 0; i < MAX_ENTRIES; ++i) {
-			//zoneTrackerCtx->current[i] = 0.0f;
-		//}
-		//zoneTrackerCtx->names.size = 0;
 		zoneTrackerCtx->ident = 0;
 		// create root event
 		zoneTrackerCtx->current_parent = -1;
@@ -218,21 +189,29 @@ namespace perf {
 	void finalize() {
 		end(zoneTrackerCtx->root_event);
 		++zoneTrackerCtx->frameCount;
-		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5f) {
-			for (int i = 0; i < MAX_ENTRIES; ++i) {
+		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5) {
+			zoneTrackerCtx->totalAverage = 0.0;
+			for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
 				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);				
-				zoneTrackerCtx->accu[i] = 0.0f;
+				zoneTrackerCtx->accu[i] = 0.0;
+				if (i > 0) {
+					zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[i];
+				}
 			}
 			zoneTrackerCtx->beginAverage = get_total_seconds();
 			zoneTrackerCtx->frameCount = 0;
 		}
 	}
 
-	float avg(uint16_t idx) {
+	double avg_total() {
+		return zoneTrackerCtx->totalAverage;
+	}
+
+	double avg(uint16_t idx) {
 		return zoneTrackerCtx->average[idx];
 	}
 
-	float avg_total(uint16_t idx) {
+	double avg_total(uint16_t idx) {
 		return zoneTrackerCtx->average[0];
 	}
 
@@ -248,7 +227,7 @@ namespace perf {
 		return zoneTrackerCtx->names.data + zoneTrackerCtx->trackerEvents[i].name_index;
 	}
 
-	float dt(uint16_t i) {
+	double dt(uint16_t i) {
 		return zoneTrackerCtx->current[i];
 	}
 	// -----------------------------------------------------------
@@ -327,12 +306,16 @@ namespace perf {
 				zoneTrackerCtx->names.resize(zoneTrackerCtx->names.capacity + MAX_ENTRIES);
 			}
 			zoneTrackerCtx->names.append(name, l);
+			event.parent = zoneTrackerCtx->current_parent;
+			QueryPerformanceCounter(&event.started);
 			idx = zoneTrackerCtx->num_entries - 1;
 		}
-		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[idx];
-		event.parent = zoneTrackerCtx->current_parent;
-		QueryPerformanceCounter(&event.started);
-		zoneTrackerCtx->current_parent = idx;
+		else {
+			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[idx];
+			event.parent = zoneTrackerCtx->current_parent;
+			QueryPerformanceCounter(&event.started);
+			zoneTrackerCtx->current_parent = idx;
+		}
 		return idx;
 	}
 
@@ -341,11 +324,13 @@ namespace perf {
 	// -----------------------------------------------------------
 	void end(uint16_t index) {
 		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[index];
-		LARGE_INTEGER EndingTime;
-		QueryPerformanceCounter(&EndingTime);
+		LARGE_INTEGER now;
+		QueryPerformanceCounter(&now);
 		LARGE_INTEGER time;
-		time.QuadPart = EndingTime.QuadPart - event.started.QuadPart;
-		zoneTrackerCtx->current[index] = LIToSecs(time);
+		time.QuadPart = now.QuadPart - event.started.QuadPart;
+		time.QuadPart *= TicksPerSecond; // milli seconds
+		time.QuadPart /= zoneTrackerCtx->frequency.QuadPart;
+		zoneTrackerCtx->current[index] = time.QuadPart;
 		zoneTrackerCtx->accu[index] += zoneTrackerCtx->current[index];
 		if (zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent != -1) {
 			zoneTrackerCtx->current_parent = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent;

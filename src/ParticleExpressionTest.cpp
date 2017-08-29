@@ -29,6 +29,10 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 	_showParticleInfo = false;
 	_selectedType = 0;
 	_selectedExpression = -1;
+
+	_perfIndex = 0;
+	_perfMax = 0;
+	_perfTimer = 0.0f;
 }
 
 ParticleExpressionTest::~ParticleExpressionTest() {
@@ -192,27 +196,29 @@ void ParticleExpressionTest::renderGUI() {
 		}
 	}
 
-	float total = 0.0f;
-	gui::Value("Test", 12.3455f, 2, 4);
 	if (perf::num_events() > 0) {
-		for (size_t i = 0; i < perf::num_events(); ++i) {
-			float ct = perf::avg(i) * 1000.0f;
-			total += ct;
-			gui::Value(perf::get_name(i), ct, 3, 4);
+		float t = 0.0f;
+		for (size_t i = 1; i < perf::num_events(); ++i) {
+			gui::Value(perf::get_name(i), perf::avg(i), 4, 8);
+			t += perf::avg(i);
 		}
-		//gui::Value("Total", total, 3, 4);
+		gui::Value("Total", perf::avg_total(), 4, 8);
 	}
 	if (gui::Button("save")) {
 		FILE* fp = fopen("perf.txt", "w");
 		if (fp) {
 			for (size_t i = 0; i < perf::num_events(); ++i) {
-				fprintf(fp, "%s %g\n", perf::get_name(i), perf::avg(i) * 1000.0f);
-				LOG_DEBUG("%s %g", perf::get_name(i), perf::avg(i) * 1000.0f);
+				fprintf(fp, "%s %g\n", perf::get_name(i), perf::avg(i));
+				LOG_DEBUG("%s %g", perf::get_name(i), perf::avg(i));
 			}
 			fclose(fp);
 		}
 	}
-	logpanel::draw_gui(8);
+
+	gui::Histogram(_perfValues, _perfIndex, 0.0f, 16.0f, 2.0f);
+
+
+	//logpanel::draw_gui(8);
 	gui::end();
 	
 }
@@ -319,5 +325,17 @@ void ParticleExpressionTest::render() {
 		++cb;
 		++ca;
 		++r;
+	}
+
+	_perfTimer += ds::getElapsedSeconds();
+	if (_perfTimer > 0.25f) {
+		_perfTimer -= 0.25f;
+		if (_perfIndex + 1 >= 32) {
+			for (int i = 1; i < 32; ++i) {
+				_perfValues[i - 1] = _perfValues[i];
+			}
+			_perfIndex = 30;
+		}
+		_perfValues[_perfIndex++] = perf::avg_total();
 	}
 }
