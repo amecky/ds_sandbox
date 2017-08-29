@@ -34,6 +34,8 @@ namespace perf {
 
 	double avg_total();
 
+	int num_calls(uint16_t idx);
+
 	class ZoneTracker {
 
 	public:
@@ -52,6 +54,7 @@ namespace perf {
 
 #include <Windows.h>
 #include <stdint.h>
+#include <intrin.h>
 
 namespace perf {
 
@@ -91,25 +94,28 @@ namespace perf {
 	struct ZoneTrackerEvent {
 		uint32_t hash;
 		int parent;
-		LARGE_INTEGER started;
 		int name_index;
+		uint64_t startTicks;
 	};
 
 	const static uint16_t MAX_ENTRIES = 256;
 	// -----------------------------------------------------------
 	// Zone tracker context
 	// -----------------------------------------------------------
+	// https://github.com/GarageGames/Torque2D/blob/master/engine/source/debug/profiler.cc
 	struct ZoneTrackerContext {
 
 		ZoneTrackerEvent trackerEvents[MAX_ENTRIES];
 		double current[MAX_ENTRIES];
 		double accu[MAX_ENTRIES];
 		double average[MAX_ENTRIES];
+		int calls[MAX_ENTRIES];
+		uint64_t ticks[MAX_ENTRIES];
 		double totalAverage;
 		uint16_t frameCount;
 		double beginAverage;
 		uint16_t num_entries;
-		
+		DWORD cpuTicks;
 		LARGE_INTEGER frequency;
 		CharBuffer names;
 		int current_parent;
@@ -128,10 +134,14 @@ namespace perf {
 		return (L.QuadPart) * 1000000.0 / zoneTrackerCtx->frequency.QuadPart;
 	}
 
-	static const uint64_t TicksPerSecond = 10000000;
+	static const uint64_t TicksPerSecond = 1000000;
 
 	static double TicksToSeconds(uint64_t ticks) {
 		return static_cast<double>(ticks) / TicksPerSecond;
+	}
+
+	static uint64_t rdtsc() {
+		return __rdtsc();
 	}
 
 	// -----------------------------------------------------------
@@ -141,6 +151,7 @@ namespace perf {
 		if (zoneTrackerCtx == 0) {
 			zoneTrackerCtx = new ZoneTrackerContext;
 			QueryPerformanceFrequency(&zoneTrackerCtx->frequency);
+			zoneTrackerCtx->cpuTicks = zoneTrackerCtx->frequency.LowPart;
 		}
 		zoneTrackerCtx->frames = 0;
 		zoneTrackerCtx->fpsTimer = 0.0f;
@@ -176,6 +187,9 @@ namespace perf {
 	// -----------------------------------------------------------
 	void reset() {
 		tick_timers();
+		for (int i = 0; i < MAX_ENTRIES; ++i) {
+			zoneTrackerCtx->calls[i] = 0;
+		}
 		zoneTrackerCtx->ident = 0;
 		// create root event
 		zoneTrackerCtx->current_parent = -1;
@@ -188,8 +202,9 @@ namespace perf {
 	// -----------------------------------------------------------
 	void finalize() {
 		end(zoneTrackerCtx->root_event);
-		++zoneTrackerCtx->frameCount;
+		++zoneTrackerCtx->frameCount;		
 		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5) {
+			LOG_DEBUG("finalize %d", zoneTrackerCtx->frameCount);
 			zoneTrackerCtx->totalAverage = 0.0;
 			for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
 				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);				
@@ -198,6 +213,7 @@ namespace perf {
 					zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[i];
 				}
 			}
+			//zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[0];
 			zoneTrackerCtx->beginAverage = get_total_seconds();
 			zoneTrackerCtx->frameCount = 0;
 		}
@@ -221,6 +237,10 @@ namespace perf {
 
 	const ZoneTrackerEvent& get_event(uint16_t i) {
 		return zoneTrackerCtx->trackerEvents[i];
+	}
+
+	int num_calls(uint16_t idx) {
+		return zoneTrackerCtx->calls[idx];
 	}
 
 	const char* get_name(uint16_t i) {
@@ -299,6 +319,7 @@ namespace perf {
 		int idx = findHash(hash);
 		if (idx == -1) {
 			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->num_entries++];
+			event.startTicks = rdtsc();
 			event.hash = fnv1a(name);
 			event.name_index = zoneTrackerCtx->names.size;
 			int l = strlen(name);
@@ -307,15 +328,15 @@ namespace perf {
 			}
 			zoneTrackerCtx->names.append(name, l);
 			event.parent = zoneTrackerCtx->current_parent;
-			QueryPerformanceCounter(&event.started);
 			idx = zoneTrackerCtx->num_entries - 1;
 		}
 		else {
 			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[idx];
+			event.startTicks = rdtsc();
 			event.parent = zoneTrackerCtx->current_parent;
-			QueryPerformanceCounter(&event.started);
 			zoneTrackerCtx->current_parent = idx;
 		}
+		++zoneTrackerCtx->calls[idx];
 		return idx;
 	}
 
@@ -324,13 +345,9 @@ namespace perf {
 	// -----------------------------------------------------------
 	void end(uint16_t index) {
 		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[index];
-		LARGE_INTEGER now;
-		QueryPerformanceCounter(&now);
-		LARGE_INTEGER time;
-		time.QuadPart = now.QuadPart - event.started.QuadPart;
-		time.QuadPart *= TicksPerSecond; // milli seconds
-		time.QuadPart /= zoneTrackerCtx->frequency.QuadPart;
-		zoneTrackerCtx->current[index] = time.QuadPart;
+		zoneTrackerCtx->ticks[index] = rdtsc() - event.startTicks;		
+		double d = static_cast<double>(zoneTrackerCtx->ticks[index]) / static_cast<double>(zoneTrackerCtx->cpuTicks);
+		zoneTrackerCtx->current[index] = d;
 		zoneTrackerCtx->accu[index] += zoneTrackerCtx->current[index];
 		if (zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent != -1) {
 			zoneTrackerCtx->current_parent = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent;

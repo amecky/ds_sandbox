@@ -66,6 +66,8 @@ void initialize() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 	
+	SetThreadAffinityMask(GetCurrentThread(), 1);
+
 	logging::logHandler = myLogging;
 	logging::currentLevel = logging::LL_DEBUG;
 	logpanel::init(32);
@@ -97,9 +99,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	
 	while (ds::isRunning() && running) {
 
-		ds::begin();
-
 		perf::reset();
+
+		perf::ZoneTracker("main");
+
+		{
+			perf::ZoneTracker("main::begin");
+			ds::begin();
+		}
+		
 
 		{
 			perf::ZoneTracker("main::render");
@@ -114,11 +122,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 			spriteBuffer.flush();
 		}
-
+		/*
 		{
 			perf::ZoneTracker("main::events");
 			ds::Event event;
 			while (ds::get_event(&event)) {
+				LOG_DEBUG("caught event %d", event.type);
 				if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
 					animationTest.onButtonClicked(event.mouse.button);
 				}
@@ -140,7 +149,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 				}
 			}
 		}
-
+		*/
 		//tweeningTest.renderGUI();
 		//animationTest.renderGUI();
 		//vmTest.renderGUI();
@@ -149,9 +158,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			particleTest.renderGUI();
 		}
 		//perf::tickFPS(ds::getElapsedSeconds());		
+		
+		{
+			perf::ZoneTracker("main::end");
+			ds::end();
+		}
 		perf::finalize();
-
-		ds::end();
 		
 		
 	}

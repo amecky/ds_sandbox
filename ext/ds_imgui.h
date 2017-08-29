@@ -624,15 +624,37 @@ namespace gui {
 		void reset() {
 			index = 0;
 			buffer[0] = '\0';
+			_tmp[0] = '\0';
 			top = 0;
 			for (int i = 0; i < STACK_MAX_ENTRIES; ++i) {
 				ids[i] = 0;
 			}
 		}
 
+		void append_int(int v, int offset) {
+			int s = 1;
+			int t = v;
+			int cnt = 0;
+			while (t > 0) {
+				t /= 10;
+				++cnt;
+				s *= 10;
+			}
+			t = v;
+			int l = 0;
+			for (int i = 0; i < cnt; ++i) {
+				s /= 10;
+				int tmp = t / s;
+				_tmp[offset + l] = 48 + tmp;
+				t -= tmp * s;
+				++l;
+			}
+			_tmp[offset + l] = '\0';
+		}
+
 		void push(int id) {
 			if (top < STACK_MAX_ENTRIES) {
-				sprintf_s(_tmp, 256, "%d", id);
+				append_int(id, 0);
 				append(_tmp);
 				ids[++top] = fnv1a(buffer);
 			}
@@ -647,7 +669,18 @@ namespace gui {
 
 		void push(const char* text, const char* suffix) {
 			if (top < STACK_MAX_ENTRIES) {
-				sprintf_s(_tmp, 256, "%s%s", text, suffix);
+				const char* t = text;
+				int cnt = 0;
+				while (*t) {
+					_tmp[cnt++] = *t;
+					++t;
+				}
+				t = suffix;
+				while (*t) {
+					_tmp[cnt++] = *t;
+					++t;
+				}
+				_tmp[cnt] = '\0';
 				append(_tmp);
 				ids[++top] = fnv1a(buffer);
 			}
@@ -655,7 +688,13 @@ namespace gui {
 
 		void push(const char* text, int id) {
 			if (top < STACK_MAX_ENTRIES) {
-				sprintf_s(_tmp, 256, "%s%d", text, id);
+				const char* t = text;
+				int cnt = 0;
+				while (*t) {
+					_tmp[cnt++] = *t;
+					++t;
+				}
+				append_int(id, cnt);
 				append(_tmp);
 				ids[++top] = fnv1a(buffer);
 			}
@@ -1810,14 +1849,17 @@ namespace gui {
 			bw = 2.0f;
 		}
 		renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, height), ds::Color(51, 51, 51, 255));
+		char buffer[16];
+		/*
 		p.x += width + 20.0f;
 		p.y += height / 2.0f;
-		char buffer[16];
+		
 		sprintf_s(buffer, 16, "%g", maxValue);
 		renderer::add_text(_guiCtx->uiContext, p, buffer);
 		p.y -= height;
 		sprintf_s(buffer, 16, "%g", minValue);
 		renderer::add_text(_guiCtx->uiContext, p, buffer);
+		*/
 		for (int i = 0; i < num; ++i) {
 			float v = values[i];
 			if (v > maxValue) {
@@ -1830,14 +1872,22 @@ namespace gui {
 			p.x += i * bw + 2;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(bw - 1, yp), ds::Color(192, 0, 0, 255));
 		}
-		step = delta / 10.0f;
-		int d = static_cast<int>(delta / step) + 1;
-		for (int i = 0; i < d; ++i) {
+		float steps = delta / step;
+		int stp = static_cast<int>(steps);
+		float hs = height / steps;
+		for (int i = 0; i < stp; ++i) {
 			p = _guiCtx->currentPos;
-			float current = 1.0f - (step*i) / delta;
-			int yp = current * height;
-			p.y -= yp;
+			//float current = 1.0f - (step*i) / delta;
+			//int yp = height - height / stp;
+			p.y -= (stp - i) * hs;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, 1), ds::Color(16, 16, 16, 255));
+		}
+		for (int i = 0; i < stp + 1; ++i) {
+			p = _guiCtx->currentPos;
+			p.y -= (stp - i) * hs;
+			p.x += width + 20.0f;
+			sprintf_s(buffer, 16, "%g", (step * i));
+			renderer::add_text(_guiCtx->uiContext, p, buffer);
 		}
 		moveForward(p2i(width, height + 30));
 	}

@@ -171,6 +171,8 @@ void ParticleExpressionTest::renderGUI() {
 	p2i sp = p2i(10, 760);
 	if (gui::begin("Debug", &_dialogState, &_dialogPos, 300)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
+		float ti = 1.0f / ds::getFramesPerSecond() * 1000.0f;
+		gui::Value("TI", ti,3,4);
 		gui::Value("Particles", _particles.num);
 		gui::Input("Num", &_numParticles);
 		if (gui::Button("Start")) {
@@ -197,10 +199,8 @@ void ParticleExpressionTest::renderGUI() {
 	}
 
 	if (perf::num_events() > 0) {
-		float t = 0.0f;
-		for (size_t i = 1; i < perf::num_events(); ++i) {
+		for (size_t i = 0; i < perf::num_events(); ++i) {
 			gui::Value(perf::get_name(i), perf::avg(i), 4, 8);
-			t += perf::avg(i);
 		}
 		gui::Value("Total", perf::avg_total(), 4, 8);
 	}
@@ -208,14 +208,16 @@ void ParticleExpressionTest::renderGUI() {
 		FILE* fp = fopen("perf.txt", "w");
 		if (fp) {
 			for (size_t i = 0; i < perf::num_events(); ++i) {
-				fprintf(fp, "%s %g\n", perf::get_name(i), perf::avg(i));
-				LOG_DEBUG("%s %g", perf::get_name(i), perf::avg(i));
+				fprintf(fp, "%s %2.5f %d\n", perf::get_name(i), perf::avg(i),perf::num_calls(i));
+				LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
 			}
+			fprintf(fp, "Total %2.5f\n", perf::avg_total());
+			LOG_DEBUG("Total %2.5f", perf::avg_total());
 			fclose(fp);
 		}
 	}
 
-	gui::Histogram(_perfValues, _perfIndex, 0.0f, 16.0f, 2.0f);
+	gui::Histogram(_perfValues, _perfIndex, 0.0f, 5.0f, 1.0f);
 
 
 	//logpanel::draw_gui(8);
