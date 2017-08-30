@@ -204,7 +204,6 @@ namespace perf {
 		end(zoneTrackerCtx->root_event);
 		++zoneTrackerCtx->frameCount;		
 		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5) {
-			LOG_DEBUG("finalize %d", zoneTrackerCtx->frameCount);
 			zoneTrackerCtx->totalAverage = 0.0;
 			for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
 				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);				
@@ -213,7 +212,6 @@ namespace perf {
 					zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[i];
 				}
 			}
-			//zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[0];
 			zoneTrackerCtx->beginAverage = get_total_seconds();
 			zoneTrackerCtx->frameCount = 0;
 		}

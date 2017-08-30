@@ -632,24 +632,30 @@ namespace gui {
 		}
 
 		void append_int(int v, int offset) {
-			int s = 1;
-			int t = v;
-			int cnt = 0;
-			while (t > 0) {
-				t /= 10;
-				++cnt;
-				s *= 10;
+			int l = offset;
+			if (v == 0) {
+				_tmp[l++] = '0';
+				_tmp[l++] = '\0';
 			}
-			t = v;
-			int l = 0;
-			for (int i = 0; i < cnt; ++i) {
-				s /= 10;
-				int tmp = t / s;
-				_tmp[offset + l] = 48 + tmp;
-				t -= tmp * s;
-				++l;
-			}
-			_tmp[offset + l] = '\0';
+			else {
+				int s = 1;
+				int t = v;
+				int cnt = 0;
+				while (t > 0) {
+					t /= 10;
+					++cnt;
+					s *= 10;
+				}
+				t = v;
+				
+				for (int i = 0; i < cnt; ++i) {
+					s /= 10;
+					int tmp = t / s;
+					_tmp[l++] = 48 + tmp;
+					t -= tmp * s;
+				}
+				_tmp[l] = '\0';
+			}			
 		}
 
 		void push(int id) {

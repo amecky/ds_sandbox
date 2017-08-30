@@ -6,24 +6,10 @@
 #include <string>
 #include "LogPanel.h"
 
-ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _particles(4096) {
+ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
 
 	_dialogPos = p2i(10, 950);
 	_dialogState = 1;
-
-	_vmCtx.add_constant("PI", 3.141592654f);
-	_vmCtx.add_constant("TWO_PI", 2.0f * 3.141592654f);
-	_vmCtx.add_variable("DT", 1.0f);
-	_vmCtx.add_variable("IDX", 1.0f);
-	_vmCtx.add_variable("COUNT", 32.0f);
-	_vmCtx.add_variable("DT", 0.0f);
-	_vmCtx.add_variable("TIMER", 0.0f);
-	_vmCtx.add_variable("TTL", 1.0f);
-	_vmCtx.add_variable("RND", 1.0f);
-	_vmCtx.add_variable("NORM", 1.0f);
-
-	loadExpressionsFile("particles\\ring_emitter.txt", _emitterExpressions, &emitter);
-	loadExpressionsFile("particles\\motion.txt", _moduleExpressions, &modules);
 
 	_numParticles = 64;
 	_showParticleInfo = false;
@@ -33,61 +19,59 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 	_perfIndex = 0;
 	_perfMax = 0;
 	_perfTimer = 0.0f;
+
+	_system = new Particlesystem("RingExplosion", ds::vec4(200, 0, 4, 4),4096);
+	loadExpressionsFile(_system);
+
 }
 
 ParticleExpressionTest::~ParticleExpressionTest() {
+	delete _system;
 }
 
-void ParticleExpressionTest::loadExpressionsFile(const char* name, ParticleExpression* expressions, ParticleEmitter* ret) {
-	std::ifstream ifs(name);
+void ParticleExpressionTest::loadExpressionsFile(Particlesystem* system) {
+	char buffer[256];
+	sprintf(buffer, "particles\\%s.txt", system->name);
+	std::ifstream ifs(buffer);
 	std::string line;
 	uint16_t cnt = 0;
 	while (std::getline(ifs, line)) {
-		// skip empty lines:
-		if (line.empty() || line == "-") {
+		if (line.empty() || line.find("#") != std::string::npos) {
+			continue;
+		}
+		if (line == "-") {
 			++cnt;
 			continue;
 		}
-		ParticleExpression& exp = expressions[cnt];
+		LOG_DEBUG("line %d = '%s'", cnt, line.c_str());
+		ParticleExpression& exp = system->expressions[cnt];
 		snprintf(exp.source, 256, "%s", line.c_str());
-		vm::parse(exp.source, _vmCtx, exp.expression);
-		ret->connections[cnt] = { ALL_CHANNELS[cnt],&exp.expression, cnt };
+		vm::parse(exp.source, system->vmCtx, exp.expression);
+		int cid = cnt;
+		if (cid > NUM_CHANNELS) {
+			cid -= NUM_CHANNELS;
+		}
+		system->connections[cnt] = { ALL_CHANNELS[cid],&exp.expression, cnt };
 		++cnt;
 	}
 }
 
-void ParticleExpressionTest::emitt(uint16_t num, const ds::vec2& pos) {
-	uint16_t start = 0;
-	uint16_t cnt = 0;
-	_vmCtx.variables[4].value = num;
-	if (_particles.wake_up(num, &start, &cnt)) {
-		for (int i = 0; i < cnt; ++i) {
-			_vmCtx.variables[3].value = i;
-			for (int j = 0; j < NUM_CHANNELS; ++j) {
-				if (emitter.connections[j].expression != 0) {
-					const ChannelConnection& cc = emitter.connections[j];
-					float r = vm::run(cc.expression->tokens, cc.expression->num, _vmCtx);
-					if (cc.channel == PC_POS_X ) {
-						r += pos.x;
-					}
-					if (cc.channel == PC_POS_Y) {
-						r += pos.y;
-					}
-					_particles.set_value(cc.channel, start + i, r);
-				}
-			}
-		}
-	}
-}
-
-void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, ParticleExpression* expressions) {
+void ParticleExpressionTest::renderExpressions(Particlesystem* system) {
 	perf::ZoneTracker("renderExpressions");
 	p2i p = gui::getCurrentPosition();
 	p2i t = p;
-	for (uint16_t i = 0; i < NUM_CHANNELS; ++i) {
-		gui::draw_text(t, CHANNEL_NAMES[i]);
+	int s = 0;
+	int e = NUM_CHANNELS;
+	int d = 0;
+	if (_selectedType == 1) {
+		s += NUM_CHANNELS;
+		e += NUM_CHANNELS;
+		d = NUM_CHANNELS;
+	}
+	for (uint16_t i = s; i < e; ++i) {
+		gui::draw_text(t, CHANNEL_NAMES[i - d]);
 		t.x += 100;
-		const ChannelConnection& cc = emitter.connections[i];
+		const ChannelConnection& cc = system->connections[i];
 		if (cc.expression != 0) {
 			uint16_t id = cc.id;
 			gui::pushID(CHANNEL_NAMES[i],i);
@@ -97,15 +81,15 @@ void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, Particl
 			}
 			gui::draw_box(t, p2i(60, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "edit");
-			t.x += 80;
-			gui::popID();
+			t.x += 80;			
 			gui::pushID("-",i);
 			gui::checkItem(t, p2i(20, 16));
 			if (gui::isClicked()) {
-				emitter.connections[i].expression = 0;
+				system->connections[i].expression = 0;
 			}
 			gui::draw_box(t, p2i(20, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "-");
+			gui::popID();
 			gui::popID();
 		}
 		else {
@@ -113,10 +97,10 @@ void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, Particl
 			gui::pushID("-", i);
 			gui::checkItem(t, p2i(20, 16));
 			if (gui::isClicked()) {
-				ParticleExpression& exp = expressions[i];
+				ParticleExpression& exp = system->expressions[i];
 				snprintf(exp.source, 256, "1");
-				vm::parse(exp.source, _vmCtx, exp.expression);
-				emitter.connections[i] = { ALL_CHANNELS[i],&exp.expression, i };
+				vm::parse(exp.source, system->vmCtx, exp.expression);
+				system->connections[i] = { ALL_CHANNELS[i],&exp.expression, i };
 			}
 			gui::draw_box(t, p2i(20, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "+");
@@ -127,10 +111,10 @@ void ParticleExpressionTest::renderExpressions(ParticleEmitter& emitter, Particl
 	}
 	gui::moveForward(p2i(200, NUM_CHANNELS * 22));
 	if (_selectedExpression != -1) {
-		ChannelConnection& cc = emitter.connections[_selectedExpression];
-		ParticleExpression& pexp = expressions[cc.id];
+		ChannelConnection& cc = system->connections[_selectedExpression];
+		ParticleExpression& pexp = system->expressions[cc.id];
 		if (gui::Input("Source", pexp.source, 256)) {
-			vm::parse(pexp.source, _vmCtx, pexp.expression);
+			vm::parse(pexp.source, system->vmCtx, pexp.expression);
 		}
 	}
 }
@@ -173,26 +157,21 @@ void ParticleExpressionTest::renderGUI() {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		float ti = 1.0f / ds::getFramesPerSecond() * 1000.0f;
 		gui::Value("TI", ti,3,4);
-		gui::Value("Particles", _particles.num);
+		gui::Value("Particles", _system->particles.num);
 		gui::Input("Num", &_numParticles);
 		if (gui::Button("Start")) {
 			float px = ds::random(300, 600);
 			float py = ds::random(200, 400);
-			emitt(_numParticles, ds::vec2(px,py));
+			_system->emitt(_numParticles, ds::vec2(px,py));
 		}
 		static const char* RButtons[] = {"Emitter","Motion"};
 		gui::RadioButtons(RButtons, 2, &_selectedType);
-		if (_selectedType == 0) {
-			renderExpressions(emitter, _emitterExpressions);
-		}
-		else {
-			renderExpressions(modules, _moduleExpressions);
-		}
+		renderExpressions(_system);
 		gui::Checkbox("Show Info", &_showParticleInfo);
 		if (_showParticleInfo) {
-			if (_particles.num > 0) {
+			if (_system->particles.num > 0) {
 				for (int i = 0; i < NUM_CHANNELS; ++i) {
-					gui::Value(CHANNEL_NAMES[i], _particles.get_value(ALL_CHANNELS[i], 0));
+					gui::Value(CHANNEL_NAMES[i], _system->particles.get_value(ALL_CHANNELS[i], 0));
 				}
 			}
 		}
@@ -226,109 +205,20 @@ void ParticleExpressionTest::renderGUI() {
 }
 
 // ----------------------------------------------------
-// move by particles by velocity
-// ----------------------------------------------------
-void ParticleExpressionTest::moveParticles() {
-	perf::ZoneTracker("moveParticles");
-	uint16_t cnt = 0;
-	float elapsed = ds::getElapsedSeconds();
-	uint16_t num = _particles.num;
-	float* px = _particles.get_channel(PC_POS_X);
-	float* py = _particles.get_channel(PC_POS_Y);
-	float* vx = _particles.get_channel(PC_VELOCITY_X);
-	float* vy = _particles.get_channel(PC_VELOCITY_Y);
-	while (cnt < num) {
-		*px += *vx * elapsed;
-		*py += *vy * elapsed;
-		++cnt;
-		++px;
-		++py;
-		++vx;
-		++vy;
-	}
-}
-
-// ----------------------------------------------------
-// kill dead particles
-// ----------------------------------------------------
-void ParticleExpressionTest::manageLifecycles() {
-	perf::ZoneTracker("manageLifecycles");
-	uint16_t cnt = 0;
-	float elapsed = ds::getElapsedSeconds();
-	float* timer = _particles.get_channel(PC_TIMER);
-	float* ttl = _particles.get_channel(PC_TTL);
-	while (cnt < _particles.num) {
-		*timer += elapsed;
-		if (*timer > *ttl) {
-			_particles.remove(cnt);
-		}
-		else {
-			++timer;
-			++ttl;
-			++cnt;
-		}
-	}
-}
-
-// ----------------------------------------------------
-// update particles
-// ----------------------------------------------------
-void ParticleExpressionTest::updateParticles() {
-	perf::ZoneTracker("updateParticles");
-	for (int j = 0; j < NUM_CHANNELS; ++j) {
-		if (modules.connections[j].expression != 0) {
-			const ChannelConnection& cc = modules.connections[j];
-			float* c = _particles.get_channel(cc.channel);
-			for (int i = 0; i < _particles.num; ++i) {
-				_vmCtx.variables[5].value = ds::getElapsedSeconds();
-				_vmCtx.variables[6].value = _particles.get_value(PC_TIMER, i);
-				_vmCtx.variables[7].value = _particles.get_value(PC_TTL, i);
-				_vmCtx.variables[8].value = _particles.get_value(PC_RAND, i);
-				_vmCtx.variables[9].value = _vmCtx.variables[6].value / _vmCtx.variables[7].value;
-				*c = vm::run(cc.expression->tokens, cc.expression->num, _vmCtx);
-				++c;
-			}
-		}
-	}
-}
-
-// ----------------------------------------------------
 // render
 // ----------------------------------------------------
 void ParticleExpressionTest::render() {
 
-	manageLifecycles();
+	float dt = ds::getElapsedSeconds();
+
+	_system->manageLifecycles(dt);
 	
-	moveParticles();
+	_system->moveParticles(dt);
 
-	updateParticles();
+	_system->updateParticles(dt);
 
-	perf::ZoneTracker("render");
-	// render
-	uint16_t cnt = 0;
-	float* px = _particles.get_channel(PC_POS_X);
-	float* py = _particles.get_channel(PC_POS_Y);
-	float* r = _particles.get_channel(PC_ROTATION);
-	float* sx = _particles.get_channel(PC_SCALE_X);
-	float* sy = _particles.get_channel(PC_SCALE_Y);
-	float* cr = _particles.get_channel(PC_COLOR_R);
-	float* cg = _particles.get_channel(PC_COLOR_G);
-	float* cb = _particles.get_channel(PC_COLOR_B);
-	float* ca = _particles.get_channel(PC_COLOR_A);
-	while ( cnt < _particles.num) {
-		_sprites->add(ds::vec2(*px, *py), ds::vec4(200, 0, 4, 4),ds::vec2(*sx,*sy),*r,ds::Color(*cr,*cg,*cb,*ca));
-		++cnt;
-		++px;
-		++py;
-		++sx;
-		++sy;
-		++cr;
-		++cg;
-		++cb;
-		++ca;
-		++r;
-	}
-
+	_system->render(_sprites);
+	
 	_perfTimer += ds::getElapsedSeconds();
 	if (_perfTimer > 0.25f) {
 		_perfTimer -= 0.25f;
