@@ -18,6 +18,9 @@
 #define DS_PROFILER_IMPLEMENTATION
 #include <ds_profiler.h>
 #include "ParticleExpressionTest.h"
+#define DS_PERF_PANEL
+#include "PerfPanel.h"
+
 // ---------------------------------------------------------------
 // load image from the resources
 // ---------------------------------------------------------------

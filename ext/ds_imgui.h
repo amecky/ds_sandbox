@@ -1384,7 +1384,7 @@ namespace gui {
 		_tmpBuffer[cnt++] = '.';
 		double r = 0.0;
 		start = pow(10, prec - 1);
-		float frac = modf(value, &r) * start;
+		float frac = modf(value, &r) * (start * 10);
 		t = static_cast<int>(frac);
 		for (int i = 0; i < prec; ++i) {
 			int f = t / start;
@@ -1848,28 +1848,21 @@ namespace gui {
 		if (delta == 0.0f) {
 			delta = 1.0f;
 		}
-		// make sure bw is at least 2
-		float st = width / static_cast<float>(num - 1);
+		int dd = num - 1;
+		float st = width / static_cast<float>(dd);
 		float bw = width / static_cast<float>(num);
 		if (bw < 2.0f) {
 			bw = 2.0f;
 		}
-		renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, height), ds::Color(51, 51, 51, 255));
+		renderer::add_box(_guiCtx->uiContext, p, p2i(width, height), ds::Color(51, 51, 51, 255));
 		char buffer[16];
-		/*
-		p.x += width + 20.0f;
-		p.y += height / 2.0f;
-		
-		sprintf_s(buffer, 16, "%g", maxValue);
-		renderer::add_text(_guiCtx->uiContext, p, buffer);
-		p.y -= height;
-		sprintf_s(buffer, 16, "%g", minValue);
-		renderer::add_text(_guiCtx->uiContext, p, buffer);
-		*/
 		for (int i = 0; i < num; ++i) {
 			float v = values[i];
 			if (v > maxValue) {
 				v = maxValue;
+			}
+			if (v < minValue) {
+				v = minValue;
 			}
 			float current = (v - minValue) / delta;
 			float yp = current * height;
@@ -1883,8 +1876,6 @@ namespace gui {
 		float hs = height / steps;
 		for (int i = 0; i < stp; ++i) {
 			p = _guiCtx->currentPos;
-			//float current = 1.0f - (step*i) / delta;
-			//int yp = height - height / stp;
 			p.y -= (stp - i) * hs;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, 1), ds::Color(16, 16, 16, 255));
 		}
@@ -2270,6 +2261,8 @@ namespace gui {
 		if (_guiCtx->mouseDown && _guiCtx->activeItem != _guiCtx->inputItem) {
 			_guiCtx->inputItem = 0;
 		}
+		_guiCtx->size = p2i(0);
+		_guiCtx->grouping = false;
 	}
 
 	// --------------------------------------------------------

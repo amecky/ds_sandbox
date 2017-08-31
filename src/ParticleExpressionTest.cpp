@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include "LogPanel.h"
+#include "PerfPanel.h"
 
 ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
 
@@ -16,11 +17,7 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 	_selectedType = 0;
 	_selectedExpression = -1;
 
-	_perfIndex = 0;
-	_perfMax = 0;
-	_perfTimer = 0.0f;
-
-	_system = new Particlesystem("RingExplosion", ds::vec4(200, 0, 4, 4),4096);
+	_system = new Particlesystem("Streaks", ds::vec4(200, 0, 10, 10),4096);
 	loadExpressionsFile(_system);
 
 }
@@ -74,7 +71,7 @@ void ParticleExpressionTest::renderExpressions(Particlesystem* system) {
 		const ChannelConnection& cc = system->connections[i];
 		if (cc.expression != 0) {
 			uint16_t id = cc.id;
-			gui::pushID(CHANNEL_NAMES[i],i);
+			gui::pushID(CHANNEL_NAMES[i - d],i);
 			gui::checkItem(t, p2i(60, 16));
 			if (gui::isClicked()) {
 				_selectedExpression = i;
@@ -171,34 +168,13 @@ void ParticleExpressionTest::renderGUI() {
 		if (_showParticleInfo) {
 			if (_system->particles.num > 0) {
 				for (int i = 0; i < NUM_CHANNELS; ++i) {
-					gui::Value(CHANNEL_NAMES[i], _system->particles.get_value(ALL_CHANNELS[i], 0));
+					gui::Value(CHANNEL_NAMES[i], _system->particles.get_value(ALL_CHANNELS[i], 0),4,5);
 				}
 			}
 		}
 	}
-
-	if (perf::num_events() > 0) {
-		for (size_t i = 0; i < perf::num_events(); ++i) {
-			gui::Value(perf::get_name(i), perf::avg(i), 4, 8);
-		}
-		gui::Value("Total", perf::avg_total(), 4, 8);
-	}
-	if (gui::Button("save")) {
-		FILE* fp = fopen("perf.txt", "w");
-		if (fp) {
-			for (size_t i = 0; i < perf::num_events(); ++i) {
-				fprintf(fp, "%s %2.5f %d\n", perf::get_name(i), perf::avg(i),perf::num_calls(i));
-				LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
-			}
-			fprintf(fp, "Total %2.5f\n", perf::avg_total());
-			LOG_DEBUG("Total %2.5f", perf::avg_total());
-			fclose(fp);
-		}
-	}
-
-	gui::Histogram(_perfValues, _perfIndex, 0.0f, 5.0f, 1.0f);
-
-
+	
+	perfpanel::show_profiler();
 	//logpanel::draw_gui(8);
 	gui::end();
 	
@@ -219,15 +195,6 @@ void ParticleExpressionTest::render() {
 
 	_system->render(_sprites);
 	
-	_perfTimer += ds::getElapsedSeconds();
-	if (_perfTimer > 0.25f) {
-		_perfTimer -= 0.25f;
-		if (_perfIndex + 1 >= 32) {
-			for (int i = 1; i < 32; ++i) {
-				_perfValues[i - 1] = _perfValues[i];
-			}
-			_perfIndex = 30;
-		}
-		_perfValues[_perfIndex++] = perf::avg_total();
-	}
+	perfpanel::tick_histogram(ds::getElapsedSeconds());
+	
 }
