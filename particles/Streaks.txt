@@ -12,7 +12,7 @@ TWO_PI * IDX / COUNT
 -
 0.5 + random(0.6,1.2)
 -
-random(0.0,1.0)
+random(0.5,0.8)
 -
 -
 #
@@ -20,15 +20,15 @@ random(0.0,1.0)
 #
 -
 -
-1.0 + TIMER/TTL * 0.4
+RND + TIMER/TTL * 0.4
 -
 -
--
+1.0 - lerp(0.0,1.0,NORM)
 -
 -
 1.0 - TIMER/TTL
 -
 -
 -
--
--
+lerp(100,20,TIMER/TTL) * cos(RND)
+lerp(100,20,TIMER/TTL) * sin(RND)

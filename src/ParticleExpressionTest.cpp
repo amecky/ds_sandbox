@@ -14,10 +14,11 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 
 	_numParticles = 64;
 	_showParticleInfo = false;
+	_showExpressions = false;
 	_selectedType = 0;
 	_selectedExpression = -1;
 
-	_system = new Particlesystem("Streaks", ds::vec4(200, 0, 10, 10),4096);
+	_system = new Particlesystem("new_system", ds::vec4(200, 0, 20, 20), 4096);
 	loadExpressionsFile(_system);
 
 }
@@ -40,15 +41,38 @@ void ParticleExpressionTest::loadExpressionsFile(Particlesystem* system) {
 			++cnt;
 			continue;
 		}
-		LOG_DEBUG("line %d = '%s'", cnt, line.c_str());
-		ParticleExpression& exp = system->expressions[cnt];
-		snprintf(exp.source, 256, "%s", line.c_str());
-		vm::parse(exp.source, system->vmCtx, exp.expression);
-		int cid = cnt;
-		if (cid > NUM_CHANNELS) {
-			cid -= NUM_CHANNELS;
+		int bl = 0;
+		const char* p = line.c_str();
+		while (*p != '=') {
+			buffer[bl++] = *p;
+			++p;
 		}
-		system->connections[cnt] = { ALL_CHANNELS[cid],&exp.expression, cnt };
+		if (buffer[bl - 1] == ' ') {
+			--bl;
+		}
+		buffer[bl] = '\0';
+		++p;
+		while (*p == ' ') {
+			++p;
+		}
+		int len = strlen(p);
+		if (len > 0) {
+			ParticleExpression& exp = system->expressions[cnt];
+			int l = 0;
+			while (*p) {
+				if (l < 255) {
+					exp.source[l++] = *p;
+					++p;
+				}
+			}
+			exp.source[l] = '\0';
+			ParticleChannel pc = find_by_name(buffer);
+			LOG_DEBUG("line %d = '%s' : '%s'", cnt, buffer, exp.source);
+			if (pc != ParticleChannel::UNKNOWN) {				
+				vm::parse(exp.source, system->vmCtx, exp.expression);
+				system->connections[cnt] = { pc, &exp.expression, cnt };
+			}
+		}
 		++cnt;
 	}
 }
@@ -67,7 +91,7 @@ void ParticleExpressionTest::renderExpressions(Particlesystem* system) {
 	}
 	for (uint16_t i = s; i < e; ++i) {
 		gui::draw_text(t, CHANNEL_NAMES[i - d]);
-		t.x += 100;
+		t.x += 150;
 		const ChannelConnection& cc = system->connections[i];
 		if (cc.expression != 0) {
 			uint16_t id = cc.id;
@@ -78,7 +102,7 @@ void ParticleExpressionTest::renderExpressions(Particlesystem* system) {
 			}
 			gui::draw_box(t, p2i(60, 16), gui::getSettings().buttonColor);
 			gui::draw_text(t, "edit");
-			t.x += 80;			
+			t.x += 100;			
 			gui::pushID("-",i);
 			gui::checkItem(t, p2i(20, 16));
 			if (gui::isClicked()) {
@@ -90,7 +114,7 @@ void ParticleExpressionTest::renderExpressions(Particlesystem* system) {
 			gui::popID();
 		}
 		else {
-			t.x += 80;
+			t.x += 100;
 			gui::pushID("-", i);
 			gui::checkItem(t, p2i(20, 16));
 			if (gui::isClicked()) {
@@ -156,14 +180,16 @@ void ParticleExpressionTest::renderGUI() {
 		gui::Value("TI", ti,3,4);
 		gui::Value("Particles", _system->particles.num);
 		gui::Input("Num", &_numParticles);
+
 		if (gui::Button("Start")) {
-			float px = ds::random(300, 600);
-			float py = ds::random(200, 400);
+			float px = 640;// ds::random(300, 600);
+			float py = 480;// ds::random(200, 400);
 			_system->emitt(_numParticles, ds::vec2(px,py));
 		}
-		static const char* RButtons[] = {"Emitter","Motion"};
-		gui::RadioButtons(RButtons, 2, &_selectedType);
-		renderExpressions(_system);
+		gui::Checkbox("Show Expressions", &_showExpressions);
+		if (_showExpressions) {
+			renderExpressions(_system);
+		}
 		gui::Checkbox("Show Info", &_showParticleInfo);
 		if (_showParticleInfo) {
 			if (_system->particles.num > 0) {

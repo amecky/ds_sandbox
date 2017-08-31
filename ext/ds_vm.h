@@ -125,9 +125,9 @@ namespace vm {
 	// ------------------------------------------------------------------
 	// op codes
 	// ------------------------------------------------------------------
-	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE, OP_SATURATE, OP_RANDOM };
+	enum OpCode { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_UNARY_MINUS, OP_NOP, OP_SIN, OP_COS, OP_ABS, OP_RAMP, OP_LERP, OP_RANGE, OP_SATURATE, OP_RANDOM, OP_CHANNEL };
 
-	const char* FUNCTION_NAMES[] = { ",","+","-","*","/","u-","u+","sin","cos","abs","ramp","lerp","range","saturate","random" };
+	const char* FUNCTION_NAMES[] = { ",","+","-","*","/","u-","u+","sin","cos","abs","ramp","lerp","range","saturate","random", "channel" };
 	// ------------------------------------------------------------------
 	// Function definition
 	// ------------------------------------------------------------------
@@ -156,10 +156,11 @@ namespace vm {
 		{ FUNCTION_NAMES[11], OP_LERP, 17, 3 },
 		{ FUNCTION_NAMES[12], OP_RANGE, 17, 3 },
 		{ FUNCTION_NAMES[13], OP_SATURATE, 17, 3 },
-		{ FUNCTION_NAMES[14], OP_RANDOM, 17, 2 }
+		{ FUNCTION_NAMES[14], OP_RANDOM, 17, 2 },
+		{ FUNCTION_NAMES[15], OP_RANDOM, 17, 1 }
 	};
 
-	const uint16_t NUM_FUNCTIONS = 15;
+	const uint16_t NUM_FUNCTIONS = 16;
 
 	const char* get_function_name(uint16_t id) {
 		return FUNCTIONS[id].name;
@@ -212,7 +213,17 @@ namespace vm {
 	// ------------------------------------------------------------------
 	static Token token_for_identifier(const char *identifier, unsigned len, Context& ctx) {
 		uint16_t i;
+		char tmp[256];
+		const char* p = identifier;
+		int l = 0;
+		while (l < len) {
+			tmp[l++] = *p;
+			++p;
+		}
+		tmp[l] = '\0';
+		LOG_DEBUG("looking for %s", identifier);
 		if ((i = find_variable(identifier, len, ctx)) != UINT16_MAX) {
+			LOG_DEBUG("==> found variable: %d", i);
 			return Token(Token::VARIABLE, i);
 		}
 		else if ((i = find_function(identifier, len)) != UINT16_MAX) {
@@ -590,6 +601,7 @@ namespace vm {
 				case OP_LERP: t = stack.pop(); a = stack.pop(); b = stack.pop(); stack.push((1.0f - t) * b + t * a); break;
 				case OP_SATURATE: a = stack.pop(); if (a < 0.0f) stack.push(0.0f); else if (a > 1.0f) stack.push(1.0f); else stack.push(a); break;
 				case OP_RANDOM: a = stack.pop(); b = stack.pop(); stack.push(random(b, a)); break;
+				case OP_CHANNEL: a = stack.pop(); stack.push(a); break;
 				}
 			}
 		}

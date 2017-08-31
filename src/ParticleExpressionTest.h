@@ -22,6 +22,7 @@ private:
 	p2i _dialogPos;
 	int _numParticles;
 	bool _showParticleInfo;
+	bool _showExpressions;
 	int _selectedType;
 	int _selectedExpression;
 	char _tmpBuffer[64];
