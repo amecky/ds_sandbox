@@ -1368,6 +1368,9 @@ namespace gui {
 
 		int start = pow(10, integers - 1);
 		int t = static_cast<int>(value);
+		if (t < 0) {
+			t *= -1;
+		}
 		bool leading = true;
 		for (int i = 0; i < integers; ++i) {
 			int f = t / start;
@@ -1384,7 +1387,11 @@ namespace gui {
 		_tmpBuffer[cnt++] = '.';
 		double r = 0.0;
 		start = pow(10, prec - 1);
-		float frac = modf(value, &r) * (start * 10);
+		float tv = value;
+		if (tv < 0.0f) {
+			tv *= -1.0f;
+		}
+		float frac = modf(tv, &r) * (start * 10);
 		t = static_cast<int>(frac);
 		for (int i = 0; i < prec; ++i) {
 			int f = t / start;

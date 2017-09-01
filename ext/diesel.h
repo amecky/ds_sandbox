@@ -2238,9 +2238,7 @@ namespace ds {
 		virtual ~DrawItemResource() {}
 		void release() {
 			if (_data != 0) {
-				//for (int i = 0; i < _data->num; ++i) {
-					//delete _data->groups[i];
-				//}
+				delete[] _data->groups;
 				delete _data;
 			}
 		}
@@ -2259,6 +2257,7 @@ namespace ds {
 		virtual ~StateGroupResource() {}
 		void release() {
 			if (_data != 0) {
+				delete[] _data->items;
 				delete _data;
 			}
 		}
@@ -3079,6 +3078,7 @@ namespace ds {
 				delete _ctx->_resources[i];
 			}			
 			for (size_t i = 0; i < _ctx->_groups.size(); ++i) {				
+				delete[] _ctx->_groups[i]->items;
 				delete _ctx->_groups[i];
 			}
 			delete _ctx->charBuffer;

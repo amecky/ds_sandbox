@@ -75,7 +75,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	logging::currentLevel = logging::LL_DEBUG;
 	logpanel::init(32);
 	perf::init();
-	//_CrtSetBreakAlloc(237);
+	//_CrtSetBreakAlloc(197);
 
 	initialize();
 	

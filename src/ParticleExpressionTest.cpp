@@ -213,14 +213,10 @@ void ParticleExpressionTest::render() {
 
 	float dt = ds::getElapsedSeconds();
 
-	_system->manageLifecycles(dt);
-	
-	_system->moveParticles(dt);
-
-	_system->updateParticles(dt);
+	_system->update(dt);
 
 	_system->render(_sprites);
 	
-	perfpanel::tick_histogram(ds::getElapsedSeconds());
+	perfpanel::tick_histogram(dt);
 	
 }

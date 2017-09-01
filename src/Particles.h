@@ -209,8 +209,13 @@ struct Particlesystem {
 	ds::vec4 textureRect;
 	Particles particles;
 	vm::Context vmCtx;
+	float timer;
+	float* final_values;
+	uint16_t capacity;
+	float frequency;
+	float ttl;
 
-	Particlesystem(const char* n, const ds::vec4& r, uint16_t maxParticles) : particles(maxParticles), name(n), textureRect(r) {
+	Particlesystem(const char* n, const ds::vec4& r, uint16_t maxParticles) : particles(maxParticles), name(n), textureRect(r), timer(0.0f) , capacity(maxParticles) , frequency(0.0f) , ttl(0.0f) {
 		vmCtx.add_constant("PI", 3.141592654f);
 		vmCtx.add_constant("TWO_PI", 2.0f * 3.141592654f);
 		vmCtx.add_variable("DT", 1.0f);
@@ -224,6 +229,17 @@ struct Particlesystem {
 		vmCtx.add_variable("DATA1", 1.0f);
 		vmCtx.add_variable("DATA2", 1.0f);
 		vmCtx.add_variable("DATA3", 1.0f);
+
+		final_values = new float[maxParticles * 9];
+	}
+
+	~Particlesystem() {
+		delete[] final_values;
+	}
+
+	void set_emission_rate(uint16_t numPerSecond, float runTTL) {
+		frequency = 1.0f / static_cast<float>(numPerSecond);
+		ttl = runTTL;
 	}
 
 	void emitt(uint16_t num, const ds::vec2& pos) {
@@ -319,30 +335,61 @@ struct Particlesystem {
 		}
 	}
 
+	const float PARTICLE_SIM_STEP = 1.0f / 60.0f;
+
+	void build_final_values(uint16_t index, ParticleChannel emitterChannel,ParticleChannel motionChannel) {
+		float* px = particles.get_channel(motionChannel);
+		float* epx = particles.get_channel(emitterChannel);
+		float* fp = final_values + index * capacity;
+		for (uint16_t i = 0; i < particles.num; ++i) {
+			*fp = *px + *epx;
+			++fp;
+			++px;
+			++epx;
+		}
+	}
+
+	void update(float dt) {
+
+		timer += dt;
+
+		if (timer >= PARTICLE_SIM_STEP) {
+
+			timer -= PARTICLE_SIM_STEP;
+
+			manageLifecycles(PARTICLE_SIM_STEP);
+
+			moveParticles(PARTICLE_SIM_STEP);
+
+			updateParticles(PARTICLE_SIM_STEP);
+
+		}
+
+		build_final_values(0, EMITTER_POS_X, MOTION_POS_X);
+		build_final_values(1, EMITTER_POS_Y, MOTION_POS_Y);
+		build_final_values(2, EMITTER_SCALE_X, MOTION_SCALE_X);
+		build_final_values(3, EMITTER_SCALE_Y, MOTION_SCALE_Y);
+		build_final_values(4, EMITTER_ROTATION, MOTION_ROTATION);
+	}
+
 
 	void render(SpriteBatchBuffer* sprites) {
 		perf::ZoneTracker("renderParticles");
 		uint16_t cnt = 0;
-		float* px = particles.get_channel(MOTION_POS_X);
-		float* py = particles.get_channel(MOTION_POS_Y);
-		float* epx = particles.get_channel(EMITTER_POS_X);
-		float* epy = particles.get_channel(EMITTER_POS_Y);
-		float* ro = particles.get_channel(MOTION_ROTATION);
-		float* sx = particles.get_channel(MOTION_SCALE_X);
-		float* sy = particles.get_channel(MOTION_SCALE_Y);
+		float* px = final_values;
+		float* py = final_values + 1 * capacity;
+		float* sx = final_values + 2 * capacity;
+		float* sy = final_values + 3 * capacity;
+		float* ro = final_values + 4 * capacity;		
 		float* cr = particles.get_channel(MOTION_COLOR_R);
 		float* cg = particles.get_channel(MOTION_COLOR_G);
 		float* cb = particles.get_channel(MOTION_COLOR_B);
 		float* ca = particles.get_channel(MOTION_COLOR_A);
 		while (cnt < particles.num) {
-			float x = *px +*epx;
-			float y = *py +*epy;
-			sprites->add(ds::vec2(x, y), textureRect, ds::vec2(*sx, *sy), *ro, ds::Color(*cr, *cg, *cb, *ca));
+			sprites->add(ds::vec2(*px, *py), textureRect, ds::vec2(*sx, *sy), *ro, ds::Color(*cr, *cg, *cb, *ca));
 			++cnt;
 			++px;
 			++py;
-			++epx;
-			++epy;
 			++sx;
 			++sy;
 			++cr;

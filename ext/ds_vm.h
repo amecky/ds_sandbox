@@ -86,6 +86,13 @@ namespace vm {
 		vm::Token* tokens;
 		uint16_t num;
 		uint16_t id;
+
+		Expression() : num(0), id(0), tokens(0) {}
+		~Expression() {
+			if (tokens != 0) {
+				delete[] tokens;
+			}
+		}
 	};
 
 	const char* get_token_name(Token::TokenType type);
@@ -221,9 +228,7 @@ namespace vm {
 			++p;
 		}
 		tmp[l] = '\0';
-		LOG_DEBUG("looking for %s", identifier);
 		if ((i = find_variable(identifier, len, ctx)) != UINT16_MAX) {
-			LOG_DEBUG("==> found variable: %d", i);
 			return Token(Token::VARIABLE, i);
 		}
 		else if ((i = find_function(identifier, len)) != UINT16_MAX) {
