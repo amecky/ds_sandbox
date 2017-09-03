@@ -35,6 +35,7 @@
     <ClInclude Include="src\ParticleExpressionTest.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
+    <ClInclude Include="src\Plugin.h" />
     <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
@@ -48,6 +49,7 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
+    <ClCompile Include="src\Plugin.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />

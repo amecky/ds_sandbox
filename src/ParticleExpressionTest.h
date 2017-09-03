@@ -21,6 +21,7 @@ private:
 	int _dialogState;
 	p2i _dialogPos;
 	int _numParticles;
+	float _emissionTime;
 	bool _showParticleInfo;
 	bool _showExpressions;
 	int _selectedType;

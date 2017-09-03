@@ -113,7 +113,7 @@ inline ParticleChannel find_by_name(const char* tmp) {
 const static float DEFAULT_VALUES[] = { 
 	0.0f,0.0f,1.0f,1.0f,0.0f,1.0f,1.0f,1.0f,1.0f, // emitter
 	1.0f,0.0f,0.0f,0.0f,0.0f,0.0f, // common
-	0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,0.0f,0.0f // motion
+	0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,0.0f,0.0f // motion
 };
 
 struct Particles {
@@ -201,21 +201,34 @@ struct ParticleExpression {
 	vm::Expression expression;
 };
 
+struct ParticleEmitterSettings {
+
+	ds::vec2 pos;
+	float frequency;
+	float ttl;
+	float accu;
+	uint16_t emitted;
+	float timer;
+	uint16_t offset;
+	float offsetTimer;
+	uint16_t per;
+};
+
 struct Particlesystem {
 
 	const char* name;
 	ParticleExpression expressions[NUM_CHANNELS];
 	ChannelConnection connections[NUM_CHANNELS];
+	ParticleEmitterSettings emitter[32];
+	uint16_t emitter_index;
 	ds::vec4 textureRect;
 	Particles particles;
 	vm::Context vmCtx;
 	float timer;
 	float* final_values;
 	uint16_t capacity;
-	float frequency;
-	float ttl;
 
-	Particlesystem(const char* n, const ds::vec4& r, uint16_t maxParticles) : particles(maxParticles), name(n), textureRect(r), timer(0.0f) , capacity(maxParticles) , frequency(0.0f) , ttl(0.0f) {
+	Particlesystem(const char* n, const ds::vec4& r, uint16_t maxParticles) : particles(maxParticles), name(n), textureRect(r), timer(0.0f) , capacity(maxParticles) {
 		vmCtx.add_constant("PI", 3.141592654f);
 		vmCtx.add_constant("TWO_PI", 2.0f * 3.141592654f);
 		vmCtx.add_variable("DT", 1.0f);
@@ -231,24 +244,40 @@ struct Particlesystem {
 		vmCtx.add_variable("DATA3", 1.0f);
 
 		final_values = new float[maxParticles * 9];
+		emitter_index = 0;
 	}
 
 	~Particlesystem() {
 		delete[] final_values;
 	}
 
-	void set_emission_rate(uint16_t numPerSecond, float runTTL) {
-		frequency = 1.0f / static_cast<float>(numPerSecond);
-		ttl = runTTL;
+	void emitt(uint16_t num, const ds::vec2& pos, float emissionTime = 0.0f) {
+		if (emissionTime != 0.0f) {
+			if (emitter_index < 32) {
+				ParticleEmitterSettings& pes = emitter[emitter_index++];
+				pes.frequency = static_cast<float>(num) / 60.0f;
+				pes.pos = pos;
+				pes.accu = 0.0f;
+				pes.ttl = emissionTime;
+				pes.timer = 0.0f;
+				pes.emitted = 0;
+				pes.offset = 0;
+				pes.offsetTimer = 0.0f;
+				pes.per = num;
+			}
+		}
+		else {
+			emittParticles(num, num, pos, 0);
+		}
 	}
 
-	void emitt(uint16_t num, const ds::vec2& pos) {
+	void emittParticles(uint16_t num, uint16_t total, const ds::vec2& pos, uint16_t offset) {
 		uint16_t start = 0;
 		uint16_t cnt = 0;
-		vmCtx.variables[4].value = num;
+		vmCtx.variables[4].value = total;
 		if (particles.wake_up(num, &start, &cnt)) {
 			for (int i = 0; i < cnt; ++i) {
-				vmCtx.variables[3].value = i;
+				vmCtx.variables[3].value = i + offset;
 				for (int j = 0; j < 15; ++j) {
 					if (connections[j].expression != 0) {
 						const ChannelConnection& cc = connections[j];
@@ -354,6 +383,34 @@ struct Particlesystem {
 		timer += dt;
 
 		if (timer >= PARTICLE_SIM_STEP) {
+
+			uint16_t emcnt = 0;
+			while (emcnt < emitter_index) {
+				ParticleEmitterSettings& pes = emitter[emcnt];
+				pes.timer += PARTICLE_SIM_STEP;
+				pes.accu += pes.frequency;
+				if (pes.accu >= 1.0f) {
+					uint16_t en = static_cast<uint16_t>(pes.accu);
+					pes.emitted += en;
+					//LOG_DEBUG("emitting: %d %d %d %d", emcnt, en, pes.emitted, pes.offset);
+					emittParticles(en, pes.per, pes.pos, pes.offset);
+					pes.offset += en;
+					pes.offsetTimer += PARTICLE_SIM_STEP;
+					if (pes.offsetTimer >= 1.0f) {
+						pes.offsetTimer -= 1.0f;
+						pes.offset = 0;
+					}
+					pes.accu -= en;
+				}
+
+				if (pes.timer >= pes.ttl) {
+					emitter[emcnt] = emitter[emitter_index - 1];
+					--emitter_index;
+				}
+				else {
+					++emcnt;
+				}
+			}
 
 			timer -= PARTICLE_SIM_STEP;
 

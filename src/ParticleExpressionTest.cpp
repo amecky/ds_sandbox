@@ -17,7 +17,7 @@ ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _spr
 	_showExpressions = false;
 	_selectedType = 0;
 	_selectedExpression = -1;
-
+	_emissionTime = 2.0f;
 	_system = new Particlesystem("new_system", ds::vec4(200, 0, 20, 20), 4096);
 	loadExpressionsFile(_system);
 
@@ -180,11 +180,11 @@ void ParticleExpressionTest::renderGUI() {
 		gui::Value("TI", ti,3,4);
 		gui::Value("Particles", _system->particles.num);
 		gui::Input("Num", &_numParticles);
-
+		gui::Input("TTL", &_emissionTime);
 		if (gui::Button("Start")) {
-			float px = 640;// ds::random(300, 600);
-			float py = 480;// ds::random(200, 400);
-			_system->emitt(_numParticles, ds::vec2(px,py));
+			float px = ds::random(500, 700);
+			float py = ds::random(200, 400);
+			_system->emitt(_numParticles, ds::vec2(px,py),_emissionTime);
 		}
 		gui::Checkbox("Show Expressions", &_showExpressions);
 		if (_showExpressions) {

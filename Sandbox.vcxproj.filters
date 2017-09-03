@@ -50,6 +50,7 @@
     <ClInclude Include="src\ParticleExpressionTest.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
+    <ClInclude Include="src\Plugin.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -66,6 +67,7 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\VMTest.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
+    <ClCompile Include="src\Plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />
