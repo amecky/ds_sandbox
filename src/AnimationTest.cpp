@@ -1,7 +1,6 @@
 #include "AnimationTest.h"
 #include "utils\tweening.h"
 #include "AABBox.h"
-#include "LogPanel.h"
 
 AnimationTest::AnimationTest(SpriteBatchBuffer* buffer) : _sprites(buffer) , _world(buffer) {
 	_dialogPos = p2i(10, 950);
@@ -149,7 +148,7 @@ void AnimationTest::renderGUI() {
 			gui::endGroup();
 		}
 	}
-	logpanel::draw_gui(8);
+	//logpanel::draw_gui(8);
 	gui::end();	
 }
 

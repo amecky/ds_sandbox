@@ -7,6 +7,9 @@
     <Filter Include="ext">
       <UniqueIdentifier>{97dbb5f0-ee1c-4b76-938b-3091ec6219ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="plugins">
+      <UniqueIdentifier>{9debc145-20fc-474f-8ca1-5a53117bb371}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -51,6 +54,12 @@
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\Plugin.h" />
+    <ClInclude Include="src\plugins\ApiRegistry.h">
+      <Filter>plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\LogPanelPlugin.h">
+      <Filter>plugins</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -68,6 +77,12 @@
     <ClCompile Include="src\VMTest.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\Plugin.cpp" />
+    <ClCompile Include="src\plugins\ApiRegistry.cpp">
+      <Filter>plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\LogPanelPlugin.cpp">
+      <Filter>plugins</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

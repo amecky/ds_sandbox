@@ -457,7 +457,6 @@ namespace vm {
 	// parse
 	// ------------------------------------------------------------------
 	void parse(const char * source, Context& ctx, Expression& exp) {
-		printf("source: '%s'\n", source);
 		bool binary = false;
 		const char* p = source;
 		uint16_t num_tokens = 0;

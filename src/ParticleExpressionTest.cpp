@@ -4,10 +4,12 @@
 #include <Windows.h>
 #include <fstream>
 #include <string>
-#include "LogPanel.h"
 #include "PerfPanel.h"
+#include "plugins\LogPanelPlugin.h"
 
-ParticleExpressionTest::ParticleExpressionTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
+ParticleExpressionTest::ParticleExpressionTest(const ds_api_registry& registry, SpriteBatchBuffer* buffer) : _sprites(buffer) {
+
+	//_logPanelPlugin = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
 
 	_dialogPos = p2i(10, 950);
 	_dialogState = 1;
@@ -201,7 +203,7 @@ void ParticleExpressionTest::renderGUI() {
 	}
 	
 	perfpanel::show_profiler();
-	//logpanel::draw_gui(8);
+	//_logPanelPlugin->draw_gui(8);
 	gui::end();
 	
 }

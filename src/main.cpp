@@ -10,8 +10,8 @@
 #include "utils\tweening.h"
 #include "TweeningTest.h"
 #include "AnimationTest.h"
-#define DS_LOG_PANEL
-#include "LogPanel.h"
+//#define DS_LOG_PANEL
+//#include "LogPanel.h"
 #define DS_VM_IMPLEMENTATION
 #include <ds_vm.h>
 #include "VMTest.h"
@@ -20,6 +20,8 @@
 #include "ParticleExpressionTest.h"
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
+#include "plugins\ApiRegistry.h"
+#include "plugins\LogPanelPlugin.h"
 
 // ---------------------------------------------------------------
 // load image from the resources
@@ -45,10 +47,12 @@ RID loadImage(const char* name) {
 	return textureID;
 }
 
+static log_panel_plugin* logPanel = 0;
+
 void myLogging(const logging::LogLevel&, const char* message) {
 	OutputDebugString(message);
 	OutputDebugString("\n");
-	//logpanel::add_line(message);
+	logPanel->add_line(message);
 }
 
 // ---------------------------------------------------------------
@@ -71,9 +75,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
+	ds_api_registry registry = create_registry();
+	load_logpanel_plugin(&registry);
+	logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
+	assert(logPanel != 0);
+
 	logging::logHandler = myLogging;
 	logging::currentLevel = logging::LL_DEBUG;
-	logpanel::init(32);
+	//logpanel::init(32);
 	perf::init();
 	//_CrtSetBreakAlloc(197);
 
@@ -94,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	AnimationTest animationTest(&spriteBuffer);
 
-	ParticleExpressionTest particleTest(&spriteBuffer);
+	ParticleExpressionTest particleTest(registry,&spriteBuffer);
 
 	VMTest vmTest(&spriteBuffer);
 
@@ -172,6 +181,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	}
 	perf::shutdown();
 	gui::shutdown();
-	logpanel::shutdown();
+	//logpanel::shutdown();
+	//unload_logpanel_plugin(&registry);
+	shutdown_registry();
 	ds::shutdown();
 }
