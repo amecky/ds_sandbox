@@ -53,11 +53,13 @@
     <ClInclude Include="src\ParticleExpressionTest.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
-    <ClInclude Include="src\Plugin.h" />
-    <ClInclude Include="src\plugins\ApiRegistry.h">
+    <ClInclude Include="ext\ds_math.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\PluginRegistry.h">
       <Filter>plugins</Filter>
     </ClInclude>
-    <ClInclude Include="src\plugins\LogPanelPlugin.h">
+    <ClInclude Include="src\plugins\logger.h">
       <Filter>plugins</Filter>
     </ClInclude>
   </ItemGroup>
@@ -76,11 +78,10 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\VMTest.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
-    <ClCompile Include="src\Plugin.cpp" />
-    <ClCompile Include="src\plugins\ApiRegistry.cpp">
+    <ClCompile Include="src\plugins\logger.cpp">
       <Filter>plugins</Filter>
     </ClCompile>
-    <ClCompile Include="src\plugins\LogPanelPlugin.cpp">
+    <ClCompile Include="src\plugins\PluginRegistry.cpp">
       <Filter>plugins</Filter>
     </ClCompile>
   </ItemGroup>

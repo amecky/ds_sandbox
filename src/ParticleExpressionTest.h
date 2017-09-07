@@ -5,14 +5,13 @@
 #include <ds_vm.h>
 #include "Particles.h"
 #include <ds_profiler.h>
-#include "plugins\ApiRegistry.h"
 
-struct log_panel_plugin;
+struct plugin_registry;
 
 class ParticleExpressionTest {
 
 public:	
-	ParticleExpressionTest(const ds_api_registry& registry,SpriteBatchBuffer* buffer);
+	ParticleExpressionTest(const plugin_registry& registry,SpriteBatchBuffer* buffer);
 	~ParticleExpressionTest();
 	void render();
 	void renderGUI();
@@ -31,7 +30,7 @@ private:
 	int _selectedExpression;
 	char _tmpBuffer[64];
 	
-	log_panel_plugin* _logPanelPlugin;
+	//log_panel_plugin* _logPanelPlugin;
 	Particlesystem* _system;
 };
 

@@ -1,3 +1,5 @@
+#define DS_MATH_IMPLEMENTATION
+#include <math.h>
 #define DS_IMPLEMENTATION
 #include <diesel.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -20,8 +22,7 @@
 #include "ParticleExpressionTest.h"
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
-#include "plugins\ApiRegistry.h"
-#include "plugins\LogPanelPlugin.h"
+#include "plugins\PluginRegistry.h"
 
 // ---------------------------------------------------------------
 // load image from the resources
@@ -47,12 +48,12 @@ RID loadImage(const char* name) {
 	return textureID;
 }
 
-static log_panel_plugin* logPanel = 0;
+//static log_panel_plugin* logPanel = 0;
 
 void myLogging(const logging::LogLevel&, const char* message) {
 	OutputDebugString(message);
 	OutputDebugString("\n");
-	logPanel->add_line(message);
+	//logPanel->add_line(logPanel->data,message);
 }
 
 // ---------------------------------------------------------------
@@ -68,23 +69,31 @@ void initialize() {
 	ds::init(rs);
 }
 
+
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
+
 	
+	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
-	ds_api_registry registry = create_registry();
-	load_logpanel_plugin(&registry);
-	logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
-	assert(logPanel != 0);
+	plugin_registry registry = create_registry();
+	//load_log_panel_plugin(&registry);
+	//logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
+	//assert(logPanel != 0);
 
 	logging::logHandler = myLogging;
 	logging::currentLevel = logging::LL_DEBUG;
+
+	//load_plugin(&registry, "log_panel_plugin");
+
+	
+
 	//logpanel::init(32);
 	perf::init();
-	//_CrtSetBreakAlloc(197);
+	
 
 	initialize();
 	
@@ -182,7 +191,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	perf::shutdown();
 	gui::shutdown();
 	//logpanel::shutdown();
-	//unload_logpanel_plugin(&registry);
+	//unload_log_panel_plugin(&registry);
 	shutdown_registry();
 	ds::shutdown();
 }

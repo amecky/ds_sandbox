@@ -599,7 +599,7 @@ namespace gui {
 		ds::Color(38,38,38,255), // box background color
 		ds::Color(167,77,75,255), // box selection color
 		ds::Color(96,96,96,255), // slider color
-		ds::Color(64,64,64,255), // scroll slider color
+		ds::Color(80,80,80,255), // scroll slider color
 		5.0f // line spacing
 	};
 
