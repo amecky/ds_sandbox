@@ -34,6 +34,7 @@
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\ParticleExpressionTest.h" />
+    <ClInclude Include="src\ParticlePluginTest.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\plugins\logger.h" />
@@ -51,6 +52,7 @@
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
+    <ClCompile Include="src\ParticlePluginTest.cpp" />
     <ClCompile Include="src\plugins\logger.cpp" />
     <ClCompile Include="src\plugins\PluginRegistry.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />

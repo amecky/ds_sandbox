@@ -1,7 +1,7 @@
 #pragma once
 #define PARTICLE_MANAGER_NAME "particle_manager"
 #include <stdint.h>
-#include "ext\ds_math.h"
+#include "..\..\ext\ds_math.h"
 
 extern "C" {
 

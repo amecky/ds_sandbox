@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 
 namespace ds {
 
@@ -186,7 +187,7 @@ namespace ds {
 			return m[a][b];
 		}
 	};
-
+	/*
 	matrix matIdentity();
 
 	matrix matOrthoLH(float w, float h, float zn, float zf);
@@ -220,7 +221,7 @@ namespace ds {
 	vec3 operator * (const matrix& m, const vec3& v);
 
 	vec4 operator * (const matrix& m, const vec4& v);
-
+	*/
 	template<int Size, class T>
 	bool operator == (const Vector<Size, T>& u, const Vector<Size, T>& v) {
 		for (int i = 0; i < Size; ++i) {
@@ -342,7 +343,7 @@ namespace ds {
 	template<int Size, class T>
 	T length(const Vector<Size, T>& v) {
 		T t = dot(v, v);
-		float tmp = std::sqrt(static_cast<float>(t));
+		float tmp = sqrt(static_cast<float>(t));
 		return static_cast<T>(tmp);
 	}
 
@@ -576,14 +577,13 @@ namespace ds {
 
 	} Color;
 
-#ifdef DS_MATH_IMPLEMENTATION
 
 	// ******************************************************
 	//
 	// Math
 	//
 	// ******************************************************
-	matrix matIdentity() {
+	inline matrix matIdentity() {
 		matrix m(
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -593,7 +593,7 @@ namespace ds {
 		return m;
 	}
 
-	matrix matOrthoLH(float w, float h, float zn, float zf) {
+	inline matrix matOrthoLH(float w, float h, float zn, float zf) {
 		// msdn.microsoft.com/de-de/library/windows/desktop/bb204940(v=vs.85).aspx
 		matrix tmp = matIdentity();
 		tmp._11 = 2.0f / w;
@@ -603,7 +603,7 @@ namespace ds {
 		return tmp;
 	}
 
-	matrix operator * (const matrix& m1, const matrix& m2) {
+	inline matrix operator * (const matrix& m1, const matrix& m2) {
 		matrix tmp;
 		tmp._11 = m1._11 * m2._11 + m1._12 * m2._21 + m1._13 * m2._31 + m1._14 * m2._41;
 		tmp._12 = m1._11 * m2._12 + m1._12 * m2._22 + m1._13 * m2._32 + m1._14 * m2._42;
@@ -631,7 +631,7 @@ namespace ds {
 	// -------------------------------------------------------
 	// Scale matrix
 	// -------------------------------------------------------
-	matrix matScale(const vec3& scale) {
+	inline matrix matScale(const vec3& scale) {
 		matrix sm(
 			scale.x, 0.0f, 0.0f, 0.0f,
 			0.0f, scale.y, 0.0f, 0.0f,
@@ -643,7 +643,7 @@ namespace ds {
 
 	// http://www.cprogramming.com/tutorial/3d/rotationMatrices.html
 	// left hand sided
-	matrix matRotationX(float angle) {
+	inline matrix matRotationX(float angle) {
 		matrix sm(
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, cos(angle), -sin(angle), 0.0f,
@@ -653,7 +653,7 @@ namespace ds {
 		return sm;
 	}
 
-	matrix matRotationY(float angle) {
+	inline matrix matRotationY(float angle) {
 		matrix sm(
 			cos(angle), 0.0f, sin(angle), 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -663,7 +663,7 @@ namespace ds {
 		return sm;
 	}
 	// FIXME: wrong direction!!!!
-	matrix matRotationZ(float angle) {
+	inline matrix matRotationZ(float angle) {
 		matrix sm(
 			cos(angle), -sin(angle), 0.0f, 0.0f,
 			sin(angle), cos(angle), 0.0f, 0.0f,
@@ -673,14 +673,14 @@ namespace ds {
 		return sm;
 	}
 
-	matrix matRotation(const vec3& r) {
+	inline matrix matRotation(const vec3& r) {
 		return matRotationZ(r.z) * matRotationY(r.y) * matRotationX(r.x);
 	}
 
 	// -------------------------------------------------------
 	// Transpose matrix
 	// -------------------------------------------------------
-	matrix matTranspose(const matrix& m) {
+	inline matrix matTranspose(const matrix& m) {
 		matrix current = m;
 		matrix tmp;
 		for (int i = 0; i < 4; i++) {
@@ -694,7 +694,7 @@ namespace ds {
 	// -------------------------------------------------------
 	// Translation matrix
 	// -------------------------------------------------------
-	matrix matTranslate(const vec3& pos) {
+	inline matrix matTranslate(const vec3& pos) {
 		matrix tm(
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -704,7 +704,7 @@ namespace ds {
 		return tm;
 	}
 
-	matrix matLookAtLH(const vec3& eye, const vec3& lookAt, const vec3& up) {
+	inline matrix matLookAtLH(const vec3& eye, const vec3& lookAt, const vec3& up) {
 		// see msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
 		vec3 zAxis = normalize(lookAt - eye);
 		vec3 xAxis = normalize(cross(up, zAxis));
@@ -721,7 +721,7 @@ namespace ds {
 		return tmp;
 	}
 
-	matrix matPerspectiveFovLH(float fovy, float aspect, float zn, float zf) {
+	inline matrix matPerspectiveFovLH(float fovy, float aspect, float zn, float zf) {
 		// msdn.microsoft.com/de-de/library/windows/desktop/bb205350(v=vs.85).aspx
 		float yScale = 1.0f / tan(fovy / 2.0f);
 		float xScale = yScale / aspect;
@@ -735,7 +735,7 @@ namespace ds {
 		return tmp;
 	}
 
-	vec3 matTransformNormal(const vec3& v, const matrix& m) {
+	inline vec3 matTransformNormal(const vec3& v, const matrix& m) {
 		vec3 result =
 			vec3(v.x * m._11 + v.y * m._21 + v.z * m._31,
 				v.x * m._12 + v.y * m._22 + v.z * m._32,
@@ -743,7 +743,7 @@ namespace ds {
 		return result;
 	}
 
-	matrix matRotation(const vec3& v, float angle) {
+	inline matrix matRotation(const vec3& v, float angle) {
 		float L = (v.x * v.x + v.y * v.y + v.z * v.z);
 		float u2 = v.x * v.x;
 		float vec2 = v.y * v.y;
@@ -767,7 +767,7 @@ namespace ds {
 		return tmp;
 	}
 
-	matrix matInverse(const matrix& m) {
+	inline matrix matInverse(const matrix& m) {
 		matrix ret;
 		float tmp[12]; /* temp array for pairs */
 		float src[16]; /* array of transpose source matrix */
@@ -862,7 +862,7 @@ namespace ds {
 		return ret;
 	}
 
-	vec4 operator * (const matrix& m, const vec4& v) {
+	inline vec4 operator * (const matrix& m, const vec4& v) {
 		// column mode
 		/*
 		Vector4f tmp;
@@ -881,12 +881,11 @@ namespace ds {
 		return tmp;
 	}
 
-	vec3 operator * (const matrix& m, const vec3& v) {
+	inline vec3 operator * (const matrix& m, const vec3& v) {
 		vec4 nv(v.x, v.y, v.z, 1.0f);
 		vec4 tmp = m * nv;
 		return vec3(tmp.x, tmp.y, tmp.z);
 	}
 
-#endif
 
 }

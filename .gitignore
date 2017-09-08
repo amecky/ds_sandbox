@@ -12,3 +12,7 @@ perf.txt
 SuperBoxBot_character_sheet/
 plugins/particle_manager/particle_manager.VC.db
 *.diagsession
+plugins/particle_manager/Debug/
+particle_manager.dll
+plugins/particle_manager/.vs/particle_manager/v14/.suo
+plugins/particle_manager/particle_manager.sdf

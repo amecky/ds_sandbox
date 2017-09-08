@@ -62,6 +62,7 @@
     <ClInclude Include="src\plugins\logger.h">
       <Filter>plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\ParticlePluginTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -84,6 +85,7 @@
     <ClCompile Include="src\plugins\PluginRegistry.cpp">
       <Filter>plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticlePluginTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

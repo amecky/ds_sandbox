@@ -1,5 +1,3 @@
-#define DS_MATH_IMPLEMENTATION
-#include <math.h>
 #define DS_IMPLEMENTATION
 #include <diesel.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -23,6 +21,7 @@
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
 #include "plugins\PluginRegistry.h"
+#include "ParticlePluginTest.h"
 
 // ---------------------------------------------------------------
 // load image from the resources
@@ -108,17 +107,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	
 	bool running = true;
 
-	TweeningTest tweeningTest(&spriteBuffer);
+	//TweeningTest tweeningTest(&spriteBuffer);
 
-	AnimationTest animationTest(&spriteBuffer);
+	//AnimationTest animationTest(&spriteBuffer);
 
-	ParticleExpressionTest particleTest(registry,&spriteBuffer);
+	//ParticleExpressionTest particleTest(registry,&spriteBuffer);
 
-	VMTest vmTest(&spriteBuffer);
+	ParticlePluginTest particlePluginTest(registry, &spriteBuffer);
+
+	//VMTest vmTest(&spriteBuffer);
 
 	int l_count = 0;
+
+	bool reload = true;
+	float reloadTimer = 0.0f;
 	
 	while (ds::isRunning() && running) {
+
+		if (reload) {
+			reloadTimer += ds::getElapsedSeconds();
+			if (reloadTimer >= 0.5f) {
+				reloadTimer -= 0.5f;
+				registry.check_plugins();
+			}
+		}
 
 		perf::reset();
 
@@ -137,9 +149,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			//tweeningTest.render();
 			//animationTest.render();
 			//vmTest.render();
-			particleTest.render();
+			//particleTest.render();
 			//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
 			//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
+
+			particlePluginTest.render();
 
 			spriteBuffer.flush();
 		}
@@ -176,7 +190,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		//vmTest.renderGUI();
 		{
 			perf::ZoneTracker("main::renderGUI");
-			particleTest.renderGUI();
+			particlePluginTest.renderGUI();
 		}
 		//perf::tickFPS(ds::getElapsedSeconds());		
 		

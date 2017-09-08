@@ -5,6 +5,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ext">
+      <UniqueIdentifier>{a9a794d0-7cef-46e6-820c-ebcb33d714ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="particle_manager.cpp" />
@@ -12,5 +15,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="particle_manager.h" />
+    <ClInclude Include="ext\ds_math.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
