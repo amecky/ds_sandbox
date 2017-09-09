@@ -140,6 +140,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			perf::ZoneTracker("main::begin");
 			ds::begin();
 		}
+
+		{
+			perf::ZoneTracker("main::update");
+			particlePluginTest.tick(ds::getElapsedSeconds());
+		}
 		
 
 		{

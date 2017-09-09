@@ -1,144 +1,485 @@
 #pragma once
+#include <math.h>
 
 namespace ds {
 
-	// ------------------------------------------------
-	// Vector template
-	// ------------------------------------------------
-	template<int Size, class T>
-	struct Vector {
-
-		typedef T Type;
-
-		T data[Size];
-
-	};
-
-	// ------------------------------------------------
-	// Vector 2
-	// ------------------------------------------------
-	template <class T>
-	struct Vector<2, T> {
+	struct vec2 {
 		union {
-			T data[2];
 			struct {
-				T x, y;
+				float x, y;
 			};
+			float data[2];
 		};
-		Vector<2, T>() : x(0), y(0) {}
-		explicit Vector<2, T>(T t) : x(t), y(t) {}
-		Vector<2, T>(T xv, T yv) : x(xv), y(yv) {}
-		Vector<2, T>(const Vector<2, int>& other) : x(other.x), y(other.y) {}
-		Vector<2, T>(const T* value) {
-			x = *value;
-			++value;
-			y = *value;
+
+		vec2() : x(0.0f), y(0.0f) {}
+		explicit vec2(float v) : x(v), y(v) {}
+		vec2(float xx, float yy) : x(xx), y(yy) {}
+		vec2(int v) {
+			x = static_cast<float>(v);
+			y = static_cast<float>(v);
 		}
-		const T& operator[] (int idx) const { return data[idx]; }
-		T& operator[] (int idx) { return data[idx]; }
-		T* operator() () {
-			return &data[0];
+		vec2(int xx,int yy) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
 		}
-		Vector<2, T>& operator = (const Vector<2, T>& other) {
+		vec2(const vec2& other) {
 			x = other.x;
 			y = other.y;
-			return *this;
+		}
+
+		const float* operator() () const {
+			return &data[0];
 		}
 	};
 
-	// ------------------------------------------------
-	// Vector 3
-	// ------------------------------------------------
-	template <class T>
-	struct Vector<3, T> {
+	struct vec3 {
 		union {
-			T data[3];
 			struct {
-				T x, y, z;
+				float x, y, z;
 			};
+			float data[3];
 		};
-
-		Vector<3, T>() : x(0.0f), y(0.0f), z(0.0f) {}
-		explicit Vector<3, T>(T t) : x(t), y(t), z(t) {}
-		Vector<3, T>(T xv, T yv, T zv) : x(xv), y(yv), z(zv) {}
-		Vector<3, T>(const Vector<2, T>& other, T tz) : x(other.x), y(other.y), z(tz) {}
-		Vector<3, T>(const Vector<3, T>& other) : x(other.x), y(other.y), z(other.z) {}
-		Vector<3, T>(const T* value) {
-			x = *value;
-			++value;
-			y = *value;
-			++value;
-			z = *value;
+		vec3() : x(0.0f), y(0.0f) , z(0.0f) {}
+		explicit vec3(float v) : x(v), y(v) , z(v) {}
+		vec3(float xx, float yy) : x(xx), y(yy) , z(0.0f) {}
+		vec3(const vec2& v) : x(v.x), y(v.y), z(0.0f) {}
+		vec3(float xx, float yy, float zz) : x(xx), y(yy), z(zz) {}
+		vec3(int v) {
+			x = static_cast<float>(v);
+			y = static_cast<float>(v);
+			z = static_cast<float>(v);
 		}
-		Vector<3, T>(const Vector<2, T>& v) { x = v.x; y = v.y; z = 0.0f; }
-		const T& operator[] (int idx) const { return data[idx]; }
-		T& operator[] (int idx) { return data[idx]; }
-		T* operator() () {
-			return &data[0];
+		vec3(int xx, int yy) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
+			z = 0.0f;
 		}
-		Vector<3, T>& operator = (const Vector<3, T>& other) {
+		vec3(int xx, int yy, int zz) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
+			z = static_cast<float>(zz);
+		}
+		vec3(const vec3& other) {
 			x = other.x;
 			y = other.y;
 			z = other.z;
-			return *this;
 		}
-		Vector<2, T> xy() const {
-			return Vector<2, T>(x, y);
+
+		const float* operator() () const {
+			return &data[0];
 		}
 	};
 
-	// ------------------------------------------------
-	// Vector 4 
-	// ------------------------------------------------
-	template <class T> struct Vector<4, T> {
+	struct vec4 {
 		union {
-			T data[4];
 			struct {
-				T x, y, z, w;
+				float x, y, z, w;
 			};
-			struct {
-				T r, g, b, a;
-			};
+			float data[4];
 		};
-		Vector<4, T>() : x(0), y(0), z(0), w(0) {}
-		explicit Vector<4, T>(T t) : x(t), y(t), z(t), w(t) {}
-		Vector<4, T>(T tx, T ty, T tz, T tw) : x(tx), y(ty), z(tz), w(tw) {}
-		Vector<4, T>(const Vector<4, T>& other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
-		Vector<4, T>(const Vector<3, T>& other, float tw) : x(other.x), y(other.y), z(other.z), w(tw) {}
-		Vector<4, T>(const T* data) {
-			x = *data;
-			++data;
-			y = *data;
-			++data;
-			z = *data;
-			++data;
-			w = *data;
+		vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
+		explicit vec4(float v) : x(v), y(v), z(v), w(v) {}
+		vec4(float xx, float yy) : x(xx), y(yy), z(0.0f) , w(0.0f) {}
+		vec4(const vec2& v) : x(v.x), y(v.y), z(0.0f) , w(0.0f) {}
+		vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(0.0f) {}
+		vec4(float xx, float yy, float zz) : x(xx), y(yy), z(zz), w(0.0f) {}
+		vec4(float xx, float yy, float zz, float ww) : x(xx), y(yy), z(zz) , w(ww) {}
+		vec4(int v) {
+			x = static_cast<float>(v);
+			y = static_cast<float>(v);
+			z = static_cast<float>(v);
+			w = static_cast<float>(v);
 		}
-		const T* operator() () const {
-			return &data[0];
+		vec4(int xx, int yy) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
+			z = 0.0f;
+			w = 0.0f;
 		}
-		Vector<4, T>& operator = (const Vector<4, T>& other) {
+		vec4(int xx, int yy, int zz) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
+			z = static_cast<float>(zz);
+			w = 0.0f;
+		}
+		vec4(int xx, int yy, int zz, int ww) {
+			x = static_cast<float>(xx);
+			y = static_cast<float>(yy);
+			z = static_cast<float>(zz);
+			w = static_cast<float>(ww);
+		}
+		vec4(const vec4& other) {
 			x = other.x;
 			y = other.y;
 			z = other.z;
 			w = other.w;
-			return *this;
 		}
-		Vector<2, T> xy() const {
-			return Vector<2, T>(x, y);
-		}
-		Vector<3, T> xyz() const {
-			return Vector<3, T>(x, y, z);
+
+		const float* operator() () const {
+			return &data[0];
 		}
 	};
 
-	// ------------------------------------------------
-	// Type definitions
-	// ------------------------------------------------
-	typedef Vector<2, float> vec2;
-	typedef Vector<3, float> vec3;
-	typedef Vector<4, float> vec4;
+	struct Color {
+		union {
+			struct {
+				float r, g, b, a;
+			};
+			float data[4];
+		};
 
+		Color() : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
+		Color(float ir, float ig, float ib, float ia) : r(ir), g(ig) , b(ib), a(ia) {}
+		Color(int ir, int ig, int ib, int ia) {
+			r = static_cast<float>(ir) / 255.0f;
+			g = static_cast<float>(ig) / 255.0f;
+			b = static_cast<float>(ib) / 255.0f;
+			a = static_cast<float>(ia) / 255.0f;
+		}
+
+		operator float* () {
+			return &data[0];
+		}
+
+		operator const float* () const {
+			return &data[0];
+		}
+	};
+
+	struct matrix {
+
+		union {
+			struct {
+				float _11, _12, _13, _14;
+				float _21, _22, _23, _24;
+				float _31, _32, _33, _34;
+				float _41, _42, _43, _44;
+
+			};
+			float m[4][4];
+		};
+		
+		float& operator () (int a, int b) {
+			return m[a][b];
+		}
+	};
+
+	inline bool operator == (const vec2& u, const vec2& v) {
+		return u.x == v.x && u.y == v.y;
+	}
+
+	inline bool operator == (const vec3& u, const vec3& v) {
+		return u.x == v.x && u.y == v.y && u.z == v.z;
+	}
+
+	inline bool operator == (const vec4& u, const vec4& v) {
+		return u.x == v.x && u.y == v.y && u.z == v.z && u.w == v.w;
+	}
+
+	inline bool operator != (const vec2& u, const vec2& v) {
+		return u.x != v.x || u.y != v.y;
+	}
+
+	inline bool operator != (const vec3& u, const vec3& v) {
+		return u.x != v.x || u.y != v.y || u.z != v.z;
+	}
+
+	inline bool operator != (const vec4& u, const vec4& v) {
+		return u.x != v.x || u.y != v.y || u.z != v.z || u.w != v.w;
+	}
+
+	inline vec2 operator - (const vec2& v) {
+		return{ -v.x, -v.y };
+	}
+
+	inline vec3 operator - (const vec3& v) {
+		return{ -v.x, -v.y, -v.z };
+	}
+
+	inline vec4 operator - (const vec4& v) {
+		return{ -v.x, -v.y, -v.z, -v.w };
+	}
+
+	inline vec2 operator - (const vec2& u, const vec2& v) {
+		return{ u.x -v.x, u.y -v.y };
+	}
+
+	inline vec3 operator - (const vec3& u, const vec3& v) {
+		return{ u.x - v.x, u.y - v.y, u.z - v.z };
+	}
+
+	inline vec4 operator - (const vec4& u, const vec4& v) {
+		return{ u.x - v.x, u.y - v.y, u.z - v.z, u.w - v.w };
+	}
+
+	inline vec2 operator += (vec2& u, const vec2& v) {
+		u.x += v.x;
+		u.y += v.y;
+		return u;
+	}
+
+	inline vec3 operator += (vec3& u, const vec3& v) {
+		u.x += v.x;
+		u.y += v.y;
+		u.z += v.z;
+		return u;
+	}
+
+	inline vec4 operator += (vec4& u, const vec4& v) {
+		u.x += v.x;
+		u.y += v.y;
+		u.z += v.z;
+		u.w += v.w;
+		return u;
+	}
+
+	inline vec2 operator + (const vec2& u, const vec2& v) {
+		vec2 ret = u;
+		return ret += v;
+	}
+
+	inline vec3 operator + (const vec3& u, const vec3& v) {
+		vec3 ret = u;
+		return ret += v;
+	}
+
+	inline vec4 operator + (const vec4& u, const vec4& v) {
+		vec4 ret = u;
+		return ret += v;
+	}
+
+	inline vec2& operator /= (vec2& u, float other) {
+		u.x /= other;
+		u.y /= other;
+		return u;
+	}
+
+	inline vec3& operator /= (vec3& u, float other) {
+		u.x /= other;
+		u.y /= other;
+		u.z /= other;
+		return u;
+	}
+
+	inline vec4& operator /= (vec4& u, float other) {
+		u.x /= other;
+		u.y /= other;
+		u.z /= other;
+		u.w /= other;
+		return u;
+	}
+
+	inline vec2 operator *= (vec2& u, float other) {
+		u.x *= other;
+		u.y *= other;
+		return u;
+	}
+
+	inline vec3 operator *= (vec3& u, float other) {
+		u.x *= other;
+		u.y *= other;
+		u.z *= other;
+		return u;
+	}
+
+	inline vec4 operator *= (vec4& u, float other) {
+		u.x *= other;
+		u.y *= other;
+		u.z *= other;
+		u.w *= other;
+		return u;
+	}
+
+	inline vec2& operator -= (vec2& u, const vec2& v) {
+		u.x -= v.x;
+		u.y -= v.y;
+		return u;
+	}
+
+	inline vec3& operator -= (vec3& u, const vec3& v) {
+		u.x -= v.x;
+		u.y -= v.y;
+		u.z -= v.z;
+		return u;
+	}
+
+	inline vec4& operator -= (vec4& u, const vec4& v) {
+		u.x -= v.x;
+		u.y -= v.y;
+		u.z -= v.z;
+		u.w -= v.w;
+		return u;
+	}
+
+	inline vec2 operator -= (const vec2& u, const vec2& v) {
+		return{ u.x - v.x,u.y - v.y };
+	}
+
+	inline vec3 operator -= (const vec3& u, const vec3& v) {
+		return{ u.x - v.x,u.y - v.y, u.z - v.z };
+	}
+
+	inline vec4 operator -= (const vec4& u, const vec4& v) {
+		return{ u.x - v.x,u.y - v.y, u.z - v.z, u.w - v.w };
+	}
+
+	inline vec2 operator * (const vec2& u, float v) {
+		return{ u.x * v, u.y * v };
+	}
+
+	inline vec3 operator * (const vec3& u, float v) {
+		return{ u.x * v, u.y * v, u.z * v };
+	}
+
+	inline vec4 operator * (const vec4& u, float v) {
+		return{ u.x * v, u.y * v, u.z * v, u.w * v };
+	}
+
+	inline vec2 operator * (float v, const vec2& u) {
+		return{ u.x * v, u.y * v };
+	}
+
+	inline vec3 operator * (float v, const vec3& u) {
+		return{ u.x * v, u.y * v, u.z * v };
+	}
+
+	inline vec4 operator * (float v, const vec4& u) {
+		return{ u.x * v, u.y * v, u.z * v, u.w * v };
+	}
+
+	inline vec2 operator / (const vec2& u, const float& v) {
+		vec2 ret = u;
+		return ret /= v;
+	}
+
+	inline vec3 operator / (const vec3& u, const float& v) {
+		vec3 ret = u;
+		return ret /= v;
+	}
+
+	inline vec4 operator / (const vec4& u, const float& v) {
+		vec4 ret = u;
+		return ret /= v;
+	}
+
+	inline float dot(const vec3& v, const vec3& u) {
+		float t = 0.0f;
+		for (int i = 0; i < 3; ++i) {
+			t += v.data[i] * u.data[i];
+		}
+		return t;
+	}
+
+	inline float dot(const vec4& v, const vec4& u) {
+		float t = 0.0f;
+		for (int i = 0; i < 4; ++i) {
+			t += v.data[i] * u.data[i];
+		}
+		return t;
+	}
+
+	inline float length(const vec2& v) {
+		return static_cast<float>(sqrt(v.x * v.x + v.y * v.y));
+	}
+
+	inline float length(const vec3& v) {
+		return static_cast<float>(sqrt(dot(v, v)));
+	}
+
+	inline float length(const vec4& v) {
+		return static_cast<float>(sqrt(dot(v, v)));
+	}
+
+	inline float sqr_length(const vec2& v) {
+		return v.x * v.x + v.y * v.y;
+	}
+
+	inline float sqr_length(const vec3& v) {
+		return dot(v,v);
+	}
+
+	inline float sqr_length(const vec4& v) {
+		return dot(v, v);
+	}
+
+	inline vec2 normalize(const vec2& u) {
+		float len = length(u);
+		if (len == 0.0f) {
+			return { 0.0f, 0.0f };
+		}
+		return u / len;
+	}
+
+	inline vec3 normalize(const vec3& u) {
+		float len = length(u);
+		if (len == 0.0f) {
+			return{ 0.0f, 0.0f, 0.0f };
+		}
+		return u / len;
+	}
+
+	inline vec4 normalize(const vec4& u) {
+		float len = length(u);
+		if (len == 0.0f) {
+			return{ 0.0f, 0.0f, 0.0f, 0.0f };
+		}
+		return u / len;
+	}
+	
+	inline float distance(const vec2& u, const vec2& v) {
+		vec2 sub = u - v;
+		return length(sub);
+	}
+
+	inline float distance(const vec3& u, const vec3& v) {
+		vec3 sub = u - v;
+		return length(sub);
+	}
+
+	inline float distance(const vec4& u, const vec4& v) {
+		vec4 sub = u - v;
+		return length(sub);
+	}
+
+	inline float sqr_distance(const vec2& u, const vec2& v) {
+		vec2 sub = u - v;
+		return sqr_length(sub);
+	}
+
+	inline float sqr_distance(const vec3& u, const vec3& v) {
+		vec3 sub = u - v;
+		return sqr_length(sub);
+	}
+
+	inline float sqr_distance(const vec4& u, const vec4& v) {
+		vec4 sub = u - v;
+		return sqr_length(sub);
+	}
+	
+	inline vec3 cross(const vec3& u, const vec3& v) {
+		return{
+			u.y * v.z - u.z * v.y,
+			u.z * v.x - u.x * v.z,
+			u.x * v.y - u.y * v.x
+		};
+	}
+	/*
+	template<class T>
+	Vector<3, T>* cross(const Vector<3, T>& u, const Vector<3, T>& v, Vector<3, T>* ret) {
+		ret->x = u.y * v.z - u.z * v.y;
+		ret->y = u.z * v.x - u.x * v.z;
+		ret->z = u.x * v.y - u.y * v.x;
+		return ret;
+	}
+	*/
+	/*
+	template<class T>
+	T inline cross(const Vector<2, T>& v1, const Vector<2, T>& vec2) {
+		return v1.x * vec2.y - vec2.x * v1.y;
+	}
+	*/
+	/*
+	
 	const vec2 vec2_RIGHT = vec2(1, 0);
 	const vec2 vec2_LEFT = vec2(-1, 0);
 	const vec2 vec2_UP = vec2(0, 1);
@@ -186,7 +527,6 @@ namespace ds {
 			return m[a][b];
 		}
 	};
-
 	matrix matIdentity();
 
 	matrix matOrthoLH(float w, float h, float zn, float zf);
@@ -220,53 +560,7 @@ namespace ds {
 	vec3 operator * (const matrix& m, const vec3& v);
 
 	vec4 operator * (const matrix& m, const vec4& v);
-
-	template<int Size, class T>
-	bool operator == (const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		for (int i = 0; i < Size; ++i) {
-			if (u.data[i] != v.data[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	template<int Size, class T>
-	bool operator != (const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		for (int i = 0; i < Size; ++i) {
-			if (u.data[i] != v.data[i]) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	template<int Size, class T>
-	Vector<Size, T> operator - (const Vector<Size, T>& v) {
-		Vector<Size, T> ret;
-		for (int i = 0; i < Size; ++i) {
-			ret.data[i] = -v.data[i];
-		}
-		return ret;
-	}
-
-	template<int Size, class T>
-	Vector<Size, T> operator += (Vector<Size, T>& u, const Vector<Size, T>& v) {
-		for (int i = 0; i < Size; ++i) {
-			u.data[i] += v.data[i];
-		}
-		return u;
-	}
-
-	template<int Size, class T>
-	Vector<Size, T> operator += (const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		Vector<Size, T> r;
-		for (int i = 0; i < Size; ++i) {
-			r.data[i] = u.data[i] + v.data[i];
-		}
-		return r;
-	}
-
+	
 	template<int Size, class T>
 	Vector<Size, T> operator *= (Vector<Size, T>& u, T other) {
 		for (int i = 0; i < Size; ++i) {
@@ -275,13 +569,7 @@ namespace ds {
 		return u;
 	}
 
-	template<int Size, class T>
-	Vector<Size, T>& operator /= (Vector<Size, T>& u, T other) {
-		for (int i = 0; i < Size; ++i) {
-			u.data[i] /= other;
-		}
-		return u;
-	}
+	
 
 	template<int Size, class T>
 	Vector<Size, T>& operator -= (Vector<Size, T>& u, const Vector<Size, T>& v) {
@@ -300,11 +588,7 @@ namespace ds {
 		return r;
 	}
 
-	template<int Size, class T>
-	Vector<Size, T> operator + (const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		Vector<Size, T> ret = u;
-		return ret += v;
-	}
+	
 
 	template<int Size, class T>
 	Vector<Size, T> operator - (const Vector<Size, T>& u, const Vector<Size, T>& v) {
@@ -324,83 +608,11 @@ namespace ds {
 		return ret *= v;
 	}
 
-	template<int Size, class T>
-	Vector<Size, T> operator / (const Vector<Size, T>& u, const T& v) {
-		Vector<Size, T> ret = u;
-		return ret /= v;
-	}
+	
 
-	template<int Size, class T>
-	T dot(const Vector<Size, T>& v, const Vector<Size, T>& u) {
-		T t(0);
-		for (int i = 0; i < Size; ++i) {
-			t += v.data[i] * u.data[i];
-		}
-		return t;
-	}
+	
 
-	template<int Size, class T>
-	T length(const Vector<Size, T>& v) {
-		T t = dot(v, v);
-		float tmp = std::sqrt(static_cast<float>(t));
-		return static_cast<T>(tmp);
-	}
-
-	template<int Size, class T>
-	T sqr_length(const Vector<Size, T>& v) {
-		return dot(v, v);
-	}
-
-	template<int Size, class T>
-	Vector<Size, T> normalize(const Vector<Size, T>& u) {
-		T len = length(u);
-		if (len == 0.0f) {
-			return Vector<Size, T>();
-		}
-		return u / len;
-	}
-
-	template<int Size, class T>
-	Vector<Size, T>* normalize(const Vector<Size, T>& u, Vector<Size, T>* ret) {
-		T len = length(u);
-		for (int i = 0; i < Size; ++i) {
-			ret->data[i] /= len;
-		}
-		return ret;
-	}
-
-	template<int Size, class T>
-	T distance(const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		Vector<Size, T> sub = u - v;
-		return length(sub);
-	}
-
-	template<int Size, class T>
-	T sqr_distance(const Vector<Size, T>& u, const Vector<Size, T>& v) {
-		Vector<Size, T> sub = u - v;
-		return sqr_length(sub);
-	}
-
-	template<class T>
-	Vector<3, T> cross(const Vector<3, T>& u, const Vector<3, T>& v) {
-		T x = u.y * v.z - u.z * v.y;
-		T y = u.z * v.x - u.x * v.z;
-		T z = u.x * v.y - u.y * v.x;
-		return Vector<3, T>(x, y, z);
-	}
-
-	template<class T>
-	Vector<3, T>* cross(const Vector<3, T>& u, const Vector<3, T>& v, Vector<3, T>* ret) {
-		ret->x = u.y * v.z - u.z * v.y;
-		ret->y = u.z * v.x - u.x * v.z;
-		ret->z = u.x * v.y - u.y * v.x;
-		return ret;
-	}
-
-	template<class T>
-	T inline cross(const Vector<2, T>& v1, const Vector<2, T>& vec2) {
-		return v1.x * vec2.y - vec2.x * v1.y;
-	}
+	
 
 	template<int Size>
 	Vector<Size, float>* lerp(const Vector<Size, float>& u, const Vector<Size, float>& v, float time, Vector<Size, float>* ret) {
@@ -564,36 +776,25 @@ namespace ds {
 		operator const float* () const {
 			return &values[0];
 		}
-		/*
-		uint32_t u32() {
-		uint32_t u = r * 255.0f;
-		u = (u << 8) + g * 255.0f;
-		u = (u << 8) + b * 255.0f;
-		u = (u << 8) + a * 255.0f;
-		return u;
-		}
-		*/
 
 	} Color;
 
-#ifdef DS_MATH_IMPLEMENTATION
-
+	*/
 	// ******************************************************
 	//
 	// Math
 	//
 	// ******************************************************
-	matrix matIdentity() {
-		matrix m(
+	inline matrix matIdentity() {
+		return {
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		);
-		return m;
+			0.0f, 0.0f, 0.0f, 1.0f,
+		};
 	}
 
-	matrix matOrthoLH(float w, float h, float zn, float zf) {
+	inline matrix matOrthoLH(float w, float h, float zn, float zf) {
 		// msdn.microsoft.com/de-de/library/windows/desktop/bb204940(v=vs.85).aspx
 		matrix tmp = matIdentity();
 		tmp._11 = 2.0f / w;
@@ -603,7 +804,7 @@ namespace ds {
 		return tmp;
 	}
 
-	matrix operator * (const matrix& m1, const matrix& m2) {
+	inline matrix operator * (const matrix& m1, const matrix& m2) {
 		matrix tmp;
 		tmp._11 = m1._11 * m2._11 + m1._12 * m2._21 + m1._13 * m2._31 + m1._14 * m2._41;
 		tmp._12 = m1._11 * m2._12 + m1._12 * m2._22 + m1._13 * m2._32 + m1._14 * m2._42;
@@ -631,56 +832,58 @@ namespace ds {
 	// -------------------------------------------------------
 	// Scale matrix
 	// -------------------------------------------------------
-	matrix matScale(const vec3& scale) {
-		matrix sm(
+	inline matrix matScale(const vec3& scale) {
+		return {
 			scale.x, 0.0f, 0.0f, 0.0f,
 			0.0f, scale.y, 0.0f, 0.0f,
 			0.0f, 0.0f, scale.z, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
-		);
-		return sm;
+		};
 	}
 
 	// http://www.cprogramming.com/tutorial/3d/rotationMatrices.html
 	// left hand sided
-	matrix matRotationX(float angle) {
-		matrix sm(
+	inline matrix matRotationX(float angle) {
+		float c = static_cast<float>(cos(angle));
+		float s = static_cast<float>(sin(angle));
+		return {
 			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, cos(angle), -sin(angle), 0.0f,
-			0.0f, sin(angle), cos(angle), 0.0f,
+			0.0f,    c,   -s, 0.0f,
+			0.0f,    s,    c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
-		);
-		return sm;
+		};
 	}
 
-	matrix matRotationY(float angle) {
-		matrix sm(
-			cos(angle), 0.0f, sin(angle), 0.0f,
+	inline matrix matRotationY(float angle) {
+		float c = static_cast<float>(cos(angle));
+		float s = static_cast<float>(sin(angle));
+		return {
+			   c, 0.0f,    s, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
-			-sin(angle), 0.0f, cos(angle), 0.0f,
+			  -s, 0.0f,    c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
-		);
-		return sm;
+		};
 	}
 	// FIXME: wrong direction!!!!
-	matrix matRotationZ(float angle) {
-		matrix sm(
-			cos(angle), -sin(angle), 0.0f, 0.0f,
-			sin(angle), cos(angle), 0.0f, 0.0f,
+	inline matrix matRotationZ(float angle) {
+		float c = static_cast<float>(cos(angle));
+		float s = static_cast<float>(sin(angle));
+		return{
+			   c,   -s, 0.0f, 0.0f,
+			   s,    c, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
-		);
-		return sm;
+		};
 	}
 
-	matrix matRotation(const vec3& r) {
+	inline matrix matRotation(const vec3& r) {
 		return matRotationZ(r.z) * matRotationY(r.y) * matRotationX(r.x);
 	}
 
 	// -------------------------------------------------------
 	// Transpose matrix
 	// -------------------------------------------------------
-	matrix matTranspose(const matrix& m) {
+	inline matrix matTranspose(const matrix& m) {
 		matrix current = m;
 		matrix tmp;
 		for (int i = 0; i < 4; i++) {
@@ -694,17 +897,16 @@ namespace ds {
 	// -------------------------------------------------------
 	// Translation matrix
 	// -------------------------------------------------------
-	matrix matTranslate(const vec3& pos) {
-		matrix tm(
+	inline matrix matTranslate(const vec3& pos) {
+		return{
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			pos.x, pos.y, pos.z, 1.0f
-		);
-		return tm;
+		};
 	}
 
-	matrix matLookAtLH(const vec3& eye, const vec3& lookAt, const vec3& up) {
+	inline matrix matLookAtLH(const vec3& eye, const vec3& lookAt, const vec3& up) {
 		// see msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
 		vec3 zAxis = normalize(lookAt - eye);
 		vec3 xAxis = normalize(cross(up, zAxis));
@@ -712,66 +914,67 @@ namespace ds {
 		float dox = -dot(xAxis, eye);
 		float doy = -dot(yAxis, eye);
 		float doz = -dot(zAxis, eye);
-		matrix tmp(
+		return{
 			xAxis.x, yAxis.x, zAxis.x, 0.0f,
 			xAxis.y, yAxis.y, zAxis.y, 0.0f,
 			xAxis.z, yAxis.z, zAxis.z, 0.0f,
 			dox, doy, doz, 1.0f
-		);
-		return tmp;
+		};
 	}
 
-	matrix matPerspectiveFovLH(float fovy, float aspect, float zn, float zf) {
+	inline matrix matPerspectiveFovLH(float fovy, float aspect, float zn, float zf) {
 		// msdn.microsoft.com/de-de/library/windows/desktop/bb205350(v=vs.85).aspx
-		float yScale = 1.0f / tan(fovy / 2.0f);
+		float yScale = 1.0f / static_cast<float>(tan(fovy / 2.0f));
 		float xScale = yScale / aspect;
-
-		matrix tmp(
+		return{
 			xScale, 0.0f, 0.0f, 0.0f,
 			0.0f, yScale, 0.0f, 0.0f,
 			0.0f, 0.0f, zf / (zf - zn), 1.0f,
 			0.0f, 0.0f, -zn*zf / (zf - zn), 0.0f
-		);
-		return tmp;
+		};
 	}
 
-	vec3 matTransformNormal(const vec3& v, const matrix& m) {
-		vec3 result =
-			vec3(v.x * m._11 + v.y * m._21 + v.z * m._31,
-				v.x * m._12 + v.y * m._22 + v.z * m._32,
-				v.x * m._13 + v.y * m._23 + v.z * m._33);
-		return result;
+	inline vec3 matTransformNormal(const vec3& v, const matrix& m) {
+		return {
+			v.x * m._11 + v.y * m._21 + v.z * m._31,
+			v.x * m._12 + v.y * m._22 + v.z * m._32,
+			v.x * m._13 + v.y * m._23 + v.z * m._33 
+		};
 	}
 
-	matrix matRotation(const vec3& v, float angle) {
+	inline matrix matRotation(const vec3& v, float angle) {
 		float L = (v.x * v.x + v.y * v.y + v.z * v.z);
 		float u2 = v.x * v.x;
 		float vec2 = v.y * v.y;
 		float w2 = v.z * v.z;
+		float s = static_cast<float>(sin(angle));
+		float c = static_cast<float>(cos(angle));
+		float LS = static_cast<float>(sqrt(L));
+
 		matrix tmp = matIdentity();
-		tmp._11 = (u2 + (vec2 + w2) * cos(angle)) / L;
-		tmp._12 = (v.x * v.y * (1 - cos(angle)) - v.z * sqrt(L) * sin(angle)) / L;
-		tmp._13 = (v.x * v.z * (1 - cos(angle)) + v.y * sqrt(L) * sin(angle)) / L;
+		tmp._11 = (u2 + (vec2 + w2) * c) / L;
+		tmp._12 = (v.x * v.y * (1 - c) - v.z * LS * s) / L;
+		tmp._13 = (v.x * v.z * (1 - c) + v.y * LS * s) / L;
 		tmp._14 = 0.0f;
 
-		tmp._21 = (v.x * v.y * (1 - cos(angle)) + v.z * sqrt(L) * sin(angle)) / L;
-		tmp._22 = (vec2 + (u2 + w2) * cos(angle)) / L;
-		tmp._23 = (v.y * v.z * (1 - cos(angle)) - v.x * sqrt(L) * sin(angle)) / L;
+		tmp._21 = (v.x * v.y * (1 - c) + v.z * LS * s) / L;
+		tmp._22 = (vec2 + (u2 + w2) * c) / L;
+		tmp._23 = (v.y * v.z * (1 - c) - v.x * LS * s) / L;
 		tmp._24 = 0.0f;
 
-		tmp._31 = (v.x * v.z * (1 - cos(angle)) - v.y * sqrt(L) * sin(angle)) / L;
-		tmp._32 = (v.y * v.z * (1 - cos(angle)) + v.x * sqrt(L) * sin(angle)) / L;
-		tmp._33 = (w2 + (u2 + vec2) * cos(angle)) / L;
+		tmp._31 = (v.x * v.z * (1 - c) - v.y * LS * s) / L;
+		tmp._32 = (v.y * v.z * (1 - c) + v.x * LS * s) / L;
+		tmp._33 = (w2 + (u2 + vec2) * c) / L;
 		tmp._34 = 0.0f;
 
 		return tmp;
 	}
-
-	matrix matInverse(const matrix& m) {
+	/*
+	inline matrix matInverse(const matrix& m) {
 		matrix ret;
-		float tmp[12]; /* temp array for pairs */
-		float src[16]; /* array of transpose source matrix */
-		float det; /* determinant */
+		float tmp[12]; 
+		float src[16]; 
+		float det; 
 		float* dst = ret;
 		float* mat = m;
 
@@ -780,14 +983,14 @@ namespace ds {
 				src[i * 4 + j] = m.m[i][j];
 			}
 		}
-		/* transpose matrix */
+		// transpose matrix 
 		for (int i = 0; i < 4; i++) {
 			src[i] = mat[i * 4];
 			src[i + 4] = mat[i * 4 + 1];
 			src[i + 8] = mat[i * 4 + 2];
 			src[i + 12] = mat[i * 4 + 3];
 		}
-		/* calculate pairs for first 8 elements (cofactors) */
+		// calculate pairs for first 8 elements (cofactors) 
 		tmp[0] = src[10] * src[15];
 		tmp[1] = src[11] * src[14];
 		tmp[2] = src[9] * src[15];
@@ -800,7 +1003,7 @@ namespace ds {
 		tmp[9] = src[10] * src[12];
 		tmp[10] = src[8] * src[13];
 		tmp[11] = src[9] * src[12];
-		/* calculate first 8 elements (cofactors) */
+		// calculate first 8 elements (cofactors) 
 		dst[0] = tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7];
 		dst[0] -= tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7];
 		dst[1] = tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7];
@@ -817,7 +1020,7 @@ namespace ds {
 		dst[6] -= tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3];
 		dst[7] = tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2];
 		dst[7] -= tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2];
-		/* calculate pairs for second 8 elements (cofactors) */
+		// calculate pairs for second 8 elements (cofactors) 
 		tmp[0] = src[2] * src[7];
 		tmp[1] = src[3] * src[6];
 		tmp[2] = src[1] * src[7];
@@ -830,7 +1033,7 @@ namespace ds {
 		tmp[9] = src[2] * src[4];
 		tmp[10] = src[0] * src[5];
 		tmp[11] = src[1] * src[4];
-		/* calculate second 8 elements (cofactors) */
+		// calculate second 8 elements (cofactors) 
 		dst[8] = tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15];
 		dst[8] -= tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15];
 		dst[9] = tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15];
@@ -847,9 +1050,9 @@ namespace ds {
 		dst[14] -= tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9];
 		dst[15] = tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9];
 		dst[15] -= tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8];
-		/* calculate determinant */
+		// calculate determinant 
 		det = src[0] * dst[0] + src[1] * dst[1] + src[2] * dst[2] + src[3] * dst[3];
-		/* calculate matrix inverse */
+		// calculate matrix inverse 
 		det = 1 / det;
 		for (int j = 0; j < 16; j++) {
 			dst[j] *= det;
@@ -861,17 +1064,15 @@ namespace ds {
 		}
 		return ret;
 	}
-
-	vec4 operator * (const matrix& m, const vec4& v) {
+	*/
+	inline vec4 operator * (const matrix& m, const vec4& v) {
 		// column mode
-		/*
-		Vector4f tmp;
-		tmp.x = m._11 * v.x + m._12 * v.y + m._13 * v.z + m._14 * v.w;
-		tmp.y = m._21 * v.x + m._22 * v.y + m._23 * v.z + m._24 * v.w;
-		tmp.z = m._31 * v.x + m._32 * v.y + m._33 * v.z + m._34 * v.w;
-		tmp.w = m._41 * v.x + m._42 * v.y + m._43 * v.z + m._44 * v.w;
-		return tmp;
-		*/
+		//Vector4f tmp;
+		//tmp.x = m._11 * v.x + m._12 * v.y + m._13 * v.z + m._14 * v.w;
+		//tmp.y = m._21 * v.x + m._22 * v.y + m._23 * v.z + m._24 * v.w;
+		//tmp.z = m._31 * v.x + m._32 * v.y + m._33 * v.z + m._34 * v.w;
+		//tmp.w = m._41 * v.x + m._42 * v.y + m._43 * v.z + m._44 * v.w;
+		//return tmp;
 		// row mode
 		vec4 tmp;
 		tmp.x = m._11 * v.x + m._21 * v.y + m._31 * v.z + m._41 * v.w;
@@ -881,12 +1082,10 @@ namespace ds {
 		return tmp;
 	}
 
-	vec3 operator * (const matrix& m, const vec3& v) {
-		vec4 nv(v.x, v.y, v.z, 1.0f);
+	inline vec3 operator * (const matrix& m, const vec3& v) {
+		vec4 nv = { v.x, v.y, v.z, 1.0f };
 		vec4 tmp = m * nv;
-		return vec3(tmp.x, tmp.y, tmp.z);
+		return { tmp.x, tmp.y, tmp.z };
 	}
-
-#endif
 
 }

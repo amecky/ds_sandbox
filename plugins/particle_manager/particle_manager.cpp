@@ -21,11 +21,14 @@ float random(float min, float max) {
 	return dist(mt);
 }
 
+static ds::vec2 get_radial(float angle, float v) {
+	return{ static_cast<float>(cos(angle)) * v,static_cast<float>(sin(angle)) * v };
+}
+
 extern "C" {
 
 	static void pm_allocate(ParticleData* data, uint16_t max_particles) {
-		//uint16_t sz = max_particles * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(float) + sizeof(ds::Color) + sizeof(float) + sizeof(float));
-		uint32_t sz = max_particles * (11 * sizeof(float));
+		uint32_t sz = max_particles * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(float) + sizeof(ds::Color) + sizeof(float) + sizeof(float) + sizeof(ds::vec4));
 		data->buffer = new char[sz];
 		data->capacity = max_particles;
 		data->positions = (ds::vec2*)data->buffer;
@@ -34,6 +37,7 @@ extern "C" {
 		data->colors = (ds::Color*)(data->rotations + max_particles);
 		data->timers = (float*)(data->colors + max_particles);
 		data->ttls = (float*)(data->timers + max_particles);
+		data->additionals = (ds::vec4*)(data->ttls + max_particles);
 		data->index = 0;
 	}
 
@@ -50,6 +54,7 @@ extern "C" {
 			data->colors[end] = data->colors[index];
 			data->timers[end] = data->timers[index];
 			data->ttls[end] = data->ttls[index];
+			data->additionals[end] = data->additionals[index];
 			--data->index;
 		}
 	}
@@ -83,22 +88,38 @@ extern "C" {
 	void pm_emitt_explosion(ParticleData* data) {
 		uint16_t start = 0;
 		uint16_t count = 0;
-		if (pm_wake_up(data, 32, &start, &count)) {
+		int num = 256;
+		float numf = static_cast<float>(num);
+		if (pm_wake_up(data, num, &start, &count)) {
 			for (uint16_t i = 0; i < count; ++i) {
-				float rx = 512.0f + cos(i / 32.0f * TWO_PI) * random(120.0f,150.0f);
-				float ry = 384.0f + sin(i / 32.0f * TWO_PI) * random(120.0f, 150.0f);
-				data->positions[start + i] = ds::vec2(rx,ry);
-				data->scales[start + i] = ds::vec2(0.2f,0.4f);
-				data->rotations[start + i] = i / 32.0f * TWO_PI;
-				data->colors[start + i] = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
+				float rx = 512.0f + cos(i / numf * TWO_PI) * random(60.0f, 80.0f);
+				float ry = 384.0f + sin(i / numf * TWO_PI) * random(60.0f, 80.0f);
+				data->positions[start + i] = ds::vec2(rx, ry);
+				data->additionals[start + i].x = random(0.4f, 0.8f);
+				data->additionals[start + i].y = random(-1.0f, 1.0f);
+				data->scales[start + i] = ds::vec2(data->additionals[start + i].x);
+				data->rotations[start + i] = i / numf * TWO_PI;
+				data->colors[start + i] = ds::Color(255,255,183,255);
 				data->timers[start + i] = 0.0f;
-				data->ttls[start + i] = 1.0f;
+				data->ttls[start + i] = random(0.8f,1.4f);
 			}
 		}
 	}
 
-	void pm_update_explosion(ParticleData* data, float dt) {
+	
 
+	void pm_update_explosion(ParticleData* data, float dt) {
+		uint16_t i = 0;
+		while (i < data->index) {
+			float v = 500.0f * (1.0f - data->timers[i] / data->ttls[i]);
+			data->positions[i] += get_radial(data->rotations[i],v) * dt;
+			data->colors[i].b = (1.0f - data->timers[i] / data->ttls[i] * 0.8f);
+			data->colors[i].a = (1.0f - data->timers[i] / data->ttls[i]);
+			float s = data->additionals[i].x + static_cast<float>(sin(data->timers[i] / data->ttls[i] * TWO_PI)) * 0.3f;
+			data->rotations[i] += data->additionals[i].y * 10.0f * dt;
+			data->scales[i] = { s,s };
+			++i;
+		}
 	}
 
 	static particle_manager INSTANCE = {

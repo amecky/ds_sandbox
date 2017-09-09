@@ -19,6 +19,7 @@ public:
 	~ParticlePluginTest();
 	void render();
 	void renderGUI();
+	void tick(float dt);
 private:
 	SpriteBatchBuffer* _sprites;	
 	int _dialogState;

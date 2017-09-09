@@ -221,12 +221,12 @@ namespace ds {
 	};
 
 	enum BufferAttributeType {
-		FLOAT,
-		UINT_8,
-		FLOAT2,
-		FLOAT3,
-		FLOAT4,
-		MATRIX
+		BAT_FLOAT,
+		BAT_UINT_8,
+		BAT_FLOAT2,
+		BAT_FLOAT3,
+		BAT_FLOAT4,
+		BAT_MATRIX
 	};
 
 	enum BufferType {
@@ -391,7 +391,7 @@ namespace ds {
 		RenderSettings() {
 			width = 1024;
 			height = 768;
-			clearColor = Color(0, 0, 0, 255);
+			clearColor = { 0, 0, 0, 255 };
 			multisampling = 4;
 			title = "No title";
 			useGPUProfiling = false;
@@ -668,7 +668,7 @@ namespace ds {
 	struct RenderTargetInfo {
 		uint16_t width;
 		uint16_t height;
-		const ds::Color& clearColor;
+		const Color& clearColor;
 	};
 
 	RID createRenderTarget(const RenderTargetInfo& info, const char* name = "RenderTarget");
@@ -1178,7 +1178,7 @@ namespace ds {
 		ID3D11ShaderResourceView* srv;
 		ID3D11Texture2D* depthTexture;
 		ID3D11DepthStencilView* depthStencilView;
-		ds::Color clearColor;
+		Color clearColor;
 	};
 
 	// ******************************************************
@@ -1415,7 +1415,7 @@ namespace ds {
 
 	public:
 		ShaderResourceViewResource(InternalTexture* t) : AbstractResource(t) {
-			_size = ds::vec2(t->width, t->height);
+			_size = { t->width, t->height };
 		}
 		virtual ~ShaderResourceViewResource() {}
 		void release() {
@@ -2266,7 +2266,7 @@ namespace ds {
 	// get mouse position
 	// ------------------------------------------------------
 	vec2 getMousePosition() {
-		vec2 mp(-1.0f,-1.0f);
+		vec2 mp = { -1.0f,-1.0f };
 		tagPOINT p;
 		if (GetCursorPos(&p)) {
 			if (ScreenToClient(ds::_ctx->hwnd, &p)) {
@@ -2554,11 +2554,11 @@ namespace ds {
 	};
 
 	static const DXBufferAttributeType DXBufferAttributeTypes[] = {
-		{ FLOAT,  DXGI_FORMAT_R32G32_FLOAT , 2, 8 },
-		{ FLOAT2, DXGI_FORMAT_R32G32_FLOAT, 2, 8 },
-		{ FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT, 3, 12 },
-		{ FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 16 },
-		{ MATRIX, DXGI_FORMAT_R32G32B32A32_FLOAT, 16, 64 },
+		{ BAT_FLOAT,  DXGI_FORMAT_R32G32_FLOAT , 2, 8 },
+		{ BAT_FLOAT2, DXGI_FORMAT_R32G32_FLOAT, 2, 8 },
+		{ BAT_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT, 3, 12 },
+		{ BAT_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 16 },
+		{ BAT_MATRIX, DXGI_FORMAT_R32G32B32A32_FLOAT, 16, 64 },
 
 	};
 
@@ -5316,9 +5316,9 @@ namespace ds {
 		RID pixelShader = createPixelShader(DebugText_PS_Main, sizeof(DebugText_PS_Main), "DebugPS");
 		RID geoShader = createGeometryShader(DebugText_GS_Main, sizeof(DebugText_GS_Main), "DebugGS");
 		ds::InputLayoutDefinition decl[] = {
-			{ "POSITION", 0, ds::BufferAttributeType::FLOAT3 },
-			{ "COLOR"   , 0, ds::BufferAttributeType::FLOAT4 },
-			{ "COLOR"   , 1, ds::BufferAttributeType::FLOAT4 }
+			{ "POSITION", 0, ds::BufferAttributeType::BAT_FLOAT3 },
+			{ "COLOR"   , 0, ds::BufferAttributeType::BAT_FLOAT4 },
+			{ "COLOR"   , 1, ds::BufferAttributeType::BAT_FLOAT4 }
 		};
 		InputLayoutInfo layoutInfo = { decl, 3, vertexShader };
 		RID vertexDeclId = createInputLayout( layoutInfo, "PCC_Layout");
@@ -5344,7 +5344,7 @@ namespace ds {
 			.build();
 
 		vec2 textureSize = ds::getTextureSize(_ctx->debugTextureID);
-		_ctx->debugConstantBuffer.screenDimension = vec4(ds::getScreenWidth(), ds::getScreenHeight(), textureSize.x, textureSize.y);
+		_ctx->debugConstantBuffer.screenDimension = { static_cast<float>(ds::getScreenWidth()), static_cast<float>(ds::getScreenHeight()), textureSize.x, textureSize.y };
 		//
 		// create draw command
 		//
@@ -5359,10 +5359,10 @@ namespace ds {
 			orthoView,
 			orthoProjection,
 			orthoView * orthoProjection,
-			ds::vec3(0,0,0),
-			ds::vec3(0,0,0),
-			ds::vec3(0,1,0),
-			ds::vec3(1,0,0),
+			{ 0, 0, 0 },
+			{ 0, 0, 0 },
+			{ 0, 1, 0 },
+			{ 1, 0, 0 },
 			0.0f,
 			0.0f,
 			0.0f

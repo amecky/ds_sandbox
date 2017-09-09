@@ -342,7 +342,7 @@ SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchBufferInfo& info) : _max(i
 
 	_buffer = new Sprite[_max];
 	ds::vec2 textureSize = ds::getTextureSize(info.textureID);
-	_constantBuffer.screenCenter = ds::vec4(ds::getScreenWidth() / 2, ds::getScreenHeight() / 2, textureSize.x, textureSize.y);
+	_constantBuffer.screenCenter = { static_cast<float>(ds::getScreenWidth()) / 2.0f, static_cast<float>(ds::getScreenHeight()) / 2.0f, textureSize.x, textureSize.y };
 
 	ds::ShaderInfo vsInfo = { 0 , Sprites_VS_Main, sizeof(Sprites_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
 	RID vertexShader = ds::createShader(vsInfo, "SpritesVS");

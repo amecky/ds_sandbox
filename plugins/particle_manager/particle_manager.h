@@ -13,10 +13,11 @@ extern "C" {
 		ds::Color* colors;
 		float* timers;
 		float* ttls;
-
+		ds::vec4* additionals;
 		char* buffer;
 		uint16_t capacity;
 		uint16_t index;
+		
 	};
 
 	struct particle_manager {

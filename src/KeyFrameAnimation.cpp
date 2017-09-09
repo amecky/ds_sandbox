@@ -156,7 +156,7 @@ namespace animation {
 				char tmp[32];
 				AnimationImportData data;
 				data.pos = ds::vec2(0.0f);
-				data.scale = ds::vec2(1.0);
+				data.scale = ds::vec2(1.0f);
 				data.rotation = 0.0f;
 				file >> tmp;
 				sprintf_s(data.name, "%s", tmp);
