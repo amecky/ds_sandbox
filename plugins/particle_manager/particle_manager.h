@@ -30,7 +30,7 @@ extern "C" {
 
 		void(*tick)(ParticleData* data, float dt);
 
-		void(*emitt_explosion)(ParticleData* data);
+		void(*emitt_explosion)(ParticleData* data, const ds::vec2& pos);
 
 		void(*update_explosion)(ParticleData* data, float dt);
 

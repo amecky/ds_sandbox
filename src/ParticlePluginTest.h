@@ -1,12 +1,7 @@
 #pragma once
-//#include <diesel.h>
 #include <ds_imgui.h>
-#include <SpriteBatchBuffer.h>
-//#include <ds_vm.h>
-//#include "Particles.h"
-//#include <ds_profiler.h>
 
-
+class SpriteBatchBuffer;
 struct plugin_registry;
 struct PluginInstance;
 struct particle_manager;

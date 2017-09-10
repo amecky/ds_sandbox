@@ -1,5 +1,6 @@
 #include "ParticlePluginTest.h"
 #include <Windows.h>
+#include <SpriteBatchBuffer.h>
 #include <string>
 #include <assert.h>
 #include "plugins\PluginRegistry.h"
@@ -63,10 +64,8 @@ void ParticlePluginTest::tick(float dt) {
 	if (_running) {
 		_timer += dt;
 		if (_timer >= _delay) {
-			float px = ds::random(500, 700);
-			float py = ds::random(200, 400);
-
-			pm->emitt_explosion(_data);
+			ds::vec2 ep = { ds::random(500, 700), ds::random(200, 400) };
+			pm->emitt_explosion(_data, ep);
 			_timer -= _delay;
 		}
 	}

@@ -85,15 +85,15 @@ extern "C" {
 		return true;
 	}
 
-	void pm_emitt_explosion(ParticleData* data) {
+	void pm_emitt_explosion(ParticleData* data, const ds::vec2& pos) {
 		uint16_t start = 0;
 		uint16_t count = 0;
 		int num = 256;
 		float numf = static_cast<float>(num);
 		if (pm_wake_up(data, num, &start, &count)) {
 			for (uint16_t i = 0; i < count; ++i) {
-				float rx = 512.0f + cos(i / numf * TWO_PI) * random(60.0f, 80.0f);
-				float ry = 384.0f + sin(i / numf * TWO_PI) * random(60.0f, 80.0f);
+				float rx = pos.x + cos(i / numf * TWO_PI) * random(60.0f, 80.0f);
+				float ry = pos.y + sin(i / numf * TWO_PI) * random(60.0f, 80.0f);
 				data->positions[start + i] = ds::vec2(rx, ry);
 				data->additionals[start + i].x = random(0.4f, 0.8f);
 				data->additionals[start + i].y = random(-1.0f, 1.0f);
