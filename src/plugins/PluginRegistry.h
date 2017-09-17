@@ -8,7 +8,7 @@ struct PluginInstance {
 
 struct plugin_registry {
 
-	void (*add)(const char* name, void* interf, size_t size);
+	void (*add)(const char* name, void* interf);
 
 	bool (*contains)(const char* name);
 
@@ -19,8 +19,10 @@ struct plugin_registry {
 	void(*check_plugins)();
 
 	bool(*load_plugin)(const char* path, const char* name);
+
+	const char*(*get_last_error)();
 };
 
-plugin_registry create_registry();
+plugin_registry* get_registry();
 
 void shutdown_registry();

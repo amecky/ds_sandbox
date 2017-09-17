@@ -460,6 +460,14 @@ namespace ds {
 		return ret /= v;
 	}
 
+	inline float dot(const vec2& v, const vec2& u) {
+		float t = 0.0f;
+		for (int i = 0; i < 2; ++i) {
+			t += v.data[i] * u.data[i];
+		}
+		return t;
+	}
+
 	inline float dot(const vec3& v, const vec3& u) {
 		float t = 0.0f;
 		for (int i = 0; i < 3; ++i) {
@@ -707,6 +715,34 @@ namespace ds {
 		return ret;
 	}
 
+	inline float get_angle(const vec2& v1, const vec2& v2) {
+		static const float PI = 3.141592654f;
+		static const float TWO_PI = 2.0f * PI;
+		if (v1 != v2) {
+			vec2 vn1 = normalize(v1);
+			vec2 vn2 = normalize(v2);
+			float dt = dot(vn1, vn2);
+			if (dt < -1.0f) {
+				dt = -1.0f;
+			}
+			if (dt > 1.0f) {
+				dt = 1.0f;
+			}
+			float tmp = acos(dt);
+			float crs = (vn1.x * vn2.y) - (vn1.y * vn2.x);
+			if (crs < 0.0f) {
+				tmp = TWO_PI - tmp;
+			}
+			return tmp;
+		}
+		else {
+			return 0.0f;
+		}
+	}
+
+	inline float get_rotation(const vec2& v) {
+		return get_angle(vec2(1, 0), v);
+	}
 	/*
 	
 	template<int Size, class T>

@@ -78,7 +78,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
-	plugin_registry registry = create_registry();
+	plugin_registry* registry = get_registry();
 	//load_log_panel_plugin(&registry);
 	//logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
 	//assert(logPanel != 0);
@@ -121,14 +121,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	bool reload = true;
 	float reloadTimer = 0.0f;
-	
+
+	float timeStep = 1.0f / 60.0f;
+	float gameTimer = 0.0f;
+	float currentTime = 0.0f;
+	float accu = 0.0f;
+
 	while (ds::isRunning() && running) {
 
 		if (reload) {
 			reloadTimer += ds::getElapsedSeconds();
 			if (reloadTimer >= 0.5f) {
 				reloadTimer -= 0.5f;
-				registry.check_plugins();
+				registry->check_plugins();
 			}
 		}
 
@@ -143,7 +148,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		{
 			perf::ZoneTracker("main::update");
-			particlePluginTest.tick(ds::getElapsedSeconds());
+			gameTimer += ds::getElapsedSeconds();
+			accu += ds::getElapsedSeconds();
+			if (accu > 0.25f) {
+				accu = 0.25f;
+			}
+			int cnt = 0;
+			while (accu >= timeStep) {
+				//LOG_DEBUG("add %g - %d", accu,cnt);
+				particlePluginTest.tick(timeStep);
+				accu -= timeStep;
+				++cnt;
+			}
+			/*
+			if (accu > 0.0f) {
+				LOG_DEBUG("add %g", accu);
+				particlePluginTest.tick(accu);
+				accu = 0.0f;
+			}
+			*/
 		}
 		
 

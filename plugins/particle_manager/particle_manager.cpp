@@ -1,5 +1,3 @@
-//#define DS_IMPLEMENTATION
-//#include "ext\diesel.h"
 #include "particle_manager.h"
 #include <PluginRegistry.h>
 #include <random>
@@ -25,7 +23,9 @@ static ds::vec2 get_radial(float angle, float v) {
 	return{ static_cast<float>(cos(angle)) * v,static_cast<float>(sin(angle)) * v };
 }
 
+#ifdef DEBUG
 extern "C" {
+#endif
 
 	static void pm_allocate(ParticleData* data, uint16_t max_particles) {
 		uint32_t sz = max_particles * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(float) + sizeof(ds::Color) + sizeof(float) + sizeof(float) + sizeof(ds::vec4));
@@ -122,22 +122,57 @@ extern "C" {
 		}
 	}
 
+	void pm_emitt_trail(ParticleData* data, const ds::vec2& pos,float* timer) {
+		if (*timer >= 0.05f) {			
+			uint16_t start = 0;
+			uint16_t count = 0;
+			int num = 16;
+			float numf = static_cast<float>(num);
+			if (pm_wake_up(data, num, &start, &count)) {
+				for (uint16_t i = 0; i < count; ++i) {
+					float rx = pos.x + cos(i / numf * TWO_PI) * random(1.0f, 10.0f);
+					float ry = pos.y + sin(i / numf * TWO_PI) * random(1.0f, 10.0f);
+					data->positions[start + i] = ds::vec2(rx, ry);
+					data->additionals[start + i].x = random(0.2f, 0.3f);
+					data->additionals[start + i].y = random(-1.0f, 1.0f);
+					data->scales[start + i] = ds::vec2(data->additionals[start + i].x);
+					data->rotations[start + i] = i / numf * TWO_PI;
+					data->colors[start + i] = ds::Color(192, 0, 0, 255);
+					data->timers[start + i] = 0.0f;
+					data->ttls[start + i] = 1.5f;// random(1.5f, 2.5f);
+				}
+			}
+			*timer -= 0.05f;
+		}
+	}
+
+	void pm_update_trail(ParticleData* data, float dt) {
+		uint16_t i = 0;
+		while (i < data->index) {
+			//data->colors[i].b = (1.0f - data->timers[i] / data->ttls[i] * 0.8f);
+			data->colors[i].a = (1.0f - data->timers[i] / data->ttls[i]);
+			float s = data->additionals[i].x + static_cast<float>(sin(data->timers[i] / data->ttls[i] * TWO_PI)) * 0.1f;
+			data->scales[i] = { s,s };
+			++i;
+		}
+	}
+
 	static particle_manager INSTANCE = {
 		0,
 		pm_allocate,
 		pm_reallocate,
 		pm_tick,
 		pm_emitt_explosion,
-		pm_update_explosion
+		pm_update_explosion,
+		pm_emitt_trail,
+		pm_update_trail
 	};
 
-	struct plugin_registry;
-
-	__declspec(dllexport) void load_particle_manager(plugin_registry* registry) {
+	DLL_EXPORT void load_particle_manager(plugin_registry* registry) {
 		init_random(0);
-		registry->add(PARTICLE_MANAGER_NAME, &INSTANCE, sizeof(particle_manager));
+		registry->add(PARTICLE_MANAGER_NAME, &INSTANCE);
 	}
-
+#ifdef DEBUG
 }
-
+#endif
 

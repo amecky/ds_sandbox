@@ -374,7 +374,7 @@ SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchBufferInfo& info) : _max(i
 
 	RID basicGroup = ds::StateGroupBuilder()
 		.constantBuffer(constantBuffer, vertexShader)
-		//.blendState(bs_id)
+		.blendState(bs_id)
 		.structuredBuffer(_structuredBufferId, vertexShader, 1)
 		.vertexBuffer(NO_RID)
 		.vertexShader(vertexShader)

@@ -3,7 +3,15 @@
 #include <stdint.h>
 #include "..\..\ext\ds_math.h"
 
+#ifdef DEBUG
+#define DLL_EXPORT __declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
+#ifdef DEBUG
 extern "C" {
+#endif
 
 	struct ParticleData {
 
@@ -34,10 +42,15 @@ extern "C" {
 
 		void(*update_explosion)(ParticleData* data, float dt);
 
+		void(*emitt_trail)(ParticleData* data, const ds::vec2& pos, float* timer);
+
+		void(*update_trail)(ParticleData* data, float dt);
+
 	};
 
 	struct plugin_registry;
 
-	__declspec(dllexport) void load_particle_manager(plugin_registry* registry);
-
+	DLL_EXPORT void load_particle_manager(plugin_registry* registry);
+#ifdef DEBUG
 }
+#endif
