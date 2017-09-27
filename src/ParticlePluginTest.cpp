@@ -6,6 +6,84 @@
 #include "plugins\PluginRegistry.h"
 #include "..\plugins\particle_manager\particle_manager.h"
 
+const static ds::vec2 SIDES[] = { ds::vec2(1,0),ds::vec2(0,-1),ds::vec2(-1,0),ds::vec2(0,1) };
+
+static EnemySettings SETTINGS[] = {
+	{ ds::Color(200, 160, 160, 255), 24, 3.0f, 2.0f,  40.f, 10.0f, 350.0f, 1.0f },
+	{ ds::Color(130, 130,  50, 255), 32, 4.0f, 2.0f,  60.f, 10.0f, 250.0f, 1.0f },
+	{ ds::Color( 70, 163,  10, 255), 40, 5.0f, 2.0f,  80.f, 10.0f, 150.0f, 1.25f },
+	{ ds::Color(200, 110,  10, 255), 56, 6.0f, 2.0f, 120.f, 15.0f, 100.0f, 1.5f }
+};
+
+Enemy::Enemy(EnemySettings* settings) : _settings(settings) , _radius(0) {
+	resize();
+	_position = { 640.0f,480.0f };
+	float rad = ds::random(0.0f, ds::TWO_PI);
+	float deg = rad * 360.0f / ds::TWO_PI;
+	_velocity = { cos(rad) * _settings->radialVelocity,sin(rad) * _settings->radialVelocity };
+}
+
+Enemy::~Enemy() {
+	delete[] _radius;
+}
+
+void Enemy::resize() {
+	if (_radius != 0) {
+		delete[] _radius;
+	}
+	_radius = new float[_settings->pieces];
+	for (int i = 0; i < _settings->pieces; ++i) {
+		float a = static_cast<float>(i) / static_cast<float>(_settings->pieces) * ds::TWO_PI * _settings->amplitude;
+		_radius[i] = sin(a) * _settings->radiusVariance;
+	}
+	
+}
+
+void Enemy::tick(float dt) {
+	_timer += dt;
+	_position += _velocity * dt;
+
+	ds::vec2 rn = normalize(_velocity);
+	if (_position.x < _settings->radius || _position.x > (1280.0f - _settings->radius)) {
+		_velocity.x *= -1.0f;
+	}
+	if (_position.y < _settings->radius || _position.y > (960.0f - _settings->radius)) {
+		_velocity.y *= -1.0f;
+	}
+	/*
+	for (int i = 0; i < 4; ++i) {
+		float d = dot(rn, SIDES[i]);
+		if (d < 0.0f) {
+			LOG_DEBUG("%d", i);
+		}
+	}
+	*/
+
+}
+
+void Enemy::render(SpriteBatchBuffer* buffer) {
+	ds::Color c = _settings->color;
+	c.a = 0.25f;
+	float s = _settings->scale;
+	for (int i = 0; i < _settings->pieces; ++i) {
+		float a = static_cast<float>(i) / static_cast<float>(_settings->pieces) * ds::TWO_PI;
+		float r = sin(_timer * _settings->frequency) * _radius[i] + _settings->radius;
+		float x = _position.x + cos(a + _timer) * r;
+		float y = _position.y + sin(a + _timer) * r;
+		buffer->add(ds::vec2(x, y), ds::vec4(451, 1, 46, 46), ds::vec2(s), a, c);
+	}
+	c.a = 0.75f;
+	s -= 0.25f;
+	for (int i = 0; i < _settings->pieces; ++i) {
+		float a = static_cast<float>(i) / static_cast<float>(_settings->pieces) * ds::TWO_PI;
+		float r = sin(_timer * _settings->frequency) * _radius[i] + _settings->radius;
+		float x = _position.x + cos(a + _timer) * r;
+		float y = _position.y + sin(a + _timer) * r;
+		buffer->add(ds::vec2(x, y), ds::vec4(451, 1, 46, 46), ds::vec2(s), a, c);
+	}
+
+}
+
 ParticlePluginTest::ParticlePluginTest(plugin_registry* registry, SpriteBatchBuffer* buffer) : _sprites(buffer) {
 
 	_dialogPos = p2i(10, 950);
@@ -38,6 +116,15 @@ ParticlePluginTest::ParticlePluginTest(plugin_registry* registry, SpriteBatchBuf
 	_player.angle = 0.0f;
 	_player.trailTimer = 0.0f;
 
+	//_enemySettings.color = ds::Color(0, 200, 150, 255);
+	//_enemySettings.pieces = 36;
+	//_enemySettings.amplitude = 3.0f;
+	//_enemySettings.frequency = 2.0f;
+	//_enemySettings.radius = 80.0f;
+	//_enemySettings.radiusVariance = 20.0f;
+	
+	//_enemy = new Enemy(&_enemySettings);
+	
 	RID textureID = ds::findResource(SID("content\\TextureArray.png"), ds::ResourceType::RT_SRV);
 	ds::BlendStateInfo blendStateInfo{ ds::BlendStates::ONE, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ONE, true };
 	RID blendState = ds::createBlendState(blendStateInfo,"ParticleBlendState");
@@ -54,7 +141,7 @@ ParticlePluginTest::~ParticlePluginTest() {
 void ParticlePluginTest::renderGUI() {
 	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 300)) {
+	if (gui::begin("Debug", &_dialogState, &_dialogPos, 420)) {
 		float fps = ds::getFramesPerSecond();
 		gui::Value("FPS", fps);
 		float ti = 0.0f;
@@ -72,6 +159,37 @@ void ParticlePluginTest::renderGUI() {
 		}		
 		if (_running && gui::Button("Stop")) {
 			_running = false;
+		}
+		// enemy
+		/*
+		if (gui::Input("Pieces", &_enemySettings.pieces)) {
+			_enemy->resize();
+		}
+		if (gui::Input("Amplitude", &_enemySettings.amplitude)) {
+			_enemy->resize();
+		}
+		gui::Input("Frequency", &_enemySettings.frequency);
+		gui::Input("Radius", &_enemySettings.radius);
+		if (gui::Input("R-Variance", &_enemySettings.radiusVariance)) {
+			_enemy->resize();
+		}
+		gui::Input("Color", &_enemySettings.color);
+		*/
+		if (gui::Button("Start 1")) {
+			Enemy* e = new Enemy(&SETTINGS[0]);
+			_enemies.emplace_back(e);
+		}
+		if (gui::Button("Start 2")) {
+			Enemy* e = new Enemy(&SETTINGS[1]);
+			_enemies.emplace_back(e);
+		}
+		if (gui::Button("Start 3")) {
+			Enemy* e = new Enemy(&SETTINGS[2]);
+			_enemies.emplace_back(e);
+		}
+		if (gui::Button("Start 4")) {
+			Enemy* e = new Enemy(&SETTINGS[3]);
+			_enemies.emplace_back(e);
 		}
 	}
 	
@@ -105,6 +223,10 @@ void ParticlePluginTest::tick(float dt) {
 	pm->emitt_trail(_trailData, _player.position, &_player.trailTimer);
 	pm->tick(_trailData, dt);
 	pm->update_trail(_trailData, dt);
+
+	for (size_t i = 0; i < _enemies.size(); ++i) {
+		_enemies[i]->tick(dt);
+	}
 }
 	
 
@@ -136,25 +258,17 @@ void ParticlePluginTest::render() {
 	}
 	*/
 
-	for (int i = 0; i < 36; ++i) {
-		float a = static_cast<float>(i) / 36.0f * ds::TWO_PI;
-		float r = sin(a) * 15.0f + 80.0f;
-		float x = 640 + cos(a) * r;
-		float y = 480 + sin(a) * r;
-		_sprites->add(ds::vec2(x, y), ds::vec4(426, 1, 18, 18), ds::vec2(1, 1), a, ds::Color(255, 255, 255, 255));
-	}
-
-	for (int i = 0; i < 36; ++i) {
-		float a = static_cast<float>(i) / 36.0f * ds::TWO_PI;
-		float r = sin(a) * 15.0f + 80.0f;
-		float x = 640 + cos(a) * r;
-		float y = 480 + sin(a) * r;
-		_sprites->add(ds::vec2(x, y), ds::vec4(426, 1, 18, 18), ds::vec2(0.85f), a, ds::Color(255, 0, 0, 255));
-	}
-
 	_sprites->flush();
 
 	_particleBuffer->begin();
+
+	for (size_t i = 0; i < _enemies.size(); ++i) {
+		_enemies[i]->render(_particleBuffer);
+	}
+
+	//_sprites->flush();
+
+	//_particleBuffer->begin();
 	
 	renderParticles(_data, ds::vec4(220, 30, 20, 20));
 

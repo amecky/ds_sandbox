@@ -1,11 +1,39 @@
 #pragma once
 #include <ds_imgui.h>
+#include <vector>
 
 class SpriteBatchBuffer;
 struct plugin_registry;
 struct PluginInstance;
 struct particle_manager;
 struct ParticleData;
+
+struct EnemySettings {
+	ds::Color color;
+	int pieces;
+	float amplitude;
+	float frequency;
+	float radius;
+	float radiusVariance;
+	float radialVelocity;
+	float scale;
+};
+
+class Enemy {
+
+public:
+	Enemy(EnemySettings* settings);
+	~Enemy();
+	void tick(float dt);
+	void render(SpriteBatchBuffer* buffer);
+	void resize();
+private:
+	ds::vec2 _position;
+	ds::vec2 _velocity;
+	EnemySettings* _settings;
+	float* _radius;
+	float _timer;
+};
 
 class ParticlePluginTest {
 
@@ -39,7 +67,8 @@ private:
 	float _timer;
 	bool _running;
 	float _delay;
-
 	Player _player;
+
+	std::vector<Enemy*> _enemies;
 };
 

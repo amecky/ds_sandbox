@@ -134,9 +134,9 @@ namespace gui {
 
 	bool TextBox(const char* label, char* str, int maxLength);
 
-	void Input(const char* label, int* v);
+	bool Input(const char* label, int* v);
 
-	void Input(const char* label, float* v);
+	bool Input(const char* label, float* v);
 
 	bool Input(const char* label, ds::vec2* v);
 
@@ -1548,29 +1548,31 @@ namespace gui {
 	// -------------------------------------------------------
 	// input int
 	// -------------------------------------------------------
-	void Input(const char* label, int* v) {
+	bool Input(const char* label, int* v) {
 		pushID(label);
 		float f = static_cast<float>(*v);
-		InputScalar(0, &f, "%g", 150);
+		bool fr = InputScalar(0, &f, "%g", 150);
 		*v = static_cast<int>(f);
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x += 160;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
+		return fr;
 	}
 
 	// -------------------------------------------------------
 	// input float
 	// -------------------------------------------------------
-	void Input(const char* label, float* v) {
+	bool Input(const char* label, float* v) {
 		pushID(label);
-		InputScalar(0, v, "%g", 150);
+		bool fr = InputScalar(0, v, "%g", 150);
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x += 160;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
+		return fr;
 	}
 
 	// -------------------------------------------------------
