@@ -87,10 +87,10 @@ namespace perfpanel {
 					if (fp) {
 						for (size_t i = 0; i < perf::num_events(); ++i) {
 							fprintf(fp, "%s %2.5f %d\n", perf::get_name(i), perf::avg(i), perf::num_calls(i));
-							LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
+							//LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
 						}
 						fprintf(fp, "Total %2.5f\n", perf::avg_total());
-						LOG_DEBUG("Total %2.5f", perf::avg_total());
+						//LOG_DEBUG("Total %2.5f", perf::avg_total());
 						fclose(fp);
 					}
 				}

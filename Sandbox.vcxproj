@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_imgui.h" />
-    <ClInclude Include="ext\ds_math.h" />
     <ClInclude Include="ext\ds_profiler.h" />
     <ClInclude Include="ext\ds_vm.h" />
     <ClInclude Include="ext\SpriteBatchBuffer.h" />
@@ -31,6 +30,9 @@
     <ClInclude Include="src\AnimationTest.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\kenney\AssetViewer.h" />
+    <ClInclude Include="src\kenney\Camera.h" />
+    <ClInclude Include="src\kenney\Grid.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\ParticleExpressionTest.h" />
@@ -49,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
+    <ClCompile Include="src\kenney\AssetViewer.cpp" />
+    <ClCompile Include="src\kenney\Camera.cpp" />
+    <ClCompile Include="src\kenney\Grid.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />

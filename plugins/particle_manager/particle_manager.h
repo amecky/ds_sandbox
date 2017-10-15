@@ -1,7 +1,6 @@
 #pragma once
 #define PARTICLE_MANAGER_NAME "particle_manager"
 #include <stdint.h>
-#include "..\..\ext\ds_math.h"
 
 #ifdef DEBUG
 #define DLL_EXPORT __declspec(dllexport)

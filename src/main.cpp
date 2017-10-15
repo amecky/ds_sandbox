@@ -22,6 +22,7 @@
 #include "PerfPanel.h"
 #include "plugins\PluginRegistry.h"
 #include "ParticlePluginTest.h"
+#include "kenney\AssetViewer.h"
 
 // ---------------------------------------------------------------
 // load image from the resources
@@ -49,11 +50,11 @@ RID loadImage(const char* name) {
 
 //static log_panel_plugin* logPanel = 0;
 
-void myLogging(const logging::LogLevel&, const char* message) {
-	OutputDebugString(message);
-	OutputDebugString("\n");
+//void myLogging(const logging::LogLevel&, const char* message) {
+	//OutputDebugString(message);
+	//OutputDebugString("\n");
 	//logPanel->add_line(logPanel->data,message);
-}
+//}
 
 // ---------------------------------------------------------------
 // initialize rendering system
@@ -68,13 +69,11 @@ void initialize() {
 	ds::init(rs);
 }
 
+void run_asset_viewer() {
+	run();
+}
 
-// ---------------------------------------------------------------
-// main method
-// ---------------------------------------------------------------
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
-
-	
+void run_particle_plugin_test() {
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
@@ -83,20 +82,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	//logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
 	//assert(logPanel != 0);
 
-	logging::logHandler = myLogging;
-	logging::currentLevel = logging::LL_DEBUG;
+	//logging::logHandler = myLogging;
+	//logging::currentLevel = logging::LL_DEBUG;
 
 	//load_plugin(&registry, "log_panel_plugin");
 
-	
+
 
 	//logpanel::init(32);
 	perf::init();
-	
+
 
 	initialize();
-	
+
 	gui::init();
+
+
 
 	// load image using stb_image
 	RID textureID = loadImage("content\\TextureArray.png");
@@ -104,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	// create the sprite batch buffer
 	SpriteBatchBufferInfo sbbInfo = { 2048, textureID, ds::TextureFilters::LINEAR };
 	SpriteBatchBuffer spriteBuffer(sbbInfo);
-	
+
 	bool running = true;
 
 	//TweeningTest tweeningTest(&spriteBuffer);
@@ -162,13 +163,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 			/*
 			if (accu > 0.0f) {
-				LOG_DEBUG("add %g", accu);
-				particlePluginTest.tick(accu);
-				accu = 0.0f;
+			LOG_DEBUG("add %g", accu);
+			particlePluginTest.tick(accu);
+			accu = 0.0f;
 			}
 			*/
 		}
-		
+
 
 		{
 			perf::ZoneTracker("main::render");
@@ -187,30 +188,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		}
 		/*
 		{
-			perf::ZoneTracker("main::events");
-			ds::Event event;
-			while (ds::get_event(&event)) {
-				LOG_DEBUG("caught event %d", event.type);
-				if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
-					animationTest.onButtonClicked(event.mouse.button);
-				}
-				if (event.type == ds::EventType::ET_KEY_PRESSED) {
-					if (event.key.key == 'l') {
-						LOG_INFO("L pressed %d", l_count++);
-					}
-					if (event.key.key == 'd') {
-						int end = logpanel::get_num_lines();
-						int start = end - 5;
-						if (start < 0) {
-							start = 0;
-						}
-						LOG_INFO("----------------------------------------------\n");
-						for (uint16_t i = start; i < end; ++i) {
-							LOG_INFO("%s",logpanel::get_line(i));
-						}
-					}
-				}
-			}
+		perf::ZoneTracker("main::events");
+		ds::Event event;
+		while (ds::get_event(&event)) {
+		LOG_DEBUG("caught event %d", event.type);
+		if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
+		animationTest.onButtonClicked(event.mouse.button);
+		}
+		if (event.type == ds::EventType::ET_KEY_PRESSED) {
+		if (event.key.key == 'l') {
+		LOG_INFO("L pressed %d", l_count++);
+		}
+		if (event.key.key == 'd') {
+		int end = logpanel::get_num_lines();
+		int start = end - 5;
+		if (start < 0) {
+		start = 0;
+		}
+		LOG_INFO("----------------------------------------------\n");
+		for (uint16_t i = start; i < end; ++i) {
+		LOG_INFO("%s",logpanel::get_line(i));
+		}
+		}
+		}
+		}
 		}
 		*/
 		//tweeningTest.renderGUI();
@@ -221,14 +222,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			particlePluginTest.renderGUI();
 		}
 		//perf::tickFPS(ds::getElapsedSeconds());		
-		
+
 		{
 			perf::ZoneTracker("main::end");
 			ds::end();
 		}
 		perf::finalize();
-		
-		
+
+
 	}
 	perf::shutdown();
 	gui::shutdown();
@@ -236,4 +237,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	//unload_log_panel_plugin(&registry);
 	shutdown_registry();
 	ds::shutdown();
+}
+
+// ---------------------------------------------------------------
+// main method
+// ---------------------------------------------------------------
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
+
+	run_asset_viewer();
+	
 }

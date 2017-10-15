@@ -70,7 +70,7 @@ void ParticleExpressionTest::loadExpressionsFile(Particlesystem* system) {
 			}
 			exp.source[l] = '\0';
 			ParticleChannel pc = find_by_name(buffer);
-			LOG_DEBUG("line %d = '%s' : '%s'", cnt, buffer, exp.source);
+//			LOG_DEBUG("line %d = '%s' : '%s'", cnt, buffer, exp.source);
 			if (pc != ParticleChannel::UNKNOWN) {				
 				vm::parse(exp.source, system->vmCtx, exp.expression);
 				system->connections[cnt] = { pc, &exp.expression, cnt };

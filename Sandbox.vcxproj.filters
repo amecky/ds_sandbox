@@ -10,6 +10,9 @@
     <Filter Include="plugins">
       <UniqueIdentifier>{9debc145-20fc-474f-8ca1-5a53117bb371}</UniqueIdentifier>
     </Filter>
+    <Filter Include="kenney">
+      <UniqueIdentifier>{20c6f72e-45b2-4094-9245-45b7b6b83b3e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -53,9 +56,6 @@
     <ClInclude Include="src\ParticleExpressionTest.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
-    <ClInclude Include="ext\ds_math.h">
-      <Filter>ext</Filter>
-    </ClInclude>
     <ClInclude Include="src\plugins\PluginRegistry.h">
       <Filter>plugins</Filter>
     </ClInclude>
@@ -63,6 +63,15 @@
       <Filter>plugins</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticlePluginTest.h" />
+    <ClInclude Include="src\kenney\AssetViewer.h">
+      <Filter>kenney</Filter>
+    </ClInclude>
+    <ClInclude Include="src\kenney\Camera.h">
+      <Filter>kenney</Filter>
+    </ClInclude>
+    <ClInclude Include="src\kenney\Grid.h">
+      <Filter>kenney</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -86,6 +95,15 @@
       <Filter>plugins</Filter>
     </ClCompile>
     <ClCompile Include="src\ParticlePluginTest.cpp" />
+    <ClCompile Include="src\kenney\AssetViewer.cpp">
+      <Filter>kenney</Filter>
+    </ClCompile>
+    <ClCompile Include="src\kenney\Camera.cpp">
+      <Filter>kenney</Filter>
+    </ClCompile>
+    <ClCompile Include="src\kenney\Grid.cpp">
+      <Filter>kenney</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

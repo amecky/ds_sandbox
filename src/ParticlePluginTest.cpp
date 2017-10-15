@@ -215,7 +215,7 @@ void ParticlePluginTest::tick(float dt) {
 
 	_player.timer += dt;
 
-	_player.angle = get_rotation(_player.position - _player.previous);
+	//_player.angle = get_rotation(_player.position - _player.previous);
 	_player.previous = _player.position;
 	_player.position.y = (15.0f * cos(_player.timer * -6.0f)) + (480.0f + (300.0f * sin(_player.timer * 1.3f)));
 	_player.position.x = (15.0f * sin(_player.timer * -6.0f)) + (640.0f + (280.0f * cos(_player.timer / 1.5f)));
