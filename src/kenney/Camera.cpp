@@ -12,7 +12,7 @@ FPSCamera::~FPSCamera() {
 
 void FPSCamera::setPosition(const ds::vec3& pos, const ds::vec3& target) {
 	_camera->position = pos;
-	_camera->target = target;
+	_camera->target = ds::normalize(target - pos);
 	buildView();
 }
 

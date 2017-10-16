@@ -25,8 +25,8 @@ PS_Input VS_Main( VS_Input vertex ) {
 
 float4 PS_Main( PS_Input frag ) : SV_TARGET {
 	float2 tex = frag.tex;
-	float sx = smoothstep(0.98,1.0,tex.x);
-	float sy = smoothstep(0.98,1.0,tex.y);
+	float sx = step(0.98,tex.x);
+	float sy = step(0.98,tex.y);
 	float4 bgColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
 	float4 grColor = float4(0.7f, 0.7f, 0.7f, 1.0f);
 	float4 color = lerp( bgColor, grColor, saturate(dot(float2(sx,sy),float2(1.0,1.0))) );

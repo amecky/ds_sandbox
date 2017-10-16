@@ -7,7 +7,7 @@ void Grid::create(int numCells, RID renderPass) {
 	_renderPass = renderPass;
 	float uvMax = static_cast<float>(numCells);
 	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
-	ds::vec3 positions[] = { ds::vec3(-0.5f,0.0f,-0.5f),ds::vec3(-0.5f,0.0f,0.5f) ,ds::vec3(0.5f,0.0f,0.5f) ,ds::vec3(0.5f,0.0f,-0.5f) };
+	ds::vec3 positions[] = { ds::vec3(-0.5f,-0.0005f,-0.5f),ds::vec3(-0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,-0.5f) };
 	int num = numCells * numCells * 4 / 6;
 	_vertices = new GridVertex[numCells * numCells * 4];	
 	float sz = numCells / 2.0f - 0.5f;

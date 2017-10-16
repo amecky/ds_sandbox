@@ -3,6 +3,10 @@
 #include "..\..\shaders\AmbientLightning_PS_Main.h"
 #include "Camera.h"
 #include "Grid.h"
+#include "..\..\shaders\Depth_VS_Main.h"
+#include "..\..\shaders\Depth_PS_Main.h"
+#include "..\..\shaders\Shadow_VS_Main.h"
+#include "..\..\shaders\Shadow_PS_Main.h"
 
 struct AmbientVertex {
 	ds::vec3 p;
@@ -30,9 +34,28 @@ struct LightBuffer {
 struct Entity {
 	AmbientVertex* vertices;
 	RID drawItem;
+	RID depthDrawItem;
 };
 
-void load_entity(Entity* e, const char* fileName, RID baseGroup) {
+struct MatrixBuffer {
+	ds::matrix worldMatrix;
+	ds::matrix viewMatrix;
+	ds::matrix projectionMatrix;
+	ds::matrix lightViewMatrix;
+	ds::matrix lightProjectionMatrix;
+};
+
+struct NewLightBuffer {
+	ds::Color ambientColor;
+	ds::Color diffuseColor;
+};
+
+struct LightBuffer2 {
+	ds::vec3 lightPosition;
+	float padding;
+};
+
+void load_entity(Entity* e, const char* fileName, RID baseGroup, RID depthGroup) {
 	FILE* fp = fopen(fileName, "rb");
 	int total = 0;
 	fread(&total, sizeof(int), 1, fp);
@@ -79,12 +102,25 @@ void load_entity(Entity* e, const char* fileName, RID baseGroup) {
 		.vertexBuffer(kvbid)
 		.build();
 
+	RID myDepthGroup = ds::StateGroupBuilder()
+		.vertexBuffer(kvbid)
+		.build();
+
 	ds::DrawCommand nextDrawCmd = { total, ds::DrawType::DT_VERTICES, ds::PrimitiveTypes::TRIANGLE_LIST };
 	RID groups[] = { baseGroup, nextGroup };
 	e->drawItem = ds::compile(nextDrawCmd, groups, 2);
+
+	RID dgroups[] = { depthGroup, myDepthGroup };
+	e->depthDrawItem = ds::compile(nextDrawCmd, dgroups, 2);
 }
 
-void render_draw_item(const ds::vec3& p, CubeConstantBuffer* constantBuffer, RID pass, const Entity& e) {
+void render_depth_draw_item(const ds::vec3& p, MatrixBuffer* constantBuffer, RID pass, const Entity& e) {
+	ds::matrix w = ds::matTranslate(p);
+	constantBuffer->worldMatrix = ds::matTranspose(w);
+	ds::submit(pass, e.depthDrawItem);
+}
+
+void render_draw_item(const ds::vec3& p, MatrixBuffer* constantBuffer, RID pass, const Entity& e) {
 	ds::matrix w = ds::matTranslate(p);
 	constantBuffer->worldMatrix = ds::matTranspose(w);
 	ds::submit(pass, e.drawItem);
@@ -125,6 +161,16 @@ int run() {
 	ds::ShaderInfo apsInfo = { 0, AmbientLightning_PS_Main, sizeof(AmbientLightning_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
 	RID ambientPixelShader = ds::createShader(apsInfo);
 
+	ds::ShaderInfo dvsInfo = { 0, Depth_VS_Main, sizeof(Depth_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
+	RID depthVertexShader = ds::createShader(dvsInfo);
+	ds::ShaderInfo dpsInfo = { 0, Depth_PS_Main, sizeof(Depth_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
+	RID depthPixelShader = ds::createShader(dpsInfo);
+
+	ds::ShaderInfo svsInfo = { 0, Shadow_VS_Main, sizeof(Shadow_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
+	RID shadowVertexShader = ds::createShader(svsInfo);
+	ds::ShaderInfo spsInfo = { 0, Shadow_PS_Main, sizeof(Shadow_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
+	RID shadowPixelShader = ds::createShader(spsInfo);
+
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 4.0f, -6.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
 	ds::Camera camera = {
@@ -137,15 +183,49 @@ int run() {
 		ds::vec3(1,0,0)
 	};
 
+	ds::matrix lightViewMatrix = ds::matLookAtLH(ds::vec3(1.0f, -0.5f, 1.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::Camera lightCamera = {
+		lightViewMatrix,
+		projectionMatrix,
+		lightViewMatrix * projectionMatrix,
+		ds::vec3(1.0f, -0.5f, 1.0f),
+		ds::vec3(0,0,1),
+		ds::vec3(0,1,0),
+		ds::vec3(1,0,0)
+	};
+
+
+	MatrixBuffer matrixBuffer;
+	matrixBuffer.worldMatrix = ds::matTranspose(ds::matIdentity());
+	matrixBuffer.viewMatrix = ds::matTranspose(viewMatrix);
+	matrixBuffer.projectionMatrix = ds::matTranspose(projectionMatrix);
+	matrixBuffer.lightViewMatrix = ds::matTranspose(lightViewMatrix);
+	matrixBuffer.lightProjectionMatrix = ds::matTranspose(projectionMatrix);
+	RID matrixBufferID = ds::createConstantBuffer(sizeof(MatrixBuffer), &matrixBuffer);
+
+	NewLightBuffer newLightBuffer;
+	newLightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	newLightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
+	RID newLightBufferID = ds::createConstantBuffer(sizeof(NewLightBuffer), &newLightBuffer);
+
+	LightBuffer2 lightBuffer2;
+	lightBuffer2.lightPosition = ds::vec3(1.0f, -0.5f, 1.0f);
+	lightBuffer2.padding = 0.0f;
+	RID lightBuffer2ID = ds::createConstantBuffer(sizeof(LightBuffer2), &lightBuffer2);
+
 	FPSCamera fpsCamera(&camera);
-	fpsCamera.setPosition(ds::vec3(0, 1, -6));
+	fpsCamera.setPosition(ds::vec3(0, 4, -6),ds::vec3(0,0,0));	
 	fpsCamera.buildView();
 
-	
-
+	ds::RenderTargetInfo rtInfo = { 1024,1024,ds::Color(0.0f,0.0f,0.0f,1.0f)};
+	RID renderTarget = ds::createRenderTarget(rtInfo);
 
 	ds::RenderPassInfo rpInfo = { &camera,ds::DepthBufferState::ENABLED, 0, 0 };
 	RID basicPass = ds::createRenderPass(rpInfo);
+
+	RID targets[] = { renderTarget };
+	ds::RenderPassInfo rtrpInfo = { &camera,ds::DepthBufferState::ENABLED, targets, 1 };
+	RID rtPass = ds::createRenderPass(rtrpInfo);
 
 	Grid grid;
 	grid.create(10, basicPass);
@@ -171,11 +251,33 @@ int run() {
 		.pixelShader(ambientPixelShader)
 		.build();
 
+	RID depthGroup = ds::StateGroupBuilder()
+		.inputLayout(arid)
+		.constantBuffer(cbid, depthVertexShader, 0)
+		.blendState(bs_id)
+		.vertexShader(depthVertexShader)
+		.pixelShader(depthPixelShader)
+		.build();
+
+	RID shadowGroup = ds::StateGroupBuilder()
+		.inputLayout(arid)
+		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
+		.constantBuffer(lightBuffer2ID, shadowVertexShader, 1)
+		.constantBuffer(newLightBufferID, shadowPixelShader, 0)
+		.blendState(bs_id)
+		.textureFromRenderTarget(renderTarget, shadowPixelShader,0)
+		.vertexShader(shadowVertexShader)
+		.pixelShader(shadowPixelShader)
+		.build();
+
 	Entity barrel;
-	load_entity(&barrel, "..\\..\\..\\obj_converter\\barrel.bin", nextGroup);
+	load_entity(&barrel, "..\\obj_converter\\barrel.bin", shadowGroup, depthGroup);
 
 	Entity highTile;
-	load_entity(&highTile, "..\\..\\..\\obj_converter\\frameHighTile.bin", nextGroup);
+	load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
+
+	Entity crater;
+	load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
 
 
@@ -205,8 +307,17 @@ int run() {
 		//ds::submit(basicPass, nextDrawItem);
 
 		//ds::submit(basicPass, barrel.drawItem);
-		render_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &constantBuffer, basicPass, barrel);
-		render_draw_item(ds::vec3(1.0f, 0.0f, 0.0f), &constantBuffer, basicPass, highTile);
+		matrixBuffer.viewMatrix = ds::matTranspose(lightCamera.viewMatrix);
+		matrixBuffer.worldMatrix = ds::matTranspose(w);
+		render_depth_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &matrixBuffer, rtPass, barrel);
+
+		matrixBuffer.viewMatrix = ds::matTranspose(camera.viewMatrix);
+		matrixBuffer.worldMatrix = ds::matTranspose(w);
+		render_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, barrel);
+		//render_draw_item(ds::vec3(1.0f, 0.0f, 0.0f), &constantBuffer, basicPass, highTile);
+		//render_draw_item(ds::vec3(2.5f, 0.0f, 0.0f), &constantBuffer, basicPass, crater);
+		//render_draw_item(ds::vec3(2.5f, 0.0f, 2.0f), &constantBuffer, basicPass, crater);
+		//render_draw_item(ds::vec3(1.5f, 0.0f, 1.0f), &constantBuffer, basicPass, crater);
 
 		//ds::submit(basicPass, highTile.drawItem);
 

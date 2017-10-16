@@ -9,12 +9,18 @@ rem Copyright (c) Microsoft Corporation. All rights reserved.
 setlocal
 set error=0
 
-set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
-rem set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
+rem set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
+set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
 
 rem Cube
 call :CompileShader%1 Grid Grid vs VS_Main
 call :CompileShader%1 Grid Grid ps PS_Main
+
+call :CompileShader%1 Depth Depth vs VS_Main
+call :CompileShader%1 Depth Depth ps PS_Main
+
+call :CompileShader%1 Shadow Shadow vs VS_Main
+call :CompileShader%1 Shadow Shadow ps PS_Main
 
 call :CompileShader%1 AmbientLightning AmbientLightning vs VS_Main
 call :CompileShader%1 AmbientLightning AmbientLightning ps PS_Main
