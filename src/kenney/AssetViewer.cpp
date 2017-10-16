@@ -55,6 +55,44 @@ struct LightBuffer2 {
 	float padding;
 };
 
+void create_grid(Entity* e, int numCells, RID baseGroup) {
+	float uvMax = static_cast<float>(numCells);
+	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
+	ds::vec3 positions[] = { ds::vec3(-0.5f,-0.0005f,-0.5f),ds::vec3(-0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,-0.5f) };
+	int num = numCells * numCells * 4 / 6;
+	e->vertices = new AmbientVertex[numCells * numCells * 4];
+	float sz = numCells / 2.0f - 0.5f;
+	for (int z = 0; z < numCells; ++z) {
+		float sx = numCells / 2.0f - 0.5f;
+		for (int x = 0; x < numCells; ++x) {
+			int idx = z * numCells * 4 + x * 4;
+			for (int j = 0; j < 4; ++j) {
+				e->vertices[idx + j].p = positions[j];
+				e->vertices[idx + j].p.x += sx;
+				e->vertices[idx + j].p.z += sz;
+				e->vertices[idx + j].color = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
+				e->vertices[idx + j].n = ds::vec3(0, 1, 0);
+			}
+			sx -= 1.0f;
+		}
+		sz -= 1.0f;
+	}
+
+	RID indexBuffer = ds::createQuadIndexBuffer(numCells * numCells, "GridIndexBuffer");
+	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, numCells * numCells * 4, sizeof(AmbientVertex), e->vertices };
+	RID kvbid = ds::createVertexBuffer(vbInfo);
+
+	RID nextGroup = ds::StateGroupBuilder()
+		.vertexBuffer(kvbid)
+		.indexBuffer(indexBuffer)
+		.build();
+
+	ds::DrawCommand nextDrawCmd = { numCells * numCells * 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
+	RID groups[] = { baseGroup, nextGroup };
+	e->drawItem = ds::compile(nextDrawCmd, groups, 2);
+
+}
+
 void load_entity(Entity* e, const char* fileName, RID baseGroup, RID depthGroup) {
 	FILE* fp = fopen(fileName, "rb");
 	int total = 0;
@@ -183,7 +221,7 @@ int run() {
 		ds::vec3(1,0,0)
 	};
 
-	ds::matrix lightViewMatrix = ds::matLookAtLH(ds::vec3(1.0f, -0.5f, 1.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix lightViewMatrix = ds::matLookAtLH(ds::vec3(-4.0f, 8.0f, -8.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::Camera lightCamera = {
 		lightViewMatrix,
 		projectionMatrix,
@@ -204,17 +242,17 @@ int run() {
 	RID matrixBufferID = ds::createConstantBuffer(sizeof(MatrixBuffer), &matrixBuffer);
 
 	NewLightBuffer newLightBuffer;
-	newLightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	newLightBuffer.ambientColor = ds::Color(0.15f, 0.15f, 0.15f, 1.0f);
 	newLightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	RID newLightBufferID = ds::createConstantBuffer(sizeof(NewLightBuffer), &newLightBuffer);
 
 	LightBuffer2 lightBuffer2;
-	lightBuffer2.lightPosition = ds::vec3(1.0f, -0.5f, 1.0f);
+	lightBuffer2.lightPosition = ds::vec3(-4.0f, 8.0f, -8.0f);
 	lightBuffer2.padding = 0.0f;
 	RID lightBuffer2ID = ds::createConstantBuffer(sizeof(LightBuffer2), &lightBuffer2);
 
-	FPSCamera fpsCamera(&camera);
-	fpsCamera.setPosition(ds::vec3(0, 4, -6),ds::vec3(0,0,0));	
+	FPSCamera fpsCamera(&lightCamera);
+	fpsCamera.setPosition(lightBuffer2.lightPosition, ds::vec3(0, 0, 0));// ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));
 	fpsCamera.buildView();
 
 	ds::RenderTargetInfo rtInfo = { 1024,1024,ds::Color(0.0f,0.0f,0.0f,1.0f)};
@@ -227,8 +265,8 @@ int run() {
 	ds::RenderPassInfo rtrpInfo = { &camera,ds::DepthBufferState::ENABLED, targets, 1 };
 	RID rtPass = ds::createRenderPass(rtrpInfo);
 
-	Grid grid;
-	grid.create(10, basicPass);
+	//Grid grid;
+	//grid.create(10, basicPass);
 
 	// create buffer input layout
 	ds::InputLayoutDefinition ambientDecl[] = {
@@ -273,11 +311,14 @@ int run() {
 	Entity barrel;
 	load_entity(&barrel, "..\\obj_converter\\barrel.bin", shadowGroup, depthGroup);
 
-	Entity highTile;
-	load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
+	Entity grid;
+	create_grid(&grid, 10, shadowGroup);
 
-	Entity crater;
-	load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
+	//Entity highTile;
+	//load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
+
+	//Entity crater;
+	//load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
 
 
@@ -286,7 +327,7 @@ int run() {
 
 		fpsCamera.update(static_cast<float>(ds::getElapsedSeconds()));
 
-		grid.render(&camera);
+		
 
 		// move cube
 		t += static_cast<float>(ds::getElapsedSeconds());
@@ -295,7 +336,7 @@ int run() {
 		//float scale = 0.7f + sin(t) * 0.3f;
 		float scale = 1.0f;// 0.15f;
 		ds::matrix s = ds::matScale(ds::vec3(scale));
-		ds::matrix w = bY * s;
+		ds::matrix w = ds::matIdentity();// bY * s;
 
 		constantBuffer.viewprojectionMatrix = ds::matTranspose(camera.viewProjectionMatrix);
 		constantBuffer.worldMatrix = ds::matTranspose(w);
@@ -311,9 +352,10 @@ int run() {
 		matrixBuffer.worldMatrix = ds::matTranspose(w);
 		render_depth_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &matrixBuffer, rtPass, barrel);
 
-		matrixBuffer.viewMatrix = ds::matTranspose(camera.viewMatrix);
+		matrixBuffer.viewMatrix = ds::matTranspose(lightCamera.viewMatrix);
 		matrixBuffer.worldMatrix = ds::matTranspose(w);
-		render_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, barrel);
+		render_draw_item(ds::vec3(0.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, grid);
+		render_draw_item(ds::vec3(-1.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, barrel);		
 		//render_draw_item(ds::vec3(1.0f, 0.0f, 0.0f), &constantBuffer, basicPass, highTile);
 		//render_draw_item(ds::vec3(2.5f, 0.0f, 0.0f), &constantBuffer, basicPass, crater);
 		//render_draw_item(ds::vec3(2.5f, 0.0f, 2.0f), &constantBuffer, basicPass, crater);

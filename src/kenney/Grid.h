@@ -2,7 +2,10 @@
 
 struct GridVertex {
 	ds::vec3 p;
-	ds::vec2 uv;
+	ds::Color color;
+	ds::vec3 n;
+
+	GridVertex() : p(0.0f), color(1.0f, 1.0f, 1.0f, 1.0f), n(0.0f) {}
 };
 
 // ---------------------------------------------------------------

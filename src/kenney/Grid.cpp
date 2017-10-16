@@ -19,7 +19,8 @@ void Grid::create(int numCells, RID renderPass) {
 				_vertices[idx + j].p = positions[j];
 				_vertices[idx + j].p.x += sx;
 				_vertices[idx + j].p.z += sz;
-				_vertices[idx + j].uv = uvs[j];
+				_vertices[idx + j].color = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
+				_vertices[idx + j].n = ds::vec3(0, 1, 0);
 			}
 			sx -= 1.0f;
 		}
