@@ -1317,7 +1317,8 @@ namespace ds {
 		RT_COMPUTE_SHADER,
 		RT_STRUCTURED_BUFFER,
 		RT_UA_SRV,
-		RT_CS_GROUP
+		RT_CS_GROUP,
+		RT_VIEWPORT
 	};
 	
 	// ---------------------------------------------------
@@ -1474,8 +1475,18 @@ namespace ds {
 		int num;
 	};
 
+	struct ViewportInfo {
+		int width;
+		int height;
+		float minDepth;
+		float maxDepth;
+	};
+
+	RID createViewport(const ViewportInfo& info, const char* name = "Viewport");
+
 	struct RenderPass {
 		Camera* camera;
+		RID viewport;
 		RID rts[4];
 		int numRenderTargets;
 		DepthBufferState depthState;
@@ -1483,6 +1494,7 @@ namespace ds {
 
 	struct RenderPassInfo {
 		Camera* camera;
+		RID viewport;
 		// FIXME: RID depthBuffer
 		DepthBufferState depthBufferState;
 		RID* renderTargets;
@@ -1613,11 +1625,13 @@ namespace ds {
 
 	struct RenderTargetInfo {
 		uint16_t width;
-		uint16_t height;
+		uint16_t height;		
 		const ds::Color& clearColor;
 	};
 
 	RID createRenderTarget(const RenderTargetInfo& info, const char* name = "RenderTarget");
+
+	RID createDepthRenderTarget(const RenderTargetInfo& info, const char* name = "DepthRenderTarget");
 
 	//void setRenderTarget(RID rtID);
 
@@ -1845,7 +1859,7 @@ namespace ds {
 		"UNKNOWN"
 	};
 
-	const char* RESOURCE_NAMES[] {
+	const char* RESOURCE_NAMES[]{
 		"NONE",
 		"INPUT_LAYOUT",
 		"CONSTANT_BUFFER",
@@ -1854,7 +1868,7 @@ namespace ds {
 		"SAMPLER_STATE",
 		"BLENDSTATE",
 		"SRV",
-		"RASTERIZER_STATE",		
+		"RASTERIZER_STATE",
 		"INSTANCED_VERTEX_BUFFER",
 		"VERTEX_SHADER",
 		"GEOMETRY_SHADER",
@@ -1867,7 +1881,8 @@ namespace ds {
 		"COMPUTE_SHADER",
 		"STRUCTURED_BUFFER",
 		"UA_SRV",
-		"CS_GROUP"
+		"CS_GROUP",
+		"VIEWPORT"
 	};
 
 	void dbgInit();
@@ -2570,6 +2585,24 @@ namespace ds {
 		}
 		const ResourceType getType() const {
 			return RT_RENDER_TARGET;
+		}
+	};
+
+	// ------------------------------------------------------
+	// ViewportResource
+	// ------------------------------------------------------
+	class ViewportResource : public AbstractResource<D3D11_VIEWPORT*> {
+
+	public:
+		ViewportResource(D3D11_VIEWPORT* t) : AbstractResource(t) {}
+		virtual ~ViewportResource() {}
+		void release() {
+			if (_data != 0) {
+				delete _data;
+			}
+		}
+		const ResourceType getType() const {
+			return RT_VIEWPORT;
 		}
 	};
 
@@ -4312,7 +4345,7 @@ namespace ds {
 	static void setPixelShader(RID rid) {
 		uint16_t ridx = getResourceIndex(rid, RT_PIXEL_SHADER);
 		if (ridx == NO_RID) {
-			_ctx->d3dContext->VSSetShader(NULL, NULL, 0);
+			_ctx->d3dContext->PSSetShader(NULL, NULL, 0);
 		}
 		else {
 			PixelShaderResource* res = (PixelShaderResource*)_ctx->_resources[ridx];
@@ -4649,6 +4682,55 @@ namespace ds {
 		return addResource(res,RT_RENDER_TARGET, name);
 	}
 
+	// ------------------------------------------------------
+	// create render target
+	// ------------------------------------------------------
+	RID createDepthRenderTarget(const RenderTargetInfo& info, const char* name) {
+		RenderTarget* rt = new RenderTarget;
+		rt->clearColor = info.clearColor;
+		// Initialize the render target texture description.
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		rt->texture = 0;
+		rt->view = 0;			
+
+		D3D11_TEXTURE2D_DESC depthTexDesc;
+		ZeroMemory(&depthTexDesc, sizeof(depthTexDesc));
+		depthTexDesc.Width = info.width;
+		depthTexDesc.Height = info.height;
+		depthTexDesc.MipLevels = 1;
+		depthTexDesc.ArraySize = 1;
+		depthTexDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+		depthTexDesc.SampleDesc.Count = 1;
+		depthTexDesc.SampleDesc.Quality = 0;
+		depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		depthTexDesc.CPUAccessFlags = 0;
+		depthTexDesc.MiscFlags = 0;
+		assert_result(_ctx->d3dDevice->CreateTexture2D(&depthTexDesc, 0, &rt->depthTexture), "Failed to create depth texture");
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+		ZeroMemory(&descDSV, sizeof(descDSV));
+		descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		descDSV.Texture2D.MipSlice = 0;
+		assert_result(_ctx->d3dDevice->CreateDepthStencilView(rt->depthTexture, &descDSV, &rt->depthStencilView), "Failed to create depth stencil view");
+
+		// Setup the description of the shader resource view.
+		D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+		shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+		shaderResourceViewDesc.Texture2D.MipLevels = 1;
+		// Create the shader resource view.
+		assert_result(_ctx->d3dDevice->CreateShaderResourceView(rt->depthTexture, &shaderResourceViewDesc, &rt->srv), "Failed to create shader resource view");
+		rt->depthTexture->Release();
+		rt->depthTexture = 0;
+		RenderTargetResource* res = new RenderTargetResource(rt);
+		return addResource(res, RT_RENDER_TARGET, name);
+	}
+
 	void setRenderTarget(RID rtID) {
 		uint16_t ridx = getResourceIndex(rtID, RT_RENDER_TARGET);
 		if (ridx == NO_RID) {
@@ -4657,9 +4739,15 @@ namespace ds {
 		else {
 			RenderTargetResource* res = (RenderTargetResource*)_ctx->_resources[ridx];
 			RenderTarget* rt = res->get();
-			_ctx->d3dContext->OMSetRenderTargets(1, &rt->view, rt->depthStencilView);
-			// Clear the back buffer.
-			_ctx->d3dContext->ClearRenderTargetView(rt->view, rt->clearColor);
+			if (rt->view != 0) {
+				_ctx->d3dContext->OMSetRenderTargets(1, &rt->view, rt->depthStencilView);
+				_ctx->d3dContext->ClearRenderTargetView(rt->view, rt->clearColor);
+			}
+			else {
+				ID3D11RenderTargetView* rts[1] = { 0 };
+				_ctx->d3dContext->OMSetRenderTargets(1, rts, rt->depthStencilView);
+			}
+			// Clear the back buffer.			
 			// Clear the depth buffer.
 			_ctx->d3dContext->ClearDepthStencilView(rt->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		}
@@ -5115,6 +5203,9 @@ namespace ds {
 		else {
 			//_ctx->d3dContext->OMSetRenderTargets(1, &rt->view, rt->depthStencilView);
 		}
+		uint16_t vpidx = getResourceIndex(pass->viewport, RT_VIEWPORT);
+		ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
+		_ctx->d3dContext->RSSetViewports(1, vpRes->get());
 		Camera* camera = pass->camera;
 		_ctx->basicConstantBuffer.viewMatrix = matTranspose(camera->viewMatrix);
 		_ctx->basicConstantBuffer.projectionMatrix = matTranspose(camera->projectionMatrix);
@@ -5174,6 +5265,18 @@ namespace ds {
 		}
 	}
 
+	RID createViewport(const ViewportInfo& info, const char* name) {
+		D3D11_VIEWPORT* vp = new D3D11_VIEWPORT;
+		vp->Height = static_cast<float>(info.height);
+		vp->Width = static_cast<float>(info.width);
+		vp->MaxDepth = info.maxDepth;
+		vp->MinDepth = info.minDepth;
+		vp->TopLeftX = 0.0f;
+		vp->TopLeftY = 0.0f;
+		ViewportResource* res = new ViewportResource(vp);
+		return addResource(res, RT_VIEWPORT, name);
+	}
+
 	// ******************************************************
 	// Render pass
 	// ******************************************************
@@ -5189,6 +5292,7 @@ namespace ds {
 			rp->rts[i] = info.renderTargets[i];
 		}
 		rp->depthState = info.depthBufferState;
+		rp->viewport = info.viewport;
 		RenderPassResource* res = new RenderPassResource(rp);
 		return addResource(res, RT_RENDER_PASS, name);
 	}
@@ -6236,7 +6340,9 @@ namespace ds {
 			0.0f,
 			0.0f
 		};
-		RenderPassInfo orthoRP = { &_ctx->orthoCamera,DepthBufferState::DISABLED, 0, 0 };
+		ViewportInfo vpInfo = { getScreenWidth(), getScreenHeight(), 0.0f, 1.0f };
+		RID vp = createViewport(vpInfo, "DebugViewport");
+		RenderPassInfo orthoRP = { &_ctx->orthoCamera, vp, DepthBufferState::DISABLED, 0, 0 };
 		_ctx->debugOrthoPass = createRenderPass(orthoRP, "DebugTextOrthoPass");
 		_ctx->debugConstantBuffer.wvp = matTranspose(orthoView * orthoProjection);
 	}

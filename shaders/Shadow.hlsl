@@ -30,6 +30,24 @@ struct PixelInputType {
 	float3 lightPos : TEXCOORD2;
 };
 
+SamplerState samLinear
+{
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
+SamplerComparisonState samShadow
+{
+	Filter   = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	AddressW = BORDER;
+	BorderColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    ComparisonFunc = LESS_EQUAL;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
@@ -76,8 +94,6 @@ PixelInputType VS_Main(VertexInputType input)
 
 Texture2D depthMapTexture : register(t0);
 
-SamplerState SampleTypeClamp : register(s0);
-
 float4 PS_Main(PixelInputType input) : SV_TARGET {
 	float bias;
     float4 color;
@@ -101,7 +117,7 @@ float4 PS_Main(PixelInputType input) : SV_TARGET {
 	// Determine if the projected coordinates are in the 0 to 1 range.  If so then this pixel is in the view of the light.
 	if((saturate(projectTexCoord.x) == projectTexCoord.x) && (saturate(projectTexCoord.y) == projectTexCoord.y)) {
 		
-		depthValue = depthMapTexture.Sample(SampleTypeClamp, projectTexCoord).r;
+		depthValue = depthMapTexture.Sample(samLinear, projectTexCoord).r;
 		lightDepthValue = input.lightViewPosition.z / input.lightViewPosition.w;
 		lightDepthValue = lightDepthValue - bias;
 		if(lightDepthValue < depthValue) {

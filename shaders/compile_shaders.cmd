@@ -22,6 +22,9 @@ call :CompileShader%1 Depth Depth ps PS_Main
 call :CompileShader%1 Shadow Shadow vs VS_Main
 call :CompileShader%1 Shadow Shadow ps PS_Main
 
+call :CompileShader%1 Textured Textured vs VS_Main
+call :CompileShader%1 Textured Textured ps PS_Main
+
 call :CompileShader%1 AmbientLightning AmbientLightning vs VS_Main
 call :CompileShader%1 AmbientLightning AmbientLightning ps PS_Main
 

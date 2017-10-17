@@ -72,6 +72,9 @@
     <ClInclude Include="src\kenney\Grid.h">
       <Filter>kenney</Filter>
     </ClInclude>
+    <ClInclude Include="src\kenney\RTViewer.h">
+      <Filter>kenney</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -102,6 +105,9 @@
       <Filter>kenney</Filter>
     </ClCompile>
     <ClCompile Include="src\kenney\Grid.cpp">
+      <Filter>kenney</Filter>
+    </ClCompile>
+    <ClCompile Include="src\kenney\RTViewer.cpp">
       <Filter>kenney</Filter>
     </ClCompile>
   </ItemGroup>
