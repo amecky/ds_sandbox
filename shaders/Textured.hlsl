@@ -34,8 +34,9 @@ SamplerState samLinear
 
 float4 PS_Main( PS_Input frag ) : SV_TARGET {
     float4 color = colorMap_.Sample(samLinear, frag.texcoord);
-    float r = color.r - 0.999;
-    float d = r / 0.001;
+    //float r = color.r - 0.999;
+    //float d = r / 0.001;
+    float d = color.r;
     return saturate(float4(d,0,0,1));
 }
 

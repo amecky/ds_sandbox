@@ -852,6 +852,18 @@ namespace ds {
 		return tmp;
 	}
 
+	inline matrix matOrthoOffCenterLH(float left, float right, float bottom, float top, float znearPlane, float zfarPlane) {
+		//https://msdn.microsoft.com/en-us/library/windows/desktop/bb281724(v=vs.85).aspx
+		matrix tmp = matIdentity();
+		tmp._11 = 2.0f / (right - left);
+		tmp._22 = 2.0f / (top - bottom);
+		tmp._33 = 1.0f / (zfarPlane - znearPlane);
+		tmp._41 = (left + right) / (left - right);
+		tmp._42 = (top + bottom) / (bottom - top);
+		tmp._43 = znearPlane / (znearPlane - zfarPlane);
+		return tmp;
+	}
+
 	inline matrix operator * (const matrix& m1, const matrix& m2) {
 		matrix tmp;
 		tmp._11 = m1._11 * m2._11 + m1._12 * m2._21 + m1._13 * m2._31 + m1._14 * m2._41;
@@ -1197,6 +1209,17 @@ namespace ds {
 		TRIANGLE_LIST,
 		TRIANGLE_STRIP,
 		LINE_LIST
+	};
+
+	enum CompareFunctions {
+		CMP_NEVER = 1,
+		CMP_LESS = 2,
+		CMP_EQUAL = 3,
+		CMP_LESS_EQUAL = 4,
+		CMP_GREATER = 5,
+		CMP_NOT_EQUAL = 6,
+		CMP_GREATER_EQUAL = 7,
+		CMP_ALWAYS = 8
 	};
 
 	struct InputLayoutDefinition {
@@ -1576,6 +1599,9 @@ namespace ds {
 	struct SamplerStateInfo {
 		TextureAddressModes addressMode;
 		TextureFilters filter;
+		ds::Color borderColor;
+		float minLOD;
+		CompareFunctions compareFunction;
 	};
 	
 	RID createSamplerState(const SamplerStateInfo& info, const char* name = "SamplerState");
@@ -2770,6 +2796,8 @@ namespace ds {
 
 		DepthBufferState depthBufferState;
 
+		uint16_t currentPass;
+
 		// Timing
 		LARGE_INTEGER timerFrequency;
 		LARGE_INTEGER lastTime;
@@ -3462,6 +3490,7 @@ namespace ds {
 		if (_ctx->supportDebug) {
 			dbgBegin();
 		}
+		_ctx->currentPass = NO_RID;
 		_ctx->d3dContext->OMSetRenderTargets(1, &_ctx->backBufferTarget, _ctx->depthStencilView);
 		_ctx->d3dContext->ClearRenderTargetView(_ctx->backBufferTarget, _ctx->clearColor);
 		_ctx->d3dContext->ClearDepthStencilView(_ctx->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -4044,15 +4073,19 @@ namespace ds {
 	RID createSamplerState(const SamplerStateInfo& info, const char* name) {
 		D3D11_SAMPLER_DESC colorMapDesc;
 		ZeroMemory(&colorMapDesc, sizeof(colorMapDesc));
-
 		colorMapDesc.AddressU = TEXTURE_ADDRESSMODES[info.addressMode];
 		colorMapDesc.AddressV = TEXTURE_ADDRESSMODES[info.addressMode];
 		colorMapDesc.AddressW = TEXTURE_ADDRESSMODES[info.addressMode];
-
-		colorMapDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		colorMapDesc.MinLOD = info.minLOD;
+		colorMapDesc.ComparisonFunc = (D3D11_COMPARISON_FUNC )info.compareFunction;
 		colorMapDesc.Filter = TEXTURE_FILTERMODES[info.filter];
 		colorMapDesc.MaxLOD = D3D11_FLOAT32_MAX;
-		
+		colorMapDesc.MipLODBias = 0.f;
+		colorMapDesc.MaxAnisotropy = 0;
+		colorMapDesc.BorderColor[0] = info.borderColor.r;
+		colorMapDesc.BorderColor[1] = info.borderColor.g;
+		colorMapDesc.BorderColor[2] = info.borderColor.b;
+		colorMapDesc.BorderColor[3] = info.borderColor.a;
 		ID3D11SamplerState* sampler;
 		assert_result(_ctx->d3dDevice->CreateSamplerState(&colorMapDesc, &sampler), "Failed to create SamplerState");
 		SamplerStateResource* res = new SamplerStateResource(sampler);
@@ -5195,17 +5228,19 @@ namespace ds {
 		uint16_t pidx = getResourceIndex(renderPass, RT_RENDER_PASS);
 		RenderPassResource* rpRes = (RenderPassResource*)_ctx->_resources[pidx];
 		RenderPass* pass = rpRes->get();
-		if (pass->numRenderTargets > 0) {
-			for (int i = 0; i < pass->numRenderTargets; ++i) {
-				setRenderTarget(pass->rts[i]);
+		if (pidx != _ctx->currentPass) {			
+			if (pass->numRenderTargets > 0) {
+				for (int i = 0; i < pass->numRenderTargets; ++i) {
+					setRenderTarget(pass->rts[i]);
+				}
 			}
+			else {
+				restoreBackBuffer();
+			}
+			uint16_t vpidx = getResourceIndex(pass->viewport, RT_VIEWPORT);
+			ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
+			_ctx->d3dContext->RSSetViewports(1, vpRes->get());
 		}
-		else {
-			//_ctx->d3dContext->OMSetRenderTargets(1, &rt->view, rt->depthStencilView);
-		}
-		uint16_t vpidx = getResourceIndex(pass->viewport, RT_VIEWPORT);
-		ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
-		_ctx->d3dContext->RSSetViewports(1, vpRes->get());
 		Camera* camera = pass->camera;
 		_ctx->basicConstantBuffer.viewMatrix = matTranspose(camera->viewMatrix);
 		_ctx->basicConstantBuffer.projectionMatrix = matTranspose(camera->projectionMatrix);
@@ -5247,9 +5282,14 @@ namespace ds {
 		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };
 		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);
 		// FIXME: this is wrong since there might be several submit which would like to use the same rt
-		if (pass->numRenderTargets > 0) {			
-			restoreBackBuffer();
+		/*
+		if (pidx != _ctx->currentPass) {
+			if (pass->numRenderTargets > 0) {
+				restoreBackBuffer();
+			}
 		}
+		*/
+		_ctx->currentPass = pidx;
 	}
 
 	static void apply(PipelineState* pipelineState, RID groupID) {

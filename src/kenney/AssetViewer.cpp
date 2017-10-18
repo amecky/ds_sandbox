@@ -154,7 +154,7 @@ void load_entity(Entity* e, const char* fileName, RID baseGroup, RID depthGroup)
 	e->depthDrawItem = ds::compile(nextDrawCmd, dgroups, 2);
 }
 
-void render_depth_draw_item(const ds::vec3& p, MatrixBuffer* constantBuffer, RID pass, const Entity& e) {
+void render_depth_draw_item(const ds::vec3& p, CubeConstantBuffer* constantBuffer, RID pass, const Entity& e) {
 	ds::matrix w = ds::matTranslate(p);
 	constantBuffer->worldMatrix = ds::matTranspose(w);
 	ds::submit(pass, e.depthDrawItem);
@@ -188,7 +188,7 @@ int run() {
 	lightBuffer.ambientColor = ds::Color(0.15f, 0.15f, 0.15f, 1.0f);
 	lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	lightBuffer.padding = 0.0f;
-	ds::vec3 lightPos = ds::vec3(1.0f, -0.5f, 1.0f);
+	ds::vec3 lightPos = ds::vec3(0.0f, 4.0f, -8.0f);
 	lightBuffer.lightDirection = normalize(lightPos);
 
 	RID lightBufferID = ds::createConstantBuffer(sizeof(LightBuffer), &lightBuffer);
@@ -203,8 +203,8 @@ int run() {
 
 	ds::ShaderInfo dvsInfo = { 0, Depth_VS_Main, sizeof(Depth_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
 	RID depthVertexShader = ds::createShader(dvsInfo);
-	//ds::ShaderInfo dpsInfo = { 0, Depth_PS_Main, sizeof(Depth_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	//RID depthPixelShader = ds::createShader(dpsInfo);
+	ds::ShaderInfo dpsInfo = { 0, Depth_PS_Main, sizeof(Depth_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
+	RID depthPixelShader = ds::createShader(dpsInfo);
 
 	ds::ShaderInfo svsInfo = { 0, Shadow_VS_Main, sizeof(Shadow_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
 	RID shadowVertexShader = ds::createShader(svsInfo);
@@ -223,12 +223,13 @@ int run() {
 		ds::vec3(1,0,0)
 	};
 
-	ds::matrix lightViewMatrix = ds::matLookAtLH(ds::vec3(-4.0f, 8.0f, -8.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix lightViewMatrix = ds::matLookAtLH(lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix lightOrthoProjection = ds::matOrthoOffCenterLH(-10.0f,10.0f,-10.0f,10.0f, -10.0f, 10.0f);
 	ds::Camera lightCamera = {
 		lightViewMatrix,
-		projectionMatrix,
-		lightViewMatrix * projectionMatrix,
-		ds::vec3(1.0f, -0.5f, 1.0f),
+		lightOrthoProjection,
+		lightViewMatrix * lightOrthoProjection,
+		lightPos,
 		ds::vec3(0,0,1),
 		ds::vec3(0,1,0),
 		ds::vec3(1,0,0)
@@ -249,16 +250,17 @@ int run() {
 	RID newLightBufferID = ds::createConstantBuffer(sizeof(NewLightBuffer), &newLightBuffer);
 
 	LightBuffer2 lightBuffer2;
-	lightBuffer2.lightPosition = ds::vec3(-4.0f, 8.0f, -8.0f);
+	lightBuffer2.lightPosition = lightPos;
 	lightBuffer2.padding = 0.0f;
 	RID lightBuffer2ID = ds::createConstantBuffer(sizeof(LightBuffer2), &lightBuffer2);
 
 	FPSCamera fpsCamera(&lightCamera);
-	fpsCamera.setPosition(lightBuffer2.lightPosition, ds::vec3(0, 0, 0));// ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));
+	fpsCamera.setPosition(lightPos, ds::vec3(0, 0, 0));
 	fpsCamera.buildView();
 
 	ds::RenderTargetInfo rtInfo = { 2048, 2048, ds::Color(0.0f,0.0f,0.0f,1.0f)};
-	RID renderTarget = ds::createDepthRenderTarget(rtInfo);
+	//RID renderTarget = ds::createDepthRenderTarget(rtInfo);
+	RID renderTarget = ds::createRenderTarget(rtInfo);
 
 	ds::ViewportInfo vpInfo = { 1024, 768, 0.0f, 1.0f };
 	RID vp = ds::createViewport(vpInfo);
@@ -280,8 +282,13 @@ int run() {
 	float slopeDepthBias;
 	};
 	*/
-	ds::RasterizerStateInfo rsInfo = { ds::CullMode::BACK,ds::FillMode::SOLID,false,false,100000.0f,1.0f };
+
+	ds::SamplerStateInfo ssInfo = { ds::TextureAddressModes::BORDER,ds::TextureFilters::POINT,ds::Color(1.0f,1.0f,1.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS_EQUAL };
+	RID samplerState = ds::createSamplerState(ssInfo);
+	ds::RasterizerStateInfo rsInfo = { ds::CullMode::BACK,ds::FillMode::SOLID,false,false,10.0f,1.0f };
 	RID rsID = ds::createRasterizerState(rsInfo);
+	ds::RasterizerStateInfo drsInfo = { ds::CullMode::FRONT,ds::FillMode::SOLID,false,false,1000000.0f,1.0f };
+	RID drsID = ds::createRasterizerState(drsInfo);
 
 	//Grid grid;
 	//grid.create(10, basicPass);
@@ -310,10 +317,12 @@ int run() {
 	RID depthGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(cbid, depthVertexShader, 0)
-		.rasterizerState(rsID)
+		//.rasterizerState(drsID)
 		.blendState(bs_id)
 		.vertexShader(depthVertexShader)
-		.pixelShader(NO_RID)
+		.samplerState(samplerState,depthVertexShader)
+		.pixelShader(depthPixelShader)
+		//.pixelShader(NO_RID)
 		.build();
 
 	RID shadowGroup = ds::StateGroupBuilder()
@@ -321,6 +330,7 @@ int run() {
 		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
 		.constantBuffer(lightBuffer2ID, shadowVertexShader, 1)
 		.constantBuffer(newLightBufferID, shadowPixelShader, 0)
+		.rasterizerState(rsID)
 		.blendState(bs_id)
 		.textureFromRenderTarget(renderTarget, shadowPixelShader,0)
 		.vertexShader(shadowVertexShader)
@@ -341,6 +351,22 @@ int run() {
 
 	RID rtViewer = create_rt_view_draw_item(cbid, basicPass, renderTarget);
 
+
+	ds::matrix orthoView = ds::matIdentity();
+	ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
+	ds::Camera orthoCamera = {
+		orthoView,
+		orthoProjection,
+		orthoView * orthoProjection,
+		ds::vec3(0,0,0),
+		ds::vec3(0,0,1),
+		ds::vec3(0,1,0),
+		ds::vec3(1,0,0),
+		0.0f,
+		0.0f,
+		0.0f
+	};
+
 	while (ds::isRunning()) {
 		ds::begin();
 
@@ -349,12 +375,12 @@ int run() {
 		
 
 		// move cube
-		t += static_cast<float>(ds::getElapsedSeconds());
+		//t += static_cast<float>(ds::getElapsedSeconds());
 		//ds::vec3 cp = ds::vec3(cos(t), 0.0f, sin(t));
-		ds::matrix bY = ds::matRotationY(t);
+		//ds::matrix bY = ds::matRotationY(t);
 		//float scale = 0.7f + sin(t) * 0.3f;
-		float scale = 1.0f;// 0.15f;
-		ds::matrix s = ds::matScale(ds::vec3(scale));
+		//float scale = 1.0f;// 0.15f;
+		//ds::matrix s = ds::matScale(ds::vec3(scale));
 		ds::matrix w = ds::matIdentity();// bY * s;
 
 		
@@ -366,14 +392,15 @@ int run() {
 		//ds::submit(basicPass, nextDrawItem);
 
 		//ds::submit(basicPass, barrel.drawItem);
-		matrixBuffer.viewMatrix = ds::matTranspose(lightCamera.viewMatrix);
-		matrixBuffer.worldMatrix = ds::matTranspose(w);
+		constantBuffer.viewprojectionMatrix = ds::matTranspose(lightCamera.viewProjectionMatrix);
+		constantBuffer.worldMatrix = ds::matTranspose(ds::matTranslate(lightCamera.position));
 		float sx = -3.0f;
 		for (int i = 0; i < 4; ++i) {
-			render_depth_draw_item(ds::vec3(sx, 0.0f, 0.0f), &matrixBuffer, rtPass, barrel);
+			render_depth_draw_item(ds::vec3(sx, 0.0f, 0.0f), &constantBuffer, rtPass, barrel);
 			sx += 1.5f;
 		}
-		matrixBuffer.viewMatrix = ds::matTranspose(lightCamera.viewMatrix);
+
+		matrixBuffer.viewMatrix = ds::matTranspose(camera.viewMatrix);
 		matrixBuffer.worldMatrix = ds::matTranspose(w);
 		render_draw_item(ds::vec3(0.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, grid);
 
@@ -389,9 +416,8 @@ int run() {
 
 		//ds::submit(basicPass, highTile.drawItem);
 
-		constantBuffer.viewprojectionMatrix = ds::matTranspose(lightCamera.viewProjectionMatrix);
-		w = ds::matTranslate(ds::vec3(1.0f, 1.0f, 0.0f));
-		constantBuffer.worldMatrix = ds::matTranspose(w);
+		constantBuffer.viewprojectionMatrix = ds::matTranspose(orthoCamera.viewProjectionMatrix);
+		constantBuffer.worldMatrix = ds::matTranspose(ds::matIdentity());
 
 		ds::submit(basicPass, rtViewer);
 

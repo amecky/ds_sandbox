@@ -20,7 +20,10 @@ RID create_rt_view_draw_item(RID constantBuffer, RID renderPass, RID rtID) {
 	RID pixelShader = ds::createShader(psInfo);
 
 	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
-	ds::vec3 positions[] = { ds::vec3(-0.5f,-0.5f,-0.5f),ds::vec3(-0.5f,0.5f,-0.5f) ,ds::vec3(0.5f,0.5f,-0.5f) ,ds::vec3(0.5f,-0.5f,-0.5f) };
+	float xp = -512;
+	float yp = -384;
+	float size = 200;
+	ds::vec3 positions[] = { ds::vec3(xp,yp,0.0f),ds::vec3(xp,yp+size,0.0f) ,ds::vec3(xp+size,yp+size,0.0f) ,ds::vec3(xp+size,yp,0.0f) };
 	RTVertex* vertices = new RTVertex[4];
 	for (int j = 0; j < 4; ++j) {
 		vertices[j].p = positions[j];
@@ -38,6 +41,9 @@ RID create_rt_view_draw_item(RID constantBuffer, RID renderPass, RID rtID) {
 	RID indexBuffer = ds::createQuadIndexBuffer(1, "RTIndexBuffer");
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, 4, sizeof(RTVertex), vertices };
 	RID kvbid = ds::createVertexBuffer(vbInfo);
+
+	ds::matrix orthoView = ds::matIdentity();
+	ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
 
 	RID nextGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)

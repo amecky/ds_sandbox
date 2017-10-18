@@ -98,9 +98,9 @@ float4 PS_Main(PixelInputType input) : SV_TARGET {
 	float bias;
     float4 color;
 	float2 projectTexCoord;
-	float depthValue;
-	float lightDepthValue;
-    float lightIntensity;
+	float depthValue = 0.0;
+	float lightDepthValue = 0.0;
+    float lightIntensity = 0.0;
 	float4 textureColor;
 
 
@@ -120,16 +120,21 @@ float4 PS_Main(PixelInputType input) : SV_TARGET {
 		depthValue = depthMapTexture.Sample(samLinear, projectTexCoord).r;
 		lightDepthValue = input.lightViewPosition.z / input.lightViewPosition.w;
 		lightDepthValue = lightDepthValue - bias;
-		if(lightDepthValue < depthValue) {
+		if(lightDepthValue > depthValue) {
 			lightIntensity = saturate(dot(input.normal, input.lightPos));
 		    if(lightIntensity > 0.0f) {
 				color += (diffuseColor * lightIntensity);
 				color = saturate(color);
+				//color = float4(lightIntensity,lightIntensity,lightIntensity,1.0);
 			}
-		}
-		//color = float4(lightIntensity,0.0,0.0,1.0);
+			//color = float4(lightIntensity,0.0,0.0,1.0);
+		}				
+		//else {
+			//color = float4(lightDepthValue,depthValue,0.0,1.0);
+		//}
 	}
-
+	//color = float4(depthValue,0.0,0.0,1.0);
+	
 	// Sample the pixel color from the texture using the sampler at this texture coordinate location.
 	textureColor = input.color;
 
