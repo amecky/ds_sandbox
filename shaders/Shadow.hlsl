@@ -2,8 +2,7 @@ cbuffer MatrixBuffer {
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
-	matrix lightViewMatrix;
-	matrix lightProjectionMatrix;
+	matrix shadowTransform;
 };
 
 cbuffer LightBuffer {
@@ -26,120 +25,76 @@ struct PixelInputType {
     float4 position : SV_POSITION;
     float4 color : COLOR;
 	float3 normal : NORMAL;
-    float4 lightViewPosition : TEXCOORD1;
+    float4 ShadowPosH : TEXCOORD1;
 	float3 lightPos : TEXCOORD2;
 };
 
-SamplerState samLinear
-{
+SamplerState samLinear {
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;
 };
 
-SamplerComparisonState samShadow
-{
+SamplerComparisonState samShadow {
 	Filter   = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
 	AddressU = BORDER;
 	AddressV = BORDER;
 	AddressW = BORDER;
 	BorderColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
     ComparisonFunc = LESS_EQUAL;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType VS_Main(VertexInputType input)
-{
+PixelInputType VS_Main(VertexInputType input) {
     PixelInputType output;
 	float4 worldPosition;
-    
-    
-	// Change the position vector to be 4 units for proper matrix calculations.
     input.position.w = 1.0f;
-
-	// Calculate the position of the vertex against the world, view, and projection matrices.
     output.position = mul(input.position, worldMatrix);
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
-    
-	// Calculate the position of the vertice as viewed by the light source.
-    output.lightViewPosition = mul(input.position, worldMatrix);
-    output.lightViewPosition = mul(output.lightViewPosition, lightViewMatrix);
-    output.lightViewPosition = mul(output.lightViewPosition, lightProjectionMatrix);
-
-	// Store the texture coordinates for the pixel shader.
+    output.ShadowPosH = mul(input.position, shadowTransform);
     output.color = input.color;
-    
-	// Calculate the normal vector against the world matrix only.
     output.normal = mul(input.normal, (float3x3)worldMatrix);
-	
-    // Normalize the normal vector.
     output.normal = normalize(output.normal);
-
-    // Calculate the position of the vertex in the world.
     worldPosition = mul(input.position, worldMatrix);
-
-    // Determine the light position based on the position of the light and the position of the vertex in the world.
     output.lightPos = lightPosition.xyz - worldPosition.xyz;
-
-    // Normalize the light position vector.
     output.lightPos = normalize(output.lightPos);
-
 	return output;
+}
+
+static const float SMAP_SIZE = 1024.0f;
+static const float SMAP_DX = 1.0f / SMAP_SIZE;
+
+float CalcShadowFactor(SamplerComparisonState samShadow, Texture2D shadowMap, float4 shadowPosH) {
+	shadowPosH.xyz /= shadowPosH.w;
+	float depth = shadowPosH.z;
+	const float dx = SMAP_DX;
+	float percentLit = 0.0f;
+	const float2 offsets[9] = {
+		float2(-dx,  -dx), float2(0.0f,  -dx), float2(dx,  -dx),
+		float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
+		float2(-dx,  +dx), float2(0.0f,  +dx), float2(dx,  +dx)
+	};
+	[unroll]
+	for(int i = 0; i < 9; ++i) 	{
+		percentLit += shadowMap.Sample(samLinear, shadowPosH.xy + offsets[i]).r;
+	}
+	return percentLit /= 9.0f;
 }
 
 Texture2D depthMapTexture : register(t0);
 
 float4 PS_Main(PixelInputType input) : SV_TARGET {
-	float bias;
-    float4 color;
-	float2 projectTexCoord;
-	float depthValue = 0.0;
-	float lightDepthValue = 0.0;
-    float lightIntensity = 0.0;
-	float4 textureColor;
-
-
-	// Set the bias value for fixing the floating point precision issues.
-	bias = 0.001f;
-
-	// Set the default output color to the ambient light value for all pixels.
-    color = ambientColor;
-
-	// Calculate the projected texture coordinates.
-	projectTexCoord.x =  input.lightViewPosition.x / input.lightViewPosition.w / 2.0f + 0.5f;
-	projectTexCoord.y = -input.lightViewPosition.y / input.lightViewPosition.w / 2.0f + 0.5f;
-
-	// Determine if the projected coordinates are in the 0 to 1 range.  If so then this pixel is in the view of the light.
-	if((saturate(projectTexCoord.x) == projectTexCoord.x) && (saturate(projectTexCoord.y) == projectTexCoord.y)) {
-		
-		depthValue = depthMapTexture.Sample(samLinear, projectTexCoord).r;
-		lightDepthValue = input.lightViewPosition.z / input.lightViewPosition.w;
-		lightDepthValue = lightDepthValue - bias;
-		if(lightDepthValue > depthValue) {
-			lightIntensity = saturate(dot(input.normal, input.lightPos));
-		    if(lightIntensity > 0.0f) {
-				color += (diffuseColor * lightIntensity);
-				color = saturate(color);
-				//color = float4(lightIntensity,lightIntensity,lightIntensity,1.0);
-			}
-			//color = float4(lightIntensity,0.0,0.0,1.0);
-		}				
-		//else {
-			//color = float4(lightDepthValue,depthValue,0.0,1.0);
-		//}
+    float4 color = ambientColor;
+	float depthValue = CalcShadowFactor(samShadow, depthMapTexture, input.ShadowPosH);
+	float lightIntensity = saturate(dot(input.normal, input.lightPos));
+	if(lightIntensity > 0.0f) {
+		color += diffuseColor * lightIntensity * depthValue;
+		color = saturate(color);
 	}
-	//color = float4(depthValue,0.0,0.0,1.0);
-	
-	// Sample the pixel color from the texture using the sampler at this texture coordinate location.
-	textureColor = input.color;
-
-	// Combine the light and texture color.
+	float4 textureColor = input.color;
 	color = color * textureColor;
-
     return color;
 }

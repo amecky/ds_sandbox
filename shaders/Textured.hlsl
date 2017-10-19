@@ -37,6 +37,6 @@ float4 PS_Main( PS_Input frag ) : SV_TARGET {
     //float r = color.r - 0.999;
     //float d = r / 0.001;
     float d = color.r;
-    return saturate(float4(d,0,0,1));
+    return saturate(float4(d,d,d,1));
 }
 
