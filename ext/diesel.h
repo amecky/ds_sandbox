@@ -5242,9 +5242,11 @@ namespace ds {
 			_ctx->d3dContext->RSSetViewports(1, vpRes->get());
 		}
 		Camera* camera = pass->camera;
-		_ctx->basicConstantBuffer.viewMatrix = matTranspose(camera->viewMatrix);
-		_ctx->basicConstantBuffer.projectionMatrix = matTranspose(camera->projectionMatrix);
-		_ctx->basicConstantBuffer.viewProjectionMatrix = matTranspose(camera->viewProjectionMatrix);
+		if (camera != 0) {
+			_ctx->basicConstantBuffer.viewMatrix = matTranspose(camera->viewMatrix);
+			_ctx->basicConstantBuffer.projectionMatrix = matTranspose(camera->projectionMatrix);
+			_ctx->basicConstantBuffer.viewProjectionMatrix = matTranspose(camera->viewProjectionMatrix);
+		}
 		// FIXME: how to handle world matrix???
 		setDepthBufferState(pass->depthState);
 		uint16_t ridx = getResourceIndex(drawItemID, RT_DRAW_ITEM);

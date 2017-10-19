@@ -9,6 +9,7 @@
 #include "..\..\shaders\Shadow_VS_Main.h"
 #include "..\..\shaders\Shadow_PS_Main.h"
 #include "RTViewer.h"
+#include "DepthMap.h"
 
 struct AmbientVertex {
 	ds::vec3 p;
@@ -162,12 +163,6 @@ void load_entity(Entity* e, const char* fileName, RID baseGroup, RID depthGroup)
 	e->depthDrawItem = ds::compile(nextDrawCmd, dgroups, 2);
 }
 
-void render_depth_draw_item(const ds::vec3& p, CubeConstantBuffer* constantBuffer, RID pass, const Entity& e) {
-	ds::matrix w = ds::matTranslate(p);
-	constantBuffer->worldMatrix = ds::matTranspose(w);
-	ds::submit(pass, e.depthDrawItem);
-}
-
 void render_draw_item(const ds::vec3& p, MatrixBuffer* constantBuffer, RID pass, const Entity& e) {
 	ds::matrix w = ds::matTranslate(p);
 	constantBuffer->worldMatrix = ds::matTranspose(w);
@@ -208,16 +203,11 @@ int run() {
 	ds::BlendStateInfo bsInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 	RID bs_id = ds::createBlendState(bsInfo);
 
-	ds::ShaderInfo avsInfo = { 0, AmbientLightning_VS_Main, sizeof(AmbientLightning_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID ambientVertexShader = ds::createShader(avsInfo);
-	ds::ShaderInfo apsInfo = { 0, AmbientLightning_PS_Main, sizeof(AmbientLightning_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	RID ambientPixelShader = ds::createShader(apsInfo);
-
-	ds::ShaderInfo dvsInfo = { 0, Depth_VS_Main, sizeof(Depth_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID depthVertexShader = ds::createShader(dvsInfo);
-	ds::ShaderInfo dpsInfo = { 0, Depth_PS_Main, sizeof(Depth_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	RID depthPixelShader = ds::createShader(dpsInfo);
-
+	//ds::ShaderInfo avsInfo = { 0, AmbientLightning_VS_Main, sizeof(AmbientLightning_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
+	//RID ambientVertexShader = ds::createShader(avsInfo);
+	//ds::ShaderInfo apsInfo = { 0, AmbientLightning_PS_Main, sizeof(AmbientLightning_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
+	//RID ambientPixelShader = ds::createShader(apsInfo);
+	
 	ds::ShaderInfo svsInfo = { 0, Shadow_VS_Main, sizeof(Shadow_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
 	RID shadowVertexShader = ds::createShader(svsInfo);
 	ds::ShaderInfo spsInfo = { 0, Shadow_PS_Main, sizeof(Shadow_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
@@ -235,23 +225,24 @@ int run() {
 		ds::vec3(1,0,0)
 	};
 
-	ds::matrix lightViewMatrix = ds::matLookAtLH(lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
-	ds::matrix lightOrthoProjection = ds::matOrthoOffCenterLH(-sceneRadius, sceneRadius,-sceneRadius, sceneRadius, -15.0f, 15.0f);
-	ds::matrix lightVPMatrix = lightViewMatrix * lightOrthoProjection;
-	ds::matrix lightTransform = ds::matIdentity();
-	lightTransform(0, 0) = 0.5f;
-	lightTransform(1, 1) = -0.5f;
-	lightTransform(2, 2) = 1.0f;
-	lightTransform(3, 0) = 0.5f;
-	lightTransform(3, 1) = 0.5f;
-	ds::matrix shadowTransform = lightViewMatrix * lightOrthoProjection * lightTransform;
+	// create buffer input layout
+	ds::InputLayoutDefinition ambientDecl[] = {
+		{ "POSITION", 0, ds::BufferAttributeType::FLOAT3 },
+		{ "COLOR"   , 0, ds::BufferAttributeType::FLOAT4 },
+		{ "NORMAL"   , 0, ds::BufferAttributeType::FLOAT3 }
+	};
 
+	ds::InputLayoutInfo ambientLayoutInfo = { ambientDecl, 3, shadowVertexShader };
+	RID arid = ds::createInputLayout(ambientLayoutInfo);
+
+	DepthMap depthMap(2048, arid);
+	depthMap.buildView(lightPos, lightDirection);
 
 	MatrixBuffer matrixBuffer;
 	matrixBuffer.worldMatrix = ds::matTranspose(ds::matIdentity());
 	matrixBuffer.viewMatrix = ds::matTranspose(viewMatrix);
 	matrixBuffer.projectionMatrix = ds::matTranspose(projectionMatrix);
-	matrixBuffer.shadowTransform = ds::matTranspose(shadowTransform);
+	matrixBuffer.shadowTransform = ds::matTranspose(depthMap.getShadowTransform());
 	RID matrixBufferID = ds::createConstantBuffer(sizeof(MatrixBuffer), &matrixBuffer);
 
 	NewLightBuffer newLightBuffer;
@@ -268,56 +259,30 @@ int run() {
 	fpsCamera.setPosition(ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));
 	fpsCamera.buildView();
 
-	ds::RenderTargetInfo rtInfo = { 1024, 1024, ds::Color(0.05f,0.05f,0.05f,1.0f)};
-	RID renderTarget = ds::createDepthRenderTarget(rtInfo);
-
 	ds::ViewportInfo vpInfo = { 1024, 768, 0.0f, 1.0f };
 	RID vp = ds::createViewport(vpInfo);
 	ds::RenderPassInfo rpInfo = { &camera, vp, ds::DepthBufferState::ENABLED, 0, 0 };
 	RID basicPass = ds::createRenderPass(rpInfo);
 
-	ds::ViewportInfo depthVpInfo = { 1024, 1024, 0.0f, 1.0f };
-	RID depthVp = ds::createViewport(depthVpInfo);
-	RID targets[] = { renderTarget };
-	ds::RenderPassInfo rtrpInfo = { &camera, depthVp, ds::DepthBufferState::ENABLED, targets, 1 };
-	RID rtPass = ds::createRenderPass(rtrpInfo);
-	
-	// create buffer input layout
-	ds::InputLayoutDefinition ambientDecl[] = {
-		{ "POSITION", 0, ds::BufferAttributeType::FLOAT3 },
-		{ "COLOR"   , 0, ds::BufferAttributeType::FLOAT4 },
-		{ "NORMAL"   , 0, ds::BufferAttributeType::FLOAT3 }
-	};
-
-	ds::InputLayoutInfo ambientLayoutInfo = { ambientDecl, 3, ambientVertexShader };
-	RID arid = ds::createInputLayout(ambientLayoutInfo);
-
 	RID cbid = ds::createConstantBuffer(sizeof(CubeConstantBuffer), &constantBuffer);
 
-	RID depthGroup = ds::StateGroupBuilder()
-		.inputLayout(arid)
-		.constantBuffer(cbid, depthVertexShader, 0)
-		.blendState(bs_id)
-		.vertexShader(depthVertexShader)
-		.pixelShader(NO_RID)
-		.build();
-
+	
 	RID shadowGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
 		.constantBuffer(lightBuffer2ID, shadowVertexShader, 1)
 		.constantBuffer(newLightBufferID, shadowPixelShader, 0)
 		.blendState(bs_id)
-		.textureFromRenderTarget(renderTarget, shadowPixelShader,0)
+		.textureFromRenderTarget(depthMap.getRenderTarget(), shadowPixelShader,0)
 		.vertexShader(shadowVertexShader)
 		.pixelShader(shadowPixelShader)
 		.build();
 
 	Entity barrel;
-	load_entity(&barrel, "..\\obj_converter\\barrel.bin", shadowGroup, depthGroup);
+	load_entity(&barrel, "..\\obj_converter\\barrel.bin", shadowGroup, depthMap.getDepthBaseGroup());
 
 	Entity grid;
-	create_grid(&grid, 10, shadowGroup, depthGroup);
+	create_grid(&grid, 10, shadowGroup, depthMap.getDepthBaseGroup());
 
 	//Entity highTile;
 	//load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
@@ -325,7 +290,7 @@ int run() {
 	//Entity crater;
 	//load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
-	RenderTextureViewer rtViewer(renderTarget, 200);
+	RenderTextureViewer rtViewer(depthMap.getRenderTarget(), 200);
 
 	int dialogState = 1;
 
@@ -334,11 +299,10 @@ int run() {
 
 		fpsCamera.update(static_cast<float>(ds::getElapsedSeconds()));
 		ds::matrix w = ds::matIdentity();// bY * s;
-		constantBuffer.viewprojectionMatrix = ds::matTranspose(lightVPMatrix);
-		//render_depth_draw_item(ds::vec3(0.0f, 0.0f, 0.0f), &constantBuffer, rtPass, grid);
+		
 		float sx = -3.0f;
 		for (int i = 0; i < 4; ++i) {
-			render_depth_draw_item(ds::vec3(sx, 0.0f, 0.0f), &constantBuffer, rtPass, barrel);
+			depthMap.render(ds::vec3(sx, 0.0f, 0.0f), barrel.drawItem);
 			sx += 1.5f;
 		}
 

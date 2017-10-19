@@ -32,8 +32,10 @@
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\kenney\AssetViewer.h" />
     <ClInclude Include="src\kenney\Camera.h" />
+    <ClInclude Include="src\kenney\DepthMap.h" />
     <ClInclude Include="src\kenney\Grid.h" />
     <ClInclude Include="src\kenney\RTViewer.h" />
+    <ClInclude Include="src\kenney\ShadowMap.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="src\ParticleExpressionTest.h" />
@@ -54,8 +56,10 @@
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\kenney\AssetViewer.cpp" />
     <ClCompile Include="src\kenney\Camera.cpp" />
+    <ClCompile Include="src\kenney\DepthMap.cpp" />
     <ClCompile Include="src\kenney\Grid.cpp" />
     <ClCompile Include="src\kenney\RTViewer.cpp" />
+    <ClCompile Include="src\kenney\ShadowMap.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleExpressionTest.cpp" />
