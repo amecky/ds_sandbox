@@ -2867,7 +2867,10 @@ namespace ds {
 
 	uint16_t getResourceIndex(RID rid,ResourceType type) {
 		uint16_t idx = id_mask(rid);
-		if (idx != NO_RID) {			
+		if (idx != NO_RID) {		
+			if (idx >= _ctx->_resources.size()) {
+				DBG_LOG("Invalid index: %d - type %s", idx, RESOURCE_NAMES[type]);
+			}
 			XASSERT(idx < _ctx->_resources.size(), "Invalid resource selected - Out of bounds");
 			int current = type_mask(rid);
 			XASSERT(current == type, "The selected resource %d is not the required type: %s", idx, RESOURCE_NAMES[idx]);
@@ -3505,6 +3508,8 @@ namespace ds {
 		if (_ctx->supportDebug) {
 			dbgFlush();
 		}
+		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };
+		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);
 		_ctx->swapChain->Present(0, 0);
 		_ctx->numInputKeys = 0;
 		_ctx->mouseButtonClicked[0] = false;
@@ -5282,15 +5287,7 @@ namespace ds {
 		}
 		// FIXME: is this correct? At least it removes the warnings when using render targets as textures
 		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };
-		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);
-		// FIXME: this is wrong since there might be several submit which would like to use the same rt
-		/*
-		if (pidx != _ctx->currentPass) {
-			if (pass->numRenderTargets > 0) {
-				restoreBackBuffer();
-			}
-		}
-		*/
+		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);		
 		_ctx->currentPass = pidx;
 	}
 
@@ -5456,12 +5453,12 @@ namespace ds {
 			if (br->getType() == RT_DRAW_ITEM) {
 				const DrawItemResource* dir = (DrawItemResource*)_ctx->_resources[i];
 				const DrawItem* item = dir->get();
-				DBG_LOG("DrawItem %d (%s) - groups: %d", id_mask(br->getRID()), _ctx->charBuffer->get(item->nameIndex), item->num);
+				DBG_LOG("#> DrawItem %d (%s) - groups: %d", id_mask(br->getRID()), _ctx->charBuffer->get(item->nameIndex), item->num);
 				for (int j = 0; j < item->num; ++j) {
 					RID groupID = item->groups[j];
 					StateGroupResource* res = (StateGroupResource*)_ctx->_resources[id_mask(groupID)];
 					StateGroup* group = res->get();
-					DBG_LOG("Group: %d (%s)", id_mask(group->rid), _ctx->charBuffer->get(res->getNameIndex()));
+					DBG_LOG("=> Group: %d (%s)", id_mask(group->rid), _ctx->charBuffer->get(res->getNameIndex()));
 					DBG_LOG("resource type        | id    | stage    | slot | Name");
 					DBG_LOG("------------------------------------------------------------------------------------------");
 					for (int k = 0; k < group->num; ++k) {

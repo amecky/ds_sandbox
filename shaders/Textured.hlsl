@@ -25,8 +25,7 @@ PS_Input VS_Main( VS_Input vertex ) {
 
 Texture2D colorMap_ : register(t0);
 
-SamplerState samLinear
-{
+SamplerState samLinear {
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;

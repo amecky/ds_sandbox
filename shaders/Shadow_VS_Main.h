@@ -28,7 +28,7 @@
 //
 vs_4_0
 dcl_constantbuffer cb0[16], immediateIndexed
-dcl_constantbuffer cb1[1], immediateIndexed
+dcl_constantbuffer cb1[3], immediateIndexed
 dcl_input v0.xyz
 dcl_input v1.xyzw
 dcl_input v2.xyz
@@ -48,7 +48,7 @@ dp4 r2.x, r1.xyzw, cb0[4].xyzw
 dp4 r2.y, r1.xyzw, cb0[5].xyzw
 dp4 r2.z, r1.xyzw, cb0[6].xyzw
 dp4 r2.w, r1.xyzw, cb0[7].xyzw
-add r1.xyz, -r1.xyzx, cb1[0].xyzx
+add r1.xyz, -r1.xyzx, cb1[2].xyzx
 dp4 o0.x, r2.xyzw, cb0[8].xyzw
 dp4 o0.y, r2.xyzw, cb0[9].xyzw
 dp4 o0.z, r2.xyzw, cb0[10].xyzw
@@ -73,10 +73,10 @@ ret
 
 const BYTE Shadow_VS_Main[] =
 {
-     68,  88,  66,  67, 227,  92, 
-     91, 185,  79, 165,  10, 222, 
-    244, 187, 178,   3, 207,   8, 
-     73,  49,   1,   0,   0,   0, 
+     68,  88,  66,  67,  70,  42, 
+    159,  80,  22, 198,  64,  53, 
+    208, 114, 126,   5,  56, 248, 
+    188,  64,   1,   0,   0,   0, 
      64,   5,   0,   0,   3,   0, 
       0,   0,  44,   0,   0,   0, 
     156,   0,   0,   0,  72,   1, 
@@ -135,7 +135,7 @@ const BYTE Shadow_VS_Main[] =
       0,   0,  16,   0,   0,   0, 
      89,   0,   0,   4,  70, 142, 
      32,   0,   1,   0,   0,   0, 
-      1,   0,   0,   0,  95,   0, 
+      3,   0,   0,   0,  95,   0, 
       0,   3, 114,  16,  16,   0, 
       0,   0,   0,   0,  95,   0, 
       0,   3, 242,  16,  16,   0, 
@@ -208,7 +208,7 @@ const BYTE Shadow_VS_Main[] =
      70,   2,  16, 128,  65,   0, 
       0,   0,   1,   0,   0,   0, 
      70, 130,  32,   0,   1,   0, 
-      0,   0,   0,   0,   0,   0, 
+      0,   0,   2,   0,   0,   0, 
      17,   0,   0,   8,  18,  32, 
      16,   0,   0,   0,   0,   0, 
      70,  14,  16,   0,   2,   0, 

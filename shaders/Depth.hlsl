@@ -27,9 +27,4 @@ PixelInputType VS_Main(VertexInputType input) {
 	return output;
 }
 
-float4 PS_Main(PixelInputType input) : SV_TARGET {
-	float depthValue = input.position.z / input.position.w;
-	return float4(depthValue,depthValue,depthValue,1);
-}
-
 

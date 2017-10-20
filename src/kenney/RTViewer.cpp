@@ -31,7 +31,7 @@ RenderTextureViewer::RenderTextureViewer(RID rtID, int size) {
 
 	RID indexBuffer = ds::createQuadIndexBuffer(1, "RTIndexBuffer");
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, 4, sizeof(RTVertex), _vertices };
-	RID kvbid = ds::createVertexBuffer(vbInfo);
+	RID kvbid = ds::createVertexBuffer(vbInfo, "RTVertexBuffer");
 
 	ds::matrix orthoView = ds::matIdentity();
 	ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
@@ -49,11 +49,11 @@ RenderTextureViewer::RenderTextureViewer(RID rtID, int size) {
 		.pixelShader(pixelShader)
 		.vertexBuffer(kvbid)
 		.indexBuffer(indexBuffer)
-		.build();
+		.build("RTGroup");
 
 	ds::DrawCommand nextDrawCmd = { 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
 
-	_drawItem = ds::compile(nextDrawCmd, nextGroup);
+	_drawItem = ds::compile(nextDrawCmd, nextGroup, "RTViewerItem");
 }
 
 RenderTextureViewer::~RenderTextureViewer() {

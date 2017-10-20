@@ -1,19 +1,20 @@
 #include "DepthMap.h"
 #include "..\..\shaders\Depth_VS_Main.h"
 
-DepthMap::DepthMap(int dimension, RID inputLayoutId) {
+DepthMap::DepthMap(int dimension) {
 
+	_sceneRadius = 8.0f;
 	ds::ShaderInfo dvsInfo = { 0, Depth_VS_Main, sizeof(Depth_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID depthVertexShader = ds::createShader(dvsInfo);
+	RID depthVertexShader = ds::createShader(dvsInfo, "DepthVS");
 
 	ds::RenderTargetInfo rtInfo = { dimension, dimension, ds::Color(0.0f,0.0f,0.0f,1.0f) };
-	_renderTargetId = ds::createDepthRenderTarget(rtInfo);
+	_renderTargetId = ds::createDepthRenderTarget(rtInfo, "DepthRT");
 
 	ds::ViewportInfo depthVpInfo = { dimension, dimension, 0.0f, 1.0f };
 	RID depthVp = ds::createViewport(depthVpInfo);
 	RID targets[] = { _renderTargetId };
 	ds::RenderPassInfo rtrpInfo = { 0, depthVp, ds::DepthBufferState::ENABLED, targets, 1 };
-	_renderPass = ds::createRenderPass(rtrpInfo);
+	_renderPass = ds::createRenderPass(rtrpInfo, "DepthRenderPass");
 
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(_viewProjectionMatrix);
 	ds::matrix w = ds::matTranslate(ds::vec3(0.0f));
@@ -21,12 +22,21 @@ DepthMap::DepthMap(int dimension, RID inputLayoutId) {
 
 	RID constantBufferID = ds::createConstantBuffer(sizeof(DepthConstantBuffer), &_constantBuffer);
 
+	ds::InputLayoutDefinition ambientDecl[] = {
+		{ "POSITION", 0, ds::BufferAttributeType::FLOAT3 },
+		{ "COLOR"   , 0, ds::BufferAttributeType::FLOAT4 },
+		{ "NORMAL"   , 0, ds::BufferAttributeType::FLOAT3 }
+	};
+
+	ds::InputLayoutInfo ambientLayoutInfo = { ambientDecl, 3, depthVertexShader };
+	RID arid = ds::createInputLayout(ambientLayoutInfo);
+
 	_depthGroup = ds::StateGroupBuilder()
-		.inputLayout(inputLayoutId)
+		.inputLayout(arid)
 		.constantBuffer(constantBufferID, depthVertexShader, 0)
 		.vertexShader(depthVertexShader)
 		.pixelShader(NO_RID)
-		.build();
+		.build("DepthBaseGroup");
 
 }
 

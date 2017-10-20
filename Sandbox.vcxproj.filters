@@ -75,10 +75,10 @@
     <ClInclude Include="src\kenney\RTViewer.h">
       <Filter>kenney</Filter>
     </ClInclude>
-    <ClInclude Include="src\kenney\ShadowMap.h">
+    <ClInclude Include="src\kenney\DepthMap.h">
       <Filter>kenney</Filter>
     </ClInclude>
-    <ClInclude Include="src\kenney\DepthMap.h">
+    <ClInclude Include="src\kenney\Scene.h">
       <Filter>kenney</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,10 +116,10 @@
     <ClCompile Include="src\kenney\RTViewer.cpp">
       <Filter>kenney</Filter>
     </ClCompile>
-    <ClCompile Include="src\kenney\ShadowMap.cpp">
+    <ClCompile Include="src\kenney\DepthMap.cpp">
       <Filter>kenney</Filter>
     </ClCompile>
-    <ClCompile Include="src\kenney\DepthMap.cpp">
+    <ClCompile Include="src\kenney\Scene.cpp">
       <Filter>kenney</Filter>
     </ClCompile>
   </ItemGroup>

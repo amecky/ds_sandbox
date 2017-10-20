@@ -8,11 +8,10 @@ cbuffer MatrixBuffer {
 cbuffer LightBuffer {
 	float4 ambientColor;
 	float4 diffuseColor;
-};
-
-cbuffer LightBuffer2 {
-    float3 lightPosition;
+	float3 lightPosition;
+	float3 lightDirection;
 	float padding;
+	float more;
 };
 
 struct VertexInputType {

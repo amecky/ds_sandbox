@@ -26,6 +26,7 @@ private:
 	RID _drawItem;
 	RID renderTarget;
 	RTVConstantBuffer _constantBuffer;
+	RID _renderPass;
 };
 
 //RID create_rt_view_draw_item(RID constantBuffer, RID renderPass, RID rtID);

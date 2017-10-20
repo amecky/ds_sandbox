@@ -17,7 +17,6 @@ call :CompileShader%1 Grid Grid vs VS_Main
 call :CompileShader%1 Grid Grid ps PS_Main
 
 call :CompileShader%1 Depth Depth vs VS_Main
-call :CompileShader%1 Depth Depth ps PS_Main
 
 call :CompileShader%1 Shadow Shadow vs VS_Main
 call :CompileShader%1 Shadow Shadow ps PS_Main
