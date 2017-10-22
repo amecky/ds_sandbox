@@ -11,9 +11,10 @@ Scene::Scene() {
 	_instancesCapacity = 64;
 	_instances = new EntityInstance[_instancesCapacity];
 
-	_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
-	float sceneRadius = 8.0f;
-	_lightPosition = -0.1f * sceneRadius * _lightDirection;
+	//_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
+	_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 1.0f));
+	float sceneRadius = 6.0f;
+	_lightPosition = -2.0f * sceneRadius * _lightDirection;
 
 	_depthMap = new DepthMap(1024);
 	_depthMap->buildView(_lightPosition, _lightDirection);
@@ -28,7 +29,7 @@ Scene::Scene() {
 
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 4.0f, -6.0f), ds::vec3(0, 0, 1), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
-	ds::Camera camera = {
+	_camera = {
 		viewMatrix,
 		projectionMatrix,
 		viewMatrix * projectionMatrix,
@@ -57,15 +58,14 @@ Scene::Scene() {
 	
 	_lightBuffer.ambientColor = ds::Color(0.15f, 0.15f, 0.15f, 1.0f);
 	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
-	_lightBuffer.lightPosition = _lightPosition;
-	_lightBuffer.lightDirection = _lightDirection;
-	_lightBuffer.padding = 0.0f;
-	_lightBuffer.more = 0.0f;
+	_lightBuffer.lightPosition = ds::vec4(_lightPosition);
+	_lightBuffer.lightDirection = ds::vec4(_lightDirection);
+	_lightBuffer.eyePosition = _camera.position;
 	RID lightBufferID = ds::createConstantBuffer(sizeof(LightBuffer), &_lightBuffer);
 
-	//FPSCamera fpsCamera(&camera);
-	//fpsCamera.setPosition(ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));
-	//fpsCamera.buildView();
+	_fpsCamera = new FPSCamera(&_camera);
+	_fpsCamera->setPosition(ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));
+	_fpsCamera->buildView();
 
 	ds::ViewportInfo vpInfo = { 1024, 768, 0.0f, 1.0f };
 	RID vp = ds::createViewport(vpInfo);
@@ -73,19 +73,32 @@ Scene::Scene() {
 	_basicPass = ds::createRenderPass(rpInfo);
 
 	//RID cbid = ds::createConstantBuffer(sizeof(CubeConstantBuffer), &constantBuffer);
-
+	/*
+	SamplerComparisonState samShadow{
+		Filter = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	AddressW = BORDER;
+	BorderColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	ComparisonFunc = LESS_EQUAL;
+	};
+	*/
+	ds::SamplerStateInfo comparisonInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::COMPARISON_MIN_MAG_MIP_POINT,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS };
+	RID cpsID = ds::createSamplerState(comparisonInfo);
 
 	_baseGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
 		.constantBuffer(lightBufferID, shadowVertexShader, 1)
+		.constantBuffer(lightBufferID, shadowPixelShader, 1)
 		.blendState(bs_id)
 		.textureFromRenderTarget(_depthMap->getRenderTarget(), shadowPixelShader, 0)
 		.vertexShader(shadowVertexShader)
-		.pixelShader(shadowPixelShader)
+		.pixelShader(shadowPixelShader)		
+		.samplerState(cpsID,shadowPixelShader)
 		.build();
 
-	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 200);
+	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 300);
 }
 
 Scene::~Scene() {
@@ -167,7 +180,8 @@ int Scene::createGrid(int numCells) {
 	Entity* e = &_entities[_numEntities++];
 	float uvMax = static_cast<float>(numCells);
 	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
-	ds::vec3 positions[] = { ds::vec3(-0.5f,-0.0005f,-0.5f),ds::vec3(-0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,-0.5f) };
+	float gridSize = 0.49f;
+	ds::vec3 positions[] = { ds::vec3(-gridSize,-0.0005f,-gridSize),ds::vec3(-gridSize,-0.0005f,gridSize) ,ds::vec3(gridSize,-0.0005f,gridSize) ,ds::vec3(gridSize,-0.0005f,-gridSize) };
 	int num = numCells * numCells * 4 / 6;
 	e->vertices = new AmbientVertex[numCells * numCells * 4];
 	float sz = numCells / 2.0f - 0.5f;
@@ -220,9 +234,9 @@ int Scene::createGrid(int numCells) {
 	return _numEntities - 1;
 }
 
-int Scene::createInstance(int entityID, const ds::vec3& pos) {
+int Scene::createInstance(int entityID, const ds::vec3& pos, bool castShadows) {
 	EntityInstance* inst = &_instances[_numInstances++];
-	inst->castShadows = true;
+	inst->castShadows = castShadows;
 	inst->pos = pos;
 	inst->rotation = ds::vec3(0.0f);
 	inst->scale = ds::vec3(0.0f);
@@ -243,11 +257,15 @@ void Scene::renderDepthMap() {
 }
 
 void Scene::renderMain() {
-	/*
-	matrixBuffer.viewMatrix = ds::matTranspose(camera.viewMatrix);
-	matrixBuffer.worldMatrix = ds::matTranspose(w);
-	render_draw_item(ds::vec3(0.0f, 0.0f, 0.0f), &matrixBuffer, basicPass, grid);
-	*/
+	_matrixBuffer.projectionMatrix = ds::matTranspose(_camera.projectionMatrix);
+	_matrixBuffer.viewMatrix = ds::matTranspose(_camera.viewMatrix);	
+	_matrixBuffer.shadowTransform = _depthMap->getShadowTransform();
+	_lightBuffer.eyePosition = _camera.position;
+	for (int i = 0; i < _numInstances; ++i) {
+		const EntityInstance& inst = _instances[i];
+		_matrixBuffer.worldMatrix = ds::matTranspose(ds::matTranslate(inst.pos));
+		ds::submit(_basicPass,inst.entity->drawItem);
+	}
 }
 
 void Scene::renderDebug() {
@@ -267,4 +285,6 @@ void Scene::renderDebug() {
 	*/
 }
 
-	
+void Scene::tick(float dt) {
+	_fpsCamera->update(dt);
+}

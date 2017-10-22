@@ -40,6 +40,9 @@ RenderTextureViewer::RenderTextureViewer(RID rtID, int size) {
 
 	RID constantBufferID = ds::createConstantBuffer(sizeof(RTVConstantBuffer), &_constantBuffer);
 
+	ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, ds::TextureFilters::LINEAR };
+	RID ssid = ds::createSamplerState(samplerInfo);
+
 	RID nextGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(constantBufferID, vertexShader, 0)
@@ -49,6 +52,7 @@ RenderTextureViewer::RenderTextureViewer(RID rtID, int size) {
 		.pixelShader(pixelShader)
 		.vertexBuffer(kvbid)
 		.indexBuffer(indexBuffer)
+		.samplerState(ssid,pixelShader)
 		.build("RTGroup");
 
 	ds::DrawCommand nextDrawCmd = { 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };

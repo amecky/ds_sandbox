@@ -1,8 +1,5 @@
 #include <diesel.h>
 #include <ds_imgui.h>
-#include "Camera.h"
-#include "RTViewer.h"
-#include "DepthMap.h"
 #include "Scene.h"
 #include <Windows.h>
 
@@ -33,11 +30,14 @@ int run() {
 	//ds::vec3 lightDirection = normalize(ds::vec3(-1.0f, 1.0f, 0.0f));
 
 	RID barrelEntity = scene.loadEntity("..\\obj_converter\\barrel.bin");
+	RID griddy = scene.loadEntity("..\\obj_converter\\griddy.bin");
 	RID gridID = scene.createGrid(10);
 	
 	//load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
 	//load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
+	scene.createInstance(gridID, ds::vec3(0.0f));
+	scene.createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
 	float sx = -1.5f;
 	for (int j = 0; j < 2; ++j) {
 		float sz = 2.0f;
@@ -54,7 +54,7 @@ int run() {
 	while (ds::isRunning()) {
 		ds::begin();
 
-		//fpsCamera.update(static_cast<float>(ds::getElapsedSeconds()));
+		scene.tick(static_cast<float>(ds::getElapsedSeconds()));
 
 		scene.renderDepthMap();
 		

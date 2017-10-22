@@ -1201,7 +1201,9 @@ namespace ds {
 	enum TextureFilters {
 		POINT,
 		LINEAR,
-		ANISOTROPIC
+		ANISOTROPIC,
+		COMPARISON_MIN_MAG_MIP_LINEAR,
+		COMPARISON_MIN_MAG_MIP_POINT
 	};
 
 	enum PrimitiveTypes {
@@ -4070,6 +4072,8 @@ namespace ds {
 		{ D3D11_FILTER_MIN_MAG_MIP_POINT },
 		{ D3D11_FILTER_MIN_MAG_MIP_LINEAR },
 		{ D3D11_FILTER_ANISOTROPIC },
+		{ D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR},
+		{ D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT },
 	};
 
 	// ------------------------------------------------------
@@ -5233,7 +5237,7 @@ namespace ds {
 		uint16_t pidx = getResourceIndex(renderPass, RT_RENDER_PASS);
 		RenderPassResource* rpRes = (RenderPassResource*)_ctx->_resources[pidx];
 		RenderPass* pass = rpRes->get();
-		if (pidx != _ctx->currentPass) {			
+		if (pidx != _ctx->currentPass) {		
 			if (pass->numRenderTargets > 0) {
 				for (int i = 0; i < pass->numRenderTargets; ++i) {
 					setRenderTarget(pass->rts[i]);

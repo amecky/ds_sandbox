@@ -3,6 +3,7 @@
 #include <vector>
 #include "DepthMap.h"
 #include "RTViewer.h"
+#include "Camera.h"
 
 struct AmbientVertex {
 	ds::vec3 p;
@@ -37,10 +38,9 @@ struct EntityInstance {
 struct LightBuffer {
 	ds::Color ambientColor;
 	ds::Color diffuseColor;
-	ds::vec3 lightDirection;
-	ds::vec3 lightPosition;
-	float padding;
-	float more;
+	ds::vec4 lightPosition;
+	ds::vec4 lightDirection;	
+	ds::vec4 eyePosition;
 };
 
 struct MatrixBuffer {
@@ -63,9 +63,10 @@ class Scene {
 public:
 	Scene();
 	~Scene();
+	void tick(float dt);
 	int loadEntity(const char* fileName);
 	int createGrid(int numCells);
-	int createInstance(int entityID, const ds::vec3& pos);
+	int createInstance(int entityID, const ds::vec3& pos, bool castShadows = true);
 	void renderDepthMap();
 	void renderMain();
 	void renderDebug();
@@ -77,7 +78,8 @@ private:
 	int _numInstances;
 	int _instancesCapacity;
 	RID _baseGroup;
-	//RID _depthGroup;
+	ds::Camera _camera;
+	FPSCamera* _fpsCamera;
 	DepthMap* _depthMap;
 	RenderTextureViewer* _rtViewer;
 	RID _basicPass;

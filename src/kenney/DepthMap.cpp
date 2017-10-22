@@ -3,7 +3,7 @@
 
 DepthMap::DepthMap(int dimension) {
 
-	_sceneRadius = 8.0f;
+	_sceneRadius = 7.0f;
 	ds::ShaderInfo dvsInfo = { 0, Depth_VS_Main, sizeof(Depth_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
 	RID depthVertexShader = ds::createShader(dvsInfo, "DepthVS");
 
@@ -52,7 +52,7 @@ void DepthMap::buildView(const ds::vec3 lightPos, const ds::vec3& lightDirection
 	lightTransform(2, 2) = 1.0f;
 	lightTransform(3, 0) = 0.5f;
 	lightTransform(3, 1) = 0.5f;
-	_shadowTransformMatrix = lightViewMatrix * lightOrthoProjection * lightTransform;
+	_shadowTransformMatrix = lightViewMatrix * lightOrthoProjection;// *lightTransform;
 }
 
 void DepthMap::render(const ds::vec3& pos, RID drawItem) {
