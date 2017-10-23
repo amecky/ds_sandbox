@@ -1,60 +1,26 @@
 #define DS_IMPLEMENTATION
 #include <diesel.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#define SPRITE_IMPLEMENTATION
-#include <SpriteBatchBuffer.h>
+//#include <SpriteBatchBuffer.h>
 #define DS_IMGUI_IMPLEMENTATION
-#include <ds_imgui.h>
+#define STB_IMAGE_IMPLEMENTATION
+#define SPRITE_IMPLEMENTATION
+//#include <stb_image.h>
 #include "..\resource.h"
-#include "utils\tweening.h"
-#include "TweeningTest.h"
+#include "tweening\TweeningTest.h"
 #include "AnimationTest.h"
 //#define DS_LOG_PANEL
 //#include "LogPanel.h"
 #define DS_VM_IMPLEMENTATION
 #include <ds_vm.h>
-#include "VMTest.h"
+#include "vm\VMTest.h"
 #define DS_PROFILER_IMPLEMENTATION
 #include <ds_profiler.h>
-#include "ParticleExpressionTest.h"
+#include "particles\ParticleExpressionTest.h"
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
 #include "plugins\PluginRegistry.h"
 #include "ParticlePluginTest.h"
 #include "kenney\AssetViewer.h"
-
-// ---------------------------------------------------------------
-// load image from the resources
-// ---------------------------------------------------------------
-RID loadImage(const char* name) {
-	int x, y, n;
-	HRSRC resourceHandle = ::FindResource(NULL, MAKEINTRESOURCE(IDB_PNG2), "PNG");
-	if (resourceHandle == 0) {
-		return NO_RID;
-	}
-	DWORD imageSize = ::SizeofResource(NULL, resourceHandle);
-	if (imageSize == 0) {
-		return NO_RID;
-	}
-	HGLOBAL myResourceData = ::LoadResource(NULL, resourceHandle);
-	void* pMyBinaryData = ::LockResource(myResourceData);
-	unsigned char *data = stbi_load_from_memory((const unsigned char*)pMyBinaryData, imageSize, &x, &y, &n, 4);
-	ds::TextureInfo info = { x,y,n,data,ds::TextureFormat::R8G8B8A8_UNORM , ds::BindFlag::BF_SHADER_RESOURCE };
-	RID textureID = ds::createTexture(info, name);
-	stbi_image_free(data);
-	UnlockResource(myResourceData);
-	FreeResource(myResourceData);
-	return textureID;
-}
-
-//static log_panel_plugin* logPanel = 0;
-
-//void myLogging(const logging::LogLevel&, const char* message) {
-	//OutputDebugString(message);
-	//OutputDebugString("\n");
-	//logPanel->add_line(logPanel->data,message);
-//}
 
 // ---------------------------------------------------------------
 // initialize rendering system
@@ -68,11 +34,7 @@ void initialize() {
 	rs.multisampling = 4;
 	ds::init(rs);
 }
-
-void run_asset_viewer() {
-	run();
-}
-
+/*
 void run_particle_plugin_test() {
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
@@ -161,13 +123,7 @@ void run_particle_plugin_test() {
 				accu -= timeStep;
 				++cnt;
 			}
-			/*
-			if (accu > 0.0f) {
-			LOG_DEBUG("add %g", accu);
-			particlePluginTest.tick(accu);
-			accu = 0.0f;
-			}
-			*/
+
 		}
 
 
@@ -186,34 +142,6 @@ void run_particle_plugin_test() {
 
 			spriteBuffer.flush();
 		}
-		/*
-		{
-		perf::ZoneTracker("main::events");
-		ds::Event event;
-		while (ds::get_event(&event)) {
-		LOG_DEBUG("caught event %d", event.type);
-		if (event.type == ds::EventType::ET_MOUSEBUTTON_PRESSED) {
-		animationTest.onButtonClicked(event.mouse.button);
-		}
-		if (event.type == ds::EventType::ET_KEY_PRESSED) {
-		if (event.key.key == 'l') {
-		LOG_INFO("L pressed %d", l_count++);
-		}
-		if (event.key.key == 'd') {
-		int end = logpanel::get_num_lines();
-		int start = end - 5;
-		if (start < 0) {
-		start = 0;
-		}
-		LOG_INFO("----------------------------------------------\n");
-		for (uint16_t i = start; i < end; ++i) {
-		LOG_INFO("%s",logpanel::get_line(i));
-		}
-		}
-		}
-		}
-		}
-		*/
 		//tweeningTest.renderGUI();
 		//animationTest.renderGUI();
 		//vmTest.renderGUI();
@@ -238,12 +166,78 @@ void run_particle_plugin_test() {
 	shutdown_registry();
 	ds::shutdown();
 }
-
+*/
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	run_asset_viewer();
+	//TestApp* app = new AssetViewer;
+	//TestApp* app = new TweeningTest;
+	//TestApp* app = new VMTest;
+	TestApp* app = new ParticleExpressionTest;
+	//_CrtSetBreakAlloc(160);
+	SetThreadAffinityMask(GetCurrentThread(), 1);
+
+	ds::init(app->getRenderSettings());
+
+	if (app->usesGUI()) {
+		gui::init();
+	}
+
+	perf::init();
+
+	bool state = app->init();
+	assert(state);
+
+	bool running = true;
+	
+	float timeStep = 1.0f / 60.0f;
+	float gameTimer = 0.0f;
+	float currentTime = 0.0f;
+	float accu = 0.0f;
+
+	while (ds::isRunning() && running) {
+
+		ds::begin();
+
+		perf::reset();
+
+		perf::ZoneTracker("main");
+
+		if (app->useFixedTimestep()) {
+			gameTimer += ds::getElapsedSeconds();
+			accu += ds::getElapsedSeconds();
+			if (accu > 0.25f) {
+				accu = 0.25f;
+			}
+			int cnt = 0;
+			while (accu >= timeStep) {
+				app->tick(timeStep);
+				accu -= timeStep;
+				++cnt;
+			}
+		}
+		else {
+			app->tick(ds::getElapsedSeconds());
+		}
+
+		app->render();
+
+		if (app->usesGUI()) {
+			app->renderGUI();
+		}
+			
+		ds::end();
+
+		perf::finalize();
+
+	}
+	if (app->usesGUI()) {
+		gui::shutdown();
+	}
+	app->shutdown();
+	delete app;
+	ds::shutdown();
 	
 }

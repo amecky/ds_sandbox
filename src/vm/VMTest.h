@@ -1,10 +1,9 @@
 #pragma once
-#include <diesel.h>
-#include <ds_imgui.h>
-#include <SpriteBatchBuffer.h>
-#include "DataArray.h"
-#include "World.h"
+#include "..\TestSpriteApp.h"
+#include "..\DataArray.h"
+#include "..\World.h"
 #include <ds_vm.h>
+#include <ds_imgui.h>
 
 struct TestExpression {
 
@@ -39,16 +38,21 @@ private:
 };
 
 
-class VMTest {
+class VMTest : public TestSpriteApp {
 
 public:
-	VMTest(SpriteBatchBuffer* buffer);
+	VMTest();
 	~VMTest();
+	bool init();
+	ds::RenderSettings getRenderSettings();
+	void tick(float dt);
 	void render();
 	void renderGUI();
+	bool usesGUI() {
+		return true;
+	}
 private:
 	void compile(const char* source);
-	SpriteBatchBuffer* _sprites;
 	ds::vec2 _startPos;
 	ds::vec2 _endPos;
 	float _timer;

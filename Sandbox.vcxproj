@@ -38,18 +38,20 @@
     <ClInclude Include="src\kenney\Scene.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
-    <ClInclude Include="src\ParticleExpressionTest.h" />
     <ClInclude Include="src\ParticlePluginTest.h" />
-    <ClInclude Include="src\Particles.h" />
+    <ClInclude Include="src\particles\ParticleExpressionTest.h" />
+    <ClInclude Include="src\particles\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\plugins\logger.h" />
     <ClInclude Include="src\plugins\PluginRegistry.h" />
     <ClInclude Include="src\Sandbox.h" />
-    <ClInclude Include="src\TweeningTest.h" />
+    <ClInclude Include="src\TestApp.h" />
+    <ClInclude Include="src\TestSpriteApp.h" />
+    <ClInclude Include="src\tweening\TweeningTest.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
-    <ClInclude Include="src\VMTest.h" />
+    <ClInclude Include="src\vm\VMTest.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
@@ -62,15 +64,16 @@
     <ClCompile Include="src\kenney\Scene.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\ParticlePluginTest.cpp" />
+    <ClCompile Include="src\particles\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\plugins\logger.cpp" />
     <ClCompile Include="src\plugins\PluginRegistry.cpp" />
     <ClCompile Include="src\Sandbox.cpp" />
-    <ClCompile Include="src\TweeningTest.cpp" />
+    <ClCompile Include="src\TestSpriteApp.cpp" />
+    <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
-    <ClCompile Include="src\VMTest.cpp" />
+    <ClCompile Include="src\vm\VMTest.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>

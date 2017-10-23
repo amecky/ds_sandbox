@@ -1,9 +1,8 @@
 #pragma once
-#include <diesel.h>
+#include "..\TestSpriteApp.h"
 #include <ds_imgui.h>
-#include <SpriteBatchBuffer.h>
-#include "DataArray.h"
-#include "World.h"
+#include "..\DataArray.h"
+#include "..\World.h"
 
 class TweeningListModel : public gui::ListBoxModel {
 
@@ -22,15 +21,20 @@ struct TweeningData {
 	bool scaling;
 };
 
-class TweeningTest {
+class TweeningTest : public TestSpriteApp {
 
 public:
-	TweeningTest(SpriteBatchBuffer* buffer);
+	TweeningTest();
 	~TweeningTest();
+	ds::RenderSettings getRenderSettings();
+	bool usesGUI() {
+		return true;
+	}
+	bool init();
+	void tick(float dt);
 	void render();
 	void renderGUI();
 private:
-	SpriteBatchBuffer* _sprites;
 	ds::vec2 _startPos;
 	ds::vec2 _endPos;
 	float _timer;

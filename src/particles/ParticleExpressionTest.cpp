@@ -1,16 +1,17 @@
 #include "ParticleExpressionTest.h"
-#include "utils\tweening.h"
-#include "AABBox.h"
+#include "..\utils\tweening.h"
+#include "..\AABBox.h"
 #include <Windows.h>
 #include <fstream>
 #include <string>
-#include "PerfPanel.h"
+#include "..\PerfPanel.h"
 #include <assert.h>
 
-ParticleExpressionTest::ParticleExpressionTest(const plugin_registry& registry, SpriteBatchBuffer* buffer) : _sprites(buffer) {
+ParticleExpressionTest::ParticleExpressionTest() : TestSpriteApp() {
+}
 
-	//_logPanelPlugin = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
-	//assert(_logPanelPlugin != 0);
+bool ParticleExpressionTest::init() {
+	TestSpriteApp::init();
 
 	_dialogPos = p2i(10, 950);
 	_dialogState = 1;
@@ -24,10 +25,26 @@ ParticleExpressionTest::ParticleExpressionTest(const plugin_registry& registry, 
 	_system = new Particlesystem("new_system", ds::vec4(200, 0, 20, 20), 4096);
 	loadExpressionsFile(_system);
 
+	return true;
 }
 
 ParticleExpressionTest::~ParticleExpressionTest() {
+	perf::shutdown();
 	delete _system;
+}
+
+ds::RenderSettings ParticleExpressionTest::getRenderSettings() {
+	ds::RenderSettings rs;
+	rs.width = 1280;
+	rs.height = 960;
+	rs.title = "ds_sandbox- ParticleExpressionTest";
+	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	rs.multisampling = 4;
+	return rs;
+}
+
+void ParticleExpressionTest::tick(float dt) {
+
 }
 
 void ParticleExpressionTest::loadExpressionsFile(Particlesystem* system) {
@@ -214,11 +231,15 @@ void ParticleExpressionTest::renderGUI() {
 // ----------------------------------------------------
 void ParticleExpressionTest::render() {
 
+	_spriteBuffer->begin();
+
 	float dt = ds::getElapsedSeconds();
 
 	_system->update(dt);
 
-	_system->render(_sprites);
+	_system->render(_spriteBuffer);
+
+	_spriteBuffer->flush();
 	
 	perfpanel::tick_histogram(dt);
 	

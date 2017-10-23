@@ -1,12 +1,15 @@
 #include "VMTest.h"
-#include "utils\tweening.h"
-#include "AABBox.h"
+#include "..\utils\tweening.h"
+#include "..\AABBox.h"
 #include <Windows.h>
 #include <fstream>
 #include <string>
 
-VMTest::VMTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
+VMTest::VMTest() : TestSpriteApp() {
+}
 
+bool VMTest::init() {
+	TestSpriteApp::init();
 	_vmCtx.add_constant("PI", 3.141592654f);
 	_vmCtx.add_constant("TWO_PI", 2.0f * 3.141592654f);
 	_vmCtx.add_variable("DT", 1.0f);
@@ -42,6 +45,8 @@ VMTest::VMTest(SpriteBatchBuffer* buffer) : _sprites(buffer) {
 
 
 	_result = 0.0f;
+
+	return true;
 }
 
 VMTest::~VMTest() {
@@ -130,13 +135,29 @@ void VMTest::renderGUI() {
 }
 
 void VMTest::render() {
+	_spriteBuffer->begin();
 	if (_numTokens > 0) {
 		_vmCtx.variables[2].value = _timer;
 		_sprite.position.y = 400.0f + vm::run(_byteCode, _numTokens, _vmCtx);
-		_sprites->add(_sprite);
-		_timer += ds::getElapsedSeconds();
-		if (_timer >= 1.0f) {
-			_timer -= 1.0f;
-		}
+		_spriteBuffer->add(_sprite);				
+	}
+	_spriteBuffer->flush();
+}
+
+ds::RenderSettings VMTest::getRenderSettings() {
+	ds::RenderSettings rs;
+	rs.width = 1024;
+	rs.height = 768;
+	rs.title = "ds_sandbox- VM Test";
+	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	rs.multisampling = 4;
+	return rs;
+}
+
+void VMTest::tick(float dt) {
+	_timer += dt;
+	if (_timer >= 1.0f) {
+		_timer -= 1.0f;
 	}
 }
+

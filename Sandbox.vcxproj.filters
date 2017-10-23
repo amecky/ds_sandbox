@@ -13,6 +13,15 @@
     <Filter Include="kenney">
       <UniqueIdentifier>{20c6f72e-45b2-4094-9245-45b7b6b83b3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tweening">
+      <UniqueIdentifier>{7cb8f9a9-4b2e-491b-8990-5574264c1334}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vm">
+      <UniqueIdentifier>{232dadb5-dac0-4999-86e4-83d756093e14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="particles">
+      <UniqueIdentifier>{9bb78ac7-5b91-400d-bcba-912ab8f63820}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -36,7 +45,6 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\Sandbox.h" />
-    <ClInclude Include="src\TweeningTest.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\World.h" />
@@ -52,9 +60,6 @@
     <ClInclude Include="ext\ds_vm.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\VMTest.h" />
-    <ClInclude Include="src\ParticleExpressionTest.h" />
-    <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\plugins\PluginRegistry.h">
       <Filter>plugins</Filter>
@@ -81,6 +86,20 @@
     <ClInclude Include="src\kenney\Scene.h">
       <Filter>kenney</Filter>
     </ClInclude>
+    <ClInclude Include="src\TestApp.h" />
+    <ClInclude Include="src\tweening\TweeningTest.h">
+      <Filter>tweening</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TestSpriteApp.h" />
+    <ClInclude Include="src\vm\VMTest.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particles\Particles.h">
+      <Filter>particles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particles\ParticleExpressionTest.h">
+      <Filter>particles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -91,12 +110,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\Sandbox.cpp" />
-    <ClCompile Include="src\TweeningTest.cpp" />
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
-    <ClCompile Include="src\VMTest.cpp" />
-    <ClCompile Include="src\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\plugins\logger.cpp">
       <Filter>plugins</Filter>
     </ClCompile>
@@ -121,6 +137,16 @@
     </ClCompile>
     <ClCompile Include="src\kenney\Scene.cpp">
       <Filter>kenney</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tweening\TweeningTest.cpp">
+      <Filter>tweening</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TestSpriteApp.cpp" />
+    <ClCompile Include="src\vm\VMTest.cpp">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\particles\ParticleExpressionTest.cpp">
+      <Filter>particles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
