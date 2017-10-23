@@ -1,5 +1,6 @@
 #include "DepthMap.h"
 #include "..\..\shaders\Depth_VS_Main.h"
+#include <D3dx9math.h>
 
 DepthMap::DepthMap(int dimension) {
 
@@ -42,17 +43,27 @@ DepthMap::DepthMap(int dimension) {
 
 void DepthMap::buildView(const ds::vec3 lightPos, const ds::vec3& lightDirection) {
 	_lightPos = lightPos;
+	_lightPos = -2.0f * _sceneRadius * lightDirection;
 	_lightDirection = lightDirection;
-	ds::matrix lightViewMatrix = ds::matLookAtLH(_lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
-	ds::matrix lightOrthoProjection = ds::matOrthoOffCenterLH(-_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -15.0f, 15.0f);
-	_viewProjectionMatrix = lightViewMatrix * lightOrthoProjection;
-	ds::matrix lightTransform = ds::matIdentity();
-	lightTransform(0, 0) = 0.5f;
-	lightTransform(1, 1) = -0.5f;
-	lightTransform(2, 2) = 1.0f;
-	lightTransform(3, 0) = 0.5f;
-	lightTransform(3, 1) = 0.5f;
-	_shadowTransformMatrix = lightViewMatrix * lightOrthoProjection;// *lightTransform;
+	ds::matrix V = ds::matLookAtLH(_lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix P = ds::matOrthoOffCenterLH(-_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -20.0f, 20.0f);
+	//D3DXMATRIX P2;
+	//D3DXMatrixOrthoOffCenterLH(&P2, -_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius);
+	_viewProjectionMatrix = V * P;
+	//ds::matrix lightTransform = ds::matIdentity();
+	ds::matrix T = {
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f
+	};
+
+	//lightTransform(0, 0) = 0.5f;
+	//lightTransform(1, 1) = -0.5f;
+	//lightTransform(2, 2) = 1.0f;
+	//lightTransform(3, 0) = 0.5f;
+	//lightTransform(3, 1) = 0.5f;
+	_shadowTransformMatrix = V * P * T;
 }
 
 void DepthMap::render(const ds::vec3& pos, RID drawItem) {

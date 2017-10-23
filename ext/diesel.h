@@ -854,13 +854,11 @@ namespace ds {
 
 	inline matrix matOrthoOffCenterLH(float left, float right, float bottom, float top, float znearPlane, float zfarPlane) {
 		//https://msdn.microsoft.com/en-us/library/windows/desktop/bb281724(v=vs.85).aspx
-		matrix tmp = matIdentity();
-		tmp._11 = 2.0f / (right - left);
-		tmp._22 = 2.0f / (top - bottom);
-		tmp._33 = 1.0f / (zfarPlane - znearPlane);
-		tmp._41 = (left + right) / (left - right);
-		tmp._42 = (top + bottom) / (bottom - top);
-		tmp._43 = znearPlane / (znearPlane - zfarPlane);
+		matrix tmp(
+			2.0f / (right - left), 0.0f, 0.0f, 0.0f,
+			0.0f, 2.0f / (top - bottom), 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f / (zfarPlane - znearPlane), 0.0f,
+			(left + right) / (left - right), (top + bottom) / (bottom - top), znearPlane / (znearPlane - zfarPlane), 1.0f);
 		return tmp;
 	}
 

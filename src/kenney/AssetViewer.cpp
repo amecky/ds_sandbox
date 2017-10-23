@@ -12,6 +12,7 @@ AssetViewer::AssetViewer() : TestApp() {
 }
 
 AssetViewer::~AssetViewer() {
+	delete _scene;
 }
 
 ds::RenderSettings AssetViewer::getRenderSettings() {
@@ -31,20 +32,22 @@ bool AssetViewer::init() {
 
 	gui::init();
 
-	RID barrelEntity = _scene.loadEntity("..\\obj_converter\\barrel.bin");
+	_scene = new Scene;
+
+	RID barrelEntity = _scene->loadEntity("..\\obj_converter\\barrel.bin");
 	//RID griddy = scene.loadEntity("..\\obj_converter\\griddy.bin");
-	RID gridID = _scene.createGrid(10);
+	RID gridID = _scene->createGrid(10);
 
 	//load_entity(&highTile, "..\\obj_converter\\groundTile.bin", shadowGroup, depthGroup);
 	//load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
-	_scene.createInstance(gridID, ds::vec3(0.0f));
+	_scene->createInstance(gridID, ds::vec3(0.0f));
 	//scene.createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
 	float sx = -1.5f;
 	for (int j = 0; j < 2; ++j) {
 		float sz = 2.0f;
 		for (int i = 0; i < 4; ++i) {
-			_scene.createInstance(barrelEntity, ds::vec3(sx, 0.0f, sz));
+			_scene->createInstance(barrelEntity, ds::vec3(sx, 0.0f, sz));
 			//sx += 1.5f;
 			sz -= 1.5f;
 		}
@@ -56,24 +59,15 @@ bool AssetViewer::init() {
 }
 
 void AssetViewer::tick(float dt) {
-	_scene.tick(dt);
+	_scene->tick(dt);
 }
 
 void AssetViewer::render() {
 	
-	_scene.renderDepthMap();
+	_scene->renderDepthMap();
 
-	_scene.renderMain();
+	_scene->renderMain();
 
-	_scene.renderDebug();
+	_scene->renderDebug();
 
-}
-// ---------------------------------------------------------------
-// main method
-// ---------------------------------------------------------------
-int run() {
-	
-
-	
-	return 0;
 }

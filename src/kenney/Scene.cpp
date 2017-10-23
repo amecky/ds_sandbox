@@ -11,9 +11,9 @@ Scene::Scene() {
 	_instancesCapacity = 64;
 	_instances = new EntityInstance[_instancesCapacity];
 
-	//_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
-	_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 1.0f));
-	float sceneRadius = 6.0f;
+	_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
+	//_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 0.0f));
+	float sceneRadius = 4.0f;
 	_lightPosition = -2.0f * sceneRadius * _lightDirection;
 
 	_depthMap = new DepthMap(1024);
@@ -56,7 +56,7 @@ Scene::Scene() {
 	RID matrixBufferID = ds::createConstantBuffer(sizeof(MatrixBuffer), &_matrixBuffer);
 
 	
-	_lightBuffer.ambientColor = ds::Color(0.15f, 0.15f, 0.15f, 1.0f);
+	_lightBuffer.ambientColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	_lightBuffer.lightPosition = ds::vec4(_lightPosition);
 	_lightBuffer.lightDirection = ds::vec4(_lightDirection);
@@ -83,7 +83,7 @@ Scene::Scene() {
 	ComparisonFunc = LESS_EQUAL;
 	};
 	*/
-	ds::SamplerStateInfo comparisonInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::COMPARISON_MIN_MAG_MIP_POINT,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS };
+	ds::SamplerStateInfo comparisonInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::COMPARISON_MIN_MAG_MIP_POINT,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS_EQUAL };
 	RID cpsID = ds::createSamplerState(comparisonInfo);
 
 	_baseGroup = ds::StateGroupBuilder()
@@ -259,7 +259,7 @@ void Scene::renderDepthMap() {
 void Scene::renderMain() {
 	_matrixBuffer.projectionMatrix = ds::matTranspose(_camera.projectionMatrix);
 	_matrixBuffer.viewMatrix = ds::matTranspose(_camera.viewMatrix);	
-	_matrixBuffer.shadowTransform = _depthMap->getShadowTransform();
+	_matrixBuffer.shadowTransform = ds::matTranspose(_depthMap->getShadowTransform());
 	_lightBuffer.eyePosition = _camera.position;
 	for (int i = 0; i < _numInstances; ++i) {
 		const EntityInstance& inst = _instances[i];

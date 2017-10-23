@@ -11,6 +11,10 @@ public:
 
 	ds::RenderSettings getRenderSettings();
 
+	bool usesGUI() {
+		return false;
+	}
+
 	bool init();
 
 	void tick(float dt);
@@ -18,5 +22,5 @@ public:
 	void render();
 
 private:
-	Scene _scene;
+	Scene* _scene;
 };

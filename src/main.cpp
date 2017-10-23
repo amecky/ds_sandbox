@@ -172,10 +172,10 @@ void run_particle_plugin_test() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	//TestApp* app = new AssetViewer;
+	TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;
 	//TestApp* app = new VMTest;
-	TestApp* app = new ParticleExpressionTest;
+	//TestApp* app = new ParticleExpressionTest;
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
