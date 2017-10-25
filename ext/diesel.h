@@ -4105,17 +4105,18 @@ namespace ds {
 	static void setSamplerState(RID rid) {
 		int stage = stage_mask(rid);
 		uint16_t ridx = getResourceIndex(rid, RT_SAMPLER_STATE);
+		int slot = slot_mask(rid);
 		if (ridx != NO_RID) {
 			SamplerStateResource* res = (SamplerStateResource*)_ctx->_resources[ridx];
 			ID3D11SamplerState* state = res->get();
 			if (stage == PLS_PS_RES) {
-				_ctx->d3dContext->PSSetSamplers(0, 1, &state);
+				_ctx->d3dContext->PSSetSamplers(slot, 1, &state);
 			}
 			else if (stage == PLS_VS_RES) {
-				_ctx->d3dContext->VSSetSamplers(0, 1, &state);
+				_ctx->d3dContext->VSSetSamplers(slot, 1, &state);
 			}
 			else if (stage == PLS_GS_RES) {
-				_ctx->d3dContext->GSSetSamplers(0, 1, &state);
+				_ctx->d3dContext->GSSetSamplers(slot, 1, &state);
 			}
 		}
 	}

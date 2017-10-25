@@ -38,7 +38,7 @@ DepthMap::DepthMap(int dimension) {
 	_depthGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(constantBufferID, depthVertexShader, 0)
-		.rasterizerState(backRSS)
+		//.rasterizerState(backRSS)
 		.vertexShader(depthVertexShader)
 		.pixelShader(NO_RID)
 		.build("DepthBaseGroup");
@@ -51,14 +51,10 @@ void DepthMap::buildView(const ds::vec3& lightDirection) {
 	ds::matrix V = ds::matLookAtLH(_lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix P = ds::matOrthoOffCenterLH(-_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -20.0f, 20.0f);
 	_viewProjectionMatrix = V * P;
-	ds::matrix T = {
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f
-	};
-
-	_shadowTransformMatrix = V * P * T;
+	ds::matrix ts = ds::matScale(ds::vec3(0.5f, -0.5f, 1.0f));
+	ds::matrix tt = ds::matTranslate(ds::vec3(0.5f, 0.5f, 0.0f));
+	ds::matrix T = ts * tt;
+	_shadowTransformMatrix = V * P;// *T;
 }
 
 void DepthMap::render(const ds::vec3& pos, RID drawItem) {
