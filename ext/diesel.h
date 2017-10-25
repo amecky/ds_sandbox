@@ -1437,7 +1437,7 @@ namespace ds {
 		StateGroupBuilder& structuredBuffer(RID rid, RID shader, int slot = 0);
 		StateGroupBuilder& basicConstantBuffer(RID shader, int slot = 0);
 		StateGroupBuilder& blendState(RID rid);
-		StateGroupBuilder& samplerState(RID rid, RID shader);
+		StateGroupBuilder& samplerState(RID rid, RID shader, int slot = 0);
 		StateGroupBuilder& vertexBuffer(RID rid);
 		StateGroupBuilder& instancedVertexBuffer(RID rid);
 		StateGroupBuilder& vertexShader(RID rid);
@@ -4948,9 +4948,9 @@ namespace ds {
 		return *this;
 	}
 
-	StateGroupBuilder& StateGroupBuilder::samplerState(RID rid, RID shader) {
+	StateGroupBuilder& StateGroupBuilder::samplerState(RID rid, RID shader, int slot) {
 		int stage = extractFromShader(shader);
-		basicBinding(rid, ResourceType::RT_SAMPLER_STATE, stage, 0);
+		basicBinding(rid, ResourceType::RT_SAMPLER_STATE, stage, slot);
 		return *this;
 	}
 

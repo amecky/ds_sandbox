@@ -10,7 +10,7 @@ class DepthMap {
 
 public:
 	DepthMap(int dimension);
-	void buildView(const ds::vec3 lightPos, const ds::vec3& lightDirection);
+	void buildView(const ds::vec3& lightDirection);
 	void render(const ds::vec3& pos, RID drawItem);
 	RID getDepthBaseGroup() const {
 		return _depthGroup;

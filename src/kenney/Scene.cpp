@@ -12,12 +12,12 @@ Scene::Scene() {
 	_instances = new EntityInstance[_instancesCapacity];
 
 	_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
-	//_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 0.0f));
+	//_lightDirection = normalize(ds::vec3(0.0f, -1.0f, 1.0f));
 	float sceneRadius = 4.0f;
 	_lightPosition = -2.0f * sceneRadius * _lightDirection;
 
-	_depthMap = new DepthMap(1024);
-	_depthMap->buildView(_lightPosition, _lightDirection);
+	_depthMap = new DepthMap(2048);
+	_depthMap->buildView(_lightDirection);
 
 	ds::BlendStateInfo bsInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 	RID bs_id = ds::createBlendState(bsInfo);
@@ -86,6 +86,9 @@ Scene::Scene() {
 	ds::SamplerStateInfo comparisonInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::COMPARISON_MIN_MAG_MIP_POINT,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS_EQUAL };
 	RID cpsID = ds::createSamplerState(comparisonInfo);
 
+	ds::SamplerStateInfo linearSamplerInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::LINEAR,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS_EQUAL };
+	RID lssID = ds::createSamplerState(linearSamplerInfo);
+
 	_baseGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
@@ -96,9 +99,10 @@ Scene::Scene() {
 		.vertexShader(shadowVertexShader)
 		.pixelShader(shadowPixelShader)		
 		.samplerState(cpsID,shadowPixelShader)
+		.samplerState(lssID, shadowPixelShader,1)
 		.build();
 
-	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 300);
+	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 200);
 }
 
 Scene::~Scene() {

@@ -55,7 +55,7 @@ PixelInputType VS_Main(VertexInputType input) {
 	return output;
 }
 
-static const float SMAP_SIZE = 1024.0f;
+static const float SMAP_SIZE = 2048.0f;
 static const float SMAP_DX = 1.0f / SMAP_SIZE;
 
 float CalcShadowFactor(SamplerComparisonState samShadow, Texture2D shadowMap, float4 shadowPosH) {
@@ -70,11 +70,11 @@ float CalcShadowFactor(SamplerComparisonState samShadow, Texture2D shadowMap, fl
 	};
 	[unroll]
 	for(int i = 0; i < 9; ++i) 	{
-		//percentLit += shadowMap.Sample(samLinear, shadowPosH.xy + offsets[i]).r;
 		percentLit += shadowMap.SampleCmpLevelZero(samShadow, shadowPosH.xy + offsets[i], depth).r;
 	}
-	return percentLit /= 9.0f;
-	//return shadowMap.SampleCmpLevelZero(samShadow, shadowPosH.xy, depth).r;
+	float ret = percentLit /= 9.0f;
+	float diff = depth - ret;
+	return diff;
 }
 //---------------------------------------------------------------------------------------
 // Computes the ambient, diffuse, and specular terms in the lighting equation
@@ -92,39 +92,54 @@ void ComputeDirectionalLight(float4 diffuseColor, float3 lightDirection,
 
 	// The light vector aims opposite the direction the light rays travel.
 	float3 lightVec = -lightDirection;
-
-	// Add ambient term.
-	//ambient = mat.Ambient * L.Ambient;	
-
-	// Add diffuse and specular term, provided the surface is in 
-	// the line of site of the light.
-	
 	float diffuseFactor = dot(lightVec, normal);
-
-	// Flatten to avoid dynamic branching.
 	[flatten]
-	if( diffuseFactor > 0.0f )
-	{
-		float3 v         = reflect(-lightVec, normal);
+	if( diffuseFactor > 0.0f ) {
+		float3 v = reflect(-lightVec, normal);
 		diffuse = diffuseFactor * diffuseColor;
 	}
 }
 
+float calcPCF(SamplerState samLin, Texture2D shadowMap, float2 uv, float depth) {
+	float visibility = 1.0f;
+	const float dx = SMAP_DX;
+	float bias = 0.005;
+	const float2 offsets[9] = {
+		float2(-dx,  -dx), float2(0.0f,  -dx), float2(dx,  -dx),
+		float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
+		float2(-dx,  +dx), float2(0.0f,  +dx), float2(dx,  +dx)
+	};
+	[unroll]
+	for(int i = 0; i < 9; ++i) 	{
+		float dp = shadowMap.Sample(samLin, uv + offsets[i]).r;
+		if ( dp  <  depth - bias ) {
+    		visibility -= 0.1;
+		}
+	}
+	return visibility;
+}
+
 Texture2D depthMapTexture : register(t0);
 SamplerComparisonState compSampler:register(s0);
+SamplerState linSampler:register(s1);
 
 float4 PS_Main(PixelInputType input) : SV_TARGET {
 
-	float2 shadowTexCoords;
-	shadowTexCoords.x = 0.5f + (input.ShadowPosH.x / input.ShadowPosH.w * 0.5f);
-	shadowTexCoords.y = 0.5f - (input.ShadowPosH.y / input.ShadowPosH.w * 0.5f);
+	float2 shadowTexCoord = input.ShadowPosH.xy;
+	float dp =  depthMapTexture.Sample(linSampler, input.ShadowPosH.xy).r;
 	float pixelDepth = input.ShadowPosH.z / input.ShadowPosH.w;
+	float bias = 0.005;
+	float visibility = 1.0;
+	if ( dp  <  input.ShadowPosH.z - bias ){
+    	visibility = 0.5;
+	}
 
-	float shadow = CalcShadowFactor(compSampler, depthMapTexture, input.ShadowPosH);
+	visibility = calcPCF(linSampler,depthMapTexture,input.ShadowPosH.xy,input.ShadowPosH.z);
+	//float shadow = CalcShadowFactor(compSampler, depthMapTexture, input.ShadowPosH);
 
     float4 color = ambientColor;
 
-	float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 ambient = float4(0.1f, 0.1f, 0.1f, 0.0f);
 	float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	// Cache the distance to the eye from this surface point.
@@ -135,8 +150,9 @@ float4 PS_Main(PixelInputType input) : SV_TARGET {
 	float4 A, D;
 	ComputeDirectionalLight(float4(1.0,1.0,1.0,1.0), lightDirection.xyz,input.normal, ne, A, D);
 	ambient += A;    
-	diffuse += shadow*D;
-	color = input.color*(ambient + diffuse);
+	diffuse += visibility * D;
+	color = input.color * (ambient + diffuse);
+	color = saturate(color);
 	color.a = input.color.a;
 	//if ((saturate(shadowTexCoords.x) == shadowTexCoords.x) && (saturate(shadowTexCoords.y) == shadowTexCoords.y) &&  (pixelDepth > 0)) {
 		//float depthValue = CalcShadowFactor(compSampler, depthMapTexture, input.ShadowPosH);
@@ -149,6 +165,6 @@ float4 PS_Main(PixelInputType input) : SV_TARGET {
 	//}
 	//float4 textureColor = input.color;
 	//color = color * textureColor;
-	//color = float4(sf,sf,sf,1.0);
+	//color = float4(visibility,visibility,visibility,1.0);
     return color;
 }
