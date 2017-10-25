@@ -8,19 +8,28 @@ void Grid::create(int numCells, RID renderPass) {
 	float uvMax = static_cast<float>(numCells);
 	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
 	ds::vec3 positions[] = { ds::vec3(-0.5f,-0.0005f,-0.5f),ds::vec3(-0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,0.5f) ,ds::vec3(0.5f,-0.0005f,-0.5f) };
-	int num = numCells * numCells * 4 / 6;
-	_vertices = new GridVertex[numCells * numCells * 4];	
+	ds::vec3 back_positions[] = { ds::vec3(-0.5f,-0.0005f,0.5f) ,ds::vec3(-0.5f,-0.0005f,-0.5f),ds::vec3(0.5f,-0.0005f,-0.5f),ds::vec3(0.5f,-0.0005f,0.5f)  };
+	int num = numCells * numCells * 4 / 6 * 2;
+	_vertices = new GridVertex[numCells * numCells * 4 * 2];	
 	float sz = numCells / 2.0f - 0.5f;
 	for (int z = 0; z < numCells; ++z) {
 		float sx = numCells / 2.0f - 0.5f;
 		for (int x = 0; x < numCells; ++x) {
-			int idx = z * numCells * 4 + x * 4;
+			int idx = z * numCells * 4 * 2 + x * 4;
 			for (int j = 0; j < 4; ++j) {
 				_vertices[idx + j].p = positions[j];
 				_vertices[idx + j].p.x += sx;
 				_vertices[idx + j].p.z += sz;
 				_vertices[idx + j].color = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
 				_vertices[idx + j].n = ds::vec3(0, 1, 0);
+			}
+			idx += 4;
+			for (int j = 0; j < 4; ++j) {
+				_vertices[idx + j].p = back_positions[j];
+				_vertices[idx + j].p.x += sx;
+				_vertices[idx + j].p.z += sz;
+				_vertices[idx + j].color = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
+				_vertices[idx + j].n = ds::vec3(0, -1, 0);
 			}
 			sx -= 1.0f;
 		}
@@ -39,8 +48,8 @@ void Grid::create(int numCells, RID renderPass) {
 	ds::InputLayoutInfo layoutInfo = { decl, 2, vertexShader };
 	RID vertexDeclaration = ds::createInputLayout(layoutInfo, "PT_Layout");
 	RID bufferID = ds::createConstantBuffer(sizeof(GridConstantBuffer), &_constantBuffer, "GridConstantBuffer");
-	RID indexBuffer = ds::createQuadIndexBuffer(numCells * numCells, "GridIndexBuffer");
-	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, numCells * numCells * 4, sizeof(GridVertex), _vertices };
+	RID indexBuffer = ds::createQuadIndexBuffer(numCells * numCells * 2, "GridIndexBuffer");
+	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, numCells * numCells * 4 * 2, sizeof(GridVertex), _vertices };
 	RID gridBuffer = ds::createVertexBuffer(vbInfo, "GridVertexBuffer");
 
 	RID gridStates = ds::StateGroupBuilder()
@@ -52,7 +61,7 @@ void Grid::create(int numCells, RID renderPass) {
 		.constantBuffer(bufferID, vertexShader, 0)
 		.build();
 
-	ds::DrawCommand drawCmd = { numCells * numCells * 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
+	ds::DrawCommand drawCmd = { numCells * numCells * 6 * 2, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
 
 	_drawItem = ds::compile(drawCmd, gridStates, "Grid");
 }

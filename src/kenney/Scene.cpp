@@ -186,18 +186,17 @@ int Scene::loadEntity(const char* fileName) {
 
 int Scene::createGrid(int numCells) {
 	Entity* e = &_entities[_numEntities++];
-	float uvMax = static_cast<float>(numCells);
-	ds::vec2 uvs[] = { ds::vec2(0.0f,1.0f),ds::vec2(0.0f,0.0f),ds::vec2(1.0f,0.0f),ds::vec2(1.0f,1.0f) };
 	float gridSize = 0.49f;
 	ds::vec3 positions[] = { ds::vec3(-gridSize,-0.0005f,-gridSize),ds::vec3(-gridSize,-0.0005f,gridSize) ,ds::vec3(gridSize,-0.0005f,gridSize) ,ds::vec3(gridSize,-0.0005f,-gridSize) };
-	int num = numCells * numCells * 4 / 6;
-	e->vertices = new AmbientVertex[numCells * numCells * 4];
+	ds::vec3 back_positions[] = { ds::vec3(-gridSize,-0.0005f,gridSize) ,ds::vec3(-gridSize,-0.0005f,-gridSize),ds::vec3(gridSize,-0.0005f,-gridSize),ds::vec3(gridSize,-0.0005f,gridSize) };
+	//int num = numCells * numCells * 4 / 6 * 2;
+	e->vertices = new AmbientVertex[numCells * numCells * 4 * 2];
 	float sz = numCells / 2.0f - 0.5f;
 	float radius = 0.0f;
 	for (int z = 0; z < numCells; ++z) {
 		float sx = numCells / 2.0f - 0.5f;
 		for (int x = 0; x < numCells; ++x) {
-			int idx = z * numCells * 4 + x * 4;
+			int idx = z * numCells * 4 + x * 4 * 2;
 			for (int j = 0; j < 4; ++j) {
 				e->vertices[idx + j].p = positions[j];
 				e->vertices[idx + j].p.x += sx;
@@ -210,6 +209,14 @@ int Scene::createGrid(int numCells) {
 					radius = ds;
 				}
 			}
+			idx += 4;
+			for (int j = 0; j < 4; ++j) {
+				e->vertices[idx + j].p = back_positions[j];
+				e->vertices[idx + j].p.x += sx;
+				e->vertices[idx + j].p.z += sz;
+				e->vertices[idx + j].color = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
+				e->vertices[idx + j].n = ds::vec3(0, -1, 0);
+			}
 			sx -= 1.0f;
 		}
 		sz -= 1.0f;
@@ -218,8 +225,8 @@ int Scene::createGrid(int numCells) {
 	radius = sqrtf(radius);
 	e->radius = radius;
 
-	RID indexBuffer = ds::createQuadIndexBuffer(numCells * numCells, "GridIndexBuffer");
-	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, numCells * numCells * 4, sizeof(AmbientVertex), e->vertices };
+	RID indexBuffer = ds::createQuadIndexBuffer(numCells * numCells * 2, "GridIndexBuffer");
+	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, numCells * numCells * 4 * 2, sizeof(AmbientVertex), e->vertices };
 	RID kvbid = ds::createVertexBuffer(vbInfo);
 
 	RID nextGroup = ds::StateGroupBuilder()
@@ -232,7 +239,7 @@ int Scene::createGrid(int numCells) {
 		.indexBuffer(indexBuffer)
 		.build();
 
-	ds::DrawCommand nextDrawCmd = { numCells * numCells * 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
+	ds::DrawCommand nextDrawCmd = { numCells * numCells * 6 * 2, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
 	RID groups[] = { _baseGroup, nextGroup };
 	e->drawItem = ds::compile(nextDrawCmd, groups, 2, "GridMain");
 

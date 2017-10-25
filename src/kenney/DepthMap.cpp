@@ -32,7 +32,7 @@ DepthMap::DepthMap(int dimension) {
 	ds::InputLayoutInfo ambientLayoutInfo = { ambientDecl, 3, depthVertexShader };
 	RID arid = ds::createInputLayout(ambientLayoutInfo);
 
-	ds::RasterizerStateInfo backRasterInfo = { ds::CullMode::BACK,ds::FillMode::SOLID,true,false,0.0f,0.0f };
+	ds::RasterizerStateInfo backRasterInfo = { ds::CullMode::FRONT,ds::FillMode::SOLID,true,false,0.0f,0.0f };
 	RID backRSS = ds::createRasterizerState(backRasterInfo, "DepthRasterizerState");
 
 	_depthGroup = ds::StateGroupBuilder()
