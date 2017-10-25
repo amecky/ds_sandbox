@@ -34,7 +34,8 @@ bool AssetViewer::init() {
 
 	_scene = new Scene;
 
-	RID barrelEntity = _scene->loadEntity("..\\obj_converter\\barrel.bin");
+	RID barrelEntity = _scene->loadEntity("models\\barrel.bin");
+	RID frameHighTile = _scene->loadEntity("models\\frameHighTile.bin");
 	//RID griddy = scene.loadEntity("..\\obj_converter\\griddy.bin");
 	RID gridID = _scene->createGrid(10);
 
@@ -42,6 +43,7 @@ bool AssetViewer::init() {
 	//load_entity(&crater, "..\\obj_converter\\crater.bin", shadowGroup, depthGroup);
 
 	_scene->createInstance(gridID, ds::vec3(0.0f));
+	_scene->createInstance(frameHighTile, ds::vec3(0.0f,0.1f,0.0f));
 	//scene.createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
 	float sx = -1.5f;
 	for (int j = 0; j < 2; ++j) {

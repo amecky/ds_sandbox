@@ -89,6 +89,9 @@ Scene::Scene() {
 	ds::SamplerStateInfo linearSamplerInfo = { ds::TextureAddressModes::BORDER, ds::TextureFilters::LINEAR,ds::Color(0.0f,0.0f,0.0f,1.0f),0.0f,ds::CompareFunctions::CMP_LESS_EQUAL };
 	RID lssID = ds::createSamplerState(linearSamplerInfo);
 
+	ds::RasterizerStateInfo frontRasterInfo = { ds::CullMode::BACK,ds::FillMode::SOLID,true,false,0.0f,0.0f };
+	RID frontRSS = ds::createRasterizerState(frontRasterInfo, "ShadowRasterizerState");
+
 	_baseGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(matrixBufferID, shadowVertexShader, 0)
@@ -100,6 +103,7 @@ Scene::Scene() {
 		.pixelShader(shadowPixelShader)		
 		.samplerState(cpsID,shadowPixelShader)
 		.samplerState(lssID, shadowPixelShader,1)
+		.rasterizerState(frontRSS)
 		.build();
 
 	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 200);
