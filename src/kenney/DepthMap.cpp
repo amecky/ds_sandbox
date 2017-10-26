@@ -46,7 +46,7 @@ DepthMap::DepthMap(int dimension) {
 }
 
 void DepthMap::buildView(const ds::vec3& lightDirection) {
-	_lightPos = -1.0f * _sceneRadius * lightDirection;
+	_lightPos = -2.0f * _sceneRadius * lightDirection;
 	_lightDirection = lightDirection;
 	ds::matrix V = ds::matLookAtLH(_lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix P = ds::matOrthoOffCenterLH(-_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -20.0f, 20.0f);
@@ -54,7 +54,7 @@ void DepthMap::buildView(const ds::vec3& lightDirection) {
 	ds::matrix ts = ds::matScale(ds::vec3(0.5f, -0.5f, 1.0f));
 	ds::matrix tt = ds::matTranslate(ds::vec3(0.5f, 0.5f, 0.0f));
 	ds::matrix T = ts * tt;
-	_shadowTransformMatrix = V * P;// *T;
+	_shadowTransformMatrix = V * P * T;
 }
 
 void DepthMap::render(const ds::vec3& pos, RID drawItem) {

@@ -1809,6 +1809,8 @@ namespace ds {
 
 	void saveResourcesToFile(const char* fileName = "resources.txt");
 
+	void log(const LogLevel& level, char* format, ...);
+
 }
 
 #ifndef SID
@@ -1832,7 +1834,7 @@ namespace ds {
 
 	static void assert_fmt(char* expr_str, bool expr, char* format, ...);
 
-	static void log(const LogLevel& level, char* format,...);
+	
 
 	static void assert_result(HRESULT result, const char* msg);
 }
@@ -2960,7 +2962,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// assert functions
 	// ------------------------------------------------------
-	static void log(const LogLevel& level,char* format, ...) {
+	void log(const LogLevel& level,char* format, ...) {
 		va_list args;
 		va_start(args, format);
 		char buffer[1024];

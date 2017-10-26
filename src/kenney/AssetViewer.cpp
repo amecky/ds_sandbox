@@ -39,21 +39,19 @@ bool AssetViewer::init() {
 	RID griddy = _scene->loadEntity("models\\griddy.bin");
 	RID gridID = _scene->createGrid(10);
 
-	//_scene->createInstance(gridID, ds::vec3(0.0f));
+	_scene->createInstance(gridID, ds::vec3(0.0f));
 	//_scene->createInstance(frameHighTile, ds::vec3(0.0f,0.1f,0.0f));
-	_scene->createInstance(griddy, ds::vec3(2.0f, 1.0f, 2.0f));
-	float sx = -1.5f;
+	_scene->createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
+	float sx = -1.6f;
 	for (int j = 0; j < 2; ++j) {
 		float sz = 2.0f;
 		for (int i = 0; i < 4; ++i) {
-			//_scene->createInstance(barrelEntity, ds::vec3(sx, -0.001f, sz));
-			//sx += 1.5f;
+			_scene->createInstance(barrelEntity, ds::vec3(sx, -0.001f, sz));
 			sz -= 1.5f;
 		}
-		sx = 1.5f;
+		sx = 2.4f;
 	}
-
-	ds::logResources();
+	//ds::logResources();
 	return true;
 }
 

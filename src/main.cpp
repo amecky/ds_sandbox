@@ -177,9 +177,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	//TestApp* app = new VMTest;
 	//TestApp* app = new ParticleExpressionTest;
 	//_CrtSetBreakAlloc(160);
+
+	
+
+
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
 	ds::init(app->getRenderSettings());
+
+	ds::vec3 lightDirection = ds::vec3(1, 0, 0);
+	float sceneRadius = 4.0f;
+	ds::vec3 lightPos = -2.0f * sceneRadius * lightDirection;
+
+
+	ds::matrix wm = ds::matTranslate(ds::vec3(0.0f, 0.5f, 0.0f));
+	ds::vec3 mp = ds::vec3(0, 0, 0);
+	ds::vec3 n = ds::vec3( -1, 0, 0);
+	ds::vec3 N = normalize(n * wm);
+	// output.lightPos = lightPosition.xyz - modelPos.xyz;
+	ds::vec3 L = normalize(lightPos - mp * wm);
+	float NdotL = dot(N,L);
+	ds::log(LogLevel::LL_DEBUG, "===> N: %g %g %g L: %g %g %g NdotL: %g", N.x, N.y, N.z, L.x,L.y,L.z,NdotL);
 
 	if (app->usesGUI()) {
 		gui::init();
