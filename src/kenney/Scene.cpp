@@ -13,7 +13,7 @@ Scene::Scene() {
 	_instances = new EntityInstance[_instancesCapacity];
 
 	_lightDirection = normalize(ds::vec3(-0.57735f, -0.57735f, 0.57735f));
-	_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 0.0f));
+	_lightDirection = normalize(ds::vec3(1.0f, -1.0f, 1.0f));
 	float sceneRadius = 4.0f;
 	_lightPosition = -2.0f * sceneRadius * _lightDirection;
 

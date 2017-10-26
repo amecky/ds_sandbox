@@ -39,18 +39,11 @@ PixelInputType VS_Main(VertexInputType input) {
     PixelInputType output;
 	float4 pos = float4(input.position,1.0);
 	float4 modelPos = mul(pos, worldMatrix);
-    //output.position = mul(modelPos, worldMatrix);
     output.position = mul(modelPos, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
-
     output.ShadowPosH = mul(modelPos, shadowTransform);
-    
 	output.color = input.color;
-
-	float4 norm = float4(input.normal, 1.0f);
-	norm = mul(norm,worldMatrix);
-    output.normal = normalize(norm.xyz);
-    
+	output.normal = normalize(mul(input.normal, (float3x3)worldMatrix));
     output.lightPos = lightPosition.xyz - modelPos.xyz;
 	return output;
 }
@@ -73,7 +66,6 @@ float CalcShadowFactor(SamplerComparisonState samShadow, Texture2D shadowMap, fl
 		percentLit += shadowMap.SampleCmpLevelZero(samShadow, shadowPosH.xy + offsets[i], depth).r;
 	}
 	float ret = percentLit /= 9.0f;
-	//float diff = depth - ret;
 	return ret;
 }
 
@@ -82,21 +74,14 @@ SamplerComparisonState compSampler:register(s0);
 SamplerState linSampler:register(s1);
 
 float4 PS_Main(PixelInputType input) : SV_TARGET {
-	//float shadow = saturate(1.0 - CalcShadowFactor(compSampler, depthMapTexture, input.ShadowPosH));
 	float shadow = CalcShadowFactor(compSampler, depthMapTexture, input.ShadowPosH);
     float4 color = float4(0,0,0,1);
-	float diff = 0.5 + 0.5 * (shadow - input.ShadowPosH.z);
-	//if ( diff < 0.5) {
-	//if ( shadow > input.ShadowPosH.z - 0.001) {
-		float3 L = normalize(input.lightPos.xyz);
-		float NdotL = saturate(dot(input.normal,L));	
+	float3 L = normalize(input.lightPos.xyz);
+	float NdotL = saturate(dot(input.normal,L));	
+	if ( NdotL > 0.0 ) {
 		color = input.color * shadow * NdotL;
 		color = saturate(color);
-	//}
-	//if ( diff < 0.76) {
-	//	diff = 1.0;
-	//}
+	}
 	color.a = input.color.a;
-	color = float4(diff,diff,diff,1.0);
     return color;
 }

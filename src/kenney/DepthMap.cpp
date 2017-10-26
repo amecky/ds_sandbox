@@ -32,13 +32,13 @@ DepthMap::DepthMap(int dimension) {
 	ds::InputLayoutInfo ambientLayoutInfo = { ambientDecl, 3, depthVertexShader };
 	RID arid = ds::createInputLayout(ambientLayoutInfo);
 
-	ds::RasterizerStateInfo backRasterInfo = { ds::CullMode::FRONT,ds::FillMode::SOLID,true,false,0.0f,0.0f };
+	ds::RasterizerStateInfo backRasterInfo = { ds::CullMode::FRONT,ds::FillMode::SOLID,true,false,5000.0f,1.0f };
 	RID backRSS = ds::createRasterizerState(backRasterInfo, "DepthRasterizerState");
 
 	_depthGroup = ds::StateGroupBuilder()
 		.inputLayout(arid)
 		.constantBuffer(constantBufferID, depthVertexShader, 0)
-		//.rasterizerState(backRSS)
+		.rasterizerState(backRSS)
 		.vertexShader(depthVertexShader)
 		.pixelShader(NO_RID)
 		.build("DepthBaseGroup");
@@ -46,7 +46,7 @@ DepthMap::DepthMap(int dimension) {
 }
 
 void DepthMap::buildView(const ds::vec3& lightDirection) {
-	_lightPos = -2.0f * _sceneRadius * lightDirection;
+	_lightPos = -1.0f * _sceneRadius * lightDirection;
 	_lightDirection = lightDirection;
 	ds::matrix V = ds::matLookAtLH(_lightPos, ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix P = ds::matOrthoOffCenterLH(-_sceneRadius, _sceneRadius, -_sceneRadius, _sceneRadius, -20.0f, 20.0f);
