@@ -107,7 +107,7 @@ Scene::Scene() {
 		//.rasterizerState(frontRSS)
 		.build();
 
-	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 400);
+	_rtViewer = new RenderTextureViewer(_depthMap->getRenderTarget(), 150);
 }
 
 Scene::~Scene() {
@@ -187,7 +187,7 @@ int Scene::loadEntity(const char* fileName) {
 
 int Scene::createGrid(int numCells) {
 	Entity* e = &_entities[_numEntities++];
-	int num_vertices = create_grid(numCells, 0.495f, ds::Color(0.2f, 0.2f, 0.2f, 1.0f), &e->vertices);
+	int num_vertices = create_new_grid(numCells, 0.5f, ds::Color(0.2f, 0.2f, 0.2f, 1.0f), &e->vertices);
 	RID indexBuffer = ds::createQuadIndexBuffer(num_vertices / 4, "GridIndexBuffer");
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, num_vertices, sizeof(AmbientVertex), e->vertices };
 	RID kvbid = ds::createVertexBuffer(vbInfo);

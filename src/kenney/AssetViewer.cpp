@@ -37,11 +37,11 @@ bool AssetViewer::init() {
 	RID barrelEntity = _scene->loadEntity("models\\barrel.bin");
 	RID frameHighTile = _scene->loadEntity("models\\frameHighTile.bin");
 	RID griddy = _scene->loadEntity("models\\griddy.bin");
-	RID gridID = _scene->createGrid(10);
+	RID gridID = _scene->createGrid(5);
 
 	_scene->createInstance(gridID, ds::vec3(0.0f));
 	//_scene->createInstance(frameHighTile, ds::vec3(0.0f,0.1f,0.0f));
-	_scene->createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
+	//_scene->createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
 	float sx = -1.6f;
 	for (int j = 0; j < 2; ++j) {
 		float sz = 2.0f;
