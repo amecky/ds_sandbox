@@ -21,7 +21,7 @@
 #include "plugins\PluginRegistry.h"
 #include "ParticlePluginTest.h"
 #include "kenney\AssetViewer.h"
-
+#include "binary\BinaryClock.h"
 // ---------------------------------------------------------------
 // initialize rendering system
 // ---------------------------------------------------------------
@@ -172,7 +172,8 @@ void run_particle_plugin_test() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	TestApp* app = new AssetViewer;
+	TestApp* app = new BinaryClock;
+	//TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;
 	//TestApp* app = new VMTest;
 	//TestApp* app = new ParticleExpressionTest;

@@ -181,28 +181,29 @@ int Scene::loadEntity(const char* fileName) {
 	sprintf_s(tmp, "%s-Depth", fileName);
 	RID dgroups[] = { _depthMap->getDepthBaseGroup(), myDepthGroup };
 	e->depthDrawItem = ds::compile(nextDrawCmd, dgroups, 2, tmp);
-
+	e->numVertices = total;
 	return _numEntities - 1;
 }
 
-int Scene::createGrid(int numCells) {
+int Scene::createGrid(int object, int numCells) {
+	const Entity& org = get(object);
 	Entity* e = &_entities[_numEntities++];
-	int num_vertices = create_new_grid(numCells, 0.5f, ds::Color(0.2f, 0.2f, 0.2f, 1.0f), &e->vertices);
-	RID indexBuffer = ds::createQuadIndexBuffer(num_vertices / 4, "GridIndexBuffer");
+	int num_vertices = create_new_grid(numCells, org, &e->vertices);
+	//RID indexBuffer = ds::createQuadIndexBuffer(num_vertices / 4, "GridIndexBuffer");
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, num_vertices, sizeof(AmbientVertex), e->vertices };
 	RID kvbid = ds::createVertexBuffer(vbInfo);
 
 	RID nextGroup = ds::StateGroupBuilder()
 		.vertexBuffer(kvbid)
-		.indexBuffer(indexBuffer)
+		//.indexBuffer(indexBuffer)
 		.build();
 
 	RID myDepthGroup = ds::StateGroupBuilder()
 		.vertexBuffer(kvbid)
-		.indexBuffer(indexBuffer)
+		//.indexBuffer(indexBuffer)
 		.build();
 
-	ds::DrawCommand nextDrawCmd = { num_vertices / 4 * 6, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
+	ds::DrawCommand nextDrawCmd = { num_vertices, ds::DrawType::DT_VERTICES, ds::PrimitiveTypes::TRIANGLE_LIST };
 	RID groups[] = { _baseGroup, nextGroup };
 	e->drawItem = ds::compile(nextDrawCmd, groups, 2, "GridMain");
 

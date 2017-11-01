@@ -898,45 +898,66 @@ namespace ds {
 	}
 
 	// http://www.cprogramming.com/tutorial/3d/rotationMatrices.html
-	// left hand sided
+	// -------------------------------------------------------
+	// Rotation X matrix
+	// -------------------------------------------------------
 	inline matrix matRotationX(float angle) {
 		float s = sin(angle);
 		float c = cos(angle);
 		matrix sm(
 			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, c, -s, 0.0f,
-			0.0f, s, c, 0.0f,
+			0.0f, c, s, 0.0f,
+			0.0f, -s, c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
 		return sm;
 	}
 
+	// -------------------------------------------------------
+	// Rotation Y matrix
+	// -------------------------------------------------------
 	inline matrix matRotationY(float angle) {
 		float s = sin(angle);
 		float c = cos(angle);
 		matrix sm(
-			c, 0.0f, s, 0.0f,
+			c, 0.0f, -s, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
-			-s, 0.0f, c, 0.0f,
+			s, 0.0f, c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
 		return sm;
 	}
-	// FIXME: wrong direction!!!!
+	
+	// -------------------------------------------------------
+	// Rotation Z matrix
+	// -------------------------------------------------------
 	inline matrix matRotationZ(float angle) {
 		float s = sin(angle);
 		float c = cos(angle);
 		matrix sm(
-			c, -s, 0.0f, 0.0f,
-			s, c, 0.0f, 0.0f,
+			c, s, 0.0f, 0.0f,
+			-s, c, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
 		return sm;
 	}
 
+	// -------------------------------------------------------
+	// Translation matrix
+	// -------------------------------------------------------
+	inline matrix matTranslate(const vec3& pos) {
+		matrix tm(
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			pos.x, pos.y, pos.z, 1.0f
+		);
+		return tm;
+	}
+
 	inline matrix matRotation(const vec3& r) {
-		return matRotationZ(r.z) * matRotationY(r.y) * matRotationX(r.x);
+		return matRotationX(r.z) * matRotationY(r.y) * matRotationZ(r.x);
 	}
 
 	// -------------------------------------------------------
@@ -953,18 +974,7 @@ namespace ds {
 		return tmp;
 	}
 
-	// -------------------------------------------------------
-	// Translation matrix
-	// -------------------------------------------------------
-	inline matrix matTranslate(const vec3& pos) {
-		matrix tm(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			pos.x, pos.y, pos.z, 1.0f
-			);
-		return tm;
-	}
+	
 
 	inline matrix matLookAtLH(const vec3& eye, const vec3& lookAt, const vec3& up) {
 		// see msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx

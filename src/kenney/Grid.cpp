@@ -40,6 +40,36 @@ int create_grid(int num_cells, float grid_size, const ds::Color & color, Ambient
 	return num;
 }
 
+int create_new_grid(int num_cells, const Entity& e, AmbientVertex** vertices) {
+	int max = e.numVertices;
+	int num = max * num_cells * num_cells;
+	*vertices = new AmbientVertex[num];
+	float sz = num_cells / 2.0f - 0.5f;
+	float radius = 0.0f;
+	for (int z = 0; z < num_cells; ++z) {
+		float sx = num_cells / 2.0f - 0.5f;
+		for (int x = 0; x < num_cells; ++x) {
+			int idx = z * num_cells * max + x * max;
+			for (int j = 0; j < max; ++j) {
+				(*vertices + idx + j)->color = e.vertices[j].color;
+				(*vertices + idx + j)->n = e.vertices[j].n;
+				(*vertices + idx + j)->p = e.vertices[j].p;
+				(*vertices + idx + j)->p.x += sx;
+				(*vertices + idx + j)->p.z += sz;
+				float ds = sqr_distance(ds::vec3(0.0f), (*vertices + idx + j)->p);
+				if (ds > radius * radius) {
+					radius = ds;
+				}
+			}
+			sx -= 1.0f;
+		}
+		sz -= 1.0f;
+	}
+	radius = sqrtf(radius);
+	radius = radius;
+	return num;
+}
+
 
 int create_new_grid(int num_cells, float grid_size, const ds::Color & color, AmbientVertex** vertices) {
 

@@ -22,6 +22,9 @@
     <Filter Include="particles">
       <UniqueIdentifier>{9bb78ac7-5b91-400d-bcba-912ab8f63820}</UniqueIdentifier>
     </Filter>
+    <Filter Include="binary">
+      <UniqueIdentifier>{506cebc5-4908-474f-943f-9a7ee30b7b40}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -100,6 +103,9 @@
     <ClInclude Include="src\particles\ParticleExpressionTest.h">
       <Filter>particles</Filter>
     </ClInclude>
+    <ClInclude Include="src\binary\BinaryClock.h">
+      <Filter>binary</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -147,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="src\particles\ParticleExpressionTest.cpp">
       <Filter>particles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\binary\BinaryClock.cpp">
+      <Filter>binary</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

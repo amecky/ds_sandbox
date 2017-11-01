@@ -20,6 +20,7 @@ struct BoundingSphere {
 
 struct Entity {
 	AmbientVertex* vertices;
+	int numVertices;
 	RID drawItem;
 	RID depthDrawItem;
 	ds::vec3 extent;
@@ -65,11 +66,14 @@ public:
 	~Scene();
 	void tick(float dt);
 	int loadEntity(const char* fileName);
-	int createGrid(int numCells);
+	int createGrid(int object, int numCells);
 	int createInstance(int entityID, const ds::vec3& pos, bool castShadows = true);
 	void renderDepthMap();
 	void renderMain();
 	void renderDebug();
+	const Entity& get(int idx) const {
+		return _entities[idx];
+	}
 private:
 	Entity* _entities;
 	int _numEntities;

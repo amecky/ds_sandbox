@@ -28,6 +28,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\AnimationTest.h" />
+    <ClInclude Include="src\binary\BinaryClock.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\kenney\AssetViewer.h" />
@@ -56,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
+    <ClCompile Include="src\binary\BinaryClock.cpp" />
     <ClCompile Include="src\kenney\AssetViewer.cpp" />
     <ClCompile Include="src\kenney\Camera.cpp" />
     <ClCompile Include="src\kenney\DepthMap.cpp" />
