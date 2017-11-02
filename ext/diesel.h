@@ -957,7 +957,7 @@ namespace ds {
 	}
 
 	inline matrix matRotation(const vec3& r) {
-		return matRotationX(r.z) * matRotationY(r.y) * matRotationZ(r.x);
+		return matRotationZ(r.z) * matRotationY(r.y) * matRotationX(r.x);
 	}
 
 	// -------------------------------------------------------

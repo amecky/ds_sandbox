@@ -10,9 +10,10 @@ struct Vertex {
 	ds::vec2 uv;
 	ds::vec3 n;
 	ds::vec3 t;
+	ds::Color c;
 
-	Vertex() : p(0.0f), uv(0.0f), n(0.0f), t(0.0f) {}
-	Vertex(const ds::vec3& pv, const ds::vec2& uvv, const ds::vec3& nv, const ds::vec3& tv) : p(pv), uv(uvv), n(nv), t(tv) {}
+	Vertex() : p(0.0f), uv(0.0f), n(0.0f), t(0.0f) , c(1.0f,1.0f,1.0f,1.0f) {}
+	Vertex(const ds::vec3& pv, const ds::vec2& uvv, const ds::vec3& nv, const ds::vec3& tv, const ds::Color& clr) : p(pv), uv(uvv), n(nv), t(tv) , c(clr) {}
 };
 
 // ---------------------------------------------------------------

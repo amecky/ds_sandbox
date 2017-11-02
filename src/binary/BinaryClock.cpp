@@ -30,11 +30,20 @@ const int CUBE_PLANES[6][4] = {
 	{ 7, 6, 5, 4 }, // back
 };
 
-const float U_OFFSET[] = {
-	0.5f,0.0f,0.0f,0.0f,0.0f,0.5f
+const ds::Color COLORS[] = {
+	ds::Color(1.0f,0.0f,0.0f,1.0f),
+	ds::Color(0.0f,1.0f,0.0f,1.0f),
+	ds::Color(0.0f,0.0f,1.0f,1.0f),
+	ds::Color(1.0f,1.0f,0.0f,1.0f),
+	ds::Color(0.0f,1.0f,1.0f,1.0f),
+	ds::Color(1.0f,1.0f,1.0f,1.0f),
 };
 
-void buildCube(const ds::matrix& m, ds::vec3* positions, ds::vec2* uvs, ds::vec3* normals) {
+const float U_OFFSET[] = {
+	0.0f,0.0f,0.0f,0.0f,0.0f,0.0f
+};
+
+void buildCube(const ds::matrix& m, ds::vec3* positions, ds::vec2* uvs, ds::vec3* normals, ds::Color* colors) {
 	for (int side = 0; side < 6; ++side) {
 		int idx = side * 4;
 		float u[4] = { 0.0f,0.0f,0.5f,0.5f };
@@ -44,6 +53,9 @@ void buildCube(const ds::matrix& m, ds::vec3* positions, ds::vec2* uvs, ds::vec3
 			positions[p] = m * CUBE_VERTICES[CUBE_PLANES[side][i]];
 			if (uvs != 0) {
 				uvs[p] = ds::vec2(u[i] + U_OFFSET[side], v[i]);
+			}
+			if (colors != 0) {
+				colors[p] = COLORS[side];
 			}
 		}
 		if (normals != 0) {
@@ -111,11 +123,12 @@ bool BinaryClock::init() {
 	ds::vec3 normals[24];
 	ds::vec3 tangents[24];
 	ds::vec2 uvs[24];
+	ds::Color colors[24];
 	ds::matrix m = ds::matIdentity();
-	buildCube(m, positions, uvs, normals);
+	buildCube(m, positions, uvs, normals, colors);
 	calculateTangents(positions, uvs, tangents, 24);
 	for (int i = 0; i < 24; ++i) {
-		_vertices[i] = Vertex(positions[i], uvs[i], normals[i], tangents[i]);
+		_vertices[i] = Vertex(positions[i], uvs[i], normals[i], tangents[i], colors[i]);
 	}
 
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 2.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
@@ -153,10 +166,11 @@ bool BinaryClock::init() {
 		{ "POSITION", 0,ds::BufferAttributeType::FLOAT3 },
 		{ "TEXCOORD", 0, ds::BufferAttributeType::FLOAT2 },
 		{ "NORMAL"  , 0, ds::BufferAttributeType::FLOAT3 },
-		{ "TANGENT" , 0 ,ds::BufferAttributeType::FLOAT3 }
+		{ "TANGENT" , 0 ,ds::BufferAttributeType::FLOAT3 },
+		{ "COLOR" , 0 ,ds::BufferAttributeType::FLOAT4 }
 	};
 
-	ds::InputLayoutInfo layoutInfo = { decl, 4, bumpVS };
+	ds::InputLayoutInfo layoutInfo = { decl, 5, bumpVS };
 	RID rid = ds::createInputLayout(layoutInfo);
 
 	_lightPos = ds::vec3(0.0f, 6.0f, -6.0f);
@@ -177,7 +191,7 @@ bool BinaryClock::init() {
 	RID ssid = ds::createSamplerState(samplerInfo);
 
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 2, -8));
+	_fpsCamera->setPosition(ds::vec3(0, 6, -6),ds::vec3(0.0f,0.0f,0.0f));
 
 	RID stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
@@ -225,7 +239,7 @@ void BinaryClock::render() {
 	ds::vec3 SCALINGS[] = { 
 		ds::vec3(1.0f,1.0f,1.0f),
 		ds::vec3(1.0f,1.0f,1.0f),
-		ds::vec3(1.0f,1.0f,1.0f),
+		ds::vec3(0.5f,0.5f,0.5f),
 		ds::vec3(1.0f,1.0f,1.0f),
 	};
 	ds::vec3 ROTATIONS[] = { 
@@ -243,34 +257,7 @@ void BinaryClock::render() {
 		srw._41 = 0.0f;
 		srw._42 = 0.0f;
 		srw._43 = 0.0f;
-		ds::matrix iw = ds::matInverse(srw);
-		
-		D3DXMATRIX m1;
-		D3DXMATRIX s1;
-		D3DXMatrixScaling(&s1, SCALINGS[i].x, SCALINGS[i].y, SCALINGS[i].z);
-		D3DXMATRIX matRotateX;
-		D3DXMATRIX matRotateY;
-		D3DXMATRIX matRotateZ;
-		D3DXMatrixRotationX(&matRotateX, ROTATIONS[i].x);
-		D3DXMatrixRotationY(&matRotateY, ROTATIONS[i].y);
-		D3DXMatrixRotationZ(&matRotateZ, ROTATIONS[i].z);
-		D3DXMATRIX matRotate = matRotateZ*matRotateY*matRotateX;
-		D3DXMATRIX w1 = s1 * matRotate;
-		D3DXMATRIX i1;
-		float d1 = D3DXMatrixDeterminant(&w1);
-		D3DXMatrixInverse(&i1, &d1, &w1);
-		/*
-		for (int y = 0; y < 4; ++y) {
-			for (int x = 0; x < 4; ++x) {
-				iw.m[x][y] = i1.m[x][y];
-			}
-		}
-		*/
-		ds::vec3 ntest = ds::vec3(1, 0, 0);
-		ds::vec3 tttt = ntest * iw;
-		//ds::log(LogLevel::LL_DEBUG,"tttt %g %g %g", tttt.x, tttt.y, tttt.z);
-		ds::matrix cmp = ds::matInverse(s * r);
-		
+		ds::matrix iw = srw;
 		_constantBuffer.invWorld = ds::matTranspose(iw);
 		ds::submit(_basicPass, _drawItem);
 	}
@@ -284,7 +271,9 @@ void BinaryClock::renderGUI() {
 	p2i sp = p2i(10, 760);
 	if (gui::begin("Debug", &state, &sp, 540)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Input("Light", &_lightPos);
+		if (gui::Input("Light", &_lightPos)) {
+			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));
+		}
 	}
 	gui::end();
 }

@@ -9,20 +9,21 @@ cbuffer cbChangesPerObject : register( b0 ) {
 };
 
 struct VS_Input {
-    float4 position  : POSITION;
+    float3 position  : POSITION;
     float2 texcoord : TEXCOORD;
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
+	float4 color : COLOR;
 };
 
 struct PS_Input {
     float4 pos  : SV_POSITION;
 	float3 PosW : POSITION;
     float2 texcoord : TEXCOORD0;
-	float3 Light : TEXCOORD1;
-	//float3 View : TEXCOORD2;
+	float3 LightDir : TEXCOORD1;
 	float3 normalW : NORMAL;
 	float3 tangentW : TANGENT;
+	float4 color : COLOR;
 };
 
 //---------------------------------------------------------------------------------------
@@ -51,13 +52,12 @@ void ComputeDirectionalLight(float3 lightDirection, float3 normal, float3 toEye,
 	ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
 	diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4 diffuseColor = float4(1.0,1.0,1.0,1.0);
-	// The light vector aims opposite the direction the light rays travel.
-	float3 lightVec = -lightDirection;
 	// Add ambient term.
 	//ambient = mat.Ambient * L.Ambient;	
 	// Add diffuse and specular term, provided the surface is in 
 	// the line of site of the light.
-	float diffuseFactor = dot(lightVec, normal);
+	//float diffuseFactor = dot(lightVec, normal);
+	float diffuseFactor = dot(lightDirection, normal);
 	// Flatten to avoid dynamic branching.
 	[flatten]
 	if( diffuseFactor > 0.0f ) {
@@ -69,16 +69,14 @@ void ComputeDirectionalLight(float3 lightDirection, float3 normal, float3 toEye,
 PS_Input VS_Main( VS_Input vertex ) {
 	float3 vecLightDir = normalize(lightPos);
     PS_Input vsOut = ( PS_Input )0;
-	//vertex.position.w = 1.0;
-	vsOut.pos = mul( vertex.position, world);
+	vsOut.pos = mul( float4(vertex.position,1.0), world);
 	vsOut.pos = mul(vsOut.pos, mvp);
     vsOut.texcoord = vertex.texcoord;
-	vsOut.PosW = mul(vertex.position, world);
-	// Pass out light and view directions, pre-normalized
-	vsOut.Light = normalize(vsOut.PosW - lightPos);
-	//vsOut.View = normalize(mul(worldToTangentSpace, eyePos - PosWorld));
-	vsOut.normalW = normalize(mul(vertex.normal, (float3x3)world)); // FIXME: use gWorldInvTranspose
-	vsOut.tangentW = normalize(mul(vertex.tangent, (float3x3)world));
+	vsOut.PosW = mul(float4(vertex.position,1.0), world);
+	vsOut.LightDir = normalize(lightPos - vsOut.PosW);
+	vsOut.normalW = normalize(mul(vertex.normal, (float3x3)invWorld)); 
+	vsOut.tangentW = normalize(mul(vertex.tangent, (float3x3)invWorld));
+	vsOut.color = vertex.color;
     return vsOut;
 }
 
@@ -86,27 +84,18 @@ Texture2D colorMap : register(t0);
 SamplerState colorSampler_ : register(s0);
 
 float4 PS_Main( PS_Input frag ) : SV_TARGET {
-	
 	float4 Color = colorMap.Sample(colorSampler_, frag.texcoord);
 	float2 nuv = frag.texcoord;
 	nuv.y += 0.5;
 	float3 normalMapSample = colorMap.Sample(colorSampler_, nuv).rgb;
 	float3 bumpedNormalW = NormalSampleToWorldSpace(normalMapSample,frag.normalW,frag.tangentW);
-
 	float4 A = float4(0.0,0.0,0.0,0.0);
 	float4 D = float4(0.0,0.0,0.0,0.0);
-
 	float3 toEye = normalize(eyePos - frag.PosW);
-	
-
-	ComputeDirectionalLight(frag.Light, bumpedNormalW, toEye, A, D);
-	//return Color*Ambient + Color * D + Color*S;
-	float3 tmp = 0.5 + 0.5 * bumpedNormalW;
-	//float3 tmp = float3(nuv,0.0);
-	//float3 tmp = 0.5 + 0.5 * frag.normalW;
-	float4 ret = Color * saturate( A + D);
+	float3 ld = normalize(frag.LightDir);
+	ComputeDirectionalLight(ld, bumpedNormalW, toEye, A, D);
+	float4 ret = Color * saturate( A + D) * frag.color;
 	ret.a = Color.a;
-	//ret = D;
 	return ret;
 }
 
