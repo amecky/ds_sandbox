@@ -902,8 +902,8 @@ namespace ds {
 	// Rotation X matrix
 	// -------------------------------------------------------
 	inline matrix matRotationX(float angle) {
-		float s = sin(angle);
-		float c = cos(angle);
+		float s = sinf(angle);
+		float c = cosf(angle);
 		matrix sm(
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, c, s, 0.0f,
@@ -917,8 +917,8 @@ namespace ds {
 	// Rotation Y matrix
 	// -------------------------------------------------------
 	inline matrix matRotationY(float angle) {
-		float s = sin(angle);
-		float c = cos(angle);
+		float s = sinf(angle);
+		float c = cosf(angle);
 		matrix sm(
 			c, 0.0f, -s, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -932,8 +932,8 @@ namespace ds {
 	// Rotation Z matrix
 	// -------------------------------------------------------
 	inline matrix matRotationZ(float angle) {
-		float s = sin(angle);
-		float c = cos(angle);
+		float s = sinf(angle);
+		float c = cosf(angle);
 		matrix sm(
 			c, s, 0.0f, 0.0f,
 			-s, c, 0.0f, 0.0f,
@@ -995,7 +995,7 @@ namespace ds {
 
 	inline matrix matPerspectiveFovLH(float fovy, float aspect, float zn, float zf) {
 		// msdn.microsoft.com/de-de/library/windows/desktop/bb205350(v=vs.85).aspx
-		float yScale = 1.0f / tan(fovy / 2.0f);
+		float yScale = 1.0f / tanf(fovy / 2.0f);
 		float xScale = yScale / aspect;
 
 		matrix tmp(
@@ -1020,9 +1020,9 @@ namespace ds {
 		float u2 = v.x * v.x;
 		float vec2 = v.y * v.y;
 		float w2 = v.z * v.z;
-		float s = sin(angle);
-		float c = cos(angle);
-		float sq = sqrt(L);
+		float s = sinf(angle);
+		float c = cosf(angle);
+		float sq = sqrtf(L);
 		matrix tmp = matIdentity();
 		tmp._11 = (u2 + (vec2 + w2) *c) / L;
 		tmp._12 = (v.x * v.y * (1 - c) - v.z * sq * s) / L;

@@ -24,6 +24,8 @@ struct BinaryClockConstantBuffer {
 	ds::matrix invWorld;
 	ds::vec3 eyePos;
 	float padding;
+	ds::vec3 lightPos;
+	float more;
 };
 
 class BinaryClock : public TestApp {
@@ -36,8 +38,10 @@ public:
 	ds::RenderSettings getRenderSettings();
 
 	bool usesGUI() {
-		return false;
+		return true;
 	}
+
+	void renderGUI();
 
 	bool init();
 
@@ -53,4 +57,5 @@ private:
 	BinaryClockConstantBuffer _constantBuffer;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
+	ds::vec3 _lightPos;
 };

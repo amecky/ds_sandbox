@@ -2,6 +2,13 @@
 #include "..\..\shaders\Bump_VS_Main.h"
 #include "..\..\shaders\Bump_PS_Main.h"
 #include <D3dx9math.h>
+#include <ds_imgui.h>
+#include <Windows.h>
+
+void bbLogHandler(const LogLevel&, const char* message) {
+	OutputDebugString(message);
+	OutputDebugString("\n");
+}
 
 const ds::vec3 CUBE_VERTICES[8] = {
 	ds::vec3(-0.5f,-0.5f,-0.5f),
@@ -95,6 +102,7 @@ ds::RenderSettings BinaryClock::getRenderSettings() {
 	rs.multisampling = 4;
 	rs.useGPUProfiling = false;
 	rs.supportDebug = false;
+	rs.logHandler = bbLogHandler;
 	return rs;
 }
 
@@ -151,10 +159,14 @@ bool BinaryClock::init() {
 	ds::InputLayoutInfo layoutInfo = { decl, 4, bumpVS };
 	RID rid = ds::createInputLayout(layoutInfo);
 
+	_lightPos = ds::vec3(0.0f, 6.0f, -6.0f);
+
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(_camera.viewProjectionMatrix);
 	_constantBuffer.worldMatrix = ds::matTranspose(ds::matIdentity());
 	_constantBuffer.eyePos = _camera.position;
+	_constantBuffer.lightPos = _lightPos;
 	_constantBuffer.padding = 0.0f;
+	_constantBuffer.more = 0.0f;
 
 	RID cbid = ds::createConstantBuffer(sizeof(BinaryClockConstantBuffer), &_constantBuffer);
 	RID indexBuffer = ds::createQuadIndexBuffer(256);
@@ -200,37 +212,38 @@ void BinaryClock::render() {
 
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(_camera.viewProjectionMatrix);
 	_constantBuffer.eyePos = _camera.position;
+	_constantBuffer.lightPos = _lightPos;
 	_constantBuffer.padding = 0.0f;
 
 	
 	ds::vec3 POSITIONS[] = { 
-		ds::vec3(-2.0f,0.0f,0.0f),
-		ds::vec3(2.0f,0.0f,0.0f), 
-		ds::vec3(0.0f,0.0f,0.0f),
-		ds::vec3(0.0f,2.0f,0.0f)
+		ds::vec3(-2.5f,2.0f,0.0f),
+		ds::vec3(-1.0f,2.0f,0.0f), 
+		ds::vec3(0.5f,2.0f,0.0f),
+		ds::vec3(2.0f,2.0f,0.0f)
 	};
 	ds::vec3 SCALINGS[] = { 
-		ds::vec3(0.5f,0.5f,0.5f),
 		ds::vec3(1.0f,1.0f,1.0f),
-		ds::vec3(0.5f,0.5f,0.5f),
+		ds::vec3(1.0f,1.0f,1.0f),
+		ds::vec3(1.0f,1.0f,1.0f),
 		ds::vec3(1.0f,1.0f,1.0f),
 	};
 	ds::vec3 ROTATIONS[] = { 
 		ds::vec3(0.0f,0.0f,0.0f),
-		ds::vec3(0.0f,1.0f,0.0f),
-		ds::vec3(0.0f,0.0f,1.0f) ,
-		ds::vec3(1.0f,0.0f,0.0f)
+		ds::vec3(0.0f,ds::PI * 0.25f,0.0f),
+		ds::vec3(0.0f,ds::PI * 0.5f,0.0f) ,
+		ds::vec3(0.0f,ds::PI * 0.75f,0.0f)
 	};
 	for (int i = 0; i < 4; ++i) {
 		ds::matrix s = ds::matScale(SCALINGS[i]);
-		ds::matrix r = ds::matRotation(ROTATIONS[i] * _timer);
+		ds::matrix r = ds::matRotation(ROTATIONS[i]);
 		ds::matrix w = ds::matTranslate(POSITIONS[i]);
 		ds::matrix srw = s * r * w;
 		_constantBuffer.worldMatrix = ds::matTranspose(srw);
 		srw._41 = 0.0f;
 		srw._42 = 0.0f;
 		srw._43 = 0.0f;
-		ds::matrix iw = ds::matInverse(s * r);
+		ds::matrix iw = ds::matInverse(srw);
 		
 		D3DXMATRIX m1;
 		D3DXMATRIX s1;
@@ -238,9 +251,9 @@ void BinaryClock::render() {
 		D3DXMATRIX matRotateX;
 		D3DXMATRIX matRotateY;
 		D3DXMATRIX matRotateZ;
-		D3DXMatrixRotationX(&matRotateX, ROTATIONS[i].x * _timer);
-		D3DXMatrixRotationY(&matRotateY, ROTATIONS[i].y * _timer);
-		D3DXMatrixRotationZ(&matRotateZ, ROTATIONS[i].z * _timer);
+		D3DXMatrixRotationX(&matRotateX, ROTATIONS[i].x);
+		D3DXMatrixRotationY(&matRotateY, ROTATIONS[i].y);
+		D3DXMatrixRotationZ(&matRotateZ, ROTATIONS[i].z);
 		D3DXMATRIX matRotate = matRotateZ*matRotateY*matRotateX;
 		D3DXMATRIX w1 = s1 * matRotate;
 		D3DXMATRIX i1;
@@ -253,6 +266,9 @@ void BinaryClock::render() {
 			}
 		}
 		*/
+		ds::vec3 ntest = ds::vec3(1, 0, 0);
+		ds::vec3 tttt = ntest * iw;
+		//ds::log(LogLevel::LL_DEBUG,"tttt %g %g %g", tttt.x, tttt.y, tttt.z);
 		ds::matrix cmp = ds::matInverse(s * r);
 		
 		_constantBuffer.invWorld = ds::matTranspose(iw);
@@ -260,4 +276,15 @@ void BinaryClock::render() {
 	}
 
 	
+}
+
+void BinaryClock::renderGUI() {
+	int state = 1;
+	gui::start();
+	p2i sp = p2i(10, 760);
+	if (gui::begin("Debug", &state, &sp, 540)) {
+		gui::Value("FPS", ds::getFramesPerSecond());
+		gui::Input("Light", &_lightPos);
+	}
+	gui::end();
 }
