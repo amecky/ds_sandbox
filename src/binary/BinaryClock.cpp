@@ -98,6 +98,27 @@ void calculateTangents(ds::vec3* positions, ds::vec2* uvs, ds::vec3* tangents, i
 	}
 }
 
+static void convert(TimeCol* columns, int index, int value) {
+	int upper = value / 10;
+	int lower = value - upper * 10;
+	if (value < 10) {
+		lower = value;
+		upper = 0;
+	}
+	for (int i = 0; i < 4; ++i) {
+		int r = 0;
+		if (upper & (1 << i)) {
+			r = 1;
+		}
+		columns[index].state[i] = r;
+		r = 0;
+		if (lower & (1 << i)) {
+			r = 1;
+		}
+		columns[index + 1].state[i] = r;
+	}
+}
+
 BinaryClock::BinaryClock() {
 }
 
@@ -191,7 +212,7 @@ bool BinaryClock::init() {
 	RID ssid = ds::createSamplerState(samplerInfo);
 
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 6, -6),ds::vec3(0.0f,0.0f,0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, 0, -8),ds::vec3(0.0f,0.0f,0.0f));
 
 	RID stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
@@ -213,6 +234,28 @@ bool BinaryClock::init() {
 
 	_timer = ds::PI;
 
+	_rotate = false;
+
+	for (int i = 0; i < 6; ++i) {
+		TimeCol& col = _columns[i];
+		col.num = 4;
+		col.state[0] = 0;
+		col.state[1] = 1;
+		col.state[2] = 0;
+		col.state[3] = 2;
+	}
+
+	SYSTEMTIME lt;
+
+	GetLocalTime(&lt);
+	convert(_columns, 0, lt.wHour);
+	convert(_columns, 2, lt.wMinute);
+	convert(_columns, 4, lt.wSecond);
+
+	_columns[0].num = 2;
+	_columns[2].num = 3;
+	_columns[4].num = 3;
+
 	return true;
 
 }
@@ -220,6 +263,13 @@ bool BinaryClock::init() {
 void BinaryClock::tick(float dt) {
 	_fpsCamera->update(dt);
 	_timer += dt;
+
+	SYSTEMTIME lt;
+	GetLocalTime(&lt);
+
+	convert(_columns, 0, lt.wHour);
+	convert(_columns, 2, lt.wMinute);
+	convert(_columns, 4, lt.wSecond);
 }
 
 void BinaryClock::render() {
@@ -229,39 +279,68 @@ void BinaryClock::render() {
 	_constantBuffer.lightPos = _lightPos;
 	_constantBuffer.padding = 0.0f;
 
-	
-	ds::vec3 POSITIONS[] = { 
-		ds::vec3(-2.5f,2.0f,0.0f),
-		ds::vec3(-1.0f,2.0f,0.0f), 
-		ds::vec3(0.5f,2.0f,0.0f),
-		ds::vec3(2.0f,2.0f,0.0f)
-	};
-	ds::vec3 SCALINGS[] = { 
-		ds::vec3(1.0f,1.0f,1.0f),
-		ds::vec3(1.0f,1.0f,1.0f),
-		ds::vec3(0.5f,0.5f,0.5f),
-		ds::vec3(1.0f,1.0f,1.0f),
-	};
-	ds::vec3 ROTATIONS[] = { 
-		ds::vec3(0.0f,0.0f,0.0f),
-		ds::vec3(0.0f,ds::PI * 0.25f,0.0f),
-		ds::vec3(0.0f,ds::PI * 0.5f,0.0f) ,
-		ds::vec3(0.0f,ds::PI * 0.75f,0.0f)
-	};
-	for (int i = 0; i < 4; ++i) {
-		ds::matrix s = ds::matScale(SCALINGS[i]);
-		ds::matrix r = ds::matRotation(ROTATIONS[i]);
-		ds::matrix w = ds::matTranslate(POSITIONS[i]);
-		ds::matrix srw = s * r * w;
-		_constantBuffer.worldMatrix = ds::matTranspose(srw);
-		srw._41 = 0.0f;
-		srw._42 = 0.0f;
-		srw._43 = 0.0f;
-		ds::matrix iw = srw;
-		_constantBuffer.invWorld = ds::matTranspose(iw);
-		ds::submit(_basicPass, _drawItem);
+	float xp = -3.0f;
+	for (int j = 0; j < 6; ++j) {
+		const TimeCol& col = _columns[j];
+		xp += 0.6f;
+		if (j % 2 == 0) {
+			xp += 0.3f;
+		}
+		float yp = -2.0f;
+		for (int i = 0; i < col.num; ++i) {			
+			float sc = 0.5f;
+			ds::vec3 scale = ds::vec3(sc, sc, sc);
+			ds::matrix s = ds::matScale(scale);
+			ds::vec3 rot = ds::vec3(0.0f);
+			if (col.state[i] == 0) {
+				rot.y = 0.5f * ds::PI;
+			}
+			else {
+				rot.y = 0.0f;
+			}
+			ds::matrix r = ds::matRotation(rot);
+			ds::vec3 p = ds::vec3(xp, yp, 0.0f);
+			ds::matrix w = ds::matTranslate(p);
+			ds::matrix srw = s * r * w;
+			_constantBuffer.worldMatrix = ds::matTranspose(srw);
+			srw._41 = 0.0f;
+			srw._42 = 0.0f;
+			srw._43 = 0.0f;
+			ds::matrix iw = srw;
+			_constantBuffer.invWorld = ds::matTranspose(iw);						
+			ds::submit(_basicPass, _drawItem);
+			yp += 0.6f;
+		}
 	}
-
+	/*
+	float yp = -1.5f;
+	for (int j = 0; j < 3; ++j) {		
+		for (int i = 0; i < 4; ++i) {
+			float sc = 1.0f - 0.2f * i;
+			ds::vec3 scale = ds::vec3(sc, sc, sc);
+			ds::matrix s = ds::matScale(scale);
+			ds::vec3 rot = ds::vec3(0.0f);
+			if (_rotate) {
+				rot.data[j] = i * 0.25f * ds::PI + _timer;
+			}
+			else {
+				rot.data[j] = i * 0.25f * ds::PI;
+			}
+			ds::matrix r = ds::matRotation(rot);
+			ds::vec3 p = ds::vec3(-2.5f + i * 1.5f, yp, 0.0f);
+			ds::matrix w = ds::matTranslate(p);
+			ds::matrix srw = s * r * w;
+			_constantBuffer.worldMatrix = ds::matTranspose(srw);
+			srw._41 = 0.0f;
+			srw._42 = 0.0f;
+			srw._43 = 0.0f;
+			ds::matrix iw = srw;
+			_constantBuffer.invWorld = ds::matTranspose(iw);
+			ds::submit(_basicPass, _drawItem);
+		}
+		yp += 1.5f;
+	}
+	*/
 	
 }
 
@@ -273,6 +352,9 @@ void BinaryClock::renderGUI() {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		if (gui::Input("Light", &_lightPos)) {
 			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));
+		}
+		if (gui::Button("Rotate")) {
+			_rotate = !_rotate;
 		}
 	}
 	gui::end();

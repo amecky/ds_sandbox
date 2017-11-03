@@ -1,6 +1,12 @@
 #pragma once
 #include "..\TestApp.h"
 #include "..\kenney\Camera.h"
+
+struct TimeCol {
+	int state[4];
+	int num;
+};
+
 // ---------------------------------------------------------------
 // Vertex
 // ---------------------------------------------------------------
@@ -59,4 +65,6 @@ private:
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightPos;
+	bool _rotate;
+	TimeCol _columns[6];
 };
