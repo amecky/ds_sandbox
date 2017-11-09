@@ -12,7 +12,7 @@ void bbLogHandler(const LogLevel&, const char* message) {
 }
 
 const ds::Color COLORS[] = {
-	ds::Color(1.0f,0.0f,0.0f,1.0f),
+	ds::Color(1.0f,1.0f,1.0f,1.0f),
 	ds::Color(0.0f,1.0f,0.0f,1.0f),
 	ds::Color(0.0f,0.0f,1.0f,1.0f),
 	ds::Color(1.0f,1.0f,0.0f,1.0f),
@@ -89,13 +89,13 @@ ds::RenderSettings BinaryClock::getRenderSettings() {
 
 bool BinaryClock::init() {
 	
-	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 2.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 1.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
 	_camera = {
 		viewMatrix,
 		projectionMatrix,
 		viewMatrix * projectionMatrix,
-		ds::vec3(0,2,-3),
+		ds::vec3(0,1,-3),
 		ds::vec3(0,0,1),
 		ds::vec3(0,1,0),
 		ds::vec3(1,0,0),
@@ -149,7 +149,7 @@ bool BinaryClock::init() {
 	RID ssid = ds::createSamplerState(samplerInfo);
 
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 0, -8),ds::vec3(0.0f,0.0f,0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, 0, -5),ds::vec3(0.0f,0.0f,0.0f));
 
 	RID stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
@@ -247,14 +247,14 @@ void BinaryClock::render() {
 	_constantBuffer.lightPos = _lightPos;
 	_constantBuffer.padding = 0.0f;
 
-	float xp = -3.0f;
+	float xp = -2.75f;
 	for (int j = 0; j < 6; ++j) {
 		const TimeCol& col = _columns[j];
 		xp += 0.6f;
 		if (j % 2 == 0) {
 			xp += 0.3f;
 		}
-		float yp = -2.0f;
+		float yp = -1.0f;
 		for (int i = 0; i < col.num; ++i) {			
 			float sc = 0.5f;
 			ds::vec3 scale = ds::vec3(sc, sc, sc);
@@ -275,36 +275,6 @@ void BinaryClock::render() {
 			yp += 0.6f;
 		}
 	}
-	/*
-	float yp = -1.5f;
-	for (int j = 0; j < 3; ++j) {		
-		for (int i = 0; i < 4; ++i) {
-			float sc = 1.0f - 0.2f * i;
-			ds::vec3 scale = ds::vec3(sc, sc, sc);
-			ds::matrix s = ds::matScale(scale);
-			ds::vec3 rot = ds::vec3(0.0f);
-			if (_rotate) {
-				rot.data[j] = i * 0.25f * ds::PI + _timer;
-			}
-			else {
-				rot.data[j] = i * 0.25f * ds::PI;
-			}
-			ds::matrix r = ds::matRotation(rot);
-			ds::vec3 p = ds::vec3(-2.5f + i * 1.5f, yp, 0.0f);
-			ds::matrix w = ds::matTranslate(p);
-			ds::matrix srw = s * r * w;
-			_constantBuffer.worldMatrix = ds::matTranspose(srw);
-			srw._41 = 0.0f;
-			srw._42 = 0.0f;
-			srw._43 = 0.0f;
-			ds::matrix iw = srw;
-			_constantBuffer.invWorld = ds::matTranspose(iw);
-			ds::submit(_basicPass, _drawItem);
-		}
-		yp += 1.5f;
-	}
-	*/
-	
 }
 
 void BinaryClock::renderGUI() {
@@ -316,6 +286,7 @@ void BinaryClock::renderGUI() {
 		if (gui::Input("Light", &_lightPos)) {
 			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));
 		}
+		/*
 		if (_running) {
 			if (gui::Button("Stop")) {
 				_running = false;
@@ -335,6 +306,7 @@ void BinaryClock::renderGUI() {
 				gui::FormattedText("%d %d %g", col.state[i], col.flipping[i], col.angle[i] * 360.0f / ds::TWO_PI);
 			}
 		}
+		*/
 	}
 	gui::end();
 }
