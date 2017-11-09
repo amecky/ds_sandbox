@@ -5,6 +5,9 @@
 struct TimeCol {
 	int state[4];
 	int num;
+	float timer[4];
+	int flipping[4];
+	float angle[4];
 };
 
 // ---------------------------------------------------------------
@@ -66,5 +69,7 @@ private:
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightPos;
 	bool _rotate;
+	bool _running;
 	TimeCol _columns[6];
+	SYSTEMTIME _systemTime;
 };

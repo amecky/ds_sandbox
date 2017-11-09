@@ -4,31 +4,12 @@
 #include <D3dx9math.h>
 #include <ds_imgui.h>
 #include <Windows.h>
+#include "..\Mesh.h"
 
 void bbLogHandler(const LogLevel&, const char* message) {
 	OutputDebugString(message);
 	OutputDebugString("\n");
 }
-
-const ds::vec3 CUBE_VERTICES[8] = {
-	ds::vec3(-0.5f,-0.5f,-0.5f),
-	ds::vec3(-0.5f, 0.5f,-0.5f),
-	ds::vec3(0.5f, 0.5f,-0.5f),
-	ds::vec3(0.5f,-0.5f,-0.5f),
-	ds::vec3(-0.5f,-0.5f, 0.5f),
-	ds::vec3(-0.5f, 0.5f, 0.5f),
-	ds::vec3(0.5f, 0.5f, 0.5f),
-	ds::vec3(0.5f,-0.5f, 0.5f)
-};
-
-const int CUBE_PLANES[6][4] = {
-	{ 0, 1, 2, 3 }, // front
-	{ 3, 2, 6, 7 }, // left
-	{ 1, 5, 6, 2 }, // top
-	{ 4, 5, 1, 0 }, // right
-	{ 4, 0, 3, 7 }, // bottom
-	{ 7, 6, 5, 4 }, // back
-};
 
 const ds::Color COLORS[] = {
 	ds::Color(1.0f,0.0f,0.0f,1.0f),
@@ -39,66 +20,7 @@ const ds::Color COLORS[] = {
 	ds::Color(1.0f,1.0f,1.0f,1.0f),
 };
 
-const float U_OFFSET[] = {
-	0.0f,0.0f,0.0f,0.0f,0.0f,0.0f
-};
-
-void buildCube(const ds::matrix& m, ds::vec3* positions, ds::vec2* uvs, ds::vec3* normals, ds::Color* colors) {
-	for (int side = 0; side < 6; ++side) {
-		int idx = side * 4;
-		float u[4] = { 0.0f,0.0f,0.5f,0.5f };
-		float v[4] = { 0.5f,0.0f,0.0f,0.5f };
-		for (int i = 0; i < 4; ++i) {
-			int p = idx + i;
-			positions[p] = m * CUBE_VERTICES[CUBE_PLANES[side][i]];
-			if (uvs != 0) {
-				uvs[p] = ds::vec2(u[i] + U_OFFSET[side], v[i]);
-			}
-			if (colors != 0) {
-				colors[p] = COLORS[side];
-			}
-		}
-		if (normals != 0) {
-			ds::vec3 d0 = positions[idx + 1] - positions[idx];
-			ds::vec3 d1 = positions[idx + 2] - positions[idx];
-			ds::vec3 c = cross(d0, d1);
-			for (int i = 0; i < 4; ++i) {
-				normals[idx + i] = c;
-			}
-		}
-	}
-}
-
-void calculateTangents(ds::vec3* positions, ds::vec2* uvs, ds::vec3* tangents, int num) {
-	int steps = num / 4;
-	for (int i = 0; i < steps; ++i) {
-		// Shortcuts for vertices
-		ds::vec3& vp0 = positions[i * 4 + 0];
-		ds::vec3& vp1 = positions[i * 4 + 1];
-		ds::vec3& vp2 = positions[i * 4 + 2];
-
-		// Shortcuts for UVs
-		ds::vec2 uv0 = uvs[i * 4 + 0];
-		ds::vec2 uv1 = uvs[i * 4 + 1];
-		ds::vec2 uv2 = uvs[i * 4 + 2];
-
-		// Edges of the triangle : postion delta
-		ds::vec3 deltaPos1 = vp1 - vp0;
-		ds::vec3 deltaPos2 = vp2 - vp0;
-
-		// UV delta
-		ds::vec2 deltaUV1 = uv1 - uv0;
-		ds::vec2 deltaUV2 = uv2 - uv0;
-		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-		ds::vec3 tangent = normalize((deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r);
-		tangents[i * 4] = tangent;
-		tangents[i * 4 + 1] = tangent;
-		tangents[i * 4 + 2] = tangent;
-		tangents[i * 4 + 3] = tangent;
-	}
-}
-
-static void convert(TimeCol* columns, int index, int value) {
+static void convert(TimeCol* columns, int index, int value, bool flip = true) {
 	int upper = value / 10;
 	int lower = value - upper * 10;
 	if (value < 10) {
@@ -106,16 +28,42 @@ static void convert(TimeCol* columns, int index, int value) {
 		upper = 0;
 	}
 	for (int i = 0; i < 4; ++i) {
+		int curUpper = columns[index].state[i];
+		int curLower = columns[index + 1].state[i];
 		int r = 0;
 		if (upper & (1 << i)) {
 			r = 1;
 		}
 		columns[index].state[i] = r;
+		if (r != curUpper && flip) {
+			if (r == 1) {
+				columns[index].flipping[i] = 1;
+			}
+			else {
+				columns[index].flipping[i] = -1;
+			}
+			columns[index].timer[i] = 0.0f;
+		}
+		if (!flip) {
+			columns[index].angle[i] = r * ds::PI * 0.5f;
+		}
 		r = 0;
 		if (lower & (1 << i)) {
 			r = 1;
 		}
+		if (r != curLower && flip) {
+			if (r == 1) {
+				columns[index + 1].flipping[i] = 1;
+			}
+			else {
+				columns[index + 1].flipping[i] = -1;
+			}
+			columns[index + 1].timer[i] = 0.0f;
+		}
 		columns[index + 1].state[i] = r;
+		if (!flip) {
+			columns[index + 1].angle[i] = r * ds::PI * 0.5f;
+		}
 	}
 }
 
@@ -140,18 +88,7 @@ ds::RenderSettings BinaryClock::getRenderSettings() {
 }
 
 bool BinaryClock::init() {
-	ds::vec3 positions[24];
-	ds::vec3 normals[24];
-	ds::vec3 tangents[24];
-	ds::vec2 uvs[24];
-	ds::Color colors[24];
-	ds::matrix m = ds::matIdentity();
-	buildCube(m, positions, uvs, normals, colors);
-	calculateTangents(positions, uvs, tangents, 24);
-	for (int i = 0; i < 24; ++i) {
-		_vertices[i] = Vertex(positions[i], uvs[i], normals[i], tangents[i], colors[i]);
-	}
-
+	
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 2.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
 	_camera = {
@@ -183,17 +120,6 @@ bool BinaryClock::init() {
 	ds::ShaderInfo bumpPSInfo = { 0, Bump_PS_Main, sizeof(Bump_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
 	RID bumpPS = ds::createShader(bumpPSInfo);
 
-	ds::InputLayoutDefinition decl[] = {
-		{ "POSITION", 0,ds::BufferAttributeType::FLOAT3 },
-		{ "TEXCOORD", 0, ds::BufferAttributeType::FLOAT2 },
-		{ "NORMAL"  , 0, ds::BufferAttributeType::FLOAT3 },
-		{ "TANGENT" , 0 ,ds::BufferAttributeType::FLOAT3 },
-		{ "COLOR" , 0 ,ds::BufferAttributeType::FLOAT4 }
-	};
-
-	ds::InputLayoutInfo layoutInfo = { decl, 5, bumpVS };
-	RID rid = ds::createInputLayout(layoutInfo);
-
 	_lightPos = ds::vec3(0.0f, 6.0f, -6.0f);
 
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(_camera.viewProjectionMatrix);
@@ -205,8 +131,19 @@ bool BinaryClock::init() {
 
 	RID cbid = ds::createConstantBuffer(sizeof(BinaryClockConstantBuffer), &_constantBuffer);
 	RID indexBuffer = ds::createQuadIndexBuffer(256);
-	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, 24, sizeof(Vertex), _vertices };
-	RID cubeBuffer = ds::createVertexBuffer(vbInfo);
+
+	Mesh mesh;
+	mesh.createCube();
+	mesh.calculateTangents(0, 1);
+	ds::Color* clr = new ds::Color[24];
+	for (int i = 0; i < 24; ++i) {
+		clr[i] = COLORS[i / 4];
+	}
+	mesh.addStream(AT_COLOR, (float*)clr, 24, 4);	
+	mesh.scaleStream(1, 0.5f);
+	RID cubeBuffer = mesh.assemble();
+
+	RID rid = mesh.createInputLayout(bumpVS);
 
 	ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, ds::TextureFilters::LINEAR };
 	RID ssid = ds::createSamplerState(samplerInfo);
@@ -243,33 +180,64 @@ bool BinaryClock::init() {
 		col.state[1] = 1;
 		col.state[2] = 0;
 		col.state[3] = 2;
+		for (int j = 0; j < 4; ++j) {
+			col.timer[j] = 0.0f;
+			col.flipping[j] = 0;
+			col.angle[j] = 0.0f;
+		}
 	}
 
-	SYSTEMTIME lt;
-
-	GetLocalTime(&lt);
-	convert(_columns, 0, lt.wHour);
-	convert(_columns, 2, lt.wMinute);
-	convert(_columns, 4, lt.wSecond);
+	GetLocalTime(&_systemTime);
+	convert(_columns, 0, _systemTime.wHour, false);
+	convert(_columns, 2, _systemTime.wMinute, false);
+	convert(_columns, 4, _systemTime.wSecond, false);
 
 	_columns[0].num = 2;
 	_columns[2].num = 3;
 	_columns[4].num = 3;
 
+	_running = true;
+
+	
 	return true;
 
 }
 
 void BinaryClock::tick(float dt) {
 	_fpsCamera->update(dt);
-	_timer += dt;
+	if (_running) {
+		_timer += dt;
+		
+		GetLocalTime(&_systemTime);
 
-	SYSTEMTIME lt;
-	GetLocalTime(&lt);
-
-	convert(_columns, 0, lt.wHour);
-	convert(_columns, 2, lt.wMinute);
-	convert(_columns, 4, lt.wSecond);
+		convert(_columns, 0, _systemTime.wHour);
+		convert(_columns, 2, _systemTime.wMinute);
+		convert(_columns, 4, _systemTime.wSecond);
+	
+		for (int i = 0; i < 6; ++i) {
+			TimeCol& col = _columns[i];
+			for (int j = 0; j < 4; ++j) {
+				if (col.flipping[j] == 1) {
+					col.timer[j] += dt;
+					col.angle[j] = col.timer[j] / 0.2f * ds::PI * 0.5f;
+					if (col.timer[j] > 0.2f) {
+						col.flipping[j] = 0;
+						col.timer[j] = 0.0f;
+						col.angle[j] = col.state[j] * ds::PI * 0.5f;
+					}
+				}
+				else if (col.flipping[j] == -1) {
+					col.timer[j] += dt;
+					col.angle[j] = (0.2f - col.timer[j] / 0.2f) * ds::PI * 0.5f;
+					if (col.timer[j] > 0.2f) {
+						col.flipping[j] = 0;
+						col.timer[j] = 0.0f;
+						col.angle[j] = col.state[j] * ds::PI * 0.5f;
+					}
+				}
+			}
+		}
+	}
 }
 
 void BinaryClock::render() {
@@ -291,13 +259,8 @@ void BinaryClock::render() {
 			float sc = 0.5f;
 			ds::vec3 scale = ds::vec3(sc, sc, sc);
 			ds::matrix s = ds::matScale(scale);
-			ds::vec3 rot = ds::vec3(0.0f);
-			if (col.state[i] == 0) {
-				rot.y = 0.5f * ds::PI;
-			}
-			else {
-				rot.y = 0.0f;
-			}
+			ds::vec3 rot = ds::vec3(0.0f);		
+			rot.y = col.angle[i];
 			ds::matrix r = ds::matRotation(rot);
 			ds::vec3 p = ds::vec3(xp, yp, 0.0f);
 			ds::matrix w = ds::matTranslate(p);
@@ -348,13 +311,29 @@ void BinaryClock::renderGUI() {
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &state, &sp, 540)) {
+	if (gui::begin("Debug", &state, &sp, 300)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		if (gui::Input("Light", &_lightPos)) {
 			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));
 		}
-		if (gui::Button("Rotate")) {
-			_rotate = !_rotate;
+		if (_running) {
+			if (gui::Button("Stop")) {
+				_running = false;
+			}
+		}
+		else {
+			if (gui::Button("Start")) {
+				_running = true;
+			}
+		}		
+		gui::Value("Hours", _systemTime.wHour);
+		gui::Value("Minutes", _systemTime.wMinute);
+		gui::Value("Seconds", _systemTime.wSecond);
+		for (int j = 0; j < 6; ++j) {
+			const TimeCol& col = _columns[j];
+			for (int i = 0; i < col.num; ++i) {
+				gui::FormattedText("%d %d %g", col.state[i], col.flipping[i], col.angle[i] * 360.0f / ds::TWO_PI);
+			}
 		}
 	}
 	gui::end();

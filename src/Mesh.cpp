@@ -1,0 +1,237 @@
+#include "Mesh.h"
+
+const ds::vec3 CUBE_VERTICES[8] = {
+	ds::vec3(-0.5f,-0.5f,-0.5f),
+	ds::vec3(-0.5f, 0.5f,-0.5f),
+	ds::vec3(0.5f, 0.5f,-0.5f),
+	ds::vec3(0.5f,-0.5f,-0.5f),
+	ds::vec3(-0.5f,-0.5f, 0.5f),
+	ds::vec3(-0.5f, 0.5f, 0.5f),
+	ds::vec3(0.5f, 0.5f, 0.5f),
+	ds::vec3(0.5f,-0.5f, 0.5f)
+};
+
+const int CUBE_PLANES[6][4] = {
+	{ 0, 1, 2, 3 }, // front
+	{ 3, 2, 6, 7 }, // left
+	{ 1, 5, 6, 2 }, // top
+	{ 4, 5, 1, 0 }, // right
+	{ 4, 0, 3, 7 }, // bottom
+	{ 7, 6, 5, 4 }, // back
+};
+
+Mesh::Mesh() {
+}
+
+
+Mesh::~Mesh() {
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		delete[] _streams[i].data;
+	}
+}
+
+void subDivide(ds::vec3 *&dest, const ds::vec3 &v0, const ds::vec3 &v1, const ds::vec3 &v2, int level) {
+	if (level) {
+		level--;
+		ds::vec3 v3 = normalize(v0 + v1);
+		ds::vec3 v4 = normalize(v1 + v2);
+		ds::vec3 v5 = normalize(v2 + v0);
+
+		subDivide(dest, v0, v3, v5, level);
+		subDivide(dest, v3, v4, v5, level);
+		subDivide(dest, v3, v1, v4, level);
+		subDivide(dest, v5, v4, v2, level);
+	}
+	else {
+		*dest++ = v0;
+		*dest++ = v1;
+		*dest++ = v2;
+	}
+}
+
+void Mesh::createCube() {
+	ds::vec3* vertices = new ds::vec3[24];
+	for (int side = 0; side < 6; ++side) {
+		int idx = side * 4;
+		for (int i = 0; i < 4; ++i) {
+			int p = idx + i;
+			vertices[p] = CUBE_VERTICES[CUBE_PLANES[side][i]];
+		}
+	}
+	addStream(AT_VERTEX, (float*)vertices, 24, 3);
+
+	ds::vec2* uvs = new ds::vec2[24];
+	for (int side = 0; side < 6; ++side) {
+		int idx = side * 4;
+		float u[4] = { 0.0f,0.0f,1.0f,1.0f };
+		float v[4] = { 1.0f,0.0f,0.0f,1.0f };
+		for (int i = 0; i < 4; ++i) {
+			int p = idx + i;
+			uvs[p] = ds::vec2(u[i], v[i]);
+		}
+	}
+	addStream(AT_UV, (float*)uvs, 24, 2);
+
+	ds::vec3* normals = new ds::vec3[24];
+	for (int side = 0; side < 6; ++side) {
+		int idx = side * 4;
+		for (int i = 0; i < 4; ++i) {
+			ds::vec3 d0 = vertices[idx + 1] - vertices[idx];
+			ds::vec3 d1 = vertices[idx + 2] - vertices[idx];
+			ds::vec3 c = cross(d0, d1);
+			for (int i = 0; i < 4; ++i) {
+				normals[idx + i] = c;
+			}
+		}
+	}
+	addStream(AT_NORMAL, (float*)normals, 24, 3);
+}
+
+void Mesh::createSphere(const int subDivLevel) {
+	const int nVertices = 8 * 3 * (1 << (2 * subDivLevel));
+
+	ds::vec3 *vertices = new ds::vec3[nVertices];
+
+	// Tessellate a octahedron
+	ds::vec3 px0(-1, 0, 0);
+	ds::vec3 px1(1, 0, 0);
+	ds::vec3 py0(0, -1, 0);
+	ds::vec3 py1(0, 1, 0);
+	ds::vec3 pz0(0, 0, -1);
+	ds::vec3 pz1(0, 0, 1);
+
+	ds::vec3 *dest = vertices;
+	subDivide(dest, py0, px0, pz0, subDivLevel);
+	subDivide(dest, py0, pz0, px1, subDivLevel);
+	subDivide(dest, py0, px1, pz1, subDivLevel);
+	subDivide(dest, py0, pz1, px0, subDivLevel);
+	subDivide(dest, py1, pz0, px0, subDivLevel);
+	subDivide(dest, py1, px0, pz1, subDivLevel);
+	subDivide(dest, py1, pz1, px1, subDivLevel);
+	subDivide(dest, py1, px1, pz0, subDivLevel);
+
+	addStream(AT_VERTEX, (float*)vertices, nVertices, 3);
+
+}
+
+int Mesh::addStream(AttributeType type, float* data, int size, int components) {
+	Stream s;
+	s.data = data;
+	s.nComponents = components;
+	s.num = size;
+	s.type = type;
+	_streams.push_back(s);
+	return _streams.size() - 1;
+}
+
+RID Mesh::assemble() {
+	int maxSize = 0;
+	int totalComponents = 0;
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		totalComponents += _streams[i].nComponents;
+		if (_streams[i].num > maxSize) {
+			maxSize = _streams[i].num;
+		}
+	}
+	float* data = new float[maxSize * totalComponents];
+	int offset = 0;
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		int steps = _streams[i].num;// *_streams[i].nComponents;
+		//ds::log(LogLevel::LL_DEBUG, "(%d) steps %d", i, steps);
+		for (int j = 0; j < steps; ++j) {
+			for (int n = 0; n < _streams[i].nComponents; ++n) {
+				data[j * totalComponents + n + offset] = _streams[i].data[j * _streams[i].nComponents + n];
+			}
+		}		
+		offset += _streams[i].nComponents;
+	}
+	/*
+	for (int i = 0; i < maxSize; ++i) {
+		ds::log(LogLevel::LL_DEBUG, "--------------------------------------");
+		for (int j = 0; j < totalComponents; ++j) {
+			ds::log(LogLevel::LL_DEBUG, "%d %g", i, data[i * totalComponents + j]);
+		}
+	}
+	*/
+	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, maxSize, totalComponents * sizeof(float), data };
+	return ds::createVertexBuffer(vbInfo);
+}
+
+void Mesh::scaleStream(int streamID, float scale) {
+	const Stream& s = _streams[streamID];
+	for (int i = 0; i < s.num; ++i) {
+		for (int j = 0; j < s.nComponents; ++j) {
+			s.data[i * s.nComponents + j] *= scale;
+		}
+	}
+}
+
+void Mesh::calculateTangents(int posStream, int uvStream) {
+	const Stream& s = _streams[uvStream];
+	const Stream& sp = _streams[posStream];
+	int steps = s.num / 4;
+	ds::vec3* tangents = new ds::vec3[s.num];
+	for (int i = 0; i < steps; ++i) {
+		// Shortcuts for vertices
+		ds::vec3 vp0 = ds::vec3(sp.data[i * 4 * 3 + 0], sp.data[i * 4 * 3 + 1], sp.data[i * 4 * 3 + 2]);
+		ds::vec3 vp1 = ds::vec3(sp.data[i * 4 * 3 + 3], sp.data[i * 4 * 3 + 4], sp.data[i * 4 * 3 + 5]);
+		ds::vec3 vp2 = ds::vec3(sp.data[i * 4 * 3 + 6], sp.data[i * 4 * 3 + 7], sp.data[i * 4 * 3 + 8]);
+
+		// Shortcuts for vertices
+		ds::vec2 uv0 = ds::vec2(s.data[i * 4 * 2 + 0], s.data[i * 4 * 2 + 1]);
+		ds::vec2 uv1 = ds::vec2(s.data[i * 4 * 2 + 2], s.data[i * 4 * 2 + 3]);
+		ds::vec2 uv2 = ds::vec2(s.data[i * 4 * 2 + 4], s.data[i * 4 * 2 + 5]);
+
+		// Edges of the triangle : postion delta
+		ds::vec3 deltaPos1 = vp1 - vp0;
+		ds::vec3 deltaPos2 = vp2 - vp0;
+
+		// UV delta
+		ds::vec2 deltaUV1 = uv1 - uv0;
+		ds::vec2 deltaUV2 = uv2 - uv0;
+		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+		ds::vec3 tangent = normalize((deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r);
+		tangents[i * 4] = tangent;
+		tangents[i * 4 + 1] = tangent;
+		tangents[i * 4 + 2] = tangent;
+		tangents[i * 4 + 3] = tangent;
+	}
+	addStream(AT_TANGENT, (float*)tangents, s.num, 3);
+}
+
+RID Mesh::createInputLayout(RID vertexShaderId) {
+	ds::InputLayoutDefinition* decl = new ds::InputLayoutDefinition[_streams.size()];
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		if (_streams[i].type == AT_VERTEX) {
+			decl[i] = { "POSITION", 0, ds::BufferAttributeType::FLOAT3 };
+		}
+		else if (_streams[i].type == AT_UV) {
+			decl[i] = { "TEXCOORD", 0, ds::BufferAttributeType::FLOAT2 };
+		}
+		else if (_streams[i].type == AT_NORMAL) {
+			decl[i] = { "NORMAL", 0, ds::BufferAttributeType::FLOAT3 };
+		}
+		else if (_streams[i].type == AT_TANGENT) {
+			decl[i] = { "TANGENT" , 0 ,ds::BufferAttributeType::FLOAT3 };
+		}
+		else if (_streams[i].type == AT_COLOR) {
+			decl[i] = { "COLOR", 0, ds::BufferAttributeType::FLOAT4 };
+		};
+	}
+	ds::InputLayoutInfo layoutInfo = { decl, _streams.size(), vertexShaderId };
+	return ds::createInputLayout(layoutInfo);
+}
+/*
+BatchID Model::addBatch(const uint startIndex, const uint nIndices) {
+	Batch batch;
+
+	batch.startIndex = startIndex;
+	batch.nIndices = nIndices;
+	//	batch.startVertex = startVertex;
+	//	batch.nVertices = nVertices;
+	batch.startVertex = 0;
+	batch.nVertices = 0;
+
+	return batches.add(batch);
+}
+*/

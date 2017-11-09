@@ -39,6 +39,7 @@
     <ClInclude Include="src\kenney\Scene.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
+    <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\ParticlePluginTest.h" />
     <ClInclude Include="src\particles\ParticleExpressionTest.h" />
     <ClInclude Include="src\particles\Particles.h" />
@@ -66,6 +67,7 @@
     <ClCompile Include="src\kenney\Scene.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\ParticlePluginTest.cpp" />
     <ClCompile Include="src\particles\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\plugins\logger.cpp" />
