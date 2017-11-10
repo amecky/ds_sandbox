@@ -13,9 +13,9 @@ const ds::vec3 CUBE_VERTICES[8] = {
 
 const int CUBE_PLANES[6][4] = {
 	{ 0, 1, 2, 3 }, // front
-	{ 3, 2, 6, 7 }, // left
+	{ 3, 2, 6, 7 }, // right
 	{ 1, 5, 6, 2 }, // top
-	{ 4, 5, 1, 0 }, // right
+	{ 4, 5, 1, 0 }, // left
 	{ 4, 0, 3, 7 }, // bottom
 	{ 7, 6, 5, 4 }, // back
 };
@@ -25,9 +25,14 @@ Mesh::Mesh() {
 
 
 Mesh::~Mesh() {
+	clear();
+}
+
+void Mesh::clear() {
 	for (size_t i = 0; i < _streams.size(); ++i) {
 		delete[] _streams[i].data;
 	}
+	_streams.clear();
 }
 
 void subDivide(ds::vec3 *&dest, const ds::vec3 &v0, const ds::vec3 &v1, const ds::vec3 &v2, int level) {
@@ -235,3 +240,44 @@ BatchID Model::addBatch(const uint startIndex, const uint nIndices) {
 	return batches.add(batch);
 }
 */
+
+void Mesh::save(const char* fileName) {
+	FILE* fp = fopen(fileName, "wb");
+	if (fp) {
+		int nr = _streams.size();
+		fwrite(&nr, sizeof(int), 1, fp);
+		for (size_t i = 0; i < _streams.size(); ++i) {
+			const Stream& s = _streams[i];
+			fwrite(&s.num, sizeof(uint32_t), 1, fp);
+			fwrite(&s.nComponents, sizeof(int), 1, fp);
+			fwrite(&s.type, sizeof(AttributeType), 1, fp);
+			fwrite(s.data, sizeof(float), s.num * s.nComponents, fp);
+		}
+		fclose(fp);
+	}
+}
+
+void Mesh::load(const char* fileName) {
+	clear();
+	FILE* fp = fopen(fileName, "rb");
+	if (fp) {
+		int nr = 0;
+		fread(&nr, sizeof(int), 1, fp);
+		ds::log(LogLevel::LL_DEBUG, "nr: %d", nr);
+		for (size_t i = 0; i < nr; ++i) {
+			uint32_t num = 0;
+			fread(&num, sizeof(uint32_t), 1, fp);
+			ds::log(LogLevel::LL_DEBUG, "%d num: %d", i, num);
+			int nc = 0;
+			fread(&nc, sizeof(int), 1, fp);
+			ds::log(LogLevel::LL_DEBUG, "%d nc: %d", i, nc);
+			AttributeType type;
+			fread(&type, sizeof(AttributeType), 1, fp);
+			ds::log(LogLevel::LL_DEBUG, "%d type: %d", i, type);
+			float* data = new float[num * nc];
+			fread(data, sizeof(float), num * nc, fp);
+			addStream(type, data, num, nc);
+		}
+		fclose(fp);
+	}
+}

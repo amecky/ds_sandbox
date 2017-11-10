@@ -13,7 +13,6 @@ enum AttributeType {
 
 struct Stream {
 	float *data;
-	uint32_t *indices;
 	uint32_t num;
 	int nComponents;
 	AttributeType type;
@@ -24,6 +23,7 @@ class Mesh {
 public:
 	Mesh();
 	~Mesh();
+	void clear();
 	void createCube();
 	void calculateTangents(int posStream, int uvStream);
 	void createSphere(const int subDivLevel);
@@ -31,6 +31,9 @@ public:
 	RID assemble();
 	int addStream(AttributeType type, float* data, int size, int components);
 	RID createInputLayout(RID vertexShaderId);
+
+	void save(const char* fileName);
+	void load(const char* fileName);
 private:
 	std::vector<Stream> _streams;
 };

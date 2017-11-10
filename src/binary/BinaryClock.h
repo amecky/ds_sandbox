@@ -72,4 +72,5 @@ private:
 	bool _running;
 	TimeCol _columns[6];
 	SYSTEMTIME _systemTime;
+	float _rotationDelay;
 };

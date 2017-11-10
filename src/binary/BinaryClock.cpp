@@ -13,13 +13,16 @@ void bbLogHandler(const LogLevel&, const char* message) {
 
 const ds::Color COLORS[] = {
 	ds::Color(1.0f,1.0f,1.0f,1.0f),
-	ds::Color(0.0f,1.0f,0.0f,1.0f),
-	ds::Color(0.0f,0.0f,1.0f,1.0f),
-	ds::Color(1.0f,1.0f,0.0f,1.0f),
-	ds::Color(0.0f,1.0f,1.0f,1.0f),
+	ds::Color(1.0f,0.0f,0.0f,1.0f),
 	ds::Color(1.0f,1.0f,1.0f,1.0f),
+	ds::Color(1.0f,1.0f,1.0f,1.0f),
+	ds::Color(1.0f,1.0f,1.0f,1.0f),
+	ds::Color(1.0f,0.0f,0.0f,1.0f),
 };
 
+// ---------------------------------------------------------------
+// convert time into TimeCol
+// ---------------------------------------------------------------
 static void convert(TimeCol* columns, int index, int value, bool flip = true) {
 	int upper = value / 10;
 	int lower = value - upper * 10;
@@ -74,6 +77,9 @@ BinaryClock::~BinaryClock() {
 
 }
 
+// ---------------------------------------------------------------
+// get rendersettings
+// ---------------------------------------------------------------
 ds::RenderSettings BinaryClock::getRenderSettings() {
 	ds::RenderSettings rs;
 	rs.width = 1024;
@@ -87,6 +93,9 @@ ds::RenderSettings BinaryClock::getRenderSettings() {
 	return rs;
 }
 
+// ---------------------------------------------------------------
+// init
+// ---------------------------------------------------------------
 bool BinaryClock::init() {
 	
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 1.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
@@ -132,7 +141,7 @@ bool BinaryClock::init() {
 	RID cbid = ds::createConstantBuffer(sizeof(BinaryClockConstantBuffer), &_constantBuffer);
 	RID indexBuffer = ds::createQuadIndexBuffer(256);
 
-	Mesh mesh;
+	Mesh mesh;	
 	mesh.createCube();
 	mesh.calculateTangents(0, 1);
 	ds::Color* clr = new ds::Color[24];
@@ -141,6 +150,9 @@ bool BinaryClock::init() {
 	}
 	mesh.addStream(AT_COLOR, (float*)clr, 24, 4);	
 	mesh.scaleStream(1, 0.5f);
+	//RID cubeBuffer = mesh.assemble();
+	mesh.save("Test.data");
+	//mesh.load("Test.data");
 	RID cubeBuffer = mesh.assemble();
 
 	RID rid = mesh.createInputLayout(bumpVS);
@@ -198,11 +210,15 @@ bool BinaryClock::init() {
 
 	_running = true;
 
-	
+	_rotationDelay = 0.2f;
+
 	return true;
 
 }
 
+// ---------------------------------------------------------------
+// tick
+// ---------------------------------------------------------------
 void BinaryClock::tick(float dt) {
 	_fpsCamera->update(dt);
 	if (_running) {
@@ -219,8 +235,8 @@ void BinaryClock::tick(float dt) {
 			for (int j = 0; j < 4; ++j) {
 				if (col.flipping[j] == 1) {
 					col.timer[j] += dt;
-					col.angle[j] = col.timer[j] / 0.2f * ds::PI * 0.5f;
-					if (col.timer[j] > 0.2f) {
+					col.angle[j] = col.timer[j] / _rotationDelay * ds::PI * 0.5f;
+					if (col.timer[j] >_rotationDelay) {
 						col.flipping[j] = 0;
 						col.timer[j] = 0.0f;
 						col.angle[j] = col.state[j] * ds::PI * 0.5f;
@@ -228,8 +244,8 @@ void BinaryClock::tick(float dt) {
 				}
 				else if (col.flipping[j] == -1) {
 					col.timer[j] += dt;
-					col.angle[j] = (0.2f - col.timer[j] / 0.2f) * ds::PI * 0.5f;
-					if (col.timer[j] > 0.2f) {
+					col.angle[j] = (_rotationDelay - col.timer[j]) / _rotationDelay * ds::PI * 0.5f;
+					if (col.timer[j] > _rotationDelay) {
 						col.flipping[j] = 0;
 						col.timer[j] = 0.0f;
 						col.angle[j] = col.state[j] * ds::PI * 0.5f;
@@ -240,6 +256,9 @@ void BinaryClock::tick(float dt) {
 	}
 }
 
+// ---------------------------------------------------------------
+// render
+// ---------------------------------------------------------------
 void BinaryClock::render() {
 
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(_camera.viewProjectionMatrix);
@@ -277,6 +296,9 @@ void BinaryClock::render() {
 	}
 }
 
+// ---------------------------------------------------------------
+// renderGUI
+// ---------------------------------------------------------------
 void BinaryClock::renderGUI() {
 	int state = 1;
 	gui::start();
@@ -286,7 +308,6 @@ void BinaryClock::renderGUI() {
 		if (gui::Input("Light", &_lightPos)) {
 			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));
 		}
-		/*
 		if (_running) {
 			if (gui::Button("Stop")) {
 				_running = false;
@@ -296,17 +317,8 @@ void BinaryClock::renderGUI() {
 			if (gui::Button("Start")) {
 				_running = true;
 			}
-		}		
-		gui::Value("Hours", _systemTime.wHour);
-		gui::Value("Minutes", _systemTime.wMinute);
-		gui::Value("Seconds", _systemTime.wSecond);
-		for (int j = 0; j < 6; ++j) {
-			const TimeCol& col = _columns[j];
-			for (int i = 0; i < col.num; ++i) {
-				gui::FormattedText("%d %d %g", col.state[i], col.flipping[i], col.angle[i] * 360.0f / ds::TWO_PI);
-			}
 		}
-		*/
+		gui::Input("Delay", &_rotationDelay);		
 	}
 	gui::end();
 }
