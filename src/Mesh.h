@@ -31,9 +31,10 @@ public:
 	RID assemble();
 	int addStream(AttributeType type, float* data, int size, int components);
 	RID createInputLayout(RID vertexShaderId);
-
+	int getCount() const;
 	void save(const char* fileName);
 	void load(const char* fileName);
+	void loadBin(const char* fileName);
 private:
 	std::vector<Stream> _streams;
 };

@@ -5,10 +5,11 @@ cbuffer cbChangesPerObject : register( b0 ) {
 
 struct VS_Input {
     float3 position  : POSITION;
-    float4 color : COLOR;
-	float3 normal : NORMAL;
+	float4 color : COLOR0;
+	float3 normal : NORMAL;	
+	matrix world : WORLD;
+	float4 icolor : COLOR1;
 };
-
 struct PS_Input {
     float4 pos  : SV_POSITION;
     float4 color : COLOR;
@@ -19,10 +20,10 @@ struct PS_Input {
 PS_Input VS_Main( VS_Input vertex ) {
     PS_Input vsOut = ( PS_Input )0;
 	float4 p = float4(vertex.position,1.0);
-    vsOut.pos = mul( p, world);
+    vsOut.pos = mul( p, vertex.world);
 	vsOut.pos = mul(vsOut.pos, mvp);
-    vsOut.color = vertex.color;
-	vsOut.normal = mul(vertex.normal, (float3x3)world);
+    vsOut.color = vertex.color * vertex.icolor;
+	vsOut.normal = mul(vertex.normal, (float3x3)vertex.world);
 	vsOut.normal = normalize(vsOut.normal);
     return vsOut;
 }

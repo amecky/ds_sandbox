@@ -30,6 +30,9 @@ call :CompileShader%1 Bump Bump ps PS_Main
 call :CompileShader%1 AmbientLightning AmbientLightning vs VS_Main
 call :CompileShader%1 AmbientLightning AmbientLightning ps PS_Main
 
+call :CompileShader%1 InstancedAmbient InstancedAmbient vs VS_Main
+call :CompileShader%1 InstancedAmbient InstancedAmbient ps PS_Main
+
 echo.
 
 if %error% == 0 (

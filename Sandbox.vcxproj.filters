@@ -25,6 +25,9 @@
     <Filter Include="binary">
       <UniqueIdentifier>{506cebc5-4908-474f-943f-9a7ee30b7b40}</UniqueIdentifier>
     </Filter>
+    <Filter Include="instancing">
+      <UniqueIdentifier>{9d75143a-df15-452a-a96d-cb8bc6397091}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -47,7 +50,6 @@
     <ClInclude Include="ext\SpriteBatchBuffer.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\World.h" />
@@ -107,6 +109,9 @@
       <Filter>binary</Filter>
     </ClInclude>
     <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\instancing\InstanceTest.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -116,7 +121,6 @@
     <ClCompile Include="src\utils\utils.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
@@ -159,6 +163,9 @@
       <Filter>binary</Filter>
     </ClCompile>
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\instancing\InstanceTest.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

@@ -12,7 +12,7 @@
 //
 // Name                 Index   Mask Register SysValue Format   Used
 // -------------------- ----- ------ -------- -------- ------ ------
-// POSITION                 0   xyzw        0     NONE  float   xyz 
+// POSITION                 0   xyz         0     NONE  float   xyz 
 // COLOR                    0   xyzw        1     NONE  float   xyzw
 // NORMAL                   0   xyz         2     NONE  float   xyz 
 //
@@ -57,10 +57,10 @@ ret
 
 const BYTE AmbientLightning_VS_Main[] =
 {
-     68,  88,  66,  67, 220, 243, 
-    173, 141,  67,  78,  79, 212, 
-     59, 230, 174, 115, 151, 190, 
-    190,  60,   1,   0,   0,   0, 
+     68,  88,  66,  67, 212,  13, 
+    197, 197, 247,  51, 135, 181, 
+    188, 254,  63, 112, 211, 150, 
+    196, 250,   1,   0,   0,   0, 
     112,   3,   0,   0,   3,   0, 
       0,   0,  44,   0,   0,   0, 
     156,   0,   0,   0,  16,   1, 
@@ -70,7 +70,7 @@ const BYTE AmbientLightning_VS_Main[] =
      80,   0,   0,   0,   0,   0, 
       0,   0,   0,   0,   0,   0, 
       3,   0,   0,   0,   0,   0, 
-      0,   0,  15,   7,   0,   0, 
+      0,   0,   7,   7,   0,   0, 
      89,   0,   0,   0,   0,   0, 
       0,   0,   0,   0,   0,   0, 
       3,   0,   0,   0,   1,   0, 

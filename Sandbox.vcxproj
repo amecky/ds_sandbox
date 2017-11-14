@@ -31,6 +31,7 @@
     <ClInclude Include="src\binary\BinaryClock.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\instancing\InstanceTest.h" />
     <ClInclude Include="src\kenney\AssetViewer.h" />
     <ClInclude Include="src\kenney\Camera.h" />
     <ClInclude Include="src\kenney\DepthMap.h" />
@@ -46,7 +47,6 @@
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\plugins\logger.h" />
     <ClInclude Include="src\plugins\PluginRegistry.h" />
-    <ClInclude Include="src\Sandbox.h" />
     <ClInclude Include="src\TestApp.h" />
     <ClInclude Include="src\TestSpriteApp.h" />
     <ClInclude Include="src\tweening\TweeningTest.h" />
@@ -59,6 +59,7 @@
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
+    <ClCompile Include="src\instancing\InstanceTest.cpp" />
     <ClCompile Include="src\kenney\AssetViewer.cpp" />
     <ClCompile Include="src\kenney\Camera.cpp" />
     <ClCompile Include="src\kenney\DepthMap.cpp" />
@@ -72,7 +73,6 @@
     <ClCompile Include="src\particles\ParticleExpressionTest.cpp" />
     <ClCompile Include="src\plugins\logger.cpp" />
     <ClCompile Include="src\plugins\PluginRegistry.cpp" />
-    <ClCompile Include="src\Sandbox.cpp" />
     <ClCompile Include="src\TestSpriteApp.cpp" />
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />

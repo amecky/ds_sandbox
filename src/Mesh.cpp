@@ -226,6 +226,18 @@ RID Mesh::createInputLayout(RID vertexShaderId) {
 	ds::InputLayoutInfo layoutInfo = { decl, _streams.size(), vertexShaderId };
 	return ds::createInputLayout(layoutInfo);
 }
+
+int Mesh::getCount() const {
+	int cnt = 0;
+	int offset = 0;
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		int steps = _streams[i].num;
+		if (steps > cnt) {
+			cnt = steps;
+		}
+	}
+	return cnt;
+}
 /*
 BatchID Model::addBatch(const uint startIndex, const uint nIndices) {
 	Batch batch;
@@ -278,6 +290,52 @@ void Mesh::load(const char* fileName) {
 			fread(data, sizeof(float), num * nc, fp);
 			addStream(type, data, num, nc);
 		}
+		fclose(fp);
+	}
+}
+
+void Mesh::loadBin(const char* fileName) {
+	clear();
+	FILE* fp = fopen(fileName, "rb");
+	if (fp) {
+		int total = 0;
+		fread(&total, sizeof(int), 1, fp);
+		ds::vec3 center = { 0.0f,0.0f,0.0f };
+		fread(&center.x, sizeof(float), 1, fp);
+		fread(&center.y, sizeof(float), 1, fp);
+		fread(&center.z, sizeof(float), 1, fp);
+		ds::vec3 extent = { 0.0f,0.0f,0.0f };
+		fread(&extent.x, sizeof(float), 1, fp);
+		fread(&extent.y, sizeof(float), 1, fp);
+		fread(&extent.z, sizeof(float), 1, fp);
+		float mm = 0.0f;
+		for (int i = 0; i < 3; ++i) {
+			if (extent.data[i] > mm) {
+				mm = extent.data[i];
+			}
+		}
+		float s = 1.0f / mm;
+		ds::matrix sm = ds::matScale(ds::vec3(s, s, s));
+		ds::matrix cm = ds::matTranslate(ds::vec3(-center.x, -center.y, -center.z));
+		ds::vec3* positions = new ds::vec3[total];
+		ds::Color* colors = new ds::Color[total];
+		ds::vec3* normals = new ds::vec3[total];
+		for (int i = 0; i < total; ++i) {
+			fread(&positions[i].x, sizeof(float), 1, fp);
+			fread(&positions[i].y, sizeof(float), 1, fp);
+			fread(&positions[i].z, sizeof(float), 1, fp);
+			fread(&colors[i].r, sizeof(float), 1, fp);
+			fread(&colors[i].g, sizeof(float), 1, fp);
+			fread(&colors[i].b, sizeof(float), 1, fp);
+			fread(&colors[i].a, sizeof(float), 1, fp);
+			fread(&normals[i].x, sizeof(float), 1, fp);
+			fread(&normals[i].y, sizeof(float), 1, fp);
+			fread(&normals[i].z, sizeof(float), 1, fp);
+			positions[i] = sm * positions[i];
+		}
+		addStream(AT_VERTEX, (float*)positions, total, 3);		
+		addStream(AT_COLOR, (float*)colors, total, 4);
+		addStream(AT_NORMAL, (float*)normals, total, 3);
 		fclose(fp);
 	}
 }

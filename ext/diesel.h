@@ -4025,16 +4025,18 @@ namespace ds {
 	// ------------------------------------------------------
 	static void setInstancedVertexBuffer(RID rid) {
 		uint16_t ridx = getResourceIndex(rid, RT_INSTANCED_VERTEX_BUFFER);
-		InstancedVertexBufferResource* ibr = (InstancedVertexBufferResource*)_ctx->_resources[ridx];
-		InstancedBindData* data = ibr->get();
-		VertexBufferResource* fr = (VertexBufferResource*)_ctx->_resources[id_mask(data->rid)];
-		VertexBufferResource* sr = (VertexBufferResource*)_ctx->_resources[id_mask(data->instanceBuffer)];
-		unsigned int strides[2] = { fr->getVertexSize(),sr->getVertexSize() };
-		unsigned int offsets[2] = { 0 };
-		ID3D11Buffer* bufferPointers[2];
-		bufferPointers[0] = fr->get();
-		bufferPointers[1] = sr->get();
-		_ctx->d3dContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+		if (ridx != NO_RID) {
+			InstancedVertexBufferResource* ibr = (InstancedVertexBufferResource*)_ctx->_resources[ridx];
+			InstancedBindData* data = ibr->get();
+			VertexBufferResource* fr = (VertexBufferResource*)_ctx->_resources[id_mask(data->rid)];
+			VertexBufferResource* sr = (VertexBufferResource*)_ctx->_resources[id_mask(data->instanceBuffer)];
+			unsigned int strides[2] = { fr->getVertexSize(),sr->getVertexSize() };
+			unsigned int offsets[2] = { 0 };
+			ID3D11Buffer* bufferPointers[2];
+			bufferPointers[0] = fr->get();
+			bufferPointers[1] = sr->get();
+			_ctx->d3dContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+		}
 	}
 
 	// ------------------------------------------------------
