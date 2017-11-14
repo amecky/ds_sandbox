@@ -3,6 +3,10 @@
 #include "..\kenney\Camera.h"
 #include "..\utils\DynamicPath.h"
 
+const int HEIGHT = 20;
+const int WIDTH = 28;
+const int TOTAL = HEIGHT * WIDTH;
+
 struct InstanceBuffer {
 	ds::matrix mvp;
 	ds::matrix world;
@@ -65,11 +69,14 @@ private:
 	GridItem _items[256];
 	int _numItems;
 	RID _drawItem;
+	RID _gridDrawItem;
 	RID _basicPass;
 	RID _instanceVertexBuffer;
+	RID _gridInstanceVertexBuffer;
 	InstanceBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
-	InstanceData _instances[256];
+	InstanceData _instances[TOTAL];
+	ds::matrix _gridPositions[TOTAL];
 };

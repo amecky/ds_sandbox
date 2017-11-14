@@ -31,6 +31,7 @@
     <ClInclude Include="src\binary\BinaryClock.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\instancing\hex.h" />
     <ClInclude Include="src\instancing\InstanceTest.h" />
     <ClInclude Include="src\kenney\AssetViewer.h" />
     <ClInclude Include="src\kenney\Camera.h" />
@@ -59,6 +60,7 @@
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
+    <ClCompile Include="src\instancing\hex.cpp" />
     <ClCompile Include="src\instancing\InstanceTest.cpp" />
     <ClCompile Include="src\kenney\AssetViewer.cpp" />
     <ClCompile Include="src\kenney\Camera.cpp" />

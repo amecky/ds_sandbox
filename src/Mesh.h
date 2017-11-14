@@ -34,7 +34,7 @@ public:
 	int getCount() const;
 	void save(const char* fileName);
 	void load(const char* fileName);
-	void loadBin(const char* fileName);
+	void loadBin(const char* fileName, bool scale = true);
 private:
 	std::vector<Stream> _streams;
 };

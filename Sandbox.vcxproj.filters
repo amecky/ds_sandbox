@@ -112,6 +112,9 @@
     <ClInclude Include="src\instancing\InstanceTest.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\hex.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -164,6 +167,9 @@
     </ClCompile>
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\instancing\InstanceTest.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\hex.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>

@@ -294,7 +294,7 @@ void Mesh::load(const char* fileName) {
 	}
 }
 
-void Mesh::loadBin(const char* fileName) {
+void Mesh::loadBin(const char* fileName, bool scale) {
 	clear();
 	FILE* fp = fopen(fileName, "rb");
 	if (fp) {
@@ -331,7 +331,9 @@ void Mesh::loadBin(const char* fileName) {
 			fread(&normals[i].x, sizeof(float), 1, fp);
 			fread(&normals[i].y, sizeof(float), 1, fp);
 			fread(&normals[i].z, sizeof(float), 1, fp);
-			positions[i] = sm * positions[i];
+			if (scale) {
+				positions[i] = sm * positions[i];
+			}
 		}
 		addStream(AT_VERTEX, (float*)positions, total, 3);		
 		addStream(AT_COLOR, (float*)colors, total, 4);
