@@ -1,47 +1,9 @@
 #pragma once
 #include "..\TestApp.h"
 #include "..\kenney\Camera.h"
-#include "..\utils\DynamicPath.h"
-
-const int HEIGHT = 20;
-const int WIDTH = 28;
-const int TOTAL = HEIGHT * WIDTH;
-
-struct InstanceBuffer {
-	ds::matrix mvp;
-	ds::matrix world;
-};
-
-struct InstanceLightBuffer {
-	ds::Color ambientColor;
-	ds::Color diffuseColor;
-	ds::vec3 lightDirection;
-	float padding;
-};
-
-struct InstanceData {
-	ds::matrix worldMatrix;
-	ds::Color color;
-};
-
-struct Animation {
-	int type;
-	float timer;
-	float ttl;
-};
-
-struct GridItem {
-	ds::vec3 pos;
-	ds::vec3 velocity;
-	float scale;
-	float angle;
-	float timer;
-	ds::Color color;
-	int type;
-	int animationFlags;
-	Animation animations[16];
-	int numAnimations;
-};
+#include "BackgroundGrid.h"
+#include "EmitterQueue.h"
+#include "Cubes.h"
 
 class InstanceTest : public TestApp {
 
@@ -64,19 +26,16 @@ public:
 
 	void renderGUI();
 
-private:
-	ds::FloatPath _scalePath;
-	GridItem _items[256];
-	int _numItems;
-	RID _drawItem;
-	RID _gridDrawItem;
+private:	
 	RID _basicPass;
 	RID _instanceVertexBuffer;
-	RID _gridInstanceVertexBuffer;
-	InstanceBuffer _constantBuffer;
-	InstanceLightBuffer _lightBuffer;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
-	InstanceData _instances[TOTAL];
-	ds::matrix _gridPositions[TOTAL];
+	BackgroundGrid _grid;
+	EmitterQueue* _queue;
+	Cubes _cubes;
+
+	int _tmpX;
+	int _tmpY;
+	float _ttl;	
 };

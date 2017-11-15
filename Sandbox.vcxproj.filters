@@ -115,6 +115,18 @@
     <ClInclude Include="src\instancing\hex.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\BackgroundGrid.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\instancing\InstanceCommon.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\instancing\EmitterQueue.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\instancing\Cubes.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -170,6 +182,15 @@
       <Filter>instancing</Filter>
     </ClCompile>
     <ClCompile Include="src\instancing\hex.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\BackgroundGrid.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\EmitterQueue.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\Cubes.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>
