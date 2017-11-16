@@ -1,9 +1,10 @@
 #pragma once
 #include "..\TestApp.h"
-#include "..\kenney\Camera.h"
+#include "TopDownCamera.h"
 #include "BackgroundGrid.h"
 #include "EmitterQueue.h"
 #include "Cubes.h"
+#include "Player.h"
 
 class InstanceTest : public TestApp {
 
@@ -15,6 +16,10 @@ public:
 	ds::RenderSettings getRenderSettings();
 
 	bool usesGUI() {
+		return true;
+	}
+
+	bool useFixedTimestep() const {
 		return true;
 	}
 
@@ -30,12 +35,12 @@ private:
 	RID _basicPass;
 	RID _instanceVertexBuffer;
 	ds::Camera _camera;
-	FPSCamera* _fpsCamera;
-	BackgroundGrid _grid;
+	TopDownCamera* _fpsCamera;
+	BackgroundGrid* _grid;
 	EmitterQueue* _queue;
 	Cubes _cubes;
-
+	Player* _player;
+	BackgroundGridSettings _gridSettings;
 	int _tmpX;
 	int _tmpY;
-	float _ttl;	
 };

@@ -37,6 +37,8 @@
     <ClInclude Include="src\instancing\hex.h" />
     <ClInclude Include="src\instancing\InstanceCommon.h" />
     <ClInclude Include="src\instancing\InstanceTest.h" />
+    <ClInclude Include="src\instancing\Player.h" />
+    <ClInclude Include="src\instancing\TopDownCamera.h" />
     <ClInclude Include="src\kenney\AssetViewer.h" />
     <ClInclude Include="src\kenney\Camera.h" />
     <ClInclude Include="src\kenney\DepthMap.h" />
@@ -69,6 +71,8 @@
     <ClCompile Include="src\instancing\EmitterQueue.cpp" />
     <ClCompile Include="src\instancing\hex.cpp" />
     <ClCompile Include="src\instancing\InstanceTest.cpp" />
+    <ClCompile Include="src\instancing\Player.cpp" />
+    <ClCompile Include="src\instancing\TopDownCamera.cpp" />
     <ClCompile Include="src\kenney\AssetViewer.cpp" />
     <ClCompile Include="src\kenney\Camera.cpp" />
     <ClCompile Include="src\kenney\DepthMap.cpp" />

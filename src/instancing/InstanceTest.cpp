@@ -9,6 +9,8 @@ InstanceTest::InstanceTest() {
 
 InstanceTest::~InstanceTest() {
 	delete _queue;
+	delete _grid;
+	delete _player;
 }
 
 // ----------------------------------------------------
@@ -81,7 +83,7 @@ bool InstanceTest::init() {
 
 	//RID instanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
 
-	_fpsCamera = new FPSCamera(&_camera);
+	_fpsCamera = new TopDownCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	RID baseGroup = ds::StateGroupBuilder()
@@ -91,17 +93,29 @@ bool InstanceTest::init() {
 		.pixelShader(bumpPS)
 		.build();
 
-	_grid.init(baseGroup, bumpVS, bumpPS);
+	_gridSettings.borderColor = ds::Color(64,64,64,255);
+	_gridSettings.gridColor = ds::Color(48,48,48,255);
+	_gridSettings.flashColor = ds::Color(192,48,48,255);
+	_gridSettings.flashTTL = 0.2f;
+	_gridSettings.pulseTTL = 2.0f;
+	_gridSettings.pulseAmplitude = 3.0f;
+
+	_grid = new BackgroundGrid(&_gridSettings);
+
+	_grid->init(baseGroup, bumpVS, bumpPS);
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
 	_cubes.create(ds::vec3(0.0f), 2);
 
-	_queue = new EmitterQueue(&_grid, &_cubes);
+	_queue = new EmitterQueue(_grid, &_cubes);
+
+	_player = new Player(_fpsCamera);
+	_player->init();
 
 	_tmpX = 7;
 	_tmpY = 8;
-	_ttl = 0.4f;
+	
 	return true;
 }
 
@@ -114,9 +128,11 @@ void InstanceTest::tick(float dt) {
 	
 	_cubes.tick(dt);
 
-	_grid.tick(dt);
+	_grid->tick(dt);
 
 	_queue->tick(dt);
+
+	_player->tick(dt);
 }
 
 // ----------------------------------------------------
@@ -126,12 +142,34 @@ void InstanceTest::render() {
 	
 	_cubes.render(_basicPass, _camera.viewProjectionMatrix);
 	
-	_grid.render(_basicPass, _camera.viewProjectionMatrix);
+	_grid->render(_basicPass, _camera.viewProjectionMatrix);
+
+	_player->render(_basicPass, _camera.viewProjectionMatrix);
 
 	ds::dbgPrint(0, 0, "FPS: %d", ds::getFramesPerSecond());
 }
 
 void InstanceTest::renderGUI() {
+
+	ds::vec2 mp = ds::getMousePosition();
+	ds::vec2 tmp;
+	ds::matrix matp = _camera.projectionMatrix;
+	tmp.x = ((2.0f * mp.x / 1024.0f) - 1.0f) * matp._11;
+	tmp.y = (-(2.0f * mp.y / 768.0f) + 1.0f) * matp._22;
+	ds::matrix inv = ds::matInverse(_camera.viewMatrix);
+	ds::vec3 v = ds::vec3(tmp.x, tmp.y, 1.0f);
+	
+	ds::vec3 vPickRayDir;
+	vPickRayDir.x = v.x*inv._11 + v.y*inv._21 + v.z*inv._31;
+	vPickRayDir.y = v.x*inv._12 + v.y*inv._22 + v.z*inv._32;
+	vPickRayDir.z = v.x*inv._13 + v.y*inv._23 + v.z*inv._33;
+	vPickRayDir = normalize(vPickRayDir);
+
+	ds::vec3 origin = ds::vec3(inv._41,inv._42,inv._43);
+	//ds::vec3 end = fr * inv;
+	//ds::vec3 t2 = nr - fr;
+	//ds::vec3 dir = normalize(end - origin);
+
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
@@ -152,16 +190,18 @@ void InstanceTest::renderGUI() {
 		*/
 		gui::Input("GX", &_tmpX);
 		gui::Input("GY", &_tmpY);
-		gui::Input("Flash TTL", &_ttl);
 		if (gui::Button("Flash ONE")) {
-			_grid.highlight(_tmpX, _tmpY, _ttl, BGF_ONE);
+			_grid->highlight(_tmpX, _tmpY, BGF_ONE);
 		}
 		if (gui::Button("Flash PULSE")) {
-			_grid.highlight(_tmpX, _tmpY, _ttl, BGF_PULSE);
+			_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
 		}
 		if (gui::Button("Emitt")) {
 			_queue->emitt(_tmpX, _tmpY);
 		}
+		gui::Value("Pos", _player->getPosition());
+		gui::FormattedText("Org %g %g", origin.x,origin.y);
+		gui::FormattedText("Dir %g %g %g", vPickRayDir.x, vPickRayDir.y, vPickRayDir.z);
 		if (gui::Button("Reset Camera")) {
 			_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 		}

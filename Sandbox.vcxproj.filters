@@ -127,6 +127,12 @@
     <ClInclude Include="src\instancing\Cubes.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\TopDownCamera.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\instancing\Player.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -191,6 +197,12 @@
       <Filter>instancing</Filter>
     </ClCompile>
     <ClCompile Include="src\instancing\Cubes.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\TopDownCamera.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\Player.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>

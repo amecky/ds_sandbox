@@ -9,7 +9,7 @@ void EmitterQueue::tick(float dt) {
 		entry.timer -= dt;
 		if (entry.timer <= 0.0f) {
 			_cubes->create(_grid->grid_to_screen(entry.x, entry.y), 3);
-			_grid->highlight(entry.x, entry.y, 0.6f, BGF_ONE);
+			_grid->highlight(entry.x, entry.y,BGF_ONE);
 			entry = _entries[_numEntries--];
 		}
 		else {
@@ -24,5 +24,5 @@ void EmitterQueue::emitt(int x, int y) {
 	entry.y = y;
 	entry.timer = 2.0f;
 	entry.type = 0;
-	_grid->highlight(entry.x, entry.y, 2.0f, BGF_PULSE);
+	_grid->highlight(entry.x, entry.y, BGF_PULSE);
 }
