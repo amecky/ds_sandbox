@@ -21,7 +21,7 @@ void Player::init() {
 	RID cbid = ds::createConstantBuffer(sizeof(PlayerConstantBuffer), &_constantBuffer);
 
 	Mesh mesh;
-	mesh.loadBin("models\\griddy.bin");
+	mesh.loadBin("models\\player.bin");
 	RID cubeBuffer = mesh.assemble();
 
 	RID rid = mesh.createInputLayout(bumpVS);
@@ -66,7 +66,7 @@ void Player::tick(float dt) {
 	if (ds::isKeyPressed('S')) {
 		tmp -= _velocity * dt;
 	}
-	if (tmp.y > -1.5f && tmp.y < 1.5f && tmp.x > -3.3f && tmp.x < 3.3f) {
+	if (tmp.y > -1.5f && tmp.y < 1.5f && tmp.x > -2.3f && tmp.x < 2.3f) {
 		_position = tmp;
 	}
 
