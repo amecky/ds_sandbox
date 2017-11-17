@@ -9,8 +9,8 @@ rem Copyright (c) Microsoft Corporation. All rights reserved.
 setlocal
 set error=0
 
-set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
-rem set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
+rem set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
+set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
 
 rem Cube
 call :CompileShader%1 Grid Grid vs VS_Main
@@ -32,6 +32,9 @@ call :CompileShader%1 AmbientLightning AmbientLightning ps PS_Main
 
 call :CompileShader%1 InstancedAmbient InstancedAmbient vs VS_Main
 call :CompileShader%1 InstancedAmbient InstancedAmbient ps PS_Main
+
+call :CompileShader%1 Billboards Billboards vs VS_Main
+call :CompileShader%1 Billboards Billboards ps PS_Main
 
 echo.
 

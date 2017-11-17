@@ -110,7 +110,7 @@ void Cubes::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
 			ds::matrix rx = ds::matRotationX(item.timer * 4.0f);
 			ds::matrix rz = ds::matRotationZ(item.angle);
 			ds::matrix sm = ds::matScale(ds::vec3(item.scale, item.scale, item.scale));
-			ds::matrix world = rz * sm * pm;
+			ds::matrix world = rx * rz * sm * pm;
 			_instances[y] = { ds::matTranspose(world), item.color };
 		}
 		else {
@@ -126,4 +126,44 @@ void Cubes::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
 	_constantBuffer.mvp = ds::matTranspose(viewProjectionMatrix);
 	_constantBuffer.world = ds::matTranspose(ds::matIdentity());
 	ds::submit(renderPass, _drawItem);
+}
+
+bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
+	ds::vec2 d = ds::vec2(p2.x,p2.y) - ds::vec2(p1.x,p1.y);
+	if (sqr_length(d) < r1 * r2) {
+		return true;
+	}
+	return false;
+}
+
+int Cubes::checkCollisions(Bullet* bullets, int num) {
+	int ret = num;
+	int y = 0;
+	while ( y < _numItems) {
+		GridItem& item = _items[y];
+		ds::vec3 ip = item.pos;
+		int cnt = 0;
+		bool hit = false;
+		while (cnt < ret) {
+			const Bullet& b = bullets[cnt];
+			if (collides(ip, 0.2f, b.pos, 0.1f)) {
+				bullets[cnt] = bullets[ret - 1];
+				--ret;
+				hit = true;
+			}
+			else {
+				++cnt;
+			}
+		}
+		if (hit) {
+			if (_numItems > 1) {
+				_items[y] = _items[_numItems - 1];
+			}
+			--_numItems;
+		}
+		else {
+			++y;
+		}
+	}
+	return ret;
 }

@@ -11,6 +11,8 @@ InstanceTest::~InstanceTest() {
 	delete _queue;
 	delete _grid;
 	delete _player;
+	delete _fpsCamera;
+	delete _topDownCamera;
 }
 
 // ----------------------------------------------------
@@ -78,12 +80,17 @@ bool InstanceTest::init() {
 	ds::InstancedInputLayoutInfo iilInfo = { decl, 3, instDecl, 5, bumpVS };
 	RID rid = ds::createInstancedInputLayout(iilInfo);
 
+	RID textureID = loadImageFromFile("content\\TextureArray.png");
+
 	//ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, TOTAL, sizeof(InstanceData) };
 	//_instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
 
 	//RID instanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
 
-	_fpsCamera = new TopDownCamera(&_camera);
+	_topDownCamera = new TopDownCamera(&_camera);
+	_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+
+	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	RID baseGroup = ds::StateGroupBuilder()
@@ -110,41 +117,116 @@ bool InstanceTest::init() {
 
 	_queue = new EmitterQueue(_grid, &_cubes);
 
-	_player = new Player(_fpsCamera);
+	_player = new Player(_topDownCamera);
 	_player->init();
 
+	_billboards.init(textureID);
+
 	_tmpX = 7;
-	_tmpY = 8;
+	_tmpY = 10;
 	
+	_cameraMode = 3;
+
+	_numBullets = 0;
+
+	_shooting = false;
+
+	_bulletTimer = 0.0f;
+
 	return true;
 }
 
+void InstanceTest::addBullet() {
+	ds::vec3 p = _player->getPosition();
+	p.z += 0.01f;
+	float r = _player->getRotation();
+	Bullet& b = _bullets[_numBullets++];
+	b.pos = p;
+	b.rotation = r;
+	b.velocity = ds::vec3(cosf(r) * 4.0f, sinf(r) * 4.0f, 0.0f);
+	b.timer = 0.0f;
+	b.scale = ds::vec2(1.0f);
+}
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
 void InstanceTest::tick(float dt) {
+	if (_cameraMode == 1) {
+		_fpsCamera->update(dt);
+	}
+	else if (_cameraMode == 2) {
+		_topDownCamera->update(dt);
+	}
+	else if (_cameraMode == 3) {
+		_player->tick(dt);
+	}
 
-	_fpsCamera->update(dt);
-	
+	int cnt = 0;
+	while ( cnt < _numBullets) {
+		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
+		_bullets[cnt].timer += dt;
+		_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * 4.0f;
+		ds::vec3 p = _bullets[cnt].pos;
+		if (p.y < -1.5f || p.y > 1.5f || p.x < -2.3f || p.x > 2.3f) {
+			if (_numBullets > 1) {
+				_bullets[cnt] = _bullets[_numBullets - 1];
+			}
+			--_numBullets;
+		}
+		else {
+			++cnt;
+		}
+	}
+
 	_cubes.tick(dt);
 
 	_grid->tick(dt);
 
 	_queue->tick(dt);
 
-	_player->tick(dt);
+	if (ds::isMouseButtonPressed(0) && !_shooting ) {
+		_shooting = true;
+	}
+	if (!ds::isMouseButtonPressed(0) && _shooting) {
+		_shooting = false;
+	}
+
+	if (_shooting) {
+		_bulletTimer += dt;
+		if (_bulletTimer >= 0.1f) {
+			addBullet();
+			_bulletTimer -= 0.1f;
+		}
+	}
+
+	_numBullets = _cubes.checkCollisions(_bullets, _numBullets);
 }
 
 // ----------------------------------------------------
 // render
 // ----------------------------------------------------
 void InstanceTest::render() {
+
+	_billboards.begin();
 	
 	_cubes.render(_basicPass, _camera.viewProjectionMatrix);
 	
 	_grid->render(_basicPass, _camera.viewProjectionMatrix);
 
-	_player->render(_basicPass, _camera.viewProjectionMatrix);
+	/*
+	for (int j = 0; j < 5; ++j) {
+		for (int i = 0; i < 12; ++i) {
+			_billboards.add(ds::vec3(-2.0f + i * 0.3f, 1.0f - j * 0.3f, 0.0f), ds::vec2(0.2f, 0.2f), ds::vec4(0, 700, 256, 256));
+		}
+	}
+	*/
+	for (int i = 0; i < _numBullets; ++i) {
+		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, ds::Color(255,128,0,255));
+	}
+
+	_billboards.add(_player->getPosition(), ds::vec2(0.2f, 0.2f), ds::vec4(350, 0, 50, 53), _player->getRotation());
+
+	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
 
 	ds::dbgPrint(0, 0, "FPS: %d", ds::getFramesPerSecond());
 }
@@ -156,40 +238,16 @@ void InstanceTest::renderGUI() {
 	ds::matrix matp = _camera.projectionMatrix;
 	tmp.x = ((2.0f * mp.x / 1024.0f) - 1.0f) * matp._11;
 	tmp.y = (-(2.0f * mp.y / 768.0f) + 1.0f) * matp._22;
-	ds::matrix inv = ds::matInverse(_camera.viewMatrix);
-	ds::vec3 v = ds::vec3(tmp.x, tmp.y, 1.0f);
 	
-	ds::vec3 vPickRayDir;
-	vPickRayDir.x = v.x*inv._11 + v.y*inv._21 + v.z*inv._31;
-	vPickRayDir.y = v.x*inv._12 + v.y*inv._22 + v.z*inv._32;
-	vPickRayDir.z = v.x*inv._13 + v.y*inv._23 + v.z*inv._33;
-	vPickRayDir = normalize(vPickRayDir);
-
-	ds::vec3 origin = ds::vec3(inv._41,inv._42,inv._43);
-	//ds::vec3 end = fr * inv;
-	//ds::vec3 t2 = nr - fr;
-	//ds::vec3 dir = normalize(end - origin);
-
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
 	if (gui::begin("Debug", &state, &sp, 300)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		/*
-		if (gui::Button("Scale")) {
-			_items[5].animations[0].timer = 0.0f;
-		}
-		if (gui::Button("Fade in")) {
-			_items[5].animations[1].timer = 0.0f;
-		}
-		if (gui::Button("Both")) {
-			_items[5].animations[0].timer = 0.0f;
-			_items[5].animations[1].timer = 0.0f;
-			_grid.highlight(12, 8, 0.4f, BGF_ONE);
-		}
-		*/
+		gui::Input("Camera Mode", &_cameraMode);
 		gui::Input("GX", &_tmpX);
 		gui::Input("GY", &_tmpY);
+		gui::Value("Bullets", _numBullets);
 		if (gui::Button("Flash ONE")) {
 			_grid->highlight(_tmpX, _tmpY, BGF_ONE);
 		}
@@ -199,9 +257,13 @@ void InstanceTest::renderGUI() {
 		if (gui::Button("Emitt")) {
 			_queue->emitt(_tmpX, _tmpY);
 		}
+		if (gui::Button("Emitt Line X")) {
+			for (int i = 0; i < 8; ++i) {
+				_queue->emitt(_tmpX + i, _tmpY);
+			}
+		}
 		gui::Value("Pos", _player->getPosition());
-		gui::FormattedText("Org %g %g", origin.x,origin.y);
-		gui::FormattedText("Dir %g %g %g", vPickRayDir.x, vPickRayDir.y, vPickRayDir.z);
+		gui::Value("TMP", tmp);
 		if (gui::Button("Reset Camera")) {
 			_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 		}

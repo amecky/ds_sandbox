@@ -17,3 +17,11 @@ struct InstanceData {
 	ds::matrix worldMatrix;
 	ds::Color color;
 };
+
+struct Bullet {
+	ds::vec3 pos;
+	ds::vec3 velocity;
+	float rotation;
+	float timer;
+	ds::vec2 scale;
+};

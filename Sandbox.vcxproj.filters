@@ -133,6 +133,9 @@
     <ClInclude Include="src\instancing\Player.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\Billboards.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -203,6 +206,9 @@
       <Filter>instancing</Filter>
     </ClCompile>
     <ClCompile Include="src\instancing\Player.cpp">
+      <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\Billboards.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>

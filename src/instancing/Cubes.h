@@ -31,6 +31,7 @@ public:
 	void tick(float dt);
 	void render(RID renderPass, const ds::matrix viewProjectionMatrix);
 	void create(const ds::vec3& pos, int animationFlags);
+	int checkCollisions(Bullet* bullets, int num);
 private:
 	ds::FloatPath _scalePath;
 	GridItem _items[256];

@@ -32,6 +32,7 @@
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\instancing\BackgroundGrid.h" />
+    <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\Cubes.h" />
     <ClInclude Include="src\instancing\EmitterQueue.h" />
     <ClInclude Include="src\instancing\hex.h" />
@@ -67,6 +68,7 @@
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
     <ClCompile Include="src\instancing\BackgroundGrid.cpp" />
+    <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\instancing\Cubes.cpp" />
     <ClCompile Include="src\instancing\EmitterQueue.cpp" />
     <ClCompile Include="src\instancing\hex.cpp" />

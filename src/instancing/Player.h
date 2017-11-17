@@ -23,6 +23,10 @@ public:
 		return _position;
 	}
 
+	float getRotation() const {
+		return _rotation;
+	}
+
 private:
 	TopDownCamera* _camera;
 	RID _drawItem;

@@ -85,14 +85,15 @@ void BackgroundGrid::tick(float dt) {
 				if (item.timer < 0.0f) {
 					item.timer = 0.0f;
 				}
-				item.color = tweening::interpolate(tweening::linear, _settings->flashColor, _settings->gridColor, item.timer, _settings->flashTTL);
+				item.color = tweening::interpolate(tweening::linear, _settings->gridColor, _settings->flashColor, item.timer, _settings->flashTTL);
 			}
 			if (item.type == BGF_PULSE) {
 				item.timer -= dt;
 				if (item.timer < 0.0f) {
 					item.timer = 0.0f;
 				}
-				item.color.r = 0.2f + abs(sinf(item.timer / _settings->pulseTTL * _settings->pulseAmplitude * ds::TWO_PI)) * 0.2f;
+				item.color = tweening::interpolate(tweening::easeSinus, _settings->gridColor, _settings->flashColor, item.timer, _settings->pulseTTL);
+					//_settings->gridColor.data[j] + abs(sinf(item.timer / _settings->pulseTTL * _settings->pulseAmplitude * ds::TWO_PI)) * _settings->flashColor.data[j];
 			}
 		}
 	}
