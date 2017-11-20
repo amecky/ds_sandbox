@@ -7,8 +7,7 @@
 #include "Cubes.h"
 #include "Player.h"
 #include "Billboards.h"
-
-
+#include "..\utils\comon_math.h"
 
 class InstanceTest : public TestApp {
 
@@ -37,7 +36,7 @@ public:
 
 private:	
 	void addBullet();
-
+	void emittCubes(int side, int num);
 	RID _basicPass;
 	RID _instanceVertexBuffer;
 	ds::Camera _camera;
@@ -51,9 +50,11 @@ private:
 	Billboards _billboards;
 	int _tmpX;
 	int _tmpY;
+	int _tmpSide;
 	int _cameraMode;
 	Bullet _bullets[256];
 	int _numBullets;
 	bool _shooting;
 	float _bulletTimer;
+	ds::vec3 _cursorPos;
 };

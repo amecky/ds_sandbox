@@ -8,9 +8,10 @@ void EmitterQueue::tick(float dt) {
 		QueueEntry& entry = _entries[cnt];
 		entry.timer -= dt;
 		if (entry.timer <= 0.0f) {
-			_cubes->create(_grid->grid_to_screen(entry.x, entry.y), 3);
+			_cubes->create(_grid->grid_to_screen(entry.x, entry.y), 2);
 			_grid->highlight(entry.x, entry.y,BGF_ONE);
-			entry = _entries[_numEntries--];
+			entry = _entries[_numEntries - 1];
+			--_numEntries;
 		}
 		else {
 			++cnt;

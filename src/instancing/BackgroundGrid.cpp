@@ -3,18 +3,21 @@
 #include "..\utils\tweening.h"
 
 ds::vec3 BackgroundGrid::grid_to_screen(int x, int y) {
-	return ds::vec3(-3.7f + x * 0.32f, -2.5f + y * 0.32f, 0.0f);
+	float cx = static_cast<float>(GRID_WIDTH) * GRID_SIZE * 0.5f - HALF_GRID_SIZE;
+	float cy = static_cast<float>(GRID_HEIGHT) * GRID_SIZE * 0.5f - HALF_GRID_SIZE;
+	return ds::vec3(-cx + static_cast<float>(x) * GRID_SIZE, -cy + static_cast<float>(y) * GRID_SIZE, 0.0f);
 }
 
 void BackgroundGrid::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
+	_plane = Plane(ds::vec3(0.0f, 0.0f, -0.1f), ds::vec3(0.0f, 0.0f, -1.0f));
 	for (int y = 0; y < GRID_HEIGHT; ++y) {
 		for (int x = 0; x < GRID_WIDTH; ++x) {
 			BackgroundGridItem& item = _items[x + y * GRID_WIDTH];
 			ds::vec3 np = grid_to_screen(x, y);
 			item.color = _settings->gridColor;
-			np.z = 0.5f;
+			np.z = 0.1f + ds::random(-0.05f, 0.05f);
 			if (x == 0 || x == (GRID_WIDTH - 1) || y == 0 || y == (GRID_HEIGHT - 1)) {
-				np.z = 0.45f;
+				np.z = -0.5f + ds::random(-0.1f, 0.1f);
 				item.color = _settings->borderColor;
 			}			
 			item.world = ds::matTranslate(np);
@@ -23,14 +26,15 @@ void BackgroundGrid::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId)
 		}
 	}
 
-	_lightBuffer.ambientColor = ds::Color(0.6f, 0.6f, 0.6f, 1.0f);
+	_lightBuffer.ambientColor = ds::Color(0.3f, 0.3f, 0.3f, 1.0f);
 	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	_lightBuffer.lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
 	_lightBuffer.padding = 0.0f;
 	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
 
 	Mesh hexMesh;
-	hexMesh.loadBin("models\\ring_cube.bin", false);
+	hexMesh.loadBin("models\\box.bin", false);
+	//hexMesh.align();
 	RID hexCubeBuffer = hexMesh.assemble();
 
 	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, GRID_TOTAL, sizeof(InstanceData) };
@@ -74,6 +78,10 @@ void BackgroundGrid::highlight(int x, int y, BackgroundGridFlashing type) {
 		_items[x + y * GRID_WIDTH].timer = _settings->pulseTTL;
 	}
 	_items[x + y * GRID_WIDTH].type = type;
+}
+
+ds::vec3 BackgroundGrid::getIntersectionPoint(const Ray & r) {
+	return _plane.getIntersection(r);
 }
 
 void BackgroundGrid::tick(float dt) {

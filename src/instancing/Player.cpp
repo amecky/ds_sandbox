@@ -48,14 +48,15 @@ void Player::init() {
 }
 
 void Player::tick(float dt) {
-	_position.z = -2.0f;
+	_position.z = 0.0f;
+	/*
 	if (ds::isKeyPressed('A')) {
 		_rotation += ds::PI * dt;
 	}
 	if (ds::isKeyPressed('D')) {
 		_rotation -= ds::PI * dt;
 	}
-
+	*/
 	_velocity = ds::vec3(cosf(_rotation) * 2.0f, sinf(_rotation)*2.0f, 0.0f);
 
 	ds::vec3 tmp = _position;
@@ -66,9 +67,15 @@ void Player::tick(float dt) {
 	if (ds::isKeyPressed('S')) {
 		tmp -= _velocity * dt;
 	}
-	if (tmp.y > -1.5f && tmp.y < 1.5f && tmp.x > -2.3f && tmp.x < 2.3f) {
-		_position = tmp;
+	
+	setPosition(tmp);
+}
+
+void Player::setPosition(const ds::vec3 & p) {
+	if (p.y > -2.1f && p.y < 1.9f && p.x > -3.5f && p.x < 3.5f) {
+		_position = p;
 	}
+	//_position = tmp;
 
 	ds::vec3 cameraPos = _position;
 	cameraPos.z = -6.0f;

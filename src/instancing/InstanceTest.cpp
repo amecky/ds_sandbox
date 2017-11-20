@@ -4,6 +4,30 @@
 #include "..\..\shaders\InstancedAmbient_PS_Main.h"
 #include <ds_imgui.h>
 
+float getAngle(const ds::vec2& v1, const ds::vec2& v2) {
+	if (v1 != v2) {
+		ds::vec2 vn1 = normalize(v1);
+		ds::vec2 vn2 = normalize(v2);
+		float dt = dot(vn1, vn2);
+		if (dt < -1.0f) {
+			dt = -1.0f;
+		}
+		if (dt > 1.0f) {
+			dt = 1.0f;
+		}
+		float tmp = acos(dt);
+		float cross = -1.0f * (vn2 - vn1).y;
+		//float crs = cross(vn1, vn2);
+		if (cross < 0.0f) {
+			tmp = ds::TWO_PI - tmp;
+		}
+		return tmp;
+	}
+	else {
+		return 0.0f;
+	}
+}
+
 InstanceTest::InstanceTest() {
 }
 
@@ -35,13 +59,13 @@ ds::RenderSettings InstanceTest::getRenderSettings() {
 // init
 // ----------------------------------------------------
 bool InstanceTest::init() {
-	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 0.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
+	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 0.0f, -6.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
 	_camera = {
 		viewMatrix,
 		projectionMatrix,
 		viewMatrix * projectionMatrix,
-		ds::vec3(0,0,-3),
+		ds::vec3(0,0,-6),
 		ds::vec3(0,0,1),
 		ds::vec3(0,1,0),
 		ds::vec3(1,0,0),
@@ -113,8 +137,6 @@ bool InstanceTest::init() {
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
-	_cubes.create(ds::vec3(0.0f), 2);
-
 	_queue = new EmitterQueue(_grid, &_cubes);
 
 	_player = new Player(_topDownCamera);
@@ -122,10 +144,12 @@ bool InstanceTest::init() {
 
 	_billboards.init(textureID);
 
-	_tmpX = 7;
+	_tmpX = 10;
 	_tmpY = 10;
+
+	_tmpSide = 2;
 	
-	_cameraMode = 3;
+	_cameraMode = 1;
 
 	_numBullets = 0;
 
@@ -167,7 +191,7 @@ void InstanceTest::tick(float dt) {
 		_bullets[cnt].timer += dt;
 		_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * 4.0f;
 		ds::vec3 p = _bullets[cnt].pos;
-		if (p.y < -1.5f || p.y > 1.5f || p.x < -2.3f || p.x > 2.3f) {
+		if (p.y < -2.1f || p.y > 1.9f || p.x < -3.2f || p.x > 3.2f) {
 			if (_numBullets > 1) {
 				_bullets[cnt] = _bullets[_numBullets - 1];
 			}
@@ -178,7 +202,7 @@ void InstanceTest::tick(float dt) {
 		}
 	}
 
-	_cubes.tick(dt);
+	_cubes.tick(dt, _player->getPosition());
 
 	_grid->tick(dt);
 
@@ -191,7 +215,7 @@ void InstanceTest::tick(float dt) {
 		_shooting = false;
 	}
 
-	if (_shooting) {
+	if (_shooting && _cameraMode == 3) {
 		_bulletTimer += dt;
 		if (_bulletTimer >= 0.1f) {
 			addBullet();
@@ -200,6 +224,19 @@ void InstanceTest::tick(float dt) {
 	}
 
 	_numBullets = _cubes.checkCollisions(_bullets, _numBullets);
+
+	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+	r.setOrigin(_camera.position);
+	//ds::vec3 n = ds::vec3(0.0f, 0.0f, -1.0f);
+	//float denominator = dot(n, r.direction);
+	//float numerator = dot(n, r.origin) - 0.1;
+	//float t = -(numerator / denominator);
+	//_cursorPos = r.origin + r.direction * t;
+	_cursorPos = _grid->getIntersectionPoint(r);
+
+	ds::vec3 delta = _cursorPos - _player->getPosition();
+
+	_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
 }
 
 // ----------------------------------------------------
@@ -220,25 +257,58 @@ void InstanceTest::render() {
 		}
 	}
 	*/
+
+	
+
+
 	for (int i = 0; i < _numBullets; ++i) {
 		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, ds::Color(255,128,0,255));
 	}
 
-	_billboards.add(_player->getPosition(), ds::vec2(0.2f, 0.2f), ds::vec4(350, 0, 50, 53), _player->getRotation());
+	_billboards.add(_cursorPos, ds::vec2(0.2f, 0.2f), ds::vec4(550, 0, 64, 64));
+
+	_billboards.add(_player->getPosition(), ds::vec2(0.3f, 0.3f), ds::vec4(350, 0, 50, 53), _player->getRotation());
+
+	//_billboards.add(_player->getPosition(), ds::vec2(1.2f, 1.2f), ds::vec4(770, 100, 150, 150), _player->getRotation());
 
 	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
+
+
 
 	ds::dbgPrint(0, 0, "FPS: %d", ds::getFramesPerSecond());
 }
 
-void InstanceTest::renderGUI() {
+void InstanceTest::emittCubes(int side, int num) {
+	int xd = 0;
+	int yd = 0;
+	int sx = 0;
+	int sy = 0;
+	if (side == 1) {
+		sx = 2;
+		sy = (GRID_HEIGHT - num) / 2;
+		yd = 1;
+	}
+	else if (side == 2) {
+		sx = (GRID_WIDTH - num) / 2;
+		sy = GRID_HEIGHT - 3;
+		xd = 1;
+	}
+	else if (side == 3) {
+		sx = GRID_WIDTH - 2;
+		sy = (GRID_HEIGHT - num) / 2;
+		yd = 1;
+	}
+	else if (side == 4) {
+		sx = (GRID_WIDTH - num) / 2;
+		sy = 2;
+		xd = 1;
+	}
+	for (int i = 0; i < num; ++i) {
+		_queue->emitt(sx + xd * i, sy + yd * i);
+	}
+}
 
-	ds::vec2 mp = ds::getMousePosition();
-	ds::vec2 tmp;
-	ds::matrix matp = _camera.projectionMatrix;
-	tmp.x = ((2.0f * mp.x / 1024.0f) - 1.0f) * matp._11;
-	tmp.y = (-(2.0f * mp.y / 768.0f) + 1.0f) * matp._22;
-	
+void InstanceTest::renderGUI() {
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
@@ -262,10 +332,18 @@ void InstanceTest::renderGUI() {
 				_queue->emitt(_tmpX + i, _tmpY);
 			}
 		}
+		gui::Input("Side", &_tmpSide);
+		if (gui::Button("Emitt Line")) {
+			emittCubes(_tmpSide, 8);
+		}
 		gui::Value("Pos", _player->getPosition());
-		gui::Value("TMP", tmp);
+		gui::Value("Camera", _camera.position);
+		ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
+		gui::Value("Cursor", tmp);
+		gui::Value("Cubes", _cubes.getNumItems());
 		if (gui::Button("Reset Camera")) {
-			_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+			_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+			_player->setPosition(ds::vec3(0.0f));
 		}
 	}
 	gui::end();

@@ -23,8 +23,14 @@ public:
 		return _position;
 	}
 
+	void setPosition(const ds::vec3& p);
+
 	float getRotation() const {
 		return _rotation;
+	}
+
+	void setRotation(float angle) {
+		_rotation = angle;
 	}
 
 private:

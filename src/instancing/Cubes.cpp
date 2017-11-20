@@ -1,6 +1,9 @@
 #include "Cubes.h"
 #include "..\Mesh.h"
 
+// ----------------------------------------------------
+// init
+// ----------------------------------------------------
 void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 
 	_scalePath.add(0.0f, 0.05f);
@@ -32,26 +35,76 @@ void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 		.instancedVertexBuffer(hexInstanceBuffer)
 		.build();
 
-	ds::DrawCommand drawCmd = { mesh.getCount(), ds::DrawType::DT_INSTANCED, ds::PrimitiveTypes::TRIANGLE_LIST, 256 };
+	_drawCmd = { mesh.getCount(), ds::DrawType::DT_INSTANCED, ds::PrimitiveTypes::TRIANGLE_LIST, 256 };
 
 	RID groups[] = { stateGroup,basicGroup };
-	_drawItem = ds::compile(drawCmd, groups, 2);
+	_drawItem = ds::compile(_drawCmd, groups, 2);
 
 }
 
-void Cubes::tick(float dt) {
+// ------------------------------------------------
+// separate
+// ------------------------------------------------
+void Cubes::separate(float minDistance, float relaxation) {
+	float sqrDist = minDistance * minDistance;
+	for (int i = 0; i < _numItems; ++i) {
+		GridItem& current = _items[i];		
+		int cnt = 0;
+		ds::vec2 separationForce = ds::vec2(0, 0);
+		ds::vec2 averageDirection = ds::vec2(0, 0);
+		ds::vec2 distance = ds::vec2(0, 0);
+		ds::vec3 currentPos = current.pos;
+		for (int j = 0; j < _numItems; j++) {
+			if (i != j) {
+				if (_items[j].type == 1) {
+					ds::vec3 dist = _items[j].pos - currentPos;
+					if (sqr_length(dist) < sqrDist) {
+						++cnt;
+						separationForce += ds::vec2(dist.x,dist.y);
+						separationForce = normalize(separationForce);
+						separationForce = separationForce * relaxation;
+						averageDirection += separationForce;
+					}
+				}
+			}
+		}
+		if (cnt > 0) {
+			current.force -= averageDirection;
+		}
+	}
+}
+
+// ----------------------------------------------------
+// tick
+// ----------------------------------------------------
+void Cubes::tick(float dt, const ds::vec3& playerPosition) {
+	for (int i = 0; i < _numItems; ++i) {
+		_items[i].force = ds::vec3(0.0f);
+	}
+
+
 	for (int y = 0; y < _numItems; ++y) {
 		GridItem& item = _items[y];
 		if (item.animationFlags == 0) {
 			item.timer += dt;
-			item.pos += item.velocity * ds::getElapsedSeconds();
-			if (item.pos.x < -2.8f || item.pos.x > 2.8f) {
-				item.velocity.x *= -1.0f;
-				item.angle += ds::PI;
+			if (item.type == 0) {
+				item.pos += item.velocity * dt;
+				if (item.pos.x < -2.8f || item.pos.x > 2.8f) {
+					item.velocity.x *= -1.0f;
+					item.angle += ds::PI;
+				}
+				if (item.pos.y < -2.0f || item.pos.y > 2.0f) {
+					item.velocity.y *= -1.0f;
+					item.angle += ds::PI;
+				}
 			}
-			if (item.pos.y < -2.0f || item.pos.y > 2.0f) {
-				item.velocity.y *= -1.0f;
-				item.angle += ds::PI;
+			else if (item.type == 1) {
+				// seek
+				float velocity = 1.0f;
+				ds::vec3 diff = playerPosition - item.pos;
+				ds::vec2 n = normalize(ds::vec2(diff.x,diff.y));
+				ds::vec2 desired = n * velocity;
+				item.force += ds::vec3(desired);
 			}
 		}
 		for (int i = 0; i < item.numAnimations; ++i) {
@@ -62,7 +115,8 @@ void Cubes::tick(float dt) {
 					float n = anim.timer / anim.ttl;
 					if (n > 1.0f) {
 						n = 1.0f;
-						item.animationFlags &= ~1;
+						//item.animationFlags &= ~1;
+						item.animationFlags = 0;
 					}
 					item.scale = _scalePath.get(n);
 				}
@@ -77,13 +131,22 @@ void Cubes::tick(float dt) {
 			}
 		}
 	}
+
+	separate(0.2f, 0.9f);
+
+	for (int i = 0; i < _numItems; ++i) {
+		_items[i].pos += _items[i].force * dt;
+	}
 }
 
+// ----------------------------------------------------
+// create cube
+// ----------------------------------------------------
 void Cubes::create(const ds::vec3& pos, int animationFlags) {
 	if (_numItems < 256) {
 		GridItem& item = _items[_numItems++];
 		item.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
-		item.type = 0;
+		item.type = 1;
 		item.pos = pos;
 		item.timer = 0.0f;
 		item.angle = ds::random(0.0f, ds::TWO_PI);
@@ -93,41 +156,33 @@ void Cubes::create(const ds::vec3& pos, int animationFlags) {
 		item.numAnimations = 0;
 		Animation& anim = item.animations[item.numAnimations++];
 		anim.timer = 0.0f;
-		anim.ttl = 0.6f;
+		anim.ttl = 0.4f;
 		anim.type = 1;
-		Animation& nanim = item.animations[item.numAnimations++];
-		nanim.timer = 0.0f;
-		nanim.ttl = 0.6f;
-		nanim.type = 2;
 	}
 }
 
+// ----------------------------------------------------
+// render
+// ----------------------------------------------------
 void Cubes::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
 	for (int y = 0; y < _numItems; ++y) {
 		GridItem& item = _items[y];
-		if (item.type == 0) {
-			ds::matrix pm = ds::matTranslate(item.pos);
-			ds::matrix rx = ds::matRotationX(item.timer * 4.0f);
-			ds::matrix rz = ds::matRotationZ(item.angle);
-			ds::matrix sm = ds::matScale(ds::vec3(item.scale, item.scale, item.scale));
-			ds::matrix world = rx * rz * sm * pm;
-			_instances[y] = { ds::matTranspose(world), item.color };
-		}
-		else {
-			ds::matrix rx = ds::matRotationX(-ds::PI * 0.5f);
-			ds::matrix ry = ds::matRotationY(item.angle);
-			ds::matrix pm = ds::matTranslate(item.pos);
-			ds::matrix world = rx * pm;
-			_instances[y] = { ds::matTranspose(world), item.color };
-		}
-
+		ds::matrix pm = ds::matTranslate(item.pos);
+		ds::matrix rx = ds::matRotationX(item.timer * 4.0f);
+		ds::matrix rz = ds::matRotationZ(item.angle);
+		ds::matrix sm = ds::matScale(ds::vec3(item.scale, item.scale, item.scale));
+		ds::matrix world = rx * rz * sm * pm;
+		_instances[y] = { ds::matTranspose(world), item.color };		
 	}
 	ds::mapBufferData(_instanceVertexBuffer, _instances, sizeof(InstanceData) * _numItems);
 	_constantBuffer.mvp = ds::matTranspose(viewProjectionMatrix);
 	_constantBuffer.world = ds::matTranspose(ds::matIdentity());
-	ds::submit(renderPass, _drawItem);
+	ds::submit(renderPass, _drawItem, -1, _numItems);
 }
 
+// ----------------------------------------------------
+// collides
+// ----------------------------------------------------
 bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 	ds::vec2 d = ds::vec2(p2.x,p2.y) - ds::vec2(p1.x,p1.y);
 	if (sqr_length(d) < r1 * r2) {
@@ -136,6 +191,9 @@ bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 	return false;
 }
 
+// ----------------------------------------------------
+// check collisions with bullets
+// ----------------------------------------------------
 int Cubes::checkCollisions(Bullet* bullets, int num) {
 	int ret = num;
 	int y = 0;

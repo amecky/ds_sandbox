@@ -58,10 +58,12 @@
     <ClInclude Include="src\TestApp.h" />
     <ClInclude Include="src\TestSpriteApp.h" />
     <ClInclude Include="src\tweening\TweeningTest.h" />
+    <ClInclude Include="src\utils\comon_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
     <ClInclude Include="src\vm\VMTest.h" />
+    <ClInclude Include="src\warp\WarpingGrid.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
@@ -90,9 +92,11 @@
     <ClCompile Include="src\plugins\PluginRegistry.cpp" />
     <ClCompile Include="src\TestSpriteApp.cpp" />
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
+    <ClCompile Include="src\utils\comon_math.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
     <ClCompile Include="src\vm\VMTest.cpp" />
+    <ClCompile Include="src\warp\WarpingGrid.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>

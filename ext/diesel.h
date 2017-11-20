@@ -558,6 +558,14 @@ namespace ds {
 		return ret /= v;
 	}
 
+	inline float dot(const vec2& v, const vec2& u) {
+		float t = 0.0f;
+		for (int i = 0; i < 2; ++i) {
+			t += v.data[i] * u.data[i];
+		}
+		return t;
+	}
+
 	inline float dot(const vec3& v, const vec3& u) {
 		float t = 0.0f;
 		for (int i = 0; i < 3; ++i) {
@@ -1540,7 +1548,7 @@ namespace ds {
 	
 	RID compile(const DrawCommand cmd, RID group, const char* name = "UNKNOWN");
 
-	void submit(RID renderPass, RID drawItemID, int numElements = -1);
+	void submit(RID renderPass, RID drawItemID, int numElements = -1, int numInstances = -1);
 	
 	bool init(const RenderSettings& settings);
 
@@ -5246,7 +5254,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// submit draw command
 	// ------------------------------------------------------
-	void submit(RID renderPass, RID drawItemID, int numElements) {
+	void submit(RID renderPass, RID drawItemID, int numElements, int numInstances) {
 		uint16_t pidx = getResourceIndex(renderPass, RT_RENDER_PASS);
 		RenderPassResource* rpRes = (RenderPassResource*)_ctx->_resources[pidx];
 		RenderPass* pass = rpRes->get();
@@ -5297,10 +5305,14 @@ namespace ds {
 			num = numElements;
 		}
 		_ctx->d3dContext->IASetPrimitiveTopology(PRIMITIVE_TOPOLOGIES[cmd.topology]);
+		int ni = cmd.instances;
+		if (numInstances != -1) {
+			ni = numInstances;
+		}
 		switch (cmd.drawType) {
 			case DT_VERTICES: _ctx->d3dContext->Draw(num, 0); break;
 			case DT_INDEXED: _ctx->d3dContext->DrawIndexed(num, 0, 0); break;
-			case DT_INSTANCED: _ctx->d3dContext->DrawInstanced(num, cmd.instances, 0, 0); break;
+			case DT_INSTANCED: _ctx->d3dContext->DrawInstanced(num, ni, 0, 0); break;
 		}
 		// FIXME: is this correct? At least it removes the warnings when using render targets as textures
 		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };

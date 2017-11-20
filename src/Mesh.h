@@ -29,13 +29,20 @@ public:
 	void createSphere(const int subDivLevel);
 	void scaleStream(int streamID, float scale);
 	RID assemble();
+	void calculate();
 	int addStream(AttributeType type, float* data, int size, int components);
+	int getStreamIndex(AttributeType type);
 	RID createInputLayout(RID vertexShaderId);
-	int getCount() const;
+	void align();
+	uint32_t getCount() const;
 	void save(const char* fileName);
 	void load(const char* fileName);
 	void loadBin(const char* fileName, bool scale = true);
 private:
 	std::vector<Stream> _streams;
+	ds::vec3 _extent;
+	ds::vec3 _center;
+	ds::vec3 _min;
+	ds::vec3 _max;
 };
 

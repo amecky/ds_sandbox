@@ -1,10 +1,13 @@
 #pragma once
 #include <diesel.h>
 #include "InstanceCommon.h"
+#include "..\utils\comon_math.h"
 
-const int GRID_HEIGHT = 16;
-const int GRID_WIDTH = 24;
+const int GRID_HEIGHT = 24;
+const int GRID_WIDTH = 32;
 const int GRID_TOTAL = GRID_HEIGHT * GRID_WIDTH;
+const float GRID_SIZE = 0.3f;
+const float HALF_GRID_SIZE = 0.15f;
 
 enum BackgroundGridFlashing {
 	BGF_NONE,
@@ -38,6 +41,7 @@ public:
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 	ds::vec3 grid_to_screen(int x, int y);
 	void highlight(int x, int y, BackgroundGridFlashing type = BGF_ONE);
+	ds::vec3 getIntersectionPoint(const Ray& r);
 private:
 	BackgroundGridItem _items[GRID_TOTAL];
 	RID _gridDrawItem;
@@ -46,4 +50,5 @@ private:
 	InstanceBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;
 	BackgroundGridSettings* _settings;
+	Plane _plane;
 };

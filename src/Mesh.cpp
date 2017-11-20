@@ -33,6 +33,10 @@ void Mesh::clear() {
 		delete[] _streams[i].data;
 	}
 	_streams.clear();
+	_extent = ds::vec3(0.0f);
+	_min = ds::vec3(0.0f);
+	_max = ds::vec3(0.0f);
+	_center = ds::vec3(0.0f);
 }
 
 void subDivide(ds::vec3 *&dest, const ds::vec3 &v0, const ds::vec3 &v1, const ds::vec3 &v2, int level) {
@@ -150,16 +154,55 @@ RID Mesh::assemble() {
 		}		
 		offset += _streams[i].nComponents;
 	}
-	/*
-	for (int i = 0; i < maxSize; ++i) {
-		ds::log(LogLevel::LL_DEBUG, "--------------------------------------");
-		for (int j = 0; j < totalComponents; ++j) {
-			ds::log(LogLevel::LL_DEBUG, "%d %g", i, data[i * totalComponents + j]);
-		}
-	}
-	*/
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, maxSize, totalComponents * sizeof(float), data };
 	return ds::createVertexBuffer(vbInfo);
+}
+
+void Mesh::calculate() {
+	_min = { 10000.0f,10000.0f,10000.0f };
+	_max = { 0.0f,0.0f,0.0f };
+
+	int idx = getStreamIndex(AT_VERTEX);
+
+	const Stream& s = _streams[idx];
+	for (int i = 0; i < s.num; ++i) {
+		for (int j = 0; j < s.nComponents; ++j) {
+			float c = s.data[i * s.nComponents + j];
+			if (c > _max.data[j]) {
+				_max.data[j] = c;
+			}
+			if (c < _min.data[j]) {
+				_min.data[j] = c;
+			}
+		}
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		_center.data[i] = (_max.data[i] + _min.data[i]) * 0.5f;
+	}
+	for (int i = 0; i < 3; ++i) {
+		_extent.data[i] = (abs(_max.data[i]) + abs(_min.data[i]));
+	}
+}
+
+void Mesh::align() {
+	int idx = getStreamIndex(AT_VERTEX);
+	const Stream& s = _streams[idx];
+	for (int i = 0; i < s.num; ++i) {
+		for (int j = 0; j < s.nComponents; ++j) {
+			s.data[i * s.nComponents + j] -= _center.data[j];			
+		}
+	}
+	_center = ds::vec3(0.0f);
+}
+
+int Mesh::getStreamIndex(AttributeType type) {
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		if (_streams[i].type == type) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 void Mesh::scaleStream(int streamID, float scale) {
@@ -227,8 +270,8 @@ RID Mesh::createInputLayout(RID vertexShaderId) {
 	return ds::createInputLayout(layoutInfo);
 }
 
-int Mesh::getCount() const {
-	int cnt = 0;
+uint32_t Mesh::getCount() const {
+	uint32_t cnt = 0;
 	int offset = 0;
 	for (size_t i = 0; i < _streams.size(); ++i) {
 		int steps = _streams[i].num;
@@ -324,6 +367,10 @@ void Mesh::loadBin(const char* fileName, bool scale) {
 			fread(&positions[i].x, sizeof(float), 1, fp);
 			fread(&positions[i].y, sizeof(float), 1, fp);
 			fread(&positions[i].z, sizeof(float), 1, fp);
+
+
+
+
 			fread(&colors[i].r, sizeof(float), 1, fp);
 			fread(&colors[i].g, sizeof(float), 1, fp);
 			fread(&colors[i].b, sizeof(float), 1, fp);
@@ -339,5 +386,7 @@ void Mesh::loadBin(const char* fileName, bool scale) {
 		addStream(AT_COLOR, (float*)colors, total, 4);
 		addStream(AT_NORMAL, (float*)normals, total, 3);
 		fclose(fp);
+
+		calculate();
 	}
 }

@@ -28,6 +28,9 @@
     <Filter Include="instancing">
       <UniqueIdentifier>{9d75143a-df15-452a-a96d-cb8bc6397091}</UniqueIdentifier>
     </Filter>
+    <Filter Include="warp">
+      <UniqueIdentifier>{cfebba90-4762-407d-a537-8dca328c4503}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -136,6 +139,12 @@
     <ClInclude Include="src\instancing\Billboards.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\comon_math.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\warp\WarpingGrid.h">
+      <Filter>warp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -210,6 +219,12 @@
     </ClCompile>
     <ClCompile Include="src\instancing\Billboards.cpp">
       <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\comon_math.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\warp\WarpingGrid.cpp">
+      <Filter>warp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
