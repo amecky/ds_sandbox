@@ -1696,6 +1696,8 @@ namespace ds {
 	RID findResource(const StaticHash& hash, ResourceType type);
 
 	void rebuildCamera(Camera* camera);
+
+	Camera buildPerspectiveCamera(const vec3& pos);
 	
 	// drawing
 	
@@ -5363,6 +5365,24 @@ namespace ds {
 		rp->viewport = info.viewport;
 		RenderPassResource* res = new RenderPassResource(rp);
 		return addResource(res, RT_RENDER_PASS, name);
+	}
+
+	Camera buildPerspectiveCamera(const vec3& pos) {
+		matrix viewMatrix = matLookAtLH(pos, vec3(0, 0, 0), vec3(0, 1, 0));
+		matrix projectionMatrix = matPerspectiveFovLH(PI / 4.0f, getScreenAspectRatio(), 0.01f, 100.0f);
+		Camera camera = {
+			viewMatrix,
+			projectionMatrix,
+			viewMatrix * projectionMatrix,
+			pos,
+			vec3(0,0,1),
+			vec3(0,1,0),
+			vec3(1,0,0),
+			0.0f,
+			0.0f,
+			0.0f
+		};
+		return camera;
 	}
 
 	// ******************************************************
