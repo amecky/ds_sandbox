@@ -15,7 +15,6 @@ struct PS_Input {
 	float2 tex : TEXCOORD;
 };
 
-
 PS_Input VS_Main( VS_Input vertex ) {
     PS_Input vsOut = ( PS_Input )0;
 	float4 p = float4(vertex.position,1.0);
@@ -27,16 +26,18 @@ PS_Input VS_Main( VS_Input vertex ) {
 }
 
 cbuffer cbChangesPerObject : register(b0) {
-	float4 ambientColor;
-	float4 diffuseColor;
-	float3 lightDirection;
+	float width;
+	float base;
+	float amplitude;	
 	float padding;
+	float4 baseColor;
 };
 
 float4 PS_Main( PS_Input frag ) : SV_TARGET {
-	float r = (step(frag.tex.x,0.9) + step(frag.tex.y,0.9)) * 0.5;
-	r = frag.tex.x;
- 	float4 color = float4(r,0.0,0.0, 1.0);
+	float r = base - (step(frag.tex.x,width) + step(frag.tex.y,width)) * amplitude;
+	//r = frag.tex.x;
+ 	float4 color = baseColor * r;
+	 color.a = 1.0;
 	return color;
 }
 

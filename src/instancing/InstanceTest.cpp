@@ -33,7 +33,8 @@ InstanceTest::InstanceTest() {
 
 InstanceTest::~InstanceTest() {
 	delete _queue;
-	delete _grid;
+	//delete _grid;
+	delete _warpingGrid;
 	delete _player;
 	delete _fpsCamera;
 	delete _topDownCamera;
@@ -131,13 +132,20 @@ bool InstanceTest::init() {
 	_gridSettings.pulseTTL = 2.0f;
 	_gridSettings.pulseAmplitude = 3.0f;
 
-	_grid = new BackgroundGrid(&_gridSettings);
+	//_grid = new BackgroundGrid(&_gridSettings);
+	//_grid->init(baseGroup, bumpVS, bumpPS);
+	_settings.amplitude = 0.4f;
+	_settings.base = 0.7f;
+	_settings.width = 0.9f;
+	_settings.padding = 0.0f;
+	_settings.baseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 
-	_grid->init(baseGroup, bumpVS, bumpPS);
+	_warpingGrid = new WarpingGrid(&_settings);
+	_warpingGrid->init();
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
-	_queue = new EmitterQueue(_grid, &_cubes);
+	_queue = new EmitterQueue(_warpingGrid, &_cubes);
 
 	_player = new Player(_topDownCamera);
 	_player->init();
@@ -204,7 +212,8 @@ void InstanceTest::tick(float dt) {
 
 	_cubes.tick(dt, _player->getPosition());
 
-	_grid->tick(dt);
+	//_grid->tick(dt);
+	_warpingGrid->tick(dt);
 
 	_queue->tick(dt);
 
@@ -248,7 +257,7 @@ void InstanceTest::render() {
 	
 	_cubes.render(_basicPass, _camera.viewProjectionMatrix);
 	
-	_grid->render(_basicPass, _camera.viewProjectionMatrix);
+	//_grid->render(_basicPass, _camera.viewProjectionMatrix);
 
 	/*
 	for (int j = 0; j < 5; ++j) {
@@ -318,12 +327,14 @@ void InstanceTest::renderGUI() {
 		gui::Input("GX", &_tmpX);
 		gui::Input("GY", &_tmpY);
 		gui::Value("Bullets", _numBullets);
+		/*
 		if (gui::Button("Flash ONE")) {
 			_grid->highlight(_tmpX, _tmpY, BGF_ONE);
 		}
 		if (gui::Button("Flash PULSE")) {
 			_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
 		}
+		*/
 		if (gui::Button("Emitt")) {
 			_queue->emitt(_tmpX, _tmpY);
 		}

@@ -23,7 +23,7 @@
 #include "kenney\AssetViewer.h"
 #include "binary\BinaryClock.h"
 #include "instancing\InstanceTest.h"
-#include "warp\WarpingGrid.h"
+#include "warp\WarpingGridApp.h"
 // ---------------------------------------------------------------
 // initialize rendering system
 // ---------------------------------------------------------------
@@ -174,7 +174,7 @@ void run_particle_plugin_test() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	TestApp* app = new WarpingGrid;
+	TestApp* app = new WarpingGridApp;
 	//TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;
 	//TestApp* app = new AssetViewer;

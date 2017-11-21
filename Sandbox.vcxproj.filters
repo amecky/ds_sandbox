@@ -145,6 +145,9 @@
     <ClInclude Include="src\warp\WarpingGrid.h">
       <Filter>warp</Filter>
     </ClInclude>
+    <ClInclude Include="src\warp\WarpingGridApp.h">
+      <Filter>warp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -224,6 +227,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\warp\WarpingGrid.cpp">
+      <Filter>warp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\warp\WarpingGridApp.cpp">
       <Filter>warp</Filter>
     </ClCompile>
   </ItemGroup>

@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "Billboards.h"
 #include "..\utils\comon_math.h"
+#include "..\warp\WarpingGrid.h"
 
 class InstanceTest : public TestApp {
 
@@ -42,11 +43,13 @@ private:
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
 	TopDownCamera* _topDownCamera;
-	BackgroundGrid* _grid;
+	//BackgroundGrid* _grid;
 	EmitterQueue* _queue;
 	Cubes _cubes;
 	Player* _player;
 	BackgroundGridSettings _gridSettings;
+	WarpingGridBuffer _settings;
+	WarpingGrid* _warpingGrid;
 	Billboards _billboards;
 	int _tmpX;
 	int _tmpY;

@@ -21,6 +21,14 @@ struct WarpingGridVertex {
 	ds::vec2 uv;
 };
 
+struct WarpingGridBuffer {
+	float width;
+	float base;
+	float amplitude;
+	float padding;
+	ds::Color baseColor;
+};
+
 struct Spring {
 	int sx;
 	int sy;
@@ -32,55 +40,41 @@ struct Spring {
 
 };
 
-const int GRID_SIZE_X = 20;
-const int GRID_SIZE_Y = 15;
+const int GRID_SIZE_X = 40;
+const int GRID_SIZE_Y = 30;
 const int TOTAL_GRID_SIZE = GRID_SIZE_X * GRID_SIZE_Y;
 const float GRID_DIM = 0.2f;
 
-class WarpingGrid : public TestApp {
+class WarpingGrid {
 
 public:
-	WarpingGrid();
+
+	WarpingGrid(WarpingGridBuffer* settings);
 
 	virtual ~WarpingGrid();
-
-	ds::RenderSettings getRenderSettings();
-
-	bool usesGUI() {
-		return true;
-	}
-
-	bool useFixedTimestep() const {
-		return true;
-	}
 
 	bool init();
 
 	void tick(float dt);
 
-	void render();
+	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 
-	void renderGUI();
+	void applyForce(int x, int y, float radius, const ds::vec3& force);
+
+	void applyForce(int x, int y, const ds::vec3& force);
+
+	ds::vec3 getIntersectionPoint(const Ray& r);
 
 private:
 	void addSpring(int x1, int y1, int x2, int y2, float stiffness, float damping);
-	void applyForce(int x, int y, float radius, const ds::vec3& force);
 	GridPoint* _points;
 	uint16_t* _indices;
 	WarpingGridVertex* _vertices;
 	RID _drawItem;
-	RID _basicPass;
-	InstanceLightBuffer _lightBuffer;
 	InstanceBuffer _constantBuffer;
-	ds::Camera _camera;
-	FPSCamera* _fpsCamera;
-	ds::vec3 _lightPos;
 	RID _cubeBuffer;
 	int _numVertices;
-	float _timer;
 	std::vector<Spring> _springs;
-
-	int _dbgX;
-	int _dbgY;
-	float _dbgForce;
+	WarpingGridBuffer* _warpingGridBuffer;
+	Plane _plane;
 };
