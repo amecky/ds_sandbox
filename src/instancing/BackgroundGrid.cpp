@@ -2,7 +2,7 @@
 #include "..\Mesh.h"
 #include "..\utils\tweening.h"
 
-ds::vec3 BackgroundGrid::grid_to_screen(int x, int y) {
+ds::vec3 BackgroundGrid::convert_grid_coords(int x, int y) {
 	float cx = static_cast<float>(GRID_WIDTH) * GRID_SIZE * 0.5f - HALF_GRID_SIZE;
 	float cy = static_cast<float>(GRID_HEIGHT) * GRID_SIZE * 0.5f - HALF_GRID_SIZE;
 	return ds::vec3(-cx + static_cast<float>(x) * GRID_SIZE, -cy + static_cast<float>(y) * GRID_SIZE, 0.0f);
@@ -13,7 +13,7 @@ void BackgroundGrid::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId)
 	for (int y = 0; y < GRID_HEIGHT; ++y) {
 		for (int x = 0; x < GRID_WIDTH; ++x) {
 			BackgroundGridItem& item = _items[x + y * GRID_WIDTH];
-			ds::vec3 np = grid_to_screen(x, y);
+			ds::vec3 np = convert_grid_coords(x, y);
 			item.color = _settings->gridColor;
 			np.z = 0.1f + ds::random(-0.05f, 0.05f);
 			if (x == 0 || x == (GRID_WIDTH - 1) || y == 0 || y == (GRID_HEIGHT - 1)) {

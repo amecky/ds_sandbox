@@ -9,6 +9,7 @@
 #include "Billboards.h"
 #include "..\utils\comon_math.h"
 #include "..\warp\WarpingGrid.h"
+#include "..\utils\EventStream.h"
 
 class InstanceTest : public TestApp {
 
@@ -60,4 +61,6 @@ private:
 	bool _shooting;
 	float _bulletTimer;
 	ds::vec3 _cursorPos;
+	ds::EventStream _events;
+	bool _running;
 };

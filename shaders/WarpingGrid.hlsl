@@ -34,9 +34,15 @@ cbuffer cbChangesPerObject : register(b0) {
 };
 
 float4 PS_Main( PS_Input frag ) : SV_TARGET {
-	float r = base - (step(frag.tex.x,width) + step(frag.tex.y,width)) * amplitude;
-	//r = frag.tex.x;
- 	float4 color = baseColor * r;
+	float4 color = float4(1.0,1.0,1.0,1.0);
+	if ( frag.color.r == 1.0) {
+		float r = (base - saturate((step(width,frag.tex.x) + step(width,frag.tex.y))) * amplitude) * frag.color.g;		
+ 		color = baseColor * r;
+	}
+	else {
+		float r = base - (step(frag.tex.x,width) + step(frag.tex.y,width)) * amplitude;		
+ 		color = baseColor * r;
+	}
 	 color.a = 1.0;
 	return color;
 }

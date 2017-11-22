@@ -60,6 +60,7 @@
     <ClInclude Include="src\tweening\TweeningTest.h" />
     <ClInclude Include="src\utils\comon_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
+    <ClInclude Include="src\utils\EventStream.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
     <ClInclude Include="src\vm\VMTest.h" />
@@ -94,6 +95,7 @@
     <ClCompile Include="src\TestSpriteApp.cpp" />
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\comon_math.cpp" />
+    <ClCompile Include="src\utils\EventStream.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
     <ClCompile Include="src\vm\VMTest.cpp" />

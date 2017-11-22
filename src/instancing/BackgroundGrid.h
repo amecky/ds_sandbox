@@ -3,8 +3,8 @@
 #include "InstanceCommon.h"
 #include "..\utils\comon_math.h"
 
-const int GRID_HEIGHT = 24;
-const int GRID_WIDTH = 32;
+const int GRID_HEIGHT = 20;
+const int GRID_WIDTH = 30;
 const int GRID_TOTAL = GRID_HEIGHT * GRID_WIDTH;
 const float GRID_SIZE = 0.3f;
 const float HALF_GRID_SIZE = 0.15f;
@@ -39,7 +39,7 @@ public:
 	void tick(float dt);
 	void init(RID basicGroup, RID vertexShaderId, RID pixelShaderId);
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
-	ds::vec3 grid_to_screen(int x, int y);
+	ds::vec3 convert_grid_coords(int x, int y);
 	void highlight(int x, int y, BackgroundGridFlashing type = BGF_ONE);
 	ds::vec3 getIntersectionPoint(const Ray& r);
 private:

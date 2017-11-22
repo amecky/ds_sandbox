@@ -10,20 +10,20 @@ void wgLogHandler(const LogLevel&, const char* message) {
 	OutputDebugString("\n");
 }
 
-ds::vec3 convert_grid_coords(int x, int y) {
-	float cx = static_cast<float>(GRID_SIZE_X) * GRID_DIM * 0.5f - GRID_DIM * 0.5f;
-	float cy = static_cast<float>(GRID_SIZE_Y) * GRID_DIM * 0.5f - GRID_DIM * 0.5f;
-	return ds::vec3(-cx + x * GRID_DIM, cy - y * GRID_DIM, 0.0f);
-}
-
-WarpingGrid::WarpingGrid(WarpingGridBuffer* settings) : _warpingGridBuffer(settings) {
-
+WarpingGrid::WarpingGrid(WarpingGridBuffer* settings, float gridDimension) : _warpingGridBuffer(settings) , _gridDimension(gridDimension) {
+	_halfGridDimension = _gridDimension * 0.5f;
+	_gridCenter.x = static_cast<float>(GRID_SIZE_X) * _gridDimension * 0.5f - _halfGridDimension;
+	_gridCenter.y = static_cast<float>(GRID_SIZE_Y) * _gridDimension * 0.5f - _halfGridDimension;
 }
 
 WarpingGrid::~WarpingGrid() {
 	delete _points;
 	delete _indices;
 	delete _vertices;
+}
+
+ds::vec3 WarpingGrid::convert_grid_coords(int x, int y) {
+	return ds::vec3(-_gridCenter.x + x * _gridDimension, _gridCenter.y - y * _gridDimension, 0.0f);
 }
 
 void WarpingGrid::addSpring(int x1, int y1, int x2, int y2, float stiffness, float damping) {
@@ -51,6 +51,9 @@ bool WarpingGrid::init() {
 			vp.damping = 0.98f;
 			vp.invMass = 1.0f;
 			vp.movable = true;
+			vp.color = ds::Color(0.0f, 1.0f, 1.0f, 1.0f);
+			vp.timer = 0.0f;
+			vp.marked = false;
 			if (x == 0 || y == 0 || x == (GRID_SIZE_X - 1) || y == (GRID_SIZE_Y - 1)) {
 				vp.invMass = 0.0f;
 				vp.movable = false;
@@ -93,7 +96,6 @@ bool WarpingGrid::init() {
 	for (int i = 0; i < sz; ++i) {
 		_vertices[i].pos = _points[_indices[i]].position;
 		_vertices[i].color = ds::Color(1.0f,1.0f,1.0f, 1.0f);
-		//_vertices[i].color = ds::Color(0.5f, 0.0f, 0.0f, 1.0f);
 		int idx = i % 3;
 		offset = (i / 3) & 1;
 		_vertices[i].uv = UV[offset * 3 + idx];				
@@ -157,6 +159,15 @@ void WarpingGrid::tick(float dt) {
 				gp.old_pos = temp;
 				gp.acceleration = ds::vec3(0.0f);
 			}
+			if (gp.timer > 0.0f) {
+				gp.timer -= dt;
+				float c = abs(sin(gp.timer / 2.0f * ds::PI*4.0f));
+				gp.color = ds::Color(1.0f, c, 1.0f, 1.0f);
+				if (gp.timer < 0.0f) {
+					gp.timer = 0.0f;
+					gp.color = ds::Color(0.0f, 1.0f, 1.0f, 1.0f);
+				}
+			}
 		}
 	}
 
@@ -181,9 +192,11 @@ void WarpingGrid::tick(float dt) {
 void WarpingGrid::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 
 	_constantBuffer.mvp = ds::matTranspose(viewProjectionMatrix);
-
+	float zOffset = 1.0f;
 	for (int i = 0; i < _numVertices; ++i) {
 		_vertices[i].pos = _points[_indices[i]].position;
+		_vertices[i].pos.z += zOffset;
+		_vertices[i].color = _points[_indices[i]].color;
 	}
 	ds::mapBufferData(_cubeBuffer, _vertices, sizeof(WarpingGridVertex) * _numVertices);
 	ds::submit(renderPass, _drawItem);
@@ -198,8 +211,18 @@ ds::vec3 WarpingGrid::getIntersectionPoint(const Ray & r) {
 	return _plane.getIntersection(r);
 }
 
-void WarpingGrid::applyForce(int x, int y, float radius, const ds::vec3& force) {
-	ds::vec3 center = convert_grid_coords(x, y);
+void WarpingGrid::highlight(int x, int y) {
+	int xds[] = { 0,1,0,1 };
+	int yds[] = { 0,0,1,1 };
+	for (int i = 0; i < 4; ++i) {
+		GridPoint& gp = _points[x +xds[i] + (y + yds[i])* GRID_SIZE_X];
+		gp.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
+		gp.timer = 2.0f;
+		gp.marked = true;
+	}
+}
+
+void WarpingGrid::applyForce(const ds::vec3& center, float radius, const ds::vec3& force) {
 	for (int y = 0; y < GRID_SIZE_Y; ++y) {
 		for (int x = 0; x < GRID_SIZE_X; ++x) {
 			GridPoint& gp = _points[x + y * GRID_SIZE_X];
@@ -209,4 +232,9 @@ void WarpingGrid::applyForce(int x, int y, float radius, const ds::vec3& force) 
 			}
 		}
 	}
+}
+
+void WarpingGrid::applyForce(int x, int y, float radius, const ds::vec3& force) {
+	ds::vec3 center = convert_grid_coords(x, y);
+	applyForce(center, radius, force);
 }

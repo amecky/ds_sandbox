@@ -40,7 +40,7 @@ bool WarpingGridApp::init() {
 	_warpingGridBuffer.padding = 0.0f;
 	_warpingGridBuffer.baseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 
-	_grid = new WarpingGrid(&_warpingGridBuffer);
+	_grid = new WarpingGrid(&_warpingGridBuffer, 0.2f);
 	_grid->init();
 
 	_dbgX = 5;

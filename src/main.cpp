@@ -36,146 +36,14 @@ void initialize() {
 	rs.multisampling = 4;
 	ds::init(rs);
 }
-/*
-void run_particle_plugin_test() {
-	//_CrtSetBreakAlloc(160);
-	SetThreadAffinityMask(GetCurrentThread(), 1);
 
-	plugin_registry* registry = get_registry();
-	//load_log_panel_plugin(&registry);
-	//logPanel = (log_panel_plugin*)registry.get(LOG_PANEL_PLUGIN_NAME);
-	//assert(logPanel != 0);
-
-	//logging::logHandler = myLogging;
-	//logging::currentLevel = logging::LL_DEBUG;
-
-	//load_plugin(&registry, "log_panel_plugin");
-
-
-
-	//logpanel::init(32);
-	perf::init();
-
-
-	initialize();
-
-	gui::init();
-
-
-
-	// load image using stb_image
-	RID textureID = loadImage("content\\TextureArray.png");
-
-	// create the sprite batch buffer
-	SpriteBatchBufferInfo sbbInfo = { 2048, textureID, ds::TextureFilters::LINEAR };
-	SpriteBatchBuffer spriteBuffer(sbbInfo);
-
-	bool running = true;
-
-	//TweeningTest tweeningTest(&spriteBuffer);
-
-	//AnimationTest animationTest(&spriteBuffer);
-
-	//ParticleExpressionTest particleTest(registry,&spriteBuffer);
-
-	ParticlePluginTest particlePluginTest(registry, &spriteBuffer);
-
-	//VMTest vmTest(&spriteBuffer);
-
-	int l_count = 0;
-
-	bool reload = true;
-	float reloadTimer = 0.0f;
-
-	float timeStep = 1.0f / 60.0f;
-	float gameTimer = 0.0f;
-	float currentTime = 0.0f;
-	float accu = 0.0f;
-
-	while (ds::isRunning() && running) {
-
-		if (reload) {
-			reloadTimer += ds::getElapsedSeconds();
-			if (reloadTimer >= 0.5f) {
-				reloadTimer -= 0.5f;
-				registry->check_plugins();
-			}
-		}
-
-		perf::reset();
-
-		perf::ZoneTracker("main");
-
-		{
-			perf::ZoneTracker("main::begin");
-			ds::begin();
-		}
-
-		{
-			perf::ZoneTracker("main::update");
-			gameTimer += ds::getElapsedSeconds();
-			accu += ds::getElapsedSeconds();
-			if (accu > 0.25f) {
-				accu = 0.25f;
-			}
-			int cnt = 0;
-			while (accu >= timeStep) {
-				//LOG_DEBUG("add %g - %d", accu,cnt);
-				particlePluginTest.tick(timeStep);
-				accu -= timeStep;
-				++cnt;
-			}
-
-		}
-
-
-		{
-			perf::ZoneTracker("main::render");
-			spriteBuffer.begin();
-
-			//tweeningTest.render();
-			//animationTest.render();
-			//vmTest.render();
-			//particleTest.render();
-			//font::renderText(ds::vec2(20, 550), "Hello World", &spriteBuffer);
-			//font::renderText(ds::vec2(20, 90), "RSTUVWXYZ", &spriteBuffer);
-
-			particlePluginTest.render();
-
-			spriteBuffer.flush();
-		}
-		//tweeningTest.renderGUI();
-		//animationTest.renderGUI();
-		//vmTest.renderGUI();
-		{
-			perf::ZoneTracker("main::renderGUI");
-			particlePluginTest.renderGUI();
-		}
-		//perf::tickFPS(ds::getElapsedSeconds());		
-
-		{
-			perf::ZoneTracker("main::end");
-			ds::end();
-		}
-		perf::finalize();
-
-
-	}
-	perf::shutdown();
-	gui::shutdown();
-	//logpanel::shutdown();
-	//unload_log_panel_plugin(&registry);
-	shutdown_registry();
-	ds::shutdown();
-}
-*/
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	TestApp* app = new WarpingGridApp;
-	//TestApp* app = new InstanceTest;
+	//TestApp* app = new WarpingGridApp;
+	TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;
 	//TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;

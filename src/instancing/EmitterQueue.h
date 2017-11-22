@@ -1,7 +1,5 @@
 #pragma once
-
-class BackgroundGrid;
-class Cubes;
+#include "..\utils\EventStream.h"
 
 struct QueueEntry {
 	int x;
@@ -13,12 +11,10 @@ struct QueueEntry {
 class EmitterQueue {
 
 public:
-	EmitterQueue(BackgroundGrid* grid, Cubes* cubes) : _grid(grid), _cubes(cubes), _numEntries(0) {}
-	void tick(float dt);
-	void emitt(int x, int y);
+	EmitterQueue() : _numEntries(0) {}
+	void tick(float dt, ds::EventStream* events);
+	void emitt(int x, int y, ds::EventStream* events);
 private:
-	BackgroundGrid* _grid;
-	Cubes* _cubes;
 	QueueEntry _entries[512];
 	int _numEntries;
 };

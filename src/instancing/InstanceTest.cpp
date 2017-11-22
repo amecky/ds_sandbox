@@ -29,6 +29,7 @@ float getAngle(const ds::vec2& v1, const ds::vec2& v2) {
 }
 
 InstanceTest::InstanceTest() {
+	_running = true;
 }
 
 InstanceTest::~InstanceTest() {
@@ -140,12 +141,12 @@ bool InstanceTest::init() {
 	_settings.padding = 0.0f;
 	_settings.baseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 
-	_warpingGrid = new WarpingGrid(&_settings);
+	_warpingGrid = new WarpingGrid(&_settings, 0.3f);
 	_warpingGrid->init();
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
-	_queue = new EmitterQueue(_warpingGrid, &_cubes);
+	_queue = new EmitterQueue;
 
 	_player = new Player(_topDownCamera);
 	_player->init();
@@ -157,7 +158,7 @@ bool InstanceTest::init() {
 
 	_tmpSide = 2;
 	
-	_cameraMode = 1;
+	_cameraMode = 3;
 
 	_numBullets = 0;
 
@@ -183,69 +184,92 @@ void InstanceTest::addBullet() {
 // tick
 // ----------------------------------------------------
 void InstanceTest::tick(float dt) {
-	if (_cameraMode == 1) {
-		_fpsCamera->update(dt);
-	}
-	else if (_cameraMode == 2) {
-		_topDownCamera->update(dt);
-	}
-	else if (_cameraMode == 3) {
-		_player->tick(dt);
-	}
 
-	int cnt = 0;
-	while ( cnt < _numBullets) {
-		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
-		_bullets[cnt].timer += dt;
-		_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * 4.0f;
-		ds::vec3 p = _bullets[cnt].pos;
-		if (p.y < -2.1f || p.y > 1.9f || p.x < -3.2f || p.x > 3.2f) {
-			if (_numBullets > 1) {
-				_bullets[cnt] = _bullets[_numBullets - 1];
+	_events.reset();
+
+	if (_running) {
+		if (_cameraMode == 1) {
+			_fpsCamera->update(dt);
+		}
+		else if (_cameraMode == 2) {
+			_topDownCamera->update(dt);
+		}
+		else if (_cameraMode == 3) {
+			_player->tick(dt);
+		}
+
+		int cnt = 0;
+		while (cnt < _numBullets) {
+			_bullets[cnt].pos += _bullets[cnt].velocity * dt;
+			_bullets[cnt].timer += dt;
+			_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * 4.0f;
+			ds::vec3 p = _bullets[cnt].pos;
+			if (p.y < -2.1f || p.y > 1.9f || p.x < -3.2f || p.x > 3.2f) {
+				if (_numBullets > 1) {
+					_bullets[cnt] = _bullets[_numBullets - 1];
+				}
+				--_numBullets;
 			}
-			--_numBullets;
+			else {
+				++cnt;
+			}
 		}
-		else {
-			++cnt;
+
+		_cubes.tick(dt, _player->getPosition());
+
+		//_grid->tick(dt);
+		_warpingGrid->tick(dt);
+
+		_queue->tick(dt, &_events);
+
+		if (ds::isMouseButtonPressed(0) && !_shooting) {
+			_shooting = true;
+		}
+		if (!ds::isMouseButtonPressed(0) && _shooting) {
+			_shooting = false;
+		}
+
+		if (_shooting && _cameraMode == 3) {
+			_bulletTimer += dt;
+			if (_bulletTimer >= 0.1f) {
+				addBullet();
+				_bulletTimer -= 0.1f;
+			}
+		}
+
+		_numBullets = _cubes.checkCollisions(_bullets, _numBullets, &_events);
+
+		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+		r.setOrigin(_camera.position);
+		_cursorPos = _warpingGrid->getIntersectionPoint(r);
+
+		ds::vec3 delta = _cursorPos - _player->getPosition();
+
+		_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
+
+		for (uint32_t i = 0; i < _events.num(); ++i) {
+			int type = _events.getType(i);
+			if (type == 100 || type == 101) {
+				ds::vec3 p;
+				_events.get(i, &p);
+				_warpingGrid->applyForce(p, 0.4f, ds::vec3(0.0f, 0.0f, 0.15f));
+			}
+			else if (type == 102) {
+				QueueEntry entry;
+				_events.get(i, &entry);
+				_cubes.create(_warpingGrid->convert_grid_coords(entry.x, entry.y), 2);
+			}
+		}
+
+	}
+	else {
+		if (_cameraMode == 1) {
+			_fpsCamera->update(dt);
+		}
+		else if (_cameraMode == 2) {
+			_topDownCamera->update(dt);
 		}
 	}
-
-	_cubes.tick(dt, _player->getPosition());
-
-	//_grid->tick(dt);
-	_warpingGrid->tick(dt);
-
-	_queue->tick(dt);
-
-	if (ds::isMouseButtonPressed(0) && !_shooting ) {
-		_shooting = true;
-	}
-	if (!ds::isMouseButtonPressed(0) && _shooting) {
-		_shooting = false;
-	}
-
-	if (_shooting && _cameraMode == 3) {
-		_bulletTimer += dt;
-		if (_bulletTimer >= 0.1f) {
-			addBullet();
-			_bulletTimer -= 0.1f;
-		}
-	}
-
-	_numBullets = _cubes.checkCollisions(_bullets, _numBullets);
-
-	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
-	r.setOrigin(_camera.position);
-	//ds::vec3 n = ds::vec3(0.0f, 0.0f, -1.0f);
-	//float denominator = dot(n, r.direction);
-	//float numerator = dot(n, r.origin) - 0.1;
-	//float t = -(numerator / denominator);
-	//_cursorPos = r.origin + r.direction * t;
-	_cursorPos = _grid->getIntersectionPoint(r);
-
-	ds::vec3 delta = _cursorPos - _player->getPosition();
-
-	_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
 }
 
 // ----------------------------------------------------
@@ -259,32 +283,19 @@ void InstanceTest::render() {
 	
 	//_grid->render(_basicPass, _camera.viewProjectionMatrix);
 
-	/*
-	for (int j = 0; j < 5; ++j) {
-		for (int i = 0; i < 12; ++i) {
-			_billboards.add(ds::vec3(-2.0f + i * 0.3f, 1.0f - j * 0.3f, 0.0f), ds::vec2(0.2f, 0.2f), ds::vec4(0, 700, 256, 256));
-		}
-	}
-	*/
-
-	
-
+	_warpingGrid->render(_basicPass, _camera.viewProjectionMatrix);
 
 	for (int i = 0; i < _numBullets; ++i) {
 		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, ds::Color(255,128,0,255));
 	}
 
-	_billboards.add(_cursorPos, ds::vec2(0.2f, 0.2f), ds::vec4(550, 0, 64, 64));
 
 	_billboards.add(_player->getPosition(), ds::vec2(0.3f, 0.3f), ds::vec4(350, 0, 50, 53), _player->getRotation());
 
-	//_billboards.add(_player->getPosition(), ds::vec2(1.2f, 1.2f), ds::vec4(770, 100, 150, 150), _player->getRotation());
+	_billboards.add(_cursorPos, ds::vec2(0.2f, 0.2f), ds::vec4(550, 0, 64, 64));
 
 	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
 
-
-
-	ds::dbgPrint(0, 0, "FPS: %d", ds::getFramesPerSecond());
 }
 
 void InstanceTest::emittCubes(int side, int num) {
@@ -313,7 +324,8 @@ void InstanceTest::emittCubes(int side, int num) {
 		xd = 1;
 	}
 	for (int i = 0; i < num; ++i) {
-		_queue->emitt(sx + xd * i, sy + yd * i);
+		_queue->emitt(sx + xd * i, sy + yd * i, &_events);
+		_warpingGrid->highlight(sx + xd * i, sy + yd * i);
 	}
 }
 
@@ -336,16 +348,20 @@ void InstanceTest::renderGUI() {
 		}
 		*/
 		if (gui::Button("Emitt")) {
-			_queue->emitt(_tmpX, _tmpY);
+			_queue->emitt(_tmpX, _tmpY, &_events);
 		}
 		if (gui::Button("Emitt Line X")) {
 			for (int i = 0; i < 8; ++i) {
-				_queue->emitt(_tmpX + i, _tmpY);
+				_queue->emitt(_tmpX + i, _tmpY, &_events);
 			}
 		}
 		gui::Input("Side", &_tmpSide);
 		if (gui::Button("Emitt Line")) {
 			emittCubes(_tmpSide, 8);
+		}
+		if (gui::Button("Emitt rnd Line")) {
+			int side = ds::random(0.0f, 3.9f);
+			emittCubes(side, 8);
 		}
 		gui::Value("Pos", _player->getPosition());
 		gui::Value("Camera", _camera.position);
@@ -356,6 +372,17 @@ void InstanceTest::renderGUI() {
 			_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 			_player->setPosition(ds::vec3(0.0f));
 		}
+		if (_running) {
+			if (gui::Button("Stop")) {
+				_running = false;
+			}
+		}
+		else {
+			if (gui::Button("Start")) {
+				_running = true;
+			}
+		}
+
 	}
 	gui::end();
 }

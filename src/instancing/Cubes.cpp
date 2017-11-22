@@ -1,6 +1,5 @@
 #include "Cubes.h"
 #include "..\Mesh.h"
-
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
@@ -194,7 +193,7 @@ bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 // ----------------------------------------------------
 // check collisions with bullets
 // ----------------------------------------------------
-int Cubes::checkCollisions(Bullet* bullets, int num) {
+int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 	int ret = num;
 	int y = 0;
 	while ( y < _numItems) {
@@ -206,6 +205,8 @@ int Cubes::checkCollisions(Bullet* bullets, int num) {
 			const Bullet& b = bullets[cnt];
 			if (collides(ip, 0.2f, b.pos, 0.1f)) {
 				bullets[cnt] = bullets[ret - 1];
+				ds::vec3 bp = b.pos;
+				events->add(100, &bp, sizeof(ds::vec3));
 				--ret;
 				hit = true;
 			}
@@ -215,6 +216,7 @@ int Cubes::checkCollisions(Bullet* bullets, int num) {
 		}
 		if (hit) {
 			if (_numItems > 1) {
+				events->add(101, &_items[y].pos, sizeof(ds::vec3));
 				_items[y] = _items[_numItems - 1];
 			}
 			--_numItems;

@@ -2,6 +2,7 @@
 #include <diesel.h>
 #include "..\utils\DynamicPath.h"
 #include "InstanceCommon.h"
+#include "..\utils\EventStream.h"
 
 struct Animation {
 	int type;
@@ -32,7 +33,7 @@ public:
 	void tick(float dt, const ds::vec3& playerPosition);
 	void render(RID renderPass, const ds::matrix viewProjectionMatrix);
 	void create(const ds::vec3& pos, int animationFlags);
-	int checkCollisions(Bullet* bullets, int num);
+	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	int getNumItems() const {
 		return _numItems;
 	}

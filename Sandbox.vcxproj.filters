@@ -148,6 +148,9 @@
     <ClInclude Include="src\warp\WarpingGridApp.h">
       <Filter>warp</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\EventStream.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -231,6 +234,9 @@
     </ClCompile>
     <ClCompile Include="src\warp\WarpingGridApp.cpp">
       <Filter>warp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\EventStream.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

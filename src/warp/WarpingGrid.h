@@ -13,6 +13,10 @@ struct GridPoint {
 	float damping;
 	ds::vec3 acceleration;
 	bool movable;
+
+	float timer;
+	bool marked;
+	ds::Color color;
 };
 
 struct WarpingGridVertex {
@@ -40,16 +44,15 @@ struct Spring {
 
 };
 
-const int GRID_SIZE_X = 40;
-const int GRID_SIZE_Y = 30;
+const int GRID_SIZE_X = 30;
+const int GRID_SIZE_Y = 20;
 const int TOTAL_GRID_SIZE = GRID_SIZE_X * GRID_SIZE_Y;
-const float GRID_DIM = 0.2f;
 
 class WarpingGrid {
 
 public:
 
-	WarpingGrid(WarpingGridBuffer* settings);
+	WarpingGrid(WarpingGridBuffer* settings, float gridDimension);
 
 	virtual ~WarpingGrid();
 
@@ -61,9 +64,15 @@ public:
 
 	void applyForce(int x, int y, float radius, const ds::vec3& force);
 
+	void applyForce(const ds::vec3& center, float radius, const ds::vec3& force);
+
 	void applyForce(int x, int y, const ds::vec3& force);
 
 	ds::vec3 getIntersectionPoint(const Ray& r);
+
+	void highlight(int x, int y);
+
+	ds::vec3 convert_grid_coords(int x, int y);
 
 private:
 	void addSpring(int x1, int y1, int x2, int y2, float stiffness, float damping);
@@ -77,4 +86,7 @@ private:
 	std::vector<Spring> _springs;
 	WarpingGridBuffer* _warpingGridBuffer;
 	Plane _plane;
+	float _gridDimension;
+	float _halfGridDimension;
+	ds::vec2 _gridCenter;
 };
