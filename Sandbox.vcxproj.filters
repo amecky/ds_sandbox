@@ -151,6 +151,9 @@
     <ClInclude Include="src\utils\EventStream.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\Border.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -237,6 +240,9 @@
     </ClCompile>
     <ClCompile Include="src\utils\EventStream.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\Border.cpp">
+      <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

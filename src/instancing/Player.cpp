@@ -79,11 +79,13 @@ void Player::tick(float dt) {
 }
 
 void Player::setPosition(const ds::vec3 & p) {
-	if (p.y > -2.1f && p.y < 1.9f && p.x > -3.5f && p.x < 3.5f) {
+	//if (p.y > -2.1f && p.y < 1.9f && p.x > -3.5f && p.x < 3.5f) {
 		_position = p;
-	}
+	//}
 	ds::vec3 cameraPos = _position;
+	
 	cameraPos.z = -6.0f;
+	/*
 	if (cameraPos.x < -0.5f) {
 		cameraPos.x = -0.5f;
 	}
@@ -96,6 +98,7 @@ void Player::setPosition(const ds::vec3 & p) {
 	if (cameraPos.y > 0.5f) {
 		cameraPos.y = 0.5f;
 	}
+	*/
 	_camera->setPosition(cameraPos);
 }
 

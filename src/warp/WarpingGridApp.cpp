@@ -23,7 +23,7 @@ ds::RenderSettings WarpingGridApp::getRenderSettings() {
 
 bool WarpingGridApp::init() {
 	
-	_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 0.0f, -6.0f));
+	_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 6.0f, -6.0f));
 
 	ds::ViewportInfo vpInfo = { 1024, 768, 0.0f, 1.0f };
 	RID vp = ds::createViewport(vpInfo);
@@ -32,7 +32,7 @@ bool WarpingGridApp::init() {
 	_basicPass = ds::createRenderPass(rpInfo);
 	
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, -6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	WarpingGridSettings wgs;
 	wgs.numX = 30;

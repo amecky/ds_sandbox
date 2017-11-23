@@ -114,10 +114,10 @@ bool InstanceTest::init() {
 	//RID instanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
 
 	_topDownCamera = new TopDownCamera(&_camera);
-	_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+	_topDownCamera->setPosition(ds::vec3(0, -5, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, -5, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	RID baseGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)		
@@ -151,6 +151,11 @@ bool InstanceTest::init() {
 	_warpingGrid->init();
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);
+
+	_border.init(baseGroup, bumpVS, bumpPS);
+	for (int i = 0; i < 10; ++i) {
+		_border.create(ds::vec3(-5.7f, -2.5f +i * 0.6f, 0.2f));
+	}
 
 	_queue = new EmitterQueue;
 
@@ -286,6 +291,8 @@ void InstanceTest::render() {
 	_billboards.begin();
 	
 	_cubes.render(_basicPass, _camera.viewProjectionMatrix);
+
+	_border.render(_basicPass, _camera.viewProjectionMatrix);
 	
 	//_grid->render(_basicPass, _camera.viewProjectionMatrix);
 

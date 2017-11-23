@@ -38,10 +38,11 @@ bool AssetViewer::init() {
 	RID frameHighTile = _scene->loadEntity("models\\frameHighTile.bin");
 	RID griddy = _scene->loadEntity("models\\griddy.bin");
 	RID gridBlockID = _scene->loadEntity("models\\grid_block.bin");
+	RID hexBorderID = _scene->loadEntity("models\\hex_border.bin");
 	int gridId = _scene->createGrid(gridBlockID, 8);
-	_scene->createInstance(gridId, ds::vec3(0.0f,-0.05f,0.0f));
+	_scene->createInstance(gridId, ds::vec3(0.0f, -0.05f, 0.0f));
 	//_scene->createInstance(frameHighTile, ds::vec3(0.0f,0.1f,0.0f));
-	_scene->createInstance(griddy, ds::vec3(0.0f, 0.5f, 0.0f));
+	_scene->createInstance(hexBorderID, ds::vec3(0.0f, 0.5f, 0.0f));
 	float sx = -1.6f;
 	for (int j = 0; j < 2; ++j) {
 		float sz = 2.0f;

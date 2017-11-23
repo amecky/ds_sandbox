@@ -10,6 +10,7 @@
 #include "..\utils\comon_math.h"
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
+#include "Border.h"
 
 class InstanceTest : public TestApp {
 
@@ -62,4 +63,5 @@ private:
 	ds::vec3 _cursorPos;
 	ds::EventStream _events;
 	bool _running;
+	Border _border;
 };
