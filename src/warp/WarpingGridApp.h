@@ -35,7 +35,6 @@ private:
 	RID _basicPass;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
-	WarpingGridBuffer _warpingGridBuffer;
 	WarpingGrid* _grid;
 	int _dbgX;
 	int _dbgY;

@@ -34,13 +34,17 @@ bool WarpingGridApp::init() {
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
-	_warpingGridBuffer.amplitude = 0.4f;
-	_warpingGridBuffer.base = 0.7f;
-	_warpingGridBuffer.width = 0.9f;
-	_warpingGridBuffer.padding = 0.0f;
-	_warpingGridBuffer.baseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
+	WarpingGridSettings wgs;
+	wgs.numX = 30;
+	wgs.numY = 20;
+	wgs.size = 0.3f;
+	wgs.borderSize = 0.05f;
+	wgs.zOffset = 0.5f;
+	wgs.color = ds::Color(0, 0, 50, 255);
+	wgs.stiffness = 0.28f;
+	wgs.damping = 0.06f;
 
-	_grid = new WarpingGrid(&_warpingGridBuffer, 0.2f);
+	_grid = new WarpingGrid(wgs);
 	_grid->init();
 
 	_dbgX = 5;
@@ -67,10 +71,6 @@ void WarpingGridApp::renderGUI() {
 	if (gui::begin("Debug", &state, &sp, 250)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 	}
-	gui::Input("Amp", &_warpingGridBuffer.amplitude);
-	gui::Input("Base", &_warpingGridBuffer.base);
-	gui::Input("Width", &_warpingGridBuffer.width);
-	gui::Input("Base Color", &_warpingGridBuffer.baseColor);
 	gui::Input("X", &_dbgX);
 	gui::Input("Y", &_dbgY);
 	gui::Input("Force", &_dbgForce);
@@ -79,6 +79,9 @@ void WarpingGridApp::renderGUI() {
 	}
 	if (gui::Button("Apply Ring")) {
 		_grid->applyForce(_dbgX, _dbgY, 0.6f, _dbgForce);
+	}
+	if (gui::Button("Highlight")) {
+		_grid->highlight(_dbgX, _dbgY);
 	}
 	if (gui::Button("Reset Camera")) {
 		_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));

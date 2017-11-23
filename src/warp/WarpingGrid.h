@@ -22,15 +22,17 @@ struct GridPoint {
 struct WarpingGridVertex {
 	ds::vec3 pos;
 	ds::Color color;
-	ds::vec2 uv;
 };
 
-struct WarpingGridBuffer {
-	float width;
-	float base;
-	float amplitude;
-	float padding;
-	ds::Color baseColor;
+struct WarpingGridSettings {	
+	int numX;
+	int numY;
+	float size;
+	float borderSize;
+	float zOffset;
+	ds::Color color;
+	float stiffness;// = 0.28f;
+	float damping;// = 0.06f;
 };
 
 struct Spring {
@@ -44,15 +46,11 @@ struct Spring {
 
 };
 
-const int GRID_SIZE_X = 30;
-const int GRID_SIZE_Y = 20;
-const int TOTAL_GRID_SIZE = GRID_SIZE_X * GRID_SIZE_Y;
-
 class WarpingGrid {
 
 public:
 
-	WarpingGrid(WarpingGridBuffer* settings, float gridDimension);
+	WarpingGrid(const WarpingGridSettings& settings);
 
 	virtual ~WarpingGrid();
 
@@ -76,6 +74,7 @@ public:
 
 private:
 	void addSpring(int x1, int y1, int x2, int y2, float stiffness, float damping);
+	void prepareData();
 	GridPoint* _points;
 	uint16_t* _indices;
 	WarpingGridVertex* _vertices;
@@ -84,9 +83,8 @@ private:
 	RID _cubeBuffer;
 	int _numVertices;
 	std::vector<Spring> _springs;
-	WarpingGridBuffer* _warpingGridBuffer;
+	WarpingGridSettings _settings;
 	Plane _plane;
-	float _gridDimension;
-	float _halfGridDimension;
 	ds::vec2 _gridCenter;
+	ds::vec3 _offsets[6];
 };

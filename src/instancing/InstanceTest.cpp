@@ -135,13 +135,19 @@ bool InstanceTest::init() {
 
 	//_grid = new BackgroundGrid(&_gridSettings);
 	//_grid->init(baseGroup, bumpVS, bumpPS);
-	_settings.amplitude = 0.4f;
-	_settings.base = 0.7f;
-	_settings.width = 0.9f;
-	_settings.padding = 0.0f;
-	_settings.baseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 
-	_warpingGrid = new WarpingGrid(&_settings, 0.3f);
+	WarpingGridSettings wgs = {
+		30,
+		20,
+		0.3f,
+		0.05f,
+		0.5f,
+		ds::Color(0,0,50,255),
+		0.28f,
+		0.06f
+	};
+
+	_warpingGrid = new WarpingGrid(wgs);
 	_warpingGrid->init();
 
 	_cubes.init(baseGroup, bumpVS, bumpPS);

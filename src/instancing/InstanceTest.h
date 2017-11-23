@@ -49,7 +49,6 @@ private:
 	Cubes _cubes;
 	Player* _player;
 	BackgroundGridSettings _gridSettings;
-	WarpingGridBuffer _settings;
 	WarpingGrid* _warpingGrid;
 	Billboards _billboards;
 	int _tmpX;

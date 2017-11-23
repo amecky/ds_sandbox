@@ -42,8 +42,8 @@ void initialize() {
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	//TestApp* app = new WarpingGridApp;
-	TestApp* app = new InstanceTest;
+	TestApp* app = new WarpingGridApp;
+	//TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;
 	//TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;
