@@ -31,6 +31,7 @@
     <ClInclude Include="src\binary\BinaryClock.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
+    <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\instancing\BackgroundGrid.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\Border.h" />
@@ -72,6 +73,7 @@
   <ItemGroup>
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
+    <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\instancing\BackgroundGrid.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\instancing\Border.cpp" />

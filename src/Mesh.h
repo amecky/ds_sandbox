@@ -38,6 +38,12 @@ public:
 	void save(const char* fileName);
 	void load(const char* fileName);
 	void loadBin(const char* fileName, bool scale = true);
+	const ds::vec3& getExtent() const {
+		return _extent;
+	}
+	const ds::vec3& getCenter() const {
+		return _center;
+	}
 private:
 	std::vector<Stream> _streams;
 	ds::vec3 _extent;

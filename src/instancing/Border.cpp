@@ -13,6 +13,8 @@ void Border::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 
 	Mesh mesh;
 	mesh.loadBin("models\\hex_border.bin",false);
+	_extent = mesh.getExtent();
+	_center = mesh.getCenter();
 	RID cubeBuffer = mesh.assemble();
 
 	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, 256, sizeof(InstanceData) };
@@ -45,14 +47,14 @@ void Border::tick(float dt, const ds::vec3& playerPosition) {
 // ----------------------------------------------------
 // create cube
 // ----------------------------------------------------
-void Border::create(const ds::vec3& pos) {
+void Border::create(const ds::vec3& pos, float rotation) {
 	if (_numItems < 256) {
 		BorderItem& item = _items[_numItems++];
 		item.color = ds::Color(48,0,0,255);
 		item.pos = pos;
 		item.timer = 0.0f;
-		item.angle = ds::random(0.0f, ds::TWO_PI);
-		item.scale = 0.4f;
+		item.angle = rotation;
+		item.scale = _scale;
 	}
 }
 
@@ -64,9 +66,9 @@ void Border::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
 		BorderItem& item = _items[y];
 		ds::matrix pm = ds::matTranslate(item.pos);
 		//ds::matrix rx = ds::matRotationX(item.timer * 4.0f);
-		//ds::matrix rz = ds::matRotationZ(item.angle);
+		ds::matrix rz = ds::matRotationZ(item.angle);
 		ds::matrix sm = ds::matScale(ds::vec3(item.scale, item.scale, item.scale));
-		ds::matrix world = sm * pm;
+		ds::matrix world = sm * rz * pm;
 		_instances[y] = { ds::matTranspose(world), item.color };		
 	}
 	ds::mapBufferData(_instanceVertexBuffer, _instances, sizeof(InstanceData) * _numItems);

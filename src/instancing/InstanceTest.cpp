@@ -30,6 +30,8 @@ float getAngle(const ds::vec2& v1, const ds::vec2& v2) {
 
 InstanceTest::InstanceTest() {
 	_running = true;
+	_showGUI = true;
+	_pressed = false;
 }
 
 InstanceTest::~InstanceTest() {
@@ -114,10 +116,10 @@ bool InstanceTest::init() {
 	//RID instanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
 
 	_topDownCamera = new TopDownCamera(&_camera);
-	_topDownCamera->setPosition(ds::vec3(0, -5, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+	_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, -5, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	RID baseGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)		
@@ -153,8 +155,22 @@ bool InstanceTest::init() {
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
 	_border.init(baseGroup, bumpVS, bumpPS);
-	for (int i = 0; i < 10; ++i) {
-		_border.create(ds::vec3(-5.7f, -2.5f +i * 0.6f, 0.2f));
+
+
+	ds::vec2 gridExtent = _warpingGrid->getExtent();
+	ds::vec3 borderExtent = _border.getItemExtent() * _border.getScale();
+	ds::vec3 borderCenter = _border.getItemCenter();
+	float borderSizeY = borderExtent.x * 0.5f;
+	float halfBorderSizeY = borderSizeY * 0.5f;
+	float sx = gridExtent.x * 0.5f + borderExtent.x;
+	float sy = (gridExtent.y - borderExtent.y * 0.5f) * 0.5f;
+	for (int i = 0; i < 9; ++i) {
+		_border.create(ds::vec3(-sx, -sy + i * borderSizeY, 0.2f));
+		_border.create(ds::vec3( sx, -sy + i * borderSizeY, 0.2f), ds::PI);
+	}
+	for (int i = 0; i < 17; ++i) {
+		_border.create(ds::vec3(-4.2f + i * borderSizeY,  4.2f, 0.2f), ds::PI + ds::PI * 0.5f);
+		_border.create(ds::vec3(-4.2f + i * borderSizeY, -4.2f, 0.2f), ds::PI * 0.5f);
 	}
 
 	_queue = new EmitterQueue;
@@ -176,6 +192,22 @@ bool InstanceTest::init() {
 	_shooting = false;
 
 	_bulletTimer = 0.0f;
+
+	ParticlesystemDescriptor descriptor;
+	descriptor.maxParticles = 16384;
+	descriptor.particleDimension = ds::vec2(32, 32);
+	descriptor.startColor = ds::Color(255, 255, 0, 255);
+	descriptor.endColor = ds::Color(128, 128, 0, 0);
+	// load image using stb_image
+	descriptor.texture = loadImage("particles.png");
+	_particleSystem = new GPUParticlesystem(descriptor);
+
+	_particleDescriptor.ttl = 0.4f;
+	_particleDescriptor.velocity = ds::vec3(0.0f);
+	_particleDescriptor.friction = 0.25f;
+	_particleDescriptor.maxScale = ds::vec2(0.05f, 0.05f);
+	_particleDescriptor.minScale = ds::vec2(0.01f, 0.01f);
+	_particleDescriptor.acceleration = ds::vec3(0.0f, 0.0f, 0.0f);
 
 	return true;
 }
@@ -272,6 +304,7 @@ void InstanceTest::tick(float dt) {
 			}
 		}
 
+		_particleSystem->tick(dt);
 	}
 	else {
 		if (_cameraMode == 1) {
@@ -280,6 +313,14 @@ void InstanceTest::tick(float dt) {
 		else if (_cameraMode == 2) {
 			_topDownCamera->update(dt);
 		}
+	}
+
+	if (ds::isKeyPressed('M') && !_pressed) {
+		_showGUI = !_showGUI;
+		_pressed = true;
+	}
+	if (!ds::isKeyPressed('M') && _pressed) {
+		_pressed = false;
 	}
 }
 
@@ -309,6 +350,7 @@ void InstanceTest::render() {
 
 	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
 
+	_particleSystem->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 void InstanceTest::emittCubes(int side, int num) {
@@ -343,59 +385,76 @@ void InstanceTest::emittCubes(int side, int num) {
 }
 
 void InstanceTest::renderGUI() {
-	int state = 1;
-	gui::start();
-	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &state, &sp, 300)) {
-		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Input("Camera Mode", &_cameraMode);
-		gui::Input("GX", &_tmpX);
-		gui::Input("GY", &_tmpY);
-		gui::Value("Bullets", _numBullets);
-		/*
-		if (gui::Button("Flash ONE")) {
-			_grid->highlight(_tmpX, _tmpY, BGF_ONE);
-		}
-		if (gui::Button("Flash PULSE")) {
-			_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
-		}
-		*/
-		if (gui::Button("Emitt")) {
-			_queue->emitt(_tmpX, _tmpY, &_events);
-		}
-		if (gui::Button("Emitt Line X")) {
-			for (int i = 0; i < 8; ++i) {
-				_queue->emitt(_tmpX + i, _tmpY, &_events);
+	if (_showGUI) {
+		int state = 1;
+		gui::start();
+		p2i sp = p2i(10, 760);
+		if (gui::begin("Debug", &state, &sp, 300)) {
+			gui::Value("FPS", ds::getFramesPerSecond());
+			gui::Input("Camera Mode", &_cameraMode);
+			gui::Input("GX", &_tmpX);
+			gui::Input("GY", &_tmpY);
+			gui::Value("Bullets", _numBullets);
+			/*
+			if (gui::Button("Flash ONE")) {
+				_grid->highlight(_tmpX, _tmpY, BGF_ONE);
 			}
-		}
-		gui::Input("Side", &_tmpSide);
-		if (gui::Button("Emitt Line")) {
-			emittCubes(_tmpSide, 8);
-		}
-		if (gui::Button("Emitt rnd Line")) {
-			int side = ds::random(0.0f, 3.9f);
-			emittCubes(side, 8);
-		}
-		gui::Value("Pos", _player->getPosition());
-		gui::Value("Camera", _camera.position);
-		ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
-		gui::Value("Cursor", tmp);
-		gui::Value("Cubes", _cubes.getNumItems());
-		if (gui::Button("Reset Camera")) {
-			_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-			_player->setPosition(ds::vec3(0.0f));
-		}
-		if (_running) {
-			if (gui::Button("Stop")) {
-				_running = false;
+			if (gui::Button("Flash PULSE")) {
+				_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
 			}
-		}
-		else {
-			if (gui::Button("Start")) {
-				_running = true;
+			*/
+			if (gui::Button("Emitt")) {
+				_queue->emitt(_tmpX, _tmpY, &_events);
 			}
-		}
+			if (gui::Button("Emitt Line X")) {
+				for (int i = 0; i < 8; ++i) {
+					_queue->emitt(_tmpX + i, _tmpY, &_events);
+				}
+			}
+			gui::Input("Side", &_tmpSide);
+			if (gui::Button("Emitt Line")) {
+				emittCubes(_tmpSide, 8);
+			}
+			if (gui::Button("Emitt rnd Line")) {
+				int side = ds::random(0.0f, 3.9f);
+				emittCubes(side, 8);
+			}
+			gui::Value("Pos", _player->getPosition());
+			gui::Value("Camera", _camera.position);
+			ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
+			gui::Value("Cursor", tmp);
+			gui::Value("Cubes", _cubes.getNumItems());
+			if (gui::Button("Reset Camera")) {
+				_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+				_player->setPosition(ds::vec3(0.0f));
+			}
+			if (_running) {
+				if (gui::Button("Stop")) {
+					_running = false;
+				}
+			}
+			else {
+				if (gui::Button("Start")) {
+					_running = true;
+				}
+			}
+			if (gui::Button("Particles")) {
+				for (int i = 0; i < 128; ++i) {
+					float radius = 1.0f;
+					float rmin = radius - radius * 0.8f;
+					float r = ds::random(rmin, radius);
+					float angle = ds::random(0.0f, ds::TWO_PI);
+					float x = cos(angle) * r;
+					float z = -1.0f;
+					float y = sin(angle) * r;
+					_particleDescriptor.ttl = ds::random(0.2f, 0.6f);
+					//_particleDescriptor.velocity = ds::vec3(cos(angle) * ds::random(-1.5f, 1.5f), sin(angle) * ds::random(1.2f, 4.6f), 0.0f);
+					_particleDescriptor.acceleration = ds::vec3(cos(angle) * ds::random(0.2f, 0.6f), sin(angle) * ds::random(0.2f, 0.6f), 0.0f);
+					_particleSystem->add(ds::vec3(x, y, z), _particleDescriptor);
+				}
+			}
 
+		}
+		gui::end();
 	}
-	gui::end();
 }

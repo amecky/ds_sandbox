@@ -72,6 +72,10 @@ public:
 
 	ds::vec3 convert_grid_coords(int x, int y);
 
+	const ds::vec2& getExtent() const {
+		return _extent;
+	}
+
 private:
 	void addSpring(int x1, int y1, int x2, int y2, float stiffness, float damping);
 	void prepareData();
@@ -87,4 +91,5 @@ private:
 	Plane _plane;
 	ds::vec2 _gridCenter;
 	ds::vec3 _offsets[6];
+	ds::vec2 _extent;
 };

@@ -39,6 +39,9 @@ call :CompileShader%1 Billboards Billboards ps PS_Main
 call :CompileShader%1 WarpingGrid WarpingGrid vs VS_Main
 call :CompileShader%1 WarpingGrid WarpingGrid ps PS_Main
 
+call :CompileShader%1 GPUParticles GPUParticles vs VS_Main
+call :CompileShader%1 GPUParticles GPUParticles ps PS_Main
+
 echo.
 
 if %error% == 0 (

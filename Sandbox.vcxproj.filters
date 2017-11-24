@@ -31,6 +31,9 @@
     <Filter Include="warp">
       <UniqueIdentifier>{cfebba90-4762-407d-a537-8dca328c4503}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gpuparticles">
+      <UniqueIdentifier>{9cee980f-279f-45ea-95d6-b9fa051baa8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -154,6 +157,9 @@
     <ClInclude Include="src\instancing\Border.h">
       <Filter>instancing</Filter>
     </ClInclude>
+    <ClInclude Include="src\gpuparticles\GPUParticlesystem.h">
+      <Filter>gpuparticles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -243,6 +249,9 @@
     </ClCompile>
     <ClCompile Include="src\instancing\Border.cpp">
       <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp">
+      <Filter>gpuparticles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

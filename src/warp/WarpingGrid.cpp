@@ -14,6 +14,7 @@ WarpingGrid::WarpingGrid(const WarpingGridSettings& settings) : _settings(settin
 	float halfGridDimension = _settings.size * 0.5f;
 	_gridCenter.x = static_cast<float>(_settings.numX) * _settings.size * 0.5f - halfGridDimension;
 	_gridCenter.y = static_cast<float>(_settings.numY) * _settings.size * 0.5f - halfGridDimension;
+	_extent = ds::vec2(static_cast<float>(_settings.numX) * _settings.size, static_cast<float>(_settings.numY) * _settings.size);
 	float zOffset = _settings.zOffset;
 	float dd = _settings.borderSize;
 	_offsets[0] = ds::vec3(dd, -dd, zOffset);

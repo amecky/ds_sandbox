@@ -11,6 +11,7 @@
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
 #include "Border.h"
+#include "..\gpuparticles\GPUParticlesystem.h"
 
 class InstanceTest : public TestApp {
 
@@ -52,6 +53,10 @@ private:
 	BackgroundGridSettings _gridSettings;
 	WarpingGrid* _warpingGrid;
 	Billboards _billboards;
+	GPUParticlesystem* _particleSystem;
+	ParticleDescriptor _particleDescriptor;
+	bool _showGUI;
+	bool _pressed;
 	int _tmpX;
 	int _tmpY;
 	int _tmpSide;
