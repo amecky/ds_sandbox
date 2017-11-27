@@ -9,7 +9,8 @@ struct GPUParticle {
 	ds::vec2 timer;
 	ds::vec2 scale;
 	ds::vec2 growth;
-
+	float rotation;
+	float rotationSpeed;
 };
 
 // ---------------------------------------------------------------
@@ -22,6 +23,7 @@ struct ParticleConstantBuffer {
 	ds::matrix world;
 	ds::vec3 eyePos;
 	float padding;
+	ds::vec4 textureRect;
 };
 
 // -------------------------------------------------------
@@ -34,12 +36,14 @@ struct ParticleArray {
 	ds::vec3* timers;
 	ds::vec4* sizes;
 	ds::vec3* accelerations;
+	float* rotations;
+	float* rotationSpeeds;
 	char* buffer;
 
 	uint32_t count;
 	uint32_t countAlive;
 
-	ParticleArray() : count(0), countAlive(0), buffer(0), positions(0), velocities(0), timers(0), sizes(0), accelerations(0) {}
+	ParticleArray() : count(0), countAlive(0), buffer(0), positions(0), velocities(0), timers(0), sizes(0), accelerations(0) , rotations(0), rotationSpeeds(0) {}
 
 	~ParticleArray() {
 		if (buffer != 0) {
@@ -48,13 +52,15 @@ struct ParticleArray {
 	}
 
 	void initialize(unsigned int maxParticles) {
-		int size = maxParticles * (sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec4) + sizeof(ds::vec3));
+		int size = maxParticles * (sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec4) + sizeof(ds::vec3) + sizeof(float) + sizeof(float));
 		buffer = new char[size];
 		positions = (ds::vec3*)(buffer);
 		velocities = (ds::vec3*)(positions + maxParticles);
 		timers = (ds::vec3*)(velocities + maxParticles);
 		sizes = (ds::vec4*)(timers + maxParticles);
 		accelerations = (ds::vec3*)(sizes + maxParticles);
+		rotations = (float*)(accelerations + maxParticles);
+		rotationSpeeds = (float*)(rotations + maxParticles);
 		count = maxParticles;
 		countAlive = 0;
 	}
@@ -66,6 +72,8 @@ struct ParticleArray {
 			timers[a] = timers[b];
 			sizes[a] = sizes[b];
 			accelerations[a] = accelerations[b];
+			rotations[a] = rotations[b];
+			rotationSpeeds[a] = rotationSpeeds[b];
 		}
 	}
 
@@ -93,6 +101,7 @@ struct ParticlesystemDescriptor {
 	ds::vec2 particleDimension;
 	ds::Color startColor;
 	ds::Color endColor;
+	ds::vec4 textureRect;
 };
 
 // -------------------------------------------------------
@@ -105,6 +114,8 @@ struct ParticleDescriptor {
 	ds::vec3 velocity;
 	float friction;	
 	ds::vec3 acceleration;
+	float rotation;
+	float rotationSpeed;
 };
 
 // -------------------------------------------------------
@@ -113,7 +124,7 @@ struct ParticleDescriptor {
 class GPUParticlesystem {
 
 public:
-	GPUParticlesystem(ParticlesystemDescriptor descriptor);
+	GPUParticlesystem(const ParticlesystemDescriptor& descriptor);
 	void add(const ds::vec3& pos, ParticleDescriptor descriptor);
 	void tick(float dt);
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::vec3& eyePos);

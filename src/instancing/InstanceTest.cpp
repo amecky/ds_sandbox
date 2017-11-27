@@ -3,6 +3,7 @@
 #include "..\..\shaders\InstancedAmbient_VS_Main.h"
 #include "..\..\shaders\InstancedAmbient_PS_Main.h"
 #include <ds_imgui.h>
+#include <ds_tweakable.h>
 
 float getAngle(const ds::vec2& v1, const ds::vec2& v2) {
 	if (v1 != v2) {
@@ -32,6 +33,7 @@ InstanceTest::InstanceTest() {
 	_running = true;
 	_showGUI = true;
 	_pressed = false;
+	_selectedTab = 0;
 }
 
 InstanceTest::~InstanceTest() {
@@ -59,10 +61,31 @@ ds::RenderSettings InstanceTest::getRenderSettings() {
 	return rs;
 }
 
+void InstanceTest::registerParticleSettings(const char* category, ParticleSettings* settings) {
+	twk_add(category, "num", &settings->num);
+	twk_add(category, "radius",&settings->radius);
+	twk_add(category, "angle", &settings->angle);
+	twk_add(category, "rotation_speed", &settings->rotationSpeed);
+	twk_add(category, "align_particle", &settings->alignParticle);
+	twk_add(category, "ttl", &settings->ttl);
+	twk_add(category, "radial_velocity", &settings->radialVelocity);
+	twk_add(category, "radial_acceleration", &settings->radialAcceleration);
+	twk_add(category, "scale", &settings->scale);
+	twk_add(category, "scale_variance", &settings->scaleVariance);
+	twk_add(category, "growth", &settings->growth);
+}
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
 bool InstanceTest::init() {
+
+	twk_add("bullets", "velocity", &_bulletSettings.velocity);
+	twk_add("bullets", "scale", &_bulletSettings.scale);
+	twk_add("bullets", "bounding_box", &_bulletSettings.boundingBox);
+	twk_add("bullets", "fire_rate", &_bulletSettings.fireRate);
+
+	registerParticleSettings("explosion", &_explosionSettings);
+
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 0.0f, -6.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
 	_camera = {
@@ -83,6 +106,9 @@ bool InstanceTest::init() {
 
 	ds::RenderPassInfo rpInfo = { &_camera, vp, ds::DepthBufferState::ENABLED, 0, 0 };
 	_basicPass = ds::createRenderPass(rpInfo);
+
+	ds::RenderPassInfo particleRPInfo = { &_camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
+	_particlePass = ds::createRenderPass(particleRPInfo);
 
 	ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 	RID bs_id = ds::createBlendState(blendInfo);
@@ -155,8 +181,8 @@ bool InstanceTest::init() {
 	_cubes.init(baseGroup, bumpVS, bumpPS);
 
 	_border.init(baseGroup, bumpVS, bumpPS);
-
-
+	_border.create(ds::vec3(0.0f));
+	/*
 	ds::vec2 gridExtent = _warpingGrid->getExtent();
 	ds::vec3 borderExtent = _border.getItemExtent() * _border.getScale();
 	ds::vec3 borderCenter = _border.getItemCenter();
@@ -164,7 +190,7 @@ bool InstanceTest::init() {
 	float halfBorderSizeY = borderSizeY * 0.5f;
 	float sx = gridExtent.x * 0.5f + borderExtent.x;
 	float sy = (gridExtent.y - borderExtent.y * 0.5f) * 0.5f;
-	for (int i = 0; i < 9; ++i) {
+	for (int i = 0; i < 18; ++i) {
 		_border.create(ds::vec3(-sx, -sy + i * borderSizeY, 0.2f));
 		_border.create(ds::vec3( sx, -sy + i * borderSizeY, 0.2f), ds::PI);
 	}
@@ -172,7 +198,7 @@ bool InstanceTest::init() {
 		_border.create(ds::vec3(-4.2f + i * borderSizeY,  4.2f, 0.2f), ds::PI + ds::PI * 0.5f);
 		_border.create(ds::vec3(-4.2f + i * borderSizeY, -4.2f, 0.2f), ds::PI * 0.5f);
 	}
-
+	*/
 	_queue = new EmitterQueue;
 
 	_player = new Player(_topDownCamera);
@@ -198,31 +224,27 @@ bool InstanceTest::init() {
 	descriptor.particleDimension = ds::vec2(32, 32);
 	descriptor.startColor = ds::Color(255, 255, 0, 255);
 	descriptor.endColor = ds::Color(128, 128, 0, 0);
+
+	float u1 = 220.0f / 1024.0f;
+	float v1 = 30.0f / 1024.0f;
+	float u2 = u1 + 20.0f / 1024.0f;
+	float v2 = v1 + 20.0f / 1024.0f;
+	descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
+
 	// load image using stb_image
-	descriptor.texture = loadImage("particles.png");
+	descriptor.texture = textureID;
 	_particleSystem = new GPUParticlesystem(descriptor);
 
 	_particleDescriptor.ttl = 0.4f;
 	_particleDescriptor.velocity = ds::vec3(0.0f);
 	_particleDescriptor.friction = 0.25f;
-	_particleDescriptor.maxScale = ds::vec2(0.05f, 0.05f);
-	_particleDescriptor.minScale = ds::vec2(0.01f, 0.01f);
+	_particleDescriptor.maxScale = ds::vec2(0.1f, 0.03f);
+	_particleDescriptor.minScale = ds::vec2(0.2f, 0.03f);
 	_particleDescriptor.acceleration = ds::vec3(0.0f, 0.0f, 0.0f);
 
 	return true;
 }
 
-void InstanceTest::addBullet() {
-	ds::vec3 p = _player->getPosition();
-	p.z += 0.01f;
-	float r = _player->getRotation();
-	Bullet& b = _bullets[_numBullets++];
-	b.pos = p;
-	b.rotation = r;
-	b.velocity = ds::vec3(cosf(r) * 4.0f, sinf(r) * 4.0f, 0.0f);
-	b.timer = 0.0f;
-	b.scale = ds::vec2(1.0f);
-}
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
@@ -237,26 +259,8 @@ void InstanceTest::tick(float dt) {
 		else if (_cameraMode == 2) {
 			_topDownCamera->update(dt);
 		}
-		else if (_cameraMode == 3) {
-			_player->tick(dt);
-		}
 
-		int cnt = 0;
-		while (cnt < _numBullets) {
-			_bullets[cnt].pos += _bullets[cnt].velocity * dt;
-			_bullets[cnt].timer += dt;
-			_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * 4.0f;
-			ds::vec3 p = _bullets[cnt].pos;
-			if (p.y < -2.1f || p.y > 1.9f || p.x < -3.2f || p.x > 3.2f) {
-				if (_numBullets > 1) {
-					_bullets[cnt] = _bullets[_numBullets - 1];
-				}
-				--_numBullets;
-			}
-			else {
-				++cnt;
-			}
-		}
+		manageBullets(dt);
 
 		_cubes.tick(dt, _player->getPosition());
 
@@ -265,44 +269,11 @@ void InstanceTest::tick(float dt) {
 
 		_queue->tick(dt, &_events);
 
-		if (ds::isMouseButtonPressed(0) && !_shooting) {
-			_shooting = true;
-		}
-		if (!ds::isMouseButtonPressed(0) && _shooting) {
-			_shooting = false;
-		}
-
-		if (_shooting && _cameraMode == 3) {
-			_bulletTimer += dt;
-			if (_bulletTimer >= 0.1f) {
-				addBullet();
-				_bulletTimer -= 0.1f;
-			}
-		}
-
 		_numBullets = _cubes.checkCollisions(_bullets, _numBullets, &_events);
 
-		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
-		r.setOrigin(_camera.position);
-		_cursorPos = _warpingGrid->getIntersectionPoint(r);
+		movePlayer(dt);
 
-		ds::vec3 delta = _cursorPos - _player->getPosition();
-
-		_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
-
-		for (uint32_t i = 0; i < _events.num(); ++i) {
-			int type = _events.getType(i);
-			if (type == 100 || type == 101) {
-				ds::vec3 p;
-				_events.get(i, &p);
-				_warpingGrid->applyForce(p, 0.4f, ds::vec3(0.0f, 0.0f, 0.15f));
-			}
-			else if (type == 102) {
-				QueueEntry entry;
-				_events.get(i, &entry);
-				_cubes.create(_warpingGrid->convert_grid_coords(entry.x, entry.y), 2);
-			}
-		}
+		handleEvents();
 
 		_particleSystem->tick(dt);
 	}
@@ -325,6 +296,92 @@ void InstanceTest::tick(float dt) {
 }
 
 // ----------------------------------------------------
+// move player
+// ----------------------------------------------------
+void InstanceTest::movePlayer(float dt) {
+	if (_cameraMode == 3) {
+		_player->tick(dt);
+	}
+	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+	r.setOrigin(_camera.position);
+	// get cursor position
+	_cursorPos = _warpingGrid->getIntersectionPoint(r);
+	// rotate player
+	ds::vec3 delta = _cursorPos - _player->getPosition();
+	_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
+}
+
+// ----------------------------------------------------
+// handle events
+// ----------------------------------------------------
+void InstanceTest::handleEvents() {
+	for (uint32_t i = 0; i < _events.num(); ++i) {
+		int type = _events.getType(i);
+		if (type == 100 || type == 101) {
+			ds::vec3 p;
+			_events.get(i, &p);
+			_warpingGrid->applyForce(p, 0.4f, ds::vec3(0.0f, 0.0f, 0.15f));
+			if (type == 101) {
+				emittExplosion(p);
+			}
+		}
+		else if (type == 102) {
+			QueueEntry entry;
+			_events.get(i, &entry);
+			_cubes.create(_warpingGrid->convert_grid_coords(entry.x, entry.y), 2);
+		}
+	}
+}
+
+// ----------------------------------------------------
+// add bullet
+// ----------------------------------------------------
+void InstanceTest::addBullet() {
+	ds::vec3 p = _player->getPosition();
+	p.z += 0.01f;
+	float r = _player->getRotation();
+	Bullet& b = _bullets[_numBullets++];
+	b.pos = p;
+	b.rotation = r;
+	b.velocity = ds::vec3(cosf(r) * _bulletSettings.velocity, sinf(r) * _bulletSettings.velocity, 0.0f);
+	b.timer = 0.0f;
+	b.scale = ds::vec2(1.0f);
+}
+
+// ----------------------------------------------------
+// manage bullets
+// ----------------------------------------------------
+void InstanceTest::manageBullets(float dt) {
+	// move bullets
+	int cnt = 0;
+	while (cnt < _numBullets) {
+		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
+		_bullets[cnt].timer += dt;
+		_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.x;
+		_bullets[cnt].scale.y = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.y;
+		ds::vec3 p = _bullets[cnt].pos;
+		if (p.y < _bulletSettings.boundingBox.y || p.y > _bulletSettings.boundingBox.w || p.x < _bulletSettings.boundingBox.x || p.x > _bulletSettings.boundingBox.z) {
+			if (_numBullets > 1) {
+				_bullets[cnt] = _bullets[_numBullets - 1];
+			}
+			--_numBullets;
+		}
+		else {
+			++cnt;
+		}
+	}
+	// create bullet if necessary
+	if (_shooting && _cameraMode == 3) {
+		float freq = 1.0f / _bulletSettings.fireRate;
+		_bulletTimer += dt;
+		if (_bulletTimer >= freq) {
+			addBullet();
+			_bulletTimer -= freq;
+		}
+	}
+}
+
+// ----------------------------------------------------
 // render
 // ----------------------------------------------------
 void InstanceTest::render() {
@@ -339,6 +396,8 @@ void InstanceTest::render() {
 
 	_warpingGrid->render(_basicPass, _camera.viewProjectionMatrix);
 
+	_particleSystem->render(_particlePass, _camera.viewProjectionMatrix, _camera.position);
+
 	for (int i = 0; i < _numBullets; ++i) {
 		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, ds::Color(255,128,0,255));
 	}
@@ -350,7 +409,7 @@ void InstanceTest::render() {
 
 	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
 
-	_particleSystem->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
+	
 }
 
 void InstanceTest::emittCubes(int side, int num) {
@@ -388,42 +447,52 @@ void InstanceTest::renderGUI() {
 	if (_showGUI) {
 		int state = 1;
 		gui::start();
+
+		const char* TABS[] = { "Emitter","Tab Two","Particles" };
+
 		p2i sp = p2i(10, 760);
 		if (gui::begin("Debug", &state, &sp, 300)) {
+
+			gui::Tabs(TABS, 3, &_selectedTab);
+
 			gui::Value("FPS", ds::getFramesPerSecond());
 			gui::Input("Camera Mode", &_cameraMode);
-			gui::Input("GX", &_tmpX);
-			gui::Input("GY", &_tmpY);
-			gui::Value("Bullets", _numBullets);
-			/*
-			if (gui::Button("Flash ONE")) {
-				_grid->highlight(_tmpX, _tmpY, BGF_ONE);
-			}
-			if (gui::Button("Flash PULSE")) {
-				_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
-			}
-			*/
-			if (gui::Button("Emitt")) {
-				_queue->emitt(_tmpX, _tmpY, &_events);
-			}
-			if (gui::Button("Emitt Line X")) {
-				for (int i = 0; i < 8; ++i) {
-					_queue->emitt(_tmpX + i, _tmpY, &_events);
+			if (_selectedTab == 0) {
+				gui::Input("GX", &_tmpX);
+				gui::Input("GY", &_tmpY);
+				gui::Value("Bullets", _numBullets);
+				/*
+				if (gui::Button("Flash ONE")) {
+					_grid->highlight(_tmpX, _tmpY, BGF_ONE);
+				}
+				if (gui::Button("Flash PULSE")) {
+					_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
+				}
+				*/
+				if (gui::Button("Emitt")) {
+					_queue->emitt(_tmpX, _tmpY, &_events);
+				}
+				if (gui::Button("Emitt Line X")) {
+					for (int i = 0; i < 8; ++i) {
+						_queue->emitt(_tmpX + i, _tmpY, &_events);
+					}
+				}
+				gui::Input("Side", &_tmpSide);
+				if (gui::Button("Emitt Line")) {
+					emittCubes(_tmpSide, 8);
+				}
+				if (gui::Button("Emitt rnd Line")) {
+					int side = ds::random(0.0f, 3.9f);
+					emittCubes(side, 8);
 				}
 			}
-			gui::Input("Side", &_tmpSide);
-			if (gui::Button("Emitt Line")) {
-				emittCubes(_tmpSide, 8);
+			if (_selectedTab == 1) {
+				gui::Value("Pos", _player->getPosition());
+				gui::Value("Camera", _camera.position);
+				ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
+				gui::Value("Cursor", tmp);
+				gui::Value("Cubes", _cubes.getNumItems());
 			}
-			if (gui::Button("Emitt rnd Line")) {
-				int side = ds::random(0.0f, 3.9f);
-				emittCubes(side, 8);
-			}
-			gui::Value("Pos", _player->getPosition());
-			gui::Value("Camera", _camera.position);
-			ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
-			gui::Value("Cursor", tmp);
-			gui::Value("Cubes", _cubes.getNumItems());
 			if (gui::Button("Reset Camera")) {
 				_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 				_player->setPosition(ds::vec3(0.0f));
@@ -438,23 +507,55 @@ void InstanceTest::renderGUI() {
 					_running = true;
 				}
 			}
-			if (gui::Button("Particles")) {
-				for (int i = 0; i < 128; ++i) {
-					float radius = 1.0f;
-					float rmin = radius - radius * 0.8f;
-					float r = ds::random(rmin, radius);
-					float angle = ds::random(0.0f, ds::TWO_PI);
-					float x = cos(angle) * r;
-					float z = -1.0f;
-					float y = sin(angle) * r;
-					_particleDescriptor.ttl = ds::random(0.2f, 0.6f);
-					//_particleDescriptor.velocity = ds::vec3(cos(angle) * ds::random(-1.5f, 1.5f), sin(angle) * ds::random(1.2f, 4.6f), 0.0f);
-					_particleDescriptor.acceleration = ds::vec3(cos(angle) * ds::random(0.2f, 0.6f), sin(angle) * ds::random(0.2f, 0.6f), 0.0f);
-					_particleSystem->add(ds::vec3(x, y, z), _particleDescriptor);
+			if (_selectedTab == 2) {
+				gui::Value("Particles",_particleSystem->countAlive());
+				gui::Input("Max Scale", &_particleDescriptor.maxScale);
+				gui::Input("Min Scale",&_particleDescriptor.minScale);
+				if (gui::Button("Particles")) {
+					//emittExplosion(ds::vec3(0.0f));
+					emittParticles(ds::vec3(0.0f), _explosionSettings);
 				}
 			}
 
 		}
 		gui::end();
+	}
+}
+
+void InstanceTest::emittParticles(const ds::vec3& pos, const ParticleSettings& settings) {
+	for (int i = 0; i < settings.num; ++i) {
+		float r = ds::random(settings.radius.x, settings.radius.y);
+		float angle = ds::random(0.0f, ds::TWO_PI);
+		float x = cos(angle) * r + pos.x;
+		float z = 0.1f;
+		float y = sin(angle) * r + pos.y;
+		if (settings.alignParticle == 1) {
+			_particleDescriptor.rotation = angle;
+		}
+		_particleDescriptor.rotationSpeed = ds::random(settings.rotationSpeed.x, settings.rotationSpeed.y);
+		_particleDescriptor.ttl = ds::random(settings.ttl.x,settings.ttl.y);
+		float acc = ds::random(0.4f, 2.0f);
+		_particleDescriptor.velocity = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+		_particleSystem->add(ds::vec3(x, y, z), _particleDescriptor);
+	}
+}
+
+void InstanceTest::emittExplosion(const ds::vec3& pos) {
+	for (int i = 0; i < 128; ++i) {
+		float radius = 0.1f;
+		float rmin = radius - radius * 0.8f;
+		float r = ds::random(rmin, radius);
+		float angle = ds::random(0.0f, ds::TWO_PI);
+		float x = cos(angle) * r + pos.x;
+		float z = 0.1f;
+		float y = sin(angle) * r + pos.y;
+		_particleDescriptor.rotation = angle;
+		_particleDescriptor.rotationSpeed = 0.0f;// ds::random(-4.0f, 4.0f);
+		_particleDescriptor.ttl = ds::random(0.5f, 1.2f);
+		float acc = ds::random(0.4f, 2.0f);
+		_particleDescriptor.velocity = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+		_particleSystem->add(ds::vec3(x, y, z), _particleDescriptor);
 	}
 }

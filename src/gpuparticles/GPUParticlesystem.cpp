@@ -4,7 +4,7 @@
 // -------------------------------------------------------
 // create new particlesystem
 // -------------------------------------------------------
-GPUParticlesystem::GPUParticlesystem(ParticlesystemDescriptor descriptor) : _descriptor(descriptor) {
+GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor) : _descriptor(descriptor) {
 	_array.initialize(descriptor.maxParticles);
 	_vertices = new GPUParticle[descriptor.maxParticles];
 
@@ -64,6 +64,8 @@ void GPUParticlesystem::add(const ds::vec3& pos, ParticleDescriptor descriptor) 
 		_array.positions[start] = pos;
 		_array.sizes[start] = ds::vec4(descriptor.minScale.x, descriptor.minScale.y, descriptor.maxScale.x, descriptor.maxScale.y);
 		_array.accelerations[start] = descriptor.acceleration;
+		_array.rotations[start] = descriptor.rotation;
+		_array.rotationSpeeds[start] = descriptor.rotationSpeed;
 		_array.wake(start);
 	}
 }
@@ -141,6 +143,7 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 	_constantBuffer.eyePos = eyePos;
 	_constantBuffer.padding = 0.0f;
 	_constantBuffer.world = ds::matTranspose(w);
+	_constantBuffer.textureRect = _descriptor.textureRect;
 	for (int i = 0; i < _array.countAlive; ++i) {
 		_vertices[i] = {
 			_array.positions[i],
@@ -148,7 +151,9 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 			_array.accelerations[i],
 			ds::vec2(_array.timers[i].x, _array.timers[i].y),
 			ds::vec2(_array.sizes[i].x,_array.sizes[i].y),
-			ds::vec2(_array.sizes[i].z,_array.sizes[i].w)
+			ds::vec2(_array.sizes[i].z,_array.sizes[i].w),
+			_array.rotations[i],
+			_array.rotationSpeeds[i]
 		};
 	}
 	//quickSort(_vertices, 0, _array.countAlive);

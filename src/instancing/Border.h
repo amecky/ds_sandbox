@@ -15,7 +15,7 @@ struct BorderItem {
 class Border {
 
 public:
-	Border() : _scale(0.4f) {}
+	Border() : _scale(1.0f) {}
 	~Border() {}
 	void init(RID basicGroup, RID vertexShaderId, RID pixelShaderId);
 	void tick(float dt, const ds::vec3& playerPosition);

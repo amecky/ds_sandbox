@@ -65,7 +65,7 @@ public:
 	Scene();
 	~Scene();
 	void tick(float dt);
-	int loadEntity(const char* fileName);
+	int loadEntity(const char* fileName, bool scale = true);
 	int createGrid(int object, int numCells);
 	int createInstance(int entityID, const ds::vec3& pos, bool castShadows = true);
 	void renderDepthMap();

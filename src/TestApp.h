@@ -27,6 +27,10 @@ public:
 		return false;
 	}
 
+	virtual const char* getSettingsFileName() const {
+		return 0;
+	}
+
 	virtual void shutdown() {}
 
 protected:

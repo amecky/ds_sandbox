@@ -120,7 +120,7 @@ Scene::~Scene() {
 	}
 }
 
-int Scene::loadEntity(const char* fileName) {
+int Scene::loadEntity(const char* fileName, bool scale) {
 	Entity* e = &_entities[_numEntities++];
 	FILE* fp = fopen(fileName, "rb");
 	int total = 0;
@@ -155,7 +155,9 @@ int Scene::loadEntity(const char* fileName) {
 		fread(&c->n.x, sizeof(float), 1, fp);
 		fread(&c->n.y, sizeof(float), 1, fp);
 		fread(&c->n.z, sizeof(float), 1, fp);
-		c->p = sm * c->p;
+		if (scale) {
+			c->p = sm * c->p;
+		}
 	}
 	fclose(fp);
 

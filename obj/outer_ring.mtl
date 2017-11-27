@@ -1,0 +1,17 @@
+# Made using Asset Forge (www.assetforge.io) version 1.2.1 
+
+newmtl Material.001 (Instance)
+Ka 0.000000 0.000000 0.000000 
+Kd 0.16152 0.13795 0.117767 
+Ks 0.330000 0.330000 0.330000 
+
+newmtl Material.002 (Instance)
+Ka 0.000000 0.000000 0.000000 
+Kd 0.16152 0.13795 0.117767 
+Ks 0.330000 0.330000 0.330000 
+
+newmtl Material.000 (Instance)
+Ka 0.000000 0.000000 0.000000 
+Kd 0.16152 0.13795 0.117767 
+Ks 0.330000 0.330000 0.330000 
+

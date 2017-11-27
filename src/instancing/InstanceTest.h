@@ -13,6 +13,26 @@
 #include "Border.h"
 #include "..\gpuparticles\GPUParticlesystem.h"
 
+struct BulletSettings {
+	float velocity;
+	ds::vec2 scale;
+	ds::vec4 boundingBox;
+	float fireRate;
+};
+
+struct ParticleSettings {
+	int num;
+	ds::vec2 radius;
+	ds::vec2 angle;
+	ds::vec2 rotationSpeed;
+	ds::vec2 ttl;
+	int alignParticle;
+	ds::vec2 radialVelocity;
+	ds::vec2 radialAcceleration;
+	ds::vec2 scale;
+	ds::vec2 scaleVariance;
+	ds::vec2 growth;
+};
 class InstanceTest : public TestApp {
 
 public:
@@ -38,14 +58,27 @@ public:
 
 	void renderGUI();
 
+	const char* getSettingsFileName() const {
+		return "data\\settings.json";
+	}
+
 private:	
+	void registerParticleSettings(const char* category, ParticleSettings* settings);
+	void emittParticles(const ds::vec3& pos, const ParticleSettings& settings);
+	void emittExplosion(const ds::vec3& pos);
 	void addBullet();
 	void emittCubes(int side, int num);
+	void manageBullets(float dt);
+	void handleEvents();
+	void movePlayer(float dt);
 	RID _basicPass;
+	RID _particlePass;
 	RID _instanceVertexBuffer;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
 	TopDownCamera* _topDownCamera;
+	BulletSettings _bulletSettings;
+	ParticleSettings _explosionSettings;
 	//BackgroundGrid* _grid;
 	EmitterQueue* _queue;
 	Cubes _cubes;
@@ -61,6 +94,7 @@ private:
 	int _tmpY;
 	int _tmpSide;
 	int _cameraMode;
+	int _selectedTab;
 	Bullet _bullets[256];
 	int _numBullets;
 	bool _shooting;

@@ -5,6 +5,7 @@ cbuffer cbChangesPerFrame : register(b0) {
 	matrix world;
 	float3 eyePos;
 	float padding; 
+	float4 textureRect;
 };
 
 struct Particle {
@@ -14,6 +15,8 @@ struct Particle {
     float2 timer;
 	float2 scale;
 	float2 growth;
+	float rotation;
+	float rotationSpeed;
 };
 
 StructuredBuffer<Particle> ParticlesRO : register(t1);
@@ -30,31 +33,32 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
 	uint vertexIndex = id % 4;	
 	float elapsed = ParticlesRO[particleIndex].timer.x;
     float norm = ParticlesRO[particleIndex].timer.y;	
+
+	float3 position;
+	position.x = (vertexIndex % 2) ? 0.5 : -0.5;
+	position.y = (vertexIndex & 2) ? -0.5 : 0.5;
+	position.z = 0.0;
+
     float3 pos = ParticlesRO[particleIndex].position;
-
-    pos += ParticlesRO[particleIndex].velocity * elapsed;
-    pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
-    // move
-
-    float3 look = normalize(eyePos - pos);
-	float3 right = normalize(cross(float3(0, 1, 0), look));
-	float3 up = normalize(cross(look, right));
-
 	float2 scaling = ParticlesRO[particleIndex].scale;
 	scaling += ParticlesRO[particleIndex].growth * elapsed;
 	scaling = saturate(scaling);
-    
-	float hw = (vertexIndex & 2) ? 0.5 : -0.5;
-	float hh = (vertexIndex % 2) ? 0.5 : -0.5;
-    hw *= scaling.x;
-    hh *= scaling.y;
+	float rot = ParticlesRO[particleIndex].rotation + ParticlesRO[particleIndex].rotationSpeed * elapsed;
+	float s = sin(rot);
+	float c = cos(rot);
 
-	float4 fp = float4(pos + hw * right - hh * up, 1.0);
+	float sx = position.x * scaling.x;
+	float sy = position.y * scaling.y;
 
-    
-	vsOut.pos = mul(fp, wvp);
-	vsOut.tex.x = (vertexIndex % 2) ? 1.0 : 0.0;
-    vsOut.tex.y = (vertexIndex & 2) ? 1.0 : 0.0;
+	float xt = c * sx - s * sy;
+	float yt = s * sx + c * sy;
+
+    pos += ParticlesRO[particleIndex].velocity * elapsed;
+    pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
+ 	vsOut.pos = mul(float4(xt + pos.x, yt + pos.y, 0.0, 1.0f), wvp);
+	float4 rect = textureRect; 
+	vsOut.tex.x = (vertexIndex % 2) ? rect.z : rect.x;
+    vsOut.tex.y = (vertexIndex & 2) ? rect.w : rect.y;
 	vsOut.color = lerp(startColor,endColor,norm);
 	return vsOut;
 }
@@ -63,8 +67,8 @@ Texture2D colorMap : register(t0);
 SamplerState colorSampler : register(s0);
 
 float4 PS_Main(PS_Input frag) : SV_TARGET{
-	//return colorMap.Sample(colorSampler, frag.tex) * frag.color;
-	return frag.color;
+	return colorMap.Sample(colorSampler, frag.tex) * frag.color;
+	//return frag.color;
 	//return float4(frac(frag.pos));
 	//return frag.color;
 }

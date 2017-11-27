@@ -5,14 +5,14 @@
 // ----------------------------------------------------
 void Border::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 
-	_lightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	_lightBuffer.ambientColor = ds::Color(0.4f, 0.4f, 0.4f, 1.0f);
 	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	_lightBuffer.lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
 	_lightBuffer.padding = 0.0f;
 	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
 
 	Mesh mesh;
-	mesh.loadBin("models\\hex_border.bin",false);
+	mesh.loadBin("models\\outer_ring.bin",false);
 	_extent = mesh.getExtent();
 	_center = mesh.getCenter();
 	RID cubeBuffer = mesh.assemble();

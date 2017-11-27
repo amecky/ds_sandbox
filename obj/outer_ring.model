@@ -1,0 +1,42 @@
+# Made using Asset Forge (1.2.1)
+
+:models
+#VaultAssets/Pipe[(-4.5, -2.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(-4.5, -1.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(-4.5, -0.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/PipeCorner[(-4.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.002]
+#VaultAssets/PipeHorizontal[(-3.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(-2.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeCorner[(4.5, 2.4, 0);(0.0, 180.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.002]
+#VaultAssets/PipeHorizontal[(-0.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(0.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(1.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(2.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(3.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeCorner[(-4, -3.1, 0);(0.0, 0.0, 90.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.002]
+#VaultAssets/PipeHorizontal[(-1.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(-2.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(-3.5, -3.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/Pipe[(-4.5, 0.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(-4.5, 1.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/PipeHorizontal[(-1.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(-0.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(0.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(1.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(2.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/PipeHorizontal[(3.5, 2.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.000]
+#VaultAssets/Pipe[(4.5, 0.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(4.5, 1.4, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/PipeCorner[(4.5, -2.6, 0);(0.0, 0.0, 180.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.002]
+#VaultAssets/Pipe[(4.5, -0.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(4.5, -1.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+#VaultAssets/Pipe[(4.5, -2.6, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);Material.001]
+
+:materials
+Material.001[RGBA(0.162, 0.138, 0.118, 1.000);]
+Material.002[RGBA(0.162, 0.138, 0.118, 1.000);]
+Material.000[RGBA(0.162, 0.138, 0.118, 1.000);]
+
+:textures
+
+:extra

@@ -160,6 +160,9 @@
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h">
       <Filter>gpuparticles</Filter>
     </ClInclude>
+    <ClInclude Include="ext\ds_tweakable.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />

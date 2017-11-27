@@ -1,0 +1,35 @@
+# Made using Asset Forge (1.2.1)
+
+:models
+Castles/wall_archwaySingle[(0, 0, 1.5);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/structure_column[(-1.5, 0, 2);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(-1.5, 0, 1);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(-1.5, 0, 0);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(-1.5, 0, -1);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(1.5, 0, 2);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(1.5, 0, 1);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(1.5, 0, 0);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/structure_column[(1.5, 0, -1);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);customMaterial1]
+Castles/floor_square[(-0.25, 0, 0);(0.0, 90.0, 0.0);(5.0, 1.0, 5.5);(0.0, 0.0, 0.0);customMaterial2]
+Castles/debris_bricks[(0, 0, 0);(0.0, 90.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/wall_archwaySingle[(0, 0, -2.1);(0.0, 90.0, 0.0);(1.0, 0.5, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(-2, 0, 2);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(-2, 0, 1);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(-2, 0, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(-2, 0, -1);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(-2, 0, -2);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(2.8, 0, 2);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(2.8, 0, 1);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(2.8, 0, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(2.8, 0, -1);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+Castles/battlement_straight[(2.8, 0, -2);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);(0.0, 0.0, 0.0);stone]
+
+:materials
+stone[RGBA(0.667, 0.663, 0.737, 1.000);]
+customMaterial1[RGBA(0.097, 0.470, 0.470, 1.000);]
+customMaterial2[RGBA(0.360, 0.026, 0.026, 1.000);]
+customMaterial3[RGBA(0.480, 0.058, 0.227, 1.000);]
+
+:textures
+
+:extra

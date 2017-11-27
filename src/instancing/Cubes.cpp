@@ -215,8 +215,8 @@ int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 			}
 		}
 		if (hit) {
-			if (_numItems > 1) {
-				events->add(101, &_items[y].pos, sizeof(ds::vec3));
+			events->add(101, &_items[y].pos, sizeof(ds::vec3));
+			if (_numItems > 1) {				
 				_items[y] = _items[_numItems - 1];
 			}
 			--_numItems;

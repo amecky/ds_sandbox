@@ -86,17 +86,17 @@ void Player::setPosition(const ds::vec3 & p) {
 	
 	cameraPos.z = -6.0f;
 	
-	if (cameraPos.x < -2.0f) {
-		cameraPos.x = -2.0f;
+	if (cameraPos.x < -1.5f) {
+		cameraPos.x = -1.5f;
 	}
-	if (cameraPos.x > 2.0f) {
-		cameraPos.x = 2.0f;
+	if (cameraPos.x > 1.5f) {
+		cameraPos.x = 1.5f;
 	}
-	if (cameraPos.y < -1.4f) {
-		cameraPos.y = -1.4f;
+	if (cameraPos.y < -0.75f) {
+		cameraPos.y = -0.75f;
 	}
-	if (cameraPos.y > 1.4f) {
-		cameraPos.y = 1.4f;
+	if (cameraPos.y > 0.75f) {
+		cameraPos.y = 0.75f;
 	}
 	_camera->setPosition(cameraPos);
 }

@@ -172,6 +172,8 @@ namespace gui {
 
 	void Diagram(const char* label, float* values, int num, float minValue, float maxValue, float step, int width = 200, int height = 100);
 
+	bool Tabs(const char** entries, int num, int* selected);
+
 	void pushID(int id);
 
 	void pushID(const char* text);
@@ -2092,6 +2094,37 @@ namespace gui {
 		model.setSelection(selected);
 		moveForward(p2i(width, height + 4));
 		popID();
+		return changed;
+	}
+
+	bool Tabs(const char** entries, int num, int* selected) {
+		bool changed = false;
+		pushID("Tabs",entries[0]);
+		p2i p = _guiCtx->currentPos;
+		for (int i = 0; i < num; ++i) {
+			pushID(i);
+			p2i ts = textSize(entries[i]);
+			ts.x += 20;
+			checkItem(p, p2i(ts.x, 20));
+			if (isClicked()) {
+				if (*selected != i) {
+					changed = true;
+				}
+				*selected = i;
+			}
+			if (*selected == i) {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), _guiCtx->settings.boxSelectionColor);
+			}
+			else {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), _guiCtx->settings.buttonColor);
+			}
+			p.x += 5;
+			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
+			p.x += ts.x;
+			popID();
+		}
+		popID();
+		moveForward(p2i(300, 20));
 		return changed;
 	}
 

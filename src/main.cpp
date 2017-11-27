@@ -18,6 +18,8 @@
 #include "particles\ParticleExpressionTest.h"
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
+#define GAMESETTINGS_IMPLEMENTATION
+#include <ds_tweakable.h>
 #include "plugins\PluginRegistry.h"
 #include "ParticlePluginTest.h"
 #include "kenney\AssetViewer.h"
@@ -60,8 +62,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	perf::init();
 
+	bool useTweaking = false;
+	float tweakingReloadTimer = 0.0f;
+
+	const char* settingsFileName = app->getSettingsFileName();
+	if (settingsFileName != 0) {
+		twk_init(settingsFileName);		
+		useTweaking = true;
+	}
+
 	bool state = app->init();
 	assert(state);
+
+	if (useTweaking) {
+		twk_load();
+	}
 
 	bool running = true;
 	
@@ -77,6 +92,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		perf::reset();
 
 		perf::ZoneTracker("main");
+
+		if (useTweaking) {
+			tweakingReloadTimer += ds::getElapsedSeconds();
+			if (tweakingReloadTimer >= 0.5f) {
+				tweakingReloadTimer -= 0.5f;
+				twk_load();
+			}
+		}
 
 		if (app->useFixedTimestep()) {
 			gameTimer += ds::getElapsedSeconds();
