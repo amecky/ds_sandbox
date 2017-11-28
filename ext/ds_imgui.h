@@ -779,7 +779,7 @@ namespace gui {
 		IMGUISettings settings;
 		renderer::UIContext* uiContext;
 		IDStack idStack;
-		
+		int width;
 	};
 
 	static GUIContext* _guiCtx = 0;
@@ -1163,6 +1163,7 @@ namespace gui {
 	// --------------------------------------------------------
 	void begin(const char* header, int width) {
 		pushID(header);
+		_guiCtx->width = width;
 		p2i pos = _guiCtx->currentPos;
 		// header
 		renderer::add_box(_guiCtx->uiContext, pos, width, 20, _guiCtx->settings.headerBoxColor);
@@ -1177,6 +1178,7 @@ namespace gui {
 	// --------------------------------------------------------
 	bool begin(const char* header, int* state, p2i* position, int width) {
 		pushID(header);
+		_guiCtx->width = width;
 		_guiCtx->currentPos = *position;
 		_guiCtx->startPos = _guiCtx->currentPos;
 		_guiCtx->uiContext->startPos = _guiCtx->currentPos;
@@ -2097,10 +2099,15 @@ namespace gui {
 		return changed;
 	}
 
+	// -------------------------------------------------------
+	// Tabs
+	// -------------------------------------------------------	
 	bool Tabs(const char** entries, int num, int* selected) {
 		bool changed = false;
 		pushID("Tabs",entries[0]);
 		p2i p = _guiCtx->currentPos;
+		p.x -= 10;
+		int tab_size = _guiCtx->width / num;
 		for (int i = 0; i < num; ++i) {
 			pushID(i);
 			p2i ts = textSize(entries[i]);
@@ -2113,14 +2120,14 @@ namespace gui {
 				*selected = i;
 			}
 			if (*selected == i) {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), _guiCtx->settings.boxSelectionColor);
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.boxSelectionColor);
 			}
 			else {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), _guiCtx->settings.buttonColor);
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.buttonColor);
 			}
 			p.x += 5;
 			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
-			p.x += ts.x;
+			p.x += tab_size;
 			popID();
 		}
 		popID();

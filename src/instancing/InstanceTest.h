@@ -66,6 +66,7 @@ private:
 	void registerParticleSettings(const char* category, ParticleSettings* settings);
 	void emittParticles(const ds::vec3& pos, const ParticleSettings& settings);
 	void emittExplosion(const ds::vec3& pos);
+	void tweakableGUI(const char* category);
 	void addBullet();
 	void emittCubes(int side, int num);
 	void manageBullets(float dt);

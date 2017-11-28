@@ -300,6 +300,14 @@ void InstanceTest::tick(float dt) {
 // ----------------------------------------------------
 void InstanceTest::movePlayer(float dt) {
 	if (_cameraMode == 3) {
+
+		if (ds::isMouseButtonPressed(0) && !_shooting) {
+			_shooting = true;
+		}
+		if (!ds::isMouseButtonPressed(0) && _shooting) {
+			_shooting = false;
+		}
+
 		_player->tick(dt);
 	}
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
@@ -357,8 +365,8 @@ void InstanceTest::manageBullets(float dt) {
 	while (cnt < _numBullets) {
 		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
 		_bullets[cnt].timer += dt;
-		_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.x;
-		_bullets[cnt].scale.y = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.y;
+		//_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.x;
+		//_bullets[cnt].scale.y = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.y;
 		ds::vec3 p = _bullets[cnt].pos;
 		if (p.y < _bulletSettings.boundingBox.y || p.y > _bulletSettings.boundingBox.w || p.x < _bulletSettings.boundingBox.x || p.x > _bulletSettings.boundingBox.z) {
 			if (_numBullets > 1) {
@@ -412,6 +420,9 @@ void InstanceTest::render() {
 	
 }
 
+// ----------------------------------------------------
+// emitt cubes
+// ----------------------------------------------------
 void InstanceTest::emittCubes(int side, int num) {
 	int xd = 0;
 	int yd = 0;
@@ -443,12 +454,15 @@ void InstanceTest::emittCubes(int side, int num) {
 	}
 }
 
+// ----------------------------------------------------
+// renderGUI
+// ----------------------------------------------------
 void InstanceTest::renderGUI() {
 	if (_showGUI) {
 		int state = 1;
 		gui::start();
 
-		const char* TABS[] = { "Emitter","Tab Two","Particles" };
+		const char* TABS[] = { "Emitter","Bullets","Particles" };
 
 		p2i sp = p2i(10, 760);
 		if (gui::begin("Debug", &state, &sp, 300)) {
@@ -492,6 +506,7 @@ void InstanceTest::renderGUI() {
 				ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
 				gui::Value("Cursor", tmp);
 				gui::Value("Cubes", _cubes.getNumItems());
+				tweakableGUI("bullets");
 			}
 			if (gui::Button("Reset Camera")) {
 				_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
@@ -509,8 +524,7 @@ void InstanceTest::renderGUI() {
 			}
 			if (_selectedTab == 2) {
 				gui::Value("Particles",_particleSystem->countAlive());
-				gui::Input("Max Scale", &_particleDescriptor.maxScale);
-				gui::Input("Min Scale",&_particleDescriptor.minScale);
+				tweakableGUI("explosion");
 				if (gui::Button("Particles")) {
 					//emittExplosion(ds::vec3(0.0f));
 					emittParticles(ds::vec3(0.0f), _explosionSettings);
@@ -522,6 +536,37 @@ void InstanceTest::renderGUI() {
 	}
 }
 
+// ----------------------------------------------------
+// GUI for tweable variables
+// ----------------------------------------------------
+void InstanceTest::tweakableGUI(const char* category) {
+	Tweakable  vars[256];
+	int num = twk_get_tweakables(category, vars, 256);
+	for (int i = 0; i < num; ++i) {
+		if (vars[i].type == TweakableType::ST_FLOAT) {
+			gui::Input(vars[i].name, vars[i].ptr.fPtr);
+		}
+		else if (vars[i].type == TweakableType::ST_INT) {
+			gui::Input(vars[i].name, vars[i].ptr.iPtr);
+		}
+		else if (vars[i].type == TweakableType::ST_VEC2) {
+			gui::Input(vars[i].name, vars[i].ptr.v2Ptr);
+		}
+		else if (vars[i].type == TweakableType::ST_VEC3) {
+			gui::Input(vars[i].name, vars[i].ptr.v3Ptr);
+		}
+		else if (vars[i].type == TweakableType::ST_VEC4) {
+			gui::Input(vars[i].name, vars[i].ptr.v4Ptr);
+		}
+		else if (vars[i].type == TweakableType::ST_COLOR) {
+			gui::Input(vars[i].name, vars[i].ptr.cPtr);
+		}
+	}
+}
+
+// ----------------------------------------------------
+// emitt particles using settings
+// ----------------------------------------------------
 void InstanceTest::emittParticles(const ds::vec3& pos, const ParticleSettings& settings) {
 	for (int i = 0; i < settings.num; ++i) {
 		float r = ds::random(settings.radius.x, settings.radius.y);

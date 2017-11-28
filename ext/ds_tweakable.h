@@ -48,6 +48,8 @@ const char* twk_get_category_name(int index);
 
 int twk_get_tweakables(int categoryIndex, Tweakable* ret, int max);
 
+int twk_get_tweakables(const char* category, Tweakable* ret, int max);
+
 void twk_shutdown();
 
 bool twk_load();
@@ -918,6 +920,38 @@ int twk_get_tweakables(int categoryIndex, Tweakable* ret, int max) {
 			int nidx = item.nameIndex;
 			int offset = _twkCtx->charBuffer.indices[nidx];
 			t.name = _twkCtx->charBuffer.data + offset;
+		}
+	}
+	return cnt;
+}
+
+// -------------------------------------------------------
+// all tweakbales for one category
+// -------------------------------------------------------
+int twk_get_tweakables(const char* category, Tweakable* ret, int max) {
+	int cid = twk__find_category(category);
+	int cnt = 0;
+	if (cid != -1) {		
+		for (size_t i = 0; i < _twkCtx->items.size(); ++i) {
+			const InternalTweakable& item = _twkCtx->items[i];
+			if (item.categoryIndex == cid && cnt < max) {
+				Tweakable& t = ret[cnt++];
+				t.type = item.type;
+				switch (item.type) {
+				case ST_FLOAT: t.ptr.fPtr = item.ptr.fPtr; break;
+				case ST_INT: t.ptr.iPtr = item.ptr.iPtr; break;
+				case ST_UINT: t.ptr.uiPtr = item.ptr.uiPtr; break;
+				case ST_VEC2: t.ptr.v2Ptr = item.ptr.v2Ptr; break;
+				case ST_VEC3: t.ptr.v3Ptr = item.ptr.v3Ptr; break;
+				case ST_VEC4: t.ptr.v4Ptr = item.ptr.v4Ptr; break;
+				case ST_COLOR: t.ptr.cPtr = item.ptr.cPtr; break;
+				case ST_ARRAY: t.ptr.arPtr = item.ptr.arPtr; break;
+				}
+				t.arrayLength = item.arrayLength;
+				int nidx = item.nameIndex;
+				int offset = _twkCtx->charBuffer.indices[nidx];
+				t.name = _twkCtx->charBuffer.data + offset;
+			}
 		}
 	}
 	return cnt;
