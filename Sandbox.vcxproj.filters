@@ -34,6 +34,9 @@
     <Filter Include="gpuparticles">
       <UniqueIdentifier>{9cee980f-279f-45ea-95d6-b9fa051baa8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="viewer">
+      <UniqueIdentifier>{0486a09b-df5a-4d5c-92f0-dfa7f3a87c60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -163,6 +166,9 @@
     <ClInclude Include="ext\ds_tweakable.h">
       <Filter>ext</Filter>
     </ClInclude>
+    <ClInclude Include="src\viewer\ObjViewer.h">
+      <Filter>viewer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -255,6 +261,9 @@
     </ClCompile>
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp">
       <Filter>gpuparticles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\viewer\ObjViewer.cpp">
+      <Filter>viewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

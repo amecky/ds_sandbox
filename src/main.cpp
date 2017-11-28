@@ -26,26 +26,16 @@
 #include "binary\BinaryClock.h"
 #include "instancing\InstanceTest.h"
 #include "warp\WarpingGridApp.h"
-// ---------------------------------------------------------------
-// initialize rendering system
-// ---------------------------------------------------------------
-void initialize() {
-	ds::RenderSettings rs;
-	rs.width = 1280;
-	rs.height = 960;
-	rs.title = "ds_sandbox";
-	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
-	rs.multisampling = 4;
-	ds::init(rs);
-}
+#include "viewer\ObjViewer.h"
 
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
+	TestApp* app = new ObjViewer;
 	//TestApp* app = new WarpingGridApp;
-	TestApp* app = new InstanceTest;
+	//TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;
 	//TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;
