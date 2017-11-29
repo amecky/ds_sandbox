@@ -1650,6 +1650,12 @@ namespace ds {
 	};
 
 	RID createShader(const ShaderInfo& info, const char* name = "Shader");
+
+	RID createVertexShader(const void* data,int dataSize, const char* name = "VertexShader");
+
+	RID createPixelShader(const void* data, int dataSize, const char* name = "PixelShader");
+
+	RID createGeometryShader(const void* data, int dataSize, const char* name = "GeometryShader");
 	
 	// texture
 	struct TextureInfo {

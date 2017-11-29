@@ -46,6 +46,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	ds::init(app->getRenderSettings());
 
+	
+
 	if (app->usesGUI()) {
 		gui::init();
 	}
@@ -60,6 +62,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		twk_init(settingsFileName);		
 		useTweaking = true;
 	}
+
+	app->prepareDefaults();
 
 	bool state = app->init();
 	assert(state);

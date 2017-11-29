@@ -2123,7 +2123,7 @@ namespace gui {
 				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.boxSelectionColor);
 			}
 			else {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.buttonColor);
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(0,0,64,255));
 			}
 			p.x += 5;
 			renderer::add_text(_guiCtx->uiContext, p, entries[i]);

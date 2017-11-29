@@ -27,11 +27,16 @@ public:
 
 private:
 	RID _gridDrawItem;
+	RID _nextDrawItem;
 	InstanceBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;
 	ds::vec3 _worldPos;
 	Mesh _mesh;
-	RID _basicPass;
-	ds::Camera _camera;
+	Mesh _grid;
 	FPSCamera* _fpsCamera;
+	float _moveTimer;
+	bool _moving;
+	ds::vec3 _startPosition;
+	ds::vec3 _targetPosition;
+	float _dbgMoveTTL;
 };

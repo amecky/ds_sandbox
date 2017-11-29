@@ -31,9 +31,25 @@ public:
 		return 0;
 	}
 
+	void prepareDefaults() {
+		_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 3.0f, -6.0f));
+
+		ds::ViewportInfo vpInfo = { ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+		RID vp = ds::createViewport(vpInfo);
+
+		ds::RenderPassInfo rpInfo = { &_camera, vp, ds::DepthBufferState::ENABLED, 0, 0 };
+		_basicPass = ds::createRenderPass(rpInfo);
+
+		ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
+		_blendStateID = ds::createBlendState(blendInfo);
+	}
+
 	virtual void shutdown() {}
 
 protected:
+	RID _blendStateID;
+	RID _basicPass;
+	ds::Camera _camera;
 
 	RID loadImage(const char* name) {
 		int x, y, n;

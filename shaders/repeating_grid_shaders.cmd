@@ -12,8 +12,8 @@ set error=0
 rem set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
 set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
 
-call :CompileShader%1 GPUParticles GPUParticles vs VS_Main
-call :CompileShader%1 GPUParticles GPUParticles ps PS_Main
+call :CompileShader%1 RepeatingGrid RepeatingGrid vs VS_Main
+call :CompileShader%1 RepeatingGrid RepeatingGrid ps PS_Main
 
 echo.
 
