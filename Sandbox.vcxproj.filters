@@ -169,6 +169,9 @@
     <ClInclude Include="src\viewer\ObjViewer.h">
       <Filter>viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\SimpleGrid.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -264,6 +267,9 @@
     </ClCompile>
     <ClCompile Include="src\viewer\ObjViewer.cpp">
       <Filter>viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\SimpleGrid.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

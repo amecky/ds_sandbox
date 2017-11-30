@@ -47,7 +47,7 @@ bool ObjViewer::init() {
 	RID layout = _mesh.createInputLayout(bumpVS);
 	RID cbid = ds::createConstantBuffer(sizeof(InstanceBuffer), &_constantBuffer);
 
-	RID gridGroup = ds::StateGroupBuilder()
+	RID objGroup = ds::StateGroupBuilder()
 		.inputLayout(layout)
 		.blendState(_blendStateID)
 		.constantBuffer(lbid, bumpPS, 0)
@@ -58,34 +58,12 @@ bool ObjViewer::init() {
 		.build();
 
 
-	ds::DrawCommand gridDrawCmd = { _mesh.getCount(), ds::DrawType::DT_VERTICES, ds::PrimitiveTypes::TRIANGLE_LIST};
+	ds::DrawCommand objDrawCmd = { _mesh.getCount(), ds::DrawType::DT_VERTICES, ds::PrimitiveTypes::TRIANGLE_LIST};
 
-	_gridDrawItem = ds::compile(gridDrawCmd, gridGroup);
+	_objDrawItem = ds::compile(objDrawCmd, objGroup);
 
-	float gridSize = 8.0f;
-	ds::vec3 positions[] = {ds::vec3(-gridSize,0.0f,-gridSize),ds::vec3(-gridSize,0.0f,gridSize) ,ds::vec3(gridSize,0.0f, gridSize) ,ds::vec3(gridSize,0.0f,gridSize) ,ds::vec3(gridSize,0.0f,-gridSize) ,ds::vec3(-gridSize,0.0f,-gridSize) };
-	_grid.addStream(AttributeType::AT_VERTEX, (float*)positions, 6, 3);
-	ds::vec2 uvs[] = { ds::vec2(0.0f,16.0f),ds::vec2(0.0f,0.0f),ds::vec2(16.0f,0.0f),ds::vec2(16.0f,0.0f),ds::vec2(16.0f,16.0f),ds::vec2(0.0f,16.0f) };
-	_grid.addStream(AttributeType::AT_UV, (float*)uvs, 6, 2);
-	RID gridBuffer = _grid.assemble();
-	
-	RID gridVS = ds::createVertexShader(RepeatingGrid_VS_Main, sizeof(RepeatingGrid_VS_Main));
-	RID gridPS = ds::createPixelShader(RepeatingGrid_PS_Main, sizeof(RepeatingGrid_PS_Main));
-	RID gridLayout = _grid.createInputLayout(gridVS);
-
-	RID nextGroup = ds::StateGroupBuilder()
-		.inputLayout(gridLayout)
-		.blendState(_blendStateID)
-		.constantBuffer(cbid, gridVS, 0)
-		.vertexBuffer(gridBuffer)
-		.vertexShader(gridVS)
-		.pixelShader(gridPS)
-		.build();
-
-
-	ds::DrawCommand nextDrawCmd = { _grid.getCount(), ds::DrawType::DT_VERTICES, ds::PrimitiveTypes::TRIANGLE_LIST };
-
-	_nextDrawItem = ds::compile(nextDrawCmd, nextGroup);
+	_grid = new SimpleGrid;
+	_grid->init(8.0f, 0.7f, 0.2f);
 
 	_worldPos = ds::vec3(0.0f);
 
@@ -115,14 +93,15 @@ void ObjViewer::tick(float dt) {
 // render
 // ----------------------------------------------------
 void ObjViewer::render() {
+
+	_grid->render(_basicPass, _camera.viewProjectionMatrix);
+
 	_constantBuffer.world = ds::matTranspose(ds::matTranslate(_worldPos));
 	_constantBuffer.mvp = ds::matTranspose(_camera.viewProjectionMatrix);
 
-	_constantBuffer.world = ds::matTranspose(ds::matIdentity());
-	ds::submit(_basicPass, _nextDrawItem);
+	ds::submit(_basicPass, _objDrawItem);
 
-	_constantBuffer.world = ds::matTranspose(ds::matTranslate(_worldPos));
-	ds::submit(_basicPass, _gridDrawItem);
+	
 }
 
 // ----------------------------------------------------
@@ -136,7 +115,7 @@ void ObjViewer::renderGUI() {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Center", _mesh.getCenter());
 		gui::Value("Extent", _mesh.getExtent());
-		gui::Value("WorldPos", &_worldPos);
+		gui::Input("WorldPos", &_worldPos);
 		gui::Input("Move TTL", &_dbgMoveTTL);
 		if (gui::Button("Center")) {
 			_worldPos = _mesh.getCenter() * -1.0f;

@@ -64,6 +64,7 @@
     <ClInclude Include="src\utils\comon_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\EventStream.h" />
+    <ClInclude Include="src\utils\SimpleGrid.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
     <ClInclude Include="src\viewer\ObjViewer.h" />
@@ -102,6 +103,7 @@
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\comon_math.cpp" />
     <ClCompile Include="src\utils\EventStream.cpp" />
+    <ClCompile Include="src\utils\SimpleGrid.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
     <ClCompile Include="src\viewer\ObjViewer.cpp" />

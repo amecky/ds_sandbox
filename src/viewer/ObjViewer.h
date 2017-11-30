@@ -3,6 +3,7 @@
 #include "..\instancing\InstanceCommon.h"
 #include "..\Mesh.h"
 #include "..\kenney\Camera.h"
+#include "..\utils\SimpleGrid.h"
 
 class ObjViewer : public TestApp {
 
@@ -26,13 +27,12 @@ public:
 	void renderGUI();
 
 private:
-	RID _gridDrawItem;
-	RID _nextDrawItem;
+	RID _objDrawItem;
 	InstanceBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;
+	SimpleGrid* _grid;
 	ds::vec3 _worldPos;
 	Mesh _mesh;
-	Mesh _grid;
 	FPSCamera* _fpsCamera;
 	float _moveTimer;
 	bool _moving;
