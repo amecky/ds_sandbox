@@ -1,7 +1,7 @@
 #include "ObjViewer.h"
 #include <ds_imgui.h>
-#include "..\..\shaders\AmbientLightning_VS_Main.h"
-#include "..\..\shaders\AmbientLightning_PS_Main.h"
+#include "..\..\shaders\AmbientMultipleLightning_VS_Main.h"
+#include "..\..\shaders\AmbientMultipleLightning_PS_Main.h"
 #include "..\utils\tweening.h"
 #include "..\..\shaders\RepeatingGrid_VS_Main.h"
 #include "..\..\shaders\RepeatingGrid_PS_Main.h"
@@ -33,16 +33,27 @@ bool ObjViewer::init() {
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 3, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
-	RID bumpVS = ds::createVertexShader(AmbientLightning_VS_Main, sizeof(AmbientLightning_VS_Main));
-	RID bumpPS = ds::createPixelShader(AmbientLightning_PS_Main, sizeof(AmbientLightning_PS_Main));
+	RID bumpVS = ds::createVertexShader(AmbientMultipleLightning_VS_Main, sizeof(AmbientMultipleLightning_VS_Main));
+	RID bumpPS = ds::createPixelShader(AmbientMultipleLightning_PS_Main, sizeof(AmbientMultipleLightning_PS_Main));
 
-	_lightBuffer.ambientColor = ds::Color(0.2f, 0.2f, 0.2f, 1.0f);
-	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
-	_lightBuffer.lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
-	_lightBuffer.padding = 0.0f;
-	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
+	for (int i = 0; i < 3; ++i) {
+		_lightBuffer.lights[i].ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+		_lightBuffer.lights[i].diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
+		_lightBuffer.lights[i].lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
+		_lightBuffer.lights[i].padding = 0.0f;
+	}
+	_lightBuffer.lights[1].lightDirection = ds::vec3(-1.0f, 0.0f, 1.0f);
+	_lightBuffer.lights[2].lightDirection = ds::vec3(1.0f, 0.0f, 1.0f);
 
-	_mesh.loadBin("models\\grid_box.bin", false);
+	_lightPos[0] = ds::vec3(1.0f, 0.5f, 1.0f);
+	_lightPos[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
+	_lightPos[2] = ds::vec3(0.0f, 0.5f, 1.0f);
+
+
+	RID lbid = ds::createConstantBuffer(sizeof(MultipleLightsBuffer), &_lightBuffer);
+
+	//_mesh.loadBin("models\\grid_box.bin", false);
+	_mesh.loadBin("models\\ship.bin", false);
 	RID hexCubeBuffer = _mesh.assemble();
 	RID layout = _mesh.createInputLayout(bumpVS);
 	RID cbid = ds::createConstantBuffer(sizeof(InstanceBuffer), &_constantBuffer);
@@ -70,8 +81,10 @@ bool ObjViewer::init() {
 	_moving = true;
 	_moveTimer = 0.0f;
 	_startPosition = ds::vec3(0.0f, 10.0f, 0.0f);
-	_targetPosition = ds::vec3(0.0f);// _mesh.getCenter();
-	_dbgMoveTTL = 0.75f;
+	_targetPosition = ds::vec3(0.0f);
+	_targetPosition.y = _mesh.getMin().y * -1.0f;
+	_dbgMoveTTL = 1.5f;
+	_scale = ds::vec3(1.0f);
 	return true;
 }
 
@@ -81,10 +94,11 @@ bool ObjViewer::init() {
 void ObjViewer::tick(float dt) {
 	_fpsCamera->update(dt);
 	if (_moving) {
-		_worldPos = tweening::interpolate(tweening::easeOutCubic, _startPosition, _targetPosition, _moveTimer, _dbgMoveTTL);
+		_worldPos = tweening::interpolate(tweening::easeOutBounce, _startPosition, _targetPosition, _moveTimer, _dbgMoveTTL);
 		_moveTimer += dt;
 		if (_moveTimer >= _dbgMoveTTL) {
 			_moving = false;
+			_worldPos = _targetPosition;
 		}
 	}
 }
@@ -93,10 +107,14 @@ void ObjViewer::tick(float dt) {
 // render
 // ----------------------------------------------------
 void ObjViewer::render() {
-
+	for (int i = 0; i < 3; ++i) {
+		_lightBuffer.lights[i].lightDirection = normalize(_lightPos[i]);
+	}
 	_grid->render(_basicPass, _camera.viewProjectionMatrix);
-
-	_constantBuffer.world = ds::matTranspose(ds::matTranslate(_worldPos));
+	ds::matrix scaleMatrix = ds::matScale(_scale);
+	ds::matrix translationMatrix = ds::matTranslate(_worldPos);
+	ds::matrix world = scaleMatrix * translationMatrix;
+	_constantBuffer.world = ds::matTranspose(world);
 	_constantBuffer.mvp = ds::matTranspose(_camera.viewProjectionMatrix);
 
 	ds::submit(_basicPass, _objDrawItem);
@@ -111,17 +129,25 @@ void ObjViewer::renderGUI() {
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &state, &sp, 300)) {
+	if (gui::begin("Object", &state, &sp, 320)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Center", _mesh.getCenter());
 		gui::Value("Extent", _mesh.getExtent());
+		gui::Value("Min", _mesh.getMin());
+		gui::Value("Max", _mesh.getMax());
 		gui::Input("WorldPos", &_worldPos);
+		for (int i = 0; i < 3; ++i) {
+			gui::Input("LightDir", &_lightPos[i]);
+		}
+		if (gui::Input("Scale", &_scale)) {
+			_worldPos.y = _mesh.getMin().y * -1.0f * _scale.y;
+		}
 		gui::Input("Move TTL", &_dbgMoveTTL);
 		if (gui::Button("Center")) {
 			_worldPos = _mesh.getCenter() * -1.0f;
 		}
 		if (gui::Button("Reset Camera")) {
-			_fpsCamera->setPosition(ds::vec3(0, 0, -6));
+			_fpsCamera->setPosition(ds::vec3(0, 3, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 		}
 		if (gui::Button("Move")) {
 			_moveTimer = 0.0f;

@@ -44,6 +44,12 @@ public:
 	const ds::vec3& getCenter() const {
 		return _center;
 	}
+	const ds::vec3& getMin() const {
+		return _min;
+	}
+	const ds::vec3& getMax() const {
+		return _max;
+	}
 private:
 	std::vector<Stream> _streams;
 	ds::vec3 _extent;

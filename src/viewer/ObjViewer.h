@@ -29,7 +29,7 @@ public:
 private:
 	RID _objDrawItem;
 	InstanceBuffer _constantBuffer;
-	InstanceLightBuffer _lightBuffer;
+	MultipleLightsBuffer _lightBuffer;
 	SimpleGrid* _grid;
 	ds::vec3 _worldPos;
 	Mesh _mesh;
@@ -38,5 +38,7 @@ private:
 	bool _moving;
 	ds::vec3 _startPosition;
 	ds::vec3 _targetPosition;
+	ds::vec3 _scale;
+	ds::vec3 _lightPos[3];
 	float _dbgMoveTTL;
 };
