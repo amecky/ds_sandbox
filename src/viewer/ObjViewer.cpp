@@ -52,8 +52,10 @@ bool ObjViewer::init() {
 
 	RID lbid = ds::createConstantBuffer(sizeof(MultipleLightsBuffer), &_lightBuffer);
 
+	//_mesh.loadObj("obj", "grid_box.obj");
+	_mesh.loadObj("obj", "outer_ring.obj");
 	//_mesh.loadBin("models\\grid_box.bin", false);
-	_mesh.loadBin("models\\ship.bin", false);
+	//_mesh.loadBin("models\\ship.bin", false);
 	RID hexCubeBuffer = _mesh.assemble();
 	RID layout = _mesh.createInputLayout(bumpVS);
 	RID cbid = ds::createConstantBuffer(sizeof(InstanceBuffer), &_constantBuffer);

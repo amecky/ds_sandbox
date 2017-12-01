@@ -31,7 +31,8 @@
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
+int main() {
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
 	TestApp* app = new ObjViewer;
 	//TestApp* app = new WarpingGridApp;

@@ -18,6 +18,23 @@ struct Stream {
 	AttributeType type;
 };
 
+typedef struct color_definition_t {
+	ds::Color color;
+	uint32_t hash;
+} color_definition;
+
+typedef struct entry_t {
+	ds::vec3 pos;
+	ds::vec2 uvs;
+	ds::vec3 n;
+	ds::Color color;
+} entry;
+
+typedef struct face_t {
+	entry entries[16];
+	int num;
+} face;
+
 class Mesh {
 
 public:
@@ -37,6 +54,7 @@ public:
 	uint32_t getCount() const;
 	void save(const char* fileName);
 	void load(const char* fileName);
+	void loadObj(const char* dir, const char* fileName);
 	void loadBin(const char* fileName, bool scale = true);
 	const ds::vec3& getExtent() const {
 		return _extent;
@@ -51,6 +69,7 @@ public:
 		return _max;
 	}
 private:
+	int loadMaterial(const char* dir, const char* fileName, color_definition* defs, int max);
 	std::vector<Stream> _streams;
 	ds::vec3 _extent;
 	ds::vec3 _center;
