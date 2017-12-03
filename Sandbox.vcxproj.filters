@@ -172,6 +172,13 @@
     <ClInclude Include="src\utils\SimpleGrid.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\obj.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Material.h" />
+    <ClInclude Include="src\utils\TransformComponent.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -269,6 +276,13 @@
       <Filter>viewer</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\SimpleGrid.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\obj.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\utils\TransformComponent.cpp">
       <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>

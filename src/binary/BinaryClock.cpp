@@ -151,7 +151,7 @@ bool BinaryClock::init() {
 	mesh.addStream(AT_COLOR, (float*)clr, 24, 4);	
 	mesh.scaleStream(1, 0.5f);
 	//RID cubeBuffer = mesh.assemble();
-	mesh.save("Test.data");
+	mesh.save("models","Test");
 	//mesh.load("Test.data");
 	RID cubeBuffer = mesh.assemble();
 

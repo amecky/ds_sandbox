@@ -51,6 +51,7 @@
     <ClInclude Include="src\kenney\Scene.h" />
     <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="src\LogPanel.h" />
+    <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\ParticlePluginTest.h" />
     <ClInclude Include="src\particles\ParticleExpressionTest.h" />
@@ -64,7 +65,9 @@
     <ClInclude Include="src\utils\comon_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\EventStream.h" />
+    <ClInclude Include="src\utils\obj.h" />
     <ClInclude Include="src\utils\SimpleGrid.h" />
+    <ClInclude Include="src\utils\TransformComponent.h" />
     <ClInclude Include="src\utils\tweening.h" />
     <ClInclude Include="src\utils\utils.h" />
     <ClInclude Include="src\viewer\ObjViewer.h" />
@@ -94,6 +97,7 @@
     <ClCompile Include="src\kenney\Scene.cpp" />
     <ClCompile Include="src\KeyFrameAnimation.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\ParticlePluginTest.cpp" />
     <ClCompile Include="src\particles\ParticleExpressionTest.cpp" />
@@ -103,7 +107,9 @@
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\comon_math.cpp" />
     <ClCompile Include="src\utils\EventStream.cpp" />
+    <ClCompile Include="src\utils\obj.cpp" />
     <ClCompile Include="src\utils\SimpleGrid.cpp" />
+    <ClCompile Include="src\utils\TransformComponent.cpp" />
     <ClCompile Include="src\utils\tweening.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
     <ClCompile Include="src\viewer\ObjViewer.cpp" />
