@@ -98,7 +98,7 @@ void TopDownObjViewer::tick(float dt) {
 		}
 	}
 	else if (_state == ObjectState::ROTATING) {
-		if (!rotate_to(_transform, ds::vec3(_transform.rotation.x, _startAngle, _transform.rotation.z), ds::vec3(_transform.rotation.x, _endAngle, _transform.rotation.z), dt, _dbgTTL)) {
+		if (!rotate_to(_transform, ds::vec3(_transform.rotation.x, _transform.rotation.y, _startAngle), ds::vec3(_transform.rotation.x, _transform.rotation.y, _endAngle), dt, _dbgTTL)) {
 			if (_steps > 0) {
 				prepareStep();
 				_state = ObjectState::WALKING;
@@ -110,7 +110,7 @@ void TopDownObjViewer::tick(float dt) {
 	}
 	else if (_state == ObjectState::WALKING) {
 		step_forward(_transform, _startPosition, _targetPosition, dt, _dbgTTL);
-		if (!rotate_to(_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
+		if (!rotate_to(_transform, ds::vec3(0.0f, 0.0f, _transform.rotation.z), ds::vec3(0.0f, ds::PI * 0.5f, _transform.rotation.z), dt, _dbgTTL)) {
 			--_steps;
 			if (_steps <= 0) {
 				_state = ObjectState::IDLE;
@@ -156,7 +156,9 @@ void TopDownObjViewer::renderGUI() {
 		gui::Value("Extent", _mesh.getExtent());
 		gui::Value("Min", _mesh.getMin());
 		gui::Value("Max", _mesh.getMax());
+		gui::SliderAngle("RotX", &_transform.rotation.x);
 		gui::SliderAngle("RotY", &_transform.rotation.y);
+		gui::SliderAngle("RotZ", &_transform.rotation.z);
 		gui::Input("WorldPos", &_transform.position);
 		for (int i = 0; i < 3; ++i) {
 			gui::Input("LightDir", &_lightDir[i]);
@@ -169,7 +171,7 @@ void TopDownObjViewer::renderGUI() {
 			_transform.position = _mesh.getCenter() * -1.0f;
 		}
 		if (gui::Button("Reset Camera")) {
-			_fpsCamera->setPosition(ds::vec3(0, 3, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+			_fpsCamera->setPosition(ds::vec3(0, 0, -12), ds::vec3(0.0f, 0.0f, 0.0f));
 		}
 		if (gui::Button("Move")) {
 			if (_state == ObjectState::IDLE) {
@@ -188,7 +190,7 @@ void TopDownObjViewer::renderGUI() {
 				}
 				else {
 					_transform.timer[2] = 0.0f;
-					_startAngle = _transform.rotation.y;
+					_startAngle = _transform.rotation.z;
 					_endAngle = _startAngle + ds::PI * 0.5f;
 					_state = ObjectState::ROTATING;
 				}
@@ -205,7 +207,7 @@ void TopDownObjViewer::renderGUI() {
 		if (gui::Button("Rotate")) {
 			if (_state == ObjectState::IDLE) {
 				_transform.timer[2] = 0.0f;
-				_startAngle = _transform.rotation.y;
+				_startAngle = _transform.rotation.z;
 				_endAngle = _startAngle + ds::PI * 0.5f;
 				_state = ObjectState::ROTATING;
 			}
@@ -218,8 +220,8 @@ bool TopDownObjViewer::prepareStep() {
 	_transform.timer[0] = 0.0f;
 	_transform.timer[2] = 0.0f;
 	_startPosition = _transform.position;
-	ds::vec3 vel = ds::vec3(cos(_transform.rotation.y) * _transform.scale.x, 0.0f, -_transform.scale.x * sin(_transform.rotation.y));
+	ds::vec3 vel = ds::vec3(cos(_transform.rotation.y) * _transform.scale.x, _transform.scale.x * sin(_transform.rotation.y), 0.0f);
 	_targetPosition = _startPosition + vel;
-	_targetPosition.y += _mesh.getExtent().y * 0.5f * _transform.scale.x;
-	return !is_outside(_targetPosition, ds::vec4(-7.0f, -7.0f, 7.0f, 7.0f));
+	_targetPosition.z -= _mesh.getExtent().z * 0.5f * _transform.scale.z;
+	return true;// !is_outside(_targetPosition, ds::vec4(-7.0f, -7.0f, 7.0f, 7.0f));
 }
