@@ -1,0 +1,28 @@
+# Made using Asset Forge (1.2.1)
+
+:models
+Primitives/block_default[(0, 0, 0.4);(0.0, 0.0, 0.0);(0.6, 0.2, 0.2);(0.0, 0.0, 0.0);customMaterial4]
+Primitives/block_default[(0.4, 0, 0);(0.0, 0.0, 0.0);(0.2, 0.2, 0.6);(0.0, 0.0, 0.0);customMaterial6]
+Primitives/block_default[(0, 0, -0.4);(0.0, 0.0, 0.0);(0.6, 0.2, 0.2);(0.0, 0.0, 0.0);customMaterial1]
+Primitives/block_default[(-0.4, 0, 0);(0.0, 0.0, 0.0);(0.2, 0.2, 0.6);(0.0, 0.0, 0.0);customMaterial5]
+Primitives/block_default[(0.4, 0, 0.4);(0.0, 0.0, 0.0);(0.2, 1.0, 0.2);(0.0, 0.0, 0.0);_defaultMat]
+Primitives/block_default[(-0.4, 0, 0.4);(0.0, 0.0, 0.0);(0.2, 1.0, 0.2);(0.0, 0.0, 0.0);_defaultMat]
+Primitives/block_default[(0.4, 0, -0.4);(0.0, 0.0, 0.0);(0.2, 1.0, 0.2);(0.0, 0.0, 0.0);_defaultMat]
+Primitives/block_default[(-0.4, 0.8, 3.73E-08);(0.0, 0.0, 0.0);(0.2, 0.2, 0.6);(0.0, 0.0, 0.0);customMaterial6]
+Primitives/block_default[(0, 0.8, 0.4);(0.0, 0.0, 0.0);(0.6, 0.2, 0.2);(0.0, 0.0, 0.0);customMaterial3]
+Primitives/block_default[(-0.4, 0, -0.4);(0.0, 0.0, 0.0);(0.2, 1.0, 0.2);(0.0, 0.0, 0.0);_defaultMat]
+Primitives/block_default[(0, 0.8, -0.4);(0.0, 0.0, 0.0);(0.6, 0.2, 0.2);(0.0, 0.0, 0.0);customMaterial2]
+Primitives/block_default[(0.4, 0.8, 0);(0.0, 0.0, 0.0);(0.2, 0.2, 0.6);(0.0, 0.0, 0.0);customMaterial5]
+
+:materials
+_defaultMat[RGBA(1.000, 1.000, 1.000, 1.000);]
+customMaterial1[RGBA(0.171, 0.440, 0.171, 1.000);]
+customMaterial2[RGBA(0.600, 0.211, 0.211, 1.000);]
+customMaterial3[RGBA(0.218, 0.591, 0.750, 1.000);]
+customMaterial4[RGBA(0.650, 0.650, 0.154, 1.000);]
+customMaterial5[RGBA(0.542, 0.290, 0.570, 1.000);]
+customMaterial6[RGBA(0.460, 0.397, 0.335, 1.000);]
+
+:textures
+
+:extra

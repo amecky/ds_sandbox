@@ -148,7 +148,7 @@ namespace gui {
 
 	void StepInput(const char* label, int* v, int minValue, int maxValue, int steps);
 
-	void Checkbox(const char* label, bool* state);
+	bool Checkbox(const char* label, bool* state);
 
 	void RadioButtons(const char** items, int num, int* selected);
 
@@ -1269,7 +1269,8 @@ namespace gui {
 	// --------------------------------------------------------
 	// Button
 	// --------------------------------------------------------
-	void Checkbox(const char* label, bool* state) {
+	bool Checkbox(const char* label, bool* state) {
+		bool ret = false;
 		pushID(label);
 		p2i p = _guiCtx->currentPos;
 		checkItem(p, p2i(16, 16));
@@ -1283,6 +1284,7 @@ namespace gui {
 		}
 		if (isClicked()) {
 			*state = !*state;
+			ret = true;
 		}
 		p = _guiCtx->currentPos;
 		p.x += 20;
@@ -1290,6 +1292,7 @@ namespace gui {
 		int advance = 16 + _guiCtx->settings.lineSpacing;
 		moveForward(p2i(40, advance));
 		popID();
+		return ret;
 	}
 
 	void RadioButtons(const char** items, int num, int* selected) {		

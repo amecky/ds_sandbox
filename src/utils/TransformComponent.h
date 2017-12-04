@@ -14,6 +14,8 @@ bool move_to(transform_component& t, const ds::vec3& start, const ds::vec3& end,
 
 bool step_forward(transform_component& t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
 
-bool rotate_to(transform_component& t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
+bool step_forward_xy(transform_component& t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
+
+bool rotate_to(transform_component* t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
 
 bool is_outside(const ds::vec3& pos, const ds::vec4& box);
