@@ -1,20 +1,20 @@
-#include "ObjViewer.h"
+#include "TopDownObjViewer.h"
 #include <ds_imgui.h>
 #include "..\..\shaders\AmbientMultipleLightning_VS_Main.h"
 #include "..\..\shaders\AmbientMultipleLightning_PS_Main.h"
 #include "..\utils\tweening.h"
 #include "..\..\shaders\RepeatingGrid_VS_Main.h"
-#include "..\..\shaders\RepeatingGrid_PS_MainXZ.h"
+#include "..\..\shaders\RepeatingGrid_PS_Main.h"
 
-ObjViewer::ObjViewer() : TestApp() {
+TopDownObjViewer::TopDownObjViewer() : TestApp() {
 }
 
-ObjViewer::~ObjViewer() {
+TopDownObjViewer::~TopDownObjViewer() {
 	delete _fpsCamera;
 	delete _material;
 }
 
-ds::RenderSettings ObjViewer::getRenderSettings() {
+ds::RenderSettings TopDownObjViewer::getRenderSettings() {
 	ds::RenderSettings rs;
 	rs.width = 1024;
 	rs.height = 768;
@@ -29,10 +29,10 @@ ds::RenderSettings ObjViewer::getRenderSettings() {
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
-bool ObjViewer::init() {
+bool TopDownObjViewer::init() {
 	
-	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 3, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_fpsCamera = new TopDownCamera(&_camera);
+	_fpsCamera->setPosition(ds::vec3(0, 0, -12), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_material = new AmbientLightningMaterial;
 
@@ -62,15 +62,15 @@ bool ObjViewer::init() {
 	_objDrawItem = ds::compile(objDrawCmd, groups, 2);
 
 	_grid = new SimpleGrid;
-	_grid->init(SGD_XZ, 8.0f, 0.7f, 0.2f);
+	_grid->init(SGD_XY, 9.0f, 0.7f, 0.2f);
 
 	_transform = { ds::vec3(0.0f),ds::vec3(1.0f),ds::vec3(0.0f),{0.0f,0.0f,0.0f}};
 	_state = ObjectState::MOVING;
 
 	_moving = true;
-	_startPosition = ds::vec3(0.0f, 10.0f, 0.0f);
+	_startPosition = ds::vec3(0.0f, 0.0f, -10.0f);
 	_targetPosition = ds::vec3(0.0f);
-	_targetPosition.y = _mesh.getExtent().y * 0.5f;
+	_targetPosition.z = _mesh.getExtent().y * -0.5f;
 	_dbgMoveTTL = 1.5f;
 
 	_dbgRotating = false;
@@ -84,7 +84,7 @@ bool ObjViewer::init() {
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
-void ObjViewer::tick(float dt) {
+void TopDownObjViewer::tick(float dt) {
 	_fpsCamera->update(dt);
 	if (_state == ObjectState::MOVING) {
 		if (!move_to(_transform, _startPosition, _targetPosition, dt, _dbgMoveTTL)) {
@@ -131,7 +131,7 @@ void ObjViewer::tick(float dt) {
 // ----------------------------------------------------
 // render
 // ----------------------------------------------------
-void ObjViewer::render() {	
+void TopDownObjViewer::render() {
 	_grid->render(_basicPass, _camera.viewProjectionMatrix);
 	ds::matrix world;
 	build_world_matrix(_transform, &world);
@@ -146,7 +146,7 @@ void ObjViewer::render() {
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void ObjViewer::renderGUI() {
+void TopDownObjViewer::renderGUI() {
 	int state = 1;
 	gui::start();
 	p2i sp = p2i(10, 760);
@@ -214,7 +214,7 @@ void ObjViewer::renderGUI() {
 	gui::end();
 }
 
-bool ObjViewer::prepareStep() {	
+bool TopDownObjViewer::prepareStep() {
 	_transform.timer[0] = 0.0f;
 	_transform.timer[2] = 0.0f;
 	_startPosition = _transform.position;

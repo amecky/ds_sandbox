@@ -342,6 +342,8 @@ void Mesh::load(const char* fileName) {
 		}
 		fclose(fp);
 	}
+	calculate();
+	align();
 }
 
 void Mesh::loadBin(const char* fileName, bool scale) {
@@ -423,6 +425,8 @@ void Mesh::loadData(const char* fileName) {
 	if (t == 1) {
 		sprintf_s(objName, "%s.obj", fileName);
 		obj::load("obj", objName, this);
+		calculate();
+		align();
 		save("models", fileName);
 	}
 	else {

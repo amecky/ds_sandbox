@@ -336,7 +336,7 @@ void InstanceTest::handleEvents() {
 		else if (type == 102) {
 			QueueEntry entry;
 			_events.get(i, &entry);
-			_cubes.create(_warpingGrid->convert_grid_coords(entry.x, entry.y), 2);
+			_cubes.createCube(_warpingGrid->convert_grid_coords(entry.x, entry.y));
 		}
 	}
 }
@@ -498,6 +498,9 @@ void InstanceTest::renderGUI() {
 				if (gui::Button("Emitt rnd Line")) {
 					int side = ds::random(0.0f, 3.9f);
 					emittCubes(side, 8);
+				}
+				if (gui::Button("Step")) {
+					_cubes.stepForward();
 				}
 			}
 			if (_selectedTab == 1) {

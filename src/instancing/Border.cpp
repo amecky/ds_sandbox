@@ -12,7 +12,7 @@ void Border::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
 
 	Mesh mesh;
-	mesh.loadBin("models\\outer_ring.bin",false);
+	mesh.loadData("outer_ring");
 	_extent = mesh.getExtent();
 	_center = mesh.getCenter();
 	RID cubeBuffer = mesh.assemble();

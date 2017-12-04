@@ -6,15 +6,21 @@
 // ---------------------------------------------------------
 struct AABBox {
 
-	ds::vec2 position;
-	ds::vec2 previous;
-	ds::vec2 extent;
+	ds::vec3 position;
+	ds::vec3 previous;
+	ds::vec3 extent;
 
 	AABBox() : position(0.0f), previous(0.0f), extent(0.0f) {}
 
 	AABBox(const ds::vec2& center, float ext) {
 		position = center;
-		extent = ds::vec2(extent);
+		extent = ds::vec3(extent);
+		previous = position;
+	}
+
+	AABBox(const ds::vec3& center, float ext) {
+		position = center;
+		extent = ds::vec3(extent);
 		previous = position;
 	}
 
@@ -49,6 +55,19 @@ struct AABBox {
 		float bottom = position.y - extent.y;
 		if ( p.x > right || p.x < left) return false;
 		if ( p.y < bottom || p.y > top) return false;
+		return true;
+	}
+
+	bool isInside(const ds::vec3& p) const {
+		float top = position.y + extent.y;
+		float left = position.x - extent.x;
+		float right = position.x + extent.x;
+		float bottom = position.y - extent.y;
+		float back = position.z + extent.z;
+		float front = position.z - extent.z;
+		if (p.x > right  || p.x < left) return false;
+		if (p.y < bottom || p.y > top ) return false;
+		if (p.z < front  || p.z > back) return false;
 		return true;
 	}
 };

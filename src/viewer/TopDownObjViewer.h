@@ -6,16 +6,17 @@
 #include "..\utils\SimpleGrid.h"
 #include "..\Material.h"
 #include "..\utils\TransformComponent.h"
+#include "..\instancing\TopDownCamera.h"
 
-class ObjViewer : public TestApp {
+class TopDownObjViewer : public TestApp {
 
 	enum ObjectState {
 		IDLE,MOVING,STEPPING,ROTATING,WALKING
 	};
 public:
-	ObjViewer();
+	TopDownObjViewer();
 
-	virtual ~ObjViewer();
+	virtual ~TopDownObjViewer();
 
 	ds::RenderSettings getRenderSettings();
 
@@ -40,7 +41,7 @@ private:
 	SimpleGrid* _grid;
 	transform_component _transform;
 	Mesh _mesh;
-	FPSCamera* _fpsCamera;
+	TopDownCamera* _fpsCamera;
 	bool _moving;
 	ds::vec3 _startPosition;
 	ds::vec3 _targetPosition;

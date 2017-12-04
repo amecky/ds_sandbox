@@ -13,7 +13,9 @@ rem set FX_PATH=C:\devtools\DirectX_SDK\Utilities\bin\x86
 set FX_PATH=C:\devtools\DirectX\Utilities\bin\x86
 
 call :CompileShader%1 RepeatingGrid RepeatingGrid vs VS_Main
-call :CompileShader%1 RepeatingGrid RepeatingGrid ps PS_Main
+call :CompileShader%1 RepeatingGrid RepeatingGrid ps PS_MainXZ
+call :CompileShader%1 RepeatingGrid RepeatingGrid ps PS_MainXY
+call :CompileShader%1 RepeatingGrid RepeatingGrid ps PS_MainYZ
 
 echo.
 

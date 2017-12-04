@@ -1,6 +1,7 @@
 #include "SimpleGrid.h"
 #include "..\..\shaders\RepeatingGrid_VS_Main.h"
-#include "..\..\shaders\RepeatingGrid_PS_Main.h"
+#include "..\..\shaders\RepeatingGrid_PS_MainXZ.h"
+#include "..\..\shaders\RepeatingGrid_PS_MainXY.h"
 
 SimpleGrid::SimpleGrid() {
 }
@@ -11,19 +12,31 @@ SimpleGrid::~SimpleGrid() {
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
-bool SimpleGrid::init(float gridSteps, float base, float amplitude) {
+bool SimpleGrid::init(SimpleGridDirection direction, float gridSteps, float base, float amplitude) {
 	
 	RID cbid = ds::createConstantBuffer(sizeof(InstanceBuffer), &_constantBuffer);
-
-	ds::vec3 positions[] = {
-		ds::vec3(-gridSteps, 0.0f,-gridSteps),
-		ds::vec3(-gridSteps, 0.0f, gridSteps) ,
-		ds::vec3( gridSteps, 0.0f, gridSteps) ,
-		ds::vec3( gridSteps, 0.0f, gridSteps) ,
-		ds::vec3( gridSteps, 0.0f,-gridSteps) ,
-		ds::vec3(-gridSteps, 0.0f,-gridSteps) 
-	};
-	_grid.addStream(AttributeType::AT_VERTEX, (float*)positions, 6, 3);
+	if (direction == SGD_XZ) {
+		ds::vec3 positions[] = {
+			ds::vec3(-gridSteps, 0.0f,-gridSteps),
+			ds::vec3(-gridSteps, 0.0f, gridSteps) ,
+			ds::vec3(gridSteps, 0.0f, gridSteps) ,
+			ds::vec3(gridSteps, 0.0f, gridSteps) ,
+			ds::vec3(gridSteps, 0.0f,-gridSteps) ,
+			ds::vec3(-gridSteps, 0.0f,-gridSteps)
+		};
+		_grid.addStream(AttributeType::AT_VERTEX, (float*)positions, 6, 3);
+	}
+	else if (direction == SGD_XY) {
+		ds::vec3 positions[] = {
+			ds::vec3(-gridSteps,-gridSteps, 0.0f),
+			ds::vec3(-gridSteps, gridSteps, 0.0f) ,
+			ds::vec3( gridSteps, gridSteps, 0.0f) ,
+			ds::vec3( gridSteps, gridSteps, 0.0f) ,
+			ds::vec3( gridSteps,-gridSteps, 0.0f) ,
+			ds::vec3(-gridSteps,-gridSteps, 0.0f)
+		};
+		_grid.addStream(AttributeType::AT_VERTEX, (float*)positions, 6, 3);
+	}
 	RID gridBuffer = _grid.assemble();
 
 	_settingsBuffer.amplitude = amplitude;
@@ -32,7 +45,13 @@ bool SimpleGrid::init(float gridSteps, float base, float amplitude) {
 	_settingsBuffer.two = 0.0f;
 	
 	RID gridVS = ds::createVertexShader(RepeatingGrid_VS_Main, sizeof(RepeatingGrid_VS_Main));
-	RID gridPS = ds::createPixelShader(RepeatingGrid_PS_Main, sizeof(RepeatingGrid_PS_Main));
+	RID gridPS = 0;
+	if (direction == SGD_XZ) {
+		gridPS = ds::createPixelShader(RepeatingGrid_PS_MainXZ, sizeof(RepeatingGrid_PS_MainXZ));
+	}
+	if (direction == SGD_XY) {
+		gridPS = ds::createPixelShader(RepeatingGrid_PS_MainXY, sizeof(RepeatingGrid_PS_MainXY));
+	}
 	RID gridLayout = _grid.createInputLayout(gridVS);
 	RID settingsBufferId = ds::createConstantBuffer(sizeof(GridSettingsBuffer), &_settingsBuffer);
 	RID nextGroup = ds::StateGroupBuilder()

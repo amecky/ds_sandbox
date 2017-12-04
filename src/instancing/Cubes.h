@@ -3,6 +3,7 @@
 #include "..\utils\DynamicPath.h"
 #include "InstanceCommon.h"
 #include "..\utils\EventStream.h"
+#include "..\utils\TransformComponent.h"
 
 struct Animation {
 	int type;
@@ -24,6 +25,20 @@ struct GridItem {
 	ds::vec3 force;
 };
 
+enum CubeState {
+	IDLE, MOVING, STEPPING, ROTATING, WALKING
+};
+
+struct Cube {
+	CubeState state;
+	transform_component transform;
+	ds::Color color;
+	ds::vec3 startPosition;
+	ds::vec3 targetPosition;
+	ds::vec3 startRotation;
+	ds::vec3 endRotation;
+};
+
 class Cubes {
 
 public:
@@ -33,16 +48,22 @@ public:
 	void tick(float dt, const ds::vec3& playerPosition);
 	void render(RID renderPass, const ds::matrix viewProjectionMatrix);
 	void create(const ds::vec3& pos, int animationFlags);
+	void createCube(const ds::vec3& pos);
 	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	int getNumItems() const {
 		return _numItems;
 	}
+	void stepForward();
 private:
 	void separate(float minDistance, float relaxation);
 	ds::FloatPath _scalePath;
 	GridItem _items[256];
 	int _numItems;
 	RID _drawItem;
+
+	Cube _cubes[256];
+	int _numCubes;
+	float _dbgTTL;
 	InstanceLightBuffer _lightBuffer;
 	InstanceData _instances[256];
 	RID _instanceVertexBuffer;

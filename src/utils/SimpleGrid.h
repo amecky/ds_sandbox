@@ -11,6 +11,12 @@ struct GridSettingsBuffer {
 	float two;
 };
 
+enum SimpleGridDirection {
+	SGD_XZ,
+	SGD_XY,
+	SGD_YZ
+};
+
 class SimpleGrid {
 
 public:
@@ -18,7 +24,7 @@ public:
 
 	virtual ~SimpleGrid();
 
-	bool init(float gridSteps, float base, float amplitude);
+	bool init(SimpleGridDirection direction, float gridSteps, float base, float amplitude);
 
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 

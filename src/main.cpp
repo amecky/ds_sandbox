@@ -27,14 +27,16 @@
 #include "instancing\InstanceTest.h"
 #include "warp\WarpingGridApp.h"
 #include "viewer\ObjViewer.h"
+#include "viewer\TopDownObjViewer.h"
 
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
-int main() {
-//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
+//int main() {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	TestApp* app = new ObjViewer;
+	TestApp* app = new TopDownObjViewer;
+	//TestApp* app = new ObjViewer;
 	//TestApp* app = new WarpingGridApp;
 	//TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;

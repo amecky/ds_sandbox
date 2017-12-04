@@ -30,8 +30,26 @@ cbuffer gridSettings : register( b0 ) {
 };
 
 
-float4 PS_Main( PS_Input frag ) : SV_TARGET {
+float4 PS_MainXZ( PS_Input frag ) : SV_TARGET {
     float2 coord = frag.wp.xz;
+    float2 gr = abs(frac(coord - 0.5) - 0.5) / fwidth(coord);
+    float ln = min(gr.x, gr.y);
+    float v = (1.0 - min(ln, 1.0) * base) * amplitude;
+    float4 color = float4(float3(v,v,v), 1.0);
+	return color;
+}
+
+float4 PS_MainXY( PS_Input frag ) : SV_TARGET {
+    float2 coord = frag.wp.xy;
+    float2 gr = abs(frac(coord - 0.5) - 0.5) / fwidth(coord);
+    float ln = min(gr.x, gr.y);
+    float v = (1.0 - min(ln, 1.0) * base) * amplitude;
+    float4 color = float4(float3(v,v,v), 1.0);
+	return color;
+}
+
+float4 PS_MainYZ( PS_Input frag ) : SV_TARGET {
+    float2 coord = frag.wp.yz;
     float2 gr = abs(frac(coord - 0.5) - 0.5) / fwidth(coord);
     float ln = min(gr.x, gr.y);
     float v = (1.0 - min(ln, 1.0) * base) * amplitude;
