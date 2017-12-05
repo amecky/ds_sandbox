@@ -93,12 +93,12 @@ void ObjViewer::tick(float dt) {
 	}
 	else if (_state == ObjectState::STEPPING) {
 		step_forward(_transform, _startPosition, _targetPosition, dt, _dbgTTL);
-		if (!rotate_to(_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
+		if (!rotate_to(&_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
 			_state = ObjectState::IDLE;
 		}
 	}
 	else if (_state == ObjectState::ROTATING) {
-		if (!rotate_to(_transform, ds::vec3(_transform.rotation.x, _startAngle, _transform.rotation.z), ds::vec3(_transform.rotation.x, _endAngle, _transform.rotation.z), dt, _dbgTTL)) {
+		if (!rotate_to(&_transform, ds::vec3(_transform.rotation.x, _startAngle, _transform.rotation.z), ds::vec3(_transform.rotation.x, _endAngle, _transform.rotation.z), dt, _dbgTTL)) {
 			if (_steps > 0) {
 				prepareStep();
 				_state = ObjectState::WALKING;
@@ -110,7 +110,7 @@ void ObjViewer::tick(float dt) {
 	}
 	else if (_state == ObjectState::WALKING) {
 		step_forward(_transform, _startPosition, _targetPosition, dt, _dbgTTL);
-		if (!rotate_to(_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
+		if (!rotate_to(&_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
 			--_steps;
 			if (_steps <= 0) {
 				_state = ObjectState::IDLE;

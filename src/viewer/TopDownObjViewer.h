@@ -43,6 +43,7 @@ private:
 	Mesh _mesh;
 	TopDownCamera* _fpsCamera;
 	bool _moving;
+	float _angle;
 	ds::vec3 _startPosition;
 	ds::vec3 _targetPosition;
 	ds::vec3 _lightDir[3];

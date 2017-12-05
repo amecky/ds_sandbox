@@ -412,17 +412,26 @@ void getFileTime(const char* fileName, FILETIME& time) {
 }
 
 void Mesh::loadData(const char* fileName) {
+	bool load_obj = false;
 	char objName[256];
 	sprintf_s(objName, "obj\\%s.obj",fileName);
 	FILETIME objTime;
 	getFileTime(objName, objTime);
 	char binName[256];
 	sprintf_s(binName, "models\\%s.bin", fileName);
-	FILETIME binTime;
-	getFileTime(binName, binTime);
-
-	int t = CompareFileTime(&objTime, &binTime);
-	if (t == 1) {
+	HANDLE hFile = CreateFile(binName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		FILETIME binTime;
+		getFileTime(binName, binTime);
+		int t = CompareFileTime(&objTime, &binTime);
+		if (t == 1) {
+			load_obj = true;
+		}
+	}
+	else {
+		load_obj = true;
+	}
+	if (load_obj) {
 		sprintf_s(objName, "%s.obj", fileName);
 		obj::load("obj", objName, this);
 		calculate();

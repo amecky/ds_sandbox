@@ -31,12 +31,16 @@ enum CubeState {
 
 struct Cube {
 	CubeState state;
-	transform_component transform;
+	ds::vec3 position;
+	ds::vec3 scale;
+	float rotation;
+	float roll;
 	ds::Color color;
 	ds::vec3 startPosition;
 	ds::vec3 targetPosition;
-	ds::vec3 startRotation;
-	ds::vec3 endRotation;
+	float startRotation;
+	float endRotation;
+	float timer[3];
 };
 
 class Cubes {

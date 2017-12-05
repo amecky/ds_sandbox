@@ -70,7 +70,7 @@ bool TopDownObjViewer::init() {
 	_moving = true;
 	_startPosition = ds::vec3(0.0f, 0.0f, -10.0f);
 	_targetPosition = ds::vec3(0.0f);
-	_targetPosition.z = _mesh.getExtent().y * -0.5f;
+	_targetPosition.z = _mesh.getExtent().z * -0.5f;
 	_dbgMoveTTL = 1.5f;
 
 	_dbgRotating = false;
@@ -78,6 +78,7 @@ bool TopDownObjViewer::init() {
 	_dbgTTL = 0.4f;
 	_steps = 0;
 	_stepCounter = 10;
+	_angle = 0.0f;
 	return true;
 }
 
@@ -92,25 +93,25 @@ void TopDownObjViewer::tick(float dt) {
 		}
 	}
 	else if (_state == ObjectState::STEPPING) {
-		step_forward(_transform, _startPosition, _targetPosition, dt, _dbgTTL);
-		if (!rotate_to(_transform, ds::vec3(0.0f, _transform.rotation.y, 0.0f), ds::vec3(0.0f, _transform.rotation.y, ds::PI * -0.5f), dt, _dbgTTL)) {
+		if (!step_forward_xy(_transform, _startPosition, _targetPosition, dt, _dbgTTL)) {
 			_state = ObjectState::IDLE;
 		}
+		_angle = tweening::interpolate(tweening::linear, _startAngle, _endAngle, _transform.timer[2], _dbgTTL);
+		_transform.timer[2] += dt;
 	}
 	else if (_state == ObjectState::ROTATING) {
-		if (!rotate_to(_transform, ds::vec3(_transform.rotation.x, _transform.rotation.y, _startAngle), ds::vec3(_transform.rotation.x, _transform.rotation.y, _endAngle), dt, _dbgTTL)) {
-			if (_steps > 0) {
-				prepareStep();
-				_state = ObjectState::WALKING;
-			}
-			else {
-				_state = ObjectState::IDLE;
+		_transform.timer[2] += dt;
+		_angle = tweening::interpolate(tweening::linear, _startAngle, _endAngle, _transform.timer[2], _dbgTTL);
+		if (_transform.timer[2] >= _dbgTTL) {
+			_state = ObjectState::IDLE;
+			if (_angle > ds::TWO_PI) {
+				_angle -= ds::TWO_PI;
 			}
 		}
 	}
 	else if (_state == ObjectState::WALKING) {
 		step_forward(_transform, _startPosition, _targetPosition, dt, _dbgTTL);
-		if (!rotate_to(_transform, ds::vec3(0.0f, 0.0f, _transform.rotation.z), ds::vec3(0.0f, ds::PI * 0.5f, _transform.rotation.z), dt, _dbgTTL)) {
+		if (!rotate_to(&_transform, ds::vec3(0.0f, 0.0f, _transform.rotation.z), ds::vec3(0.0f, ds::PI * 0.5f, _transform.rotation.z), dt, _dbgTTL)) {
 			--_steps;
 			if (_steps <= 0) {
 				_state = ObjectState::IDLE;
@@ -139,6 +140,14 @@ void TopDownObjViewer::render() {
 		_material->setLightDirection(i,_lightDir[i]);
 	}
 	_material->apply();
+
+	float x = sin(-_transform.rotation.z);
+	float y = cos(-_transform.rotation.z);
+
+	ds::matrix m = ds::matRotation(ds::vec3(x, y, 0.0f), _angle);
+	ds::matrix rzm = ds::matRotationZ(_transform.rotation.z);
+	//ds::matrix m = ds::matRotation(ds::vec3(0,1,0), _angle);
+	world = rzm * m * ds::matTranslate(_transform.position);
 	_material->transform(world, _camera.viewProjectionMatrix);
 	ds::submit(_basicPass, _objDrawItem);
 }
@@ -173,6 +182,9 @@ void TopDownObjViewer::renderGUI() {
 		if (gui::Button("Reset Camera")) {
 			_fpsCamera->setPosition(ds::vec3(0, 0, -12), ds::vec3(0.0f, 0.0f, 0.0f));
 		}
+		if (gui::Button("Reset object")) {
+			_transform = { ds::vec3(0.0f,0.0f,_mesh.getExtent().z * -0.5f),ds::vec3(1.0f),ds::vec3(0.0f),{ 0.0f,0.0f,0.0f } };
+		}
 		if (gui::Button("Move")) {
 			if (_state == ObjectState::IDLE) {
 				_transform.timer[0] = 0.0f;
@@ -190,7 +202,7 @@ void TopDownObjViewer::renderGUI() {
 				}
 				else {
 					_transform.timer[2] = 0.0f;
-					_startAngle = _transform.rotation.z;
+					_startAngle = _angle;// _transform.rotation.z;
 					_endAngle = _startAngle + ds::PI * 0.5f;
 					_state = ObjectState::ROTATING;
 				}
@@ -207,8 +219,8 @@ void TopDownObjViewer::renderGUI() {
 		if (gui::Button("Rotate")) {
 			if (_state == ObjectState::IDLE) {
 				_transform.timer[2] = 0.0f;
-				_startAngle = _transform.rotation.z;
-				_endAngle = _startAngle + ds::PI * 0.5f;
+				_startAngle = _angle;// _transform.rotation.z;
+				_endAngle = _startAngle + ds::PI * 0.5f;				
 				_state = ObjectState::ROTATING;
 			}
 		}
@@ -220,8 +232,10 @@ bool TopDownObjViewer::prepareStep() {
 	_transform.timer[0] = 0.0f;
 	_transform.timer[2] = 0.0f;
 	_startPosition = _transform.position;
-	ds::vec3 vel = ds::vec3(cos(_transform.rotation.y) * _transform.scale.x, _transform.scale.x * sin(_transform.rotation.y), 0.0f);
+	ds::vec3 vel = ds::vec3(cos(_transform.rotation.z) * _transform.scale.x, _transform.scale.x * sin(_transform.rotation.z), 0.0f);
 	_targetPosition = _startPosition + vel;
 	_targetPosition.z -= _mesh.getExtent().z * 0.5f * _transform.scale.z;
+	_startAngle = _angle;// _transform.rotation.z;
+	_endAngle = _startAngle + ds::PI * 0.5f;
 	return true;// !is_outside(_targetPosition, ds::vec4(-7.0f, -7.0f, 7.0f, 7.0f));
 }
