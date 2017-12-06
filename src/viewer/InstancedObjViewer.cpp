@@ -44,13 +44,16 @@ bool InstancedObjViewer::init() {
 
 	ds::vec3 POSITIONS[] = { ds::vec3(-2.0f,0.0f,-2.0f),ds::vec3(-2.0f,0.0f,2.0f),ds::vec3(0.0f),ds::vec3(2.0f,0.0f,-2.0f),ds::vec3(2.0f,0.0f,2.0f) };
 	for (int i = 0; i < 5; ++i) {
-		transform& t = _renderItem.transforms[_renderItem.numInstances++];
-		t.position = POSITIONS[i];
-		t.position.y = _renderItem.mesh->getExtent().y * _renderItem.transforms[i].scale.y * 0.5f;
+		_ids[i] = add_instance(&_renderItem);
+		instance_item& item = get_instance(&_renderItem, _ids[i]);
+		item.transform.position = POSITIONS[i];
+		item.transform.position.y = _renderItem.mesh->getExtent().y * item.transform.scale.y * 0.5f;
 	}
 	
 	_grid = new SimpleGrid;
 	_grid->init(SGD_XZ, 8.0f, 0.7f, 0.2f);
+
+	_selected = -1;
 	
 	return true;
 }
@@ -85,6 +88,13 @@ void InstancedObjViewer::renderGUI() {
 		gui::Value("Extent", _renderItem.mesh->getExtent());
 		gui::Value("Min", _renderItem.mesh->getMin());
 		gui::Value("Max", _renderItem.mesh->getMax());
+		gui::Input("Selected", &_selected);
+		if (_selected != -1) {
+			instance_item& item = get_instance(&_renderItem, _ids[_selected]);
+			if (gui::Input("Scale", &item.transform.scale)) {
+				item.transform.position.y = _renderItem.mesh->getExtent().y * item.transform.scale.y * 0.5f;
+			}
+		}
 	}
 	gui::end();
 }

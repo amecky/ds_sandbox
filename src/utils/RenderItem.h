@@ -20,15 +20,43 @@ struct RenderItemInstanceData {
 	ds::Color color;
 };
 
+typedef unsigned int ID;
+
+struct instance_item {
+	ID id;
+	transform transform;
+	ds::Color color;
+};
+
+struct item_index {
+	ID id;
+	unsigned short index;
+	unsigned short next;
+};
+
 struct instanced_render_item {
 	Mesh* mesh;
-	transform* transforms;
+	//transform* transforms;
 	Material* material;
 	RID draw_item;
 	RID instanceVertexBuffer;
 	RenderItemInstanceData* instanceData;
-	int numInstances;
+	//int numInstances;
+
+	unsigned int numObjects;
+	item_index* indices;
+	instance_item* objects;
+	unsigned short free_enqueue;
+	unsigned short free_dequeue;
 };
+
+bool contains_instance(instanced_render_item* item, ID id);
+
+instance_item& get_instance(instanced_render_item* item, ID id);
+
+ID add_instance(instanced_render_item* item);
+
+void remove_instance(instanced_render_item* item, ID id);
 
 void create_instanced_render_item(instanced_render_item* item, const char* objName, Material* m, int maxInstances);
 

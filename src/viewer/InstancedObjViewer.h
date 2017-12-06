@@ -38,4 +38,6 @@ private:
 	SimpleGrid* _grid;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
+	ID _ids[5];
+	int _selected;
 };
