@@ -1,5 +1,5 @@
 #include "Cubes.h"
-#include "..\Mesh.h"
+
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
@@ -17,9 +17,8 @@ void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 	_lightBuffer.padding = 0.0f;
 	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
 
-	Mesh mesh;
-	mesh.loadData("cube");
-	RID cubeBuffer = mesh.assemble();
+	_cubeMesh.loadData("cube");
+	RID cubeBuffer = _cubeMesh.assemble();
 
 	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, 256, sizeof(InstanceData) };
 	_instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
@@ -34,7 +33,7 @@ void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 		.instancedVertexBuffer(hexInstanceBuffer)
 		.build();
 
-	_drawCmd = { mesh.getCount(), ds::DrawType::DT_INSTANCED, ds::PrimitiveTypes::TRIANGLE_LIST, 256 };
+	_drawCmd = { _cubeMesh.getCount(), ds::DrawType::DT_INSTANCED, ds::PrimitiveTypes::TRIANGLE_LIST, 256 };
 
 	RID groups[] = { stateGroup,basicGroup };
 	_drawItem = ds::compile(_drawCmd, groups, 2);
@@ -81,15 +80,33 @@ void Cubes::separate(float minDistance, float relaxation) {
 void Cubes::stepForward() {
 	for (int i = 0; i < _numCubes; ++i) {
 		Cube& c = _cubes[i];
-		c.timer[0] = 0.0f;
-		c.timer[2] = 0.0f;
-		c.startPosition = c.position;
-		ds::vec3 vel = ds::vec3(cos(c.roll) * c.scale.x, c.scale.x * sin(c.roll),0.0f);
-		c.targetPosition = c.startPosition + vel;
-		c.targetPosition.z = -0.5f * c.scale.x;//_mesh.getExtent().y * 0.5f;
-		c.startRotation = c.rotation;
-		c.endRotation = c.startRotation + ds::PI * 0.5f;
-		c.state = CubeState::STEPPING;
+		if (c.state == CubeState::IDLE) {
+			reset_timers(&c.transform);
+			c.startPosition = c.transform.position;
+			ds::vec3 vel = ds::vec3(cos(c.transform.roll) * c.transform.scale.x, c.transform.scale.x * sin(c.transform.roll), 0.0f);
+			c.targetPosition = c.startPosition + vel;
+			c.targetPosition.z = _cubeMesh.getExtent().z * 0.5f * c.transform.scale.z * -1.0f;
+			c.startRotation = c.transform.pitch;
+			c.endRotation = c.startRotation + ds::PI * 0.5f;
+			c.state = CubeState::STEPPING;
+		}
+	}
+}
+
+void Cubes::rotateCubes() {
+	for (int i = 0; i < _numCubes; ++i) {
+		Cube& c = _cubes[i];
+		if (c.state == CubeState::IDLE) {
+			reset_timers(&c.transform);
+			float r = ds::random(0.0f, 1.0f);
+			float an = ds::PI * 0.5f;
+			if (r >= 0.5f) {
+				an *= -1.0f;
+			}
+			c.startRotation = c.transform.roll;
+			c.endRotation = c.startRotation + an;
+			c.state = CubeState::ROTATING;
+		}
 	}
 }
 
@@ -102,13 +119,15 @@ void Cubes::tick(float dt, const ds::vec3& playerPosition) {
 	for (int i = 0; i < _numCubes; ++i) {
 		Cube& c = _cubes[i];
 		if (c.state == CubeState::STEPPING) {
-			c.timer[0] += dt;
-			c.timer[2] += dt;
-			c.position = tweening::interpolate(tweening::linear, c.startPosition, c.targetPosition, c.timer[0], _dbgTTL);
-			c.rotation = tweening::interpolate(tweening::linear, c.startRotation, c.endRotation, c.timer[2], _dbgTTL);			
-			if (c.timer[0] >= _dbgTTL || c.timer[2] >= _dbgTTL) {
-				c.position = c.targetPosition;
-				c.rotation = c.endRotation;
+			if (!step_forward_xy(&c.transform, c.startPosition, c.targetPosition, dt, _dbgTTL)) {
+				c.state = CubeState::IDLE;
+			}
+			if (!pitch_to(&c.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
+				c.state = CubeState::IDLE;
+			}
+		}
+		else if (c.state == CubeState::ROTATING) {
+			if (!roll_to(&c.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
 				c.state = CubeState::IDLE;
 			}
 		}
@@ -205,15 +224,13 @@ void Cubes::createCube(const ds::vec3& pos) {
 	if (_numCubes< 256) {
 		Cube& c= _cubes[_numCubes++];
 		c.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
-		c.position = pos;
-		c.scale = ds::vec3(0.2f, 0.2f, 0.2f);
-		c.timer[0] = 0.0f;
-		c.timer[1] = 0.0f;
-		c.timer[2] = 0.0f;
-		c.state = CubeState::IDLE;
+		ds::vec3 p = pos;
+		ds::vec3 scale = ds::vec3(0.2f, 0.2f, 0.2f);
+		p.z = _cubeMesh.getExtent().z * scale.z * -0.5f;
 		int rs = ds::random(0.0f, 8.9f);
-		c.roll = static_cast<float>(rs) * ds::TWO_PI * 0.25f;// 0.0f;// ds::PI * 0.25f;// ds::random(0.0f, ds::TWO_PI);
-		c.rotation = 0.0f;
+		float roll = static_cast<float>(rs) * ds::TWO_PI * 0.25f;// 0.0f;// ds::PI * 0.25f;// ds::random(0.0f, ds::TWO_PI);
+		initialize(&c.transform, p, scale, roll, 0.0f);
+		c.state = CubeState::IDLE;
 	}
 }
 
@@ -238,14 +255,7 @@ void Cubes::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
 	ds::matrix world;
 	for (int i = 0; i < _numCubes; ++i) {
 		Cube& c = _cubes[i];
-
-		float x = sin(-c.roll);
-		float y = cos(-c.roll);
-
-		ds::matrix m = ds::matRotation(ds::vec3(x, y, 0.0f), c.rotation);
-		ds::matrix rzm = ds::matRotationZ(c.roll);
-		ds::matrix sm = ds::matScale(c.scale);
-		world = sm * rzm * m * ds::matTranslate(c.position);
+		build_world_matrix(c.transform, &world);
 		_instances[i] = { ds::matTranspose(world), c.color };
 	}
 	ds::mapBufferData(_instanceVertexBuffer, _instances, sizeof(InstanceData) * _numCubes);

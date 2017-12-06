@@ -26,7 +26,7 @@ void EmitterQueue::emitt(int x, int y, ds::EventStream* events) {
 	QueueEntry& entry = _entries[_numEntries++];
 	entry.x = x;
 	entry.y = y;
-	entry.timer = 2.0f;
+	entry.timer = 0.2f;
 	entry.type = 0;
 	//_grid->highlight(entry.x, entry.y, BGF_PULSE);
 	//_grid->highlight(entry.x, entry.y);

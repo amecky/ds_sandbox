@@ -7,6 +7,7 @@ public:
 	Material() {}
 	virtual ~Material() {}
 	virtual void apply() = 0;
+	virtual void transform(const ds::matrix & world, const ds::matrix & viewProjection) = 0;
 	RID getBasicGroupID() const {
 		return _basicGroup;
 	}
@@ -22,8 +23,6 @@ protected:
 	RID _vertexShader;
 	RID _blendState;
 };
-
-class AmbientLightningMaterial : public Material {
 
 struct LightBuffer {
 	ds::Color ambientColor;
@@ -41,6 +40,8 @@ struct VBConstantBuffer {
 	ds::matrix world;
 };
 
+class AmbientLightningMaterial : public Material {
+
 public:
 	AmbientLightningMaterial();
 	virtual ~AmbientLightningMaterial() {}
@@ -49,8 +50,16 @@ public:
 	void setLightDirection(int index, const ds::vec3& dir) {
 		_lightDirection[index] = normalize(dir);
 	}
-private:
+protected:
 	ds::vec3 _lightDirection[3];
 	MultipleLightsBuffer _lightBuffer;
 	VBConstantBuffer _constantBuffer;
+};
+
+class InstancedAmbientLightningMaterial : public AmbientLightningMaterial {
+
+public:
+	InstancedAmbientLightningMaterial();
+	virtual ~InstancedAmbientLightningMaterial() {}
+private:
 };

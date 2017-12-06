@@ -169,7 +169,7 @@ bool InstanceTest::init() {
 		20,
 		0.3f,
 		0.05f,
-		0.5f,
+		0.0f,
 		ds::Color(0,0,50,255),
 		0.28f,
 		0.06f
@@ -211,13 +211,13 @@ bool InstanceTest::init() {
 
 	_tmpSide = 2;
 	
-	_cameraMode = 3;
-
 	_numBullets = 0;
 
 	_shooting = false;
 
 	_bulletTimer = 0.0f;
+
+	_useTopDown = true;
 
 	ParticlesystemDescriptor descriptor;
 	descriptor.maxParticles = 16384;
@@ -253,10 +253,10 @@ void InstanceTest::tick(float dt) {
 	_events.reset();
 
 	if (_running) {
-		if (_cameraMode == 1) {
+		if (!_useTopDown) {
 			_fpsCamera->update(dt);
 		}
-		else if (_cameraMode == 2) {
+		else {
 			_topDownCamera->update(dt);
 		}
 
@@ -278,10 +278,10 @@ void InstanceTest::tick(float dt) {
 		_particleSystem->tick(dt);
 	}
 	else {
-		if (_cameraMode == 1) {
+		if (!_useTopDown) {
 			_fpsCamera->update(dt);
 		}
-		else if (_cameraMode == 2) {
+		else {
 			_topDownCamera->update(dt);
 		}
 	}
@@ -299,7 +299,7 @@ void InstanceTest::tick(float dt) {
 // move player
 // ----------------------------------------------------
 void InstanceTest::movePlayer(float dt) {
-	if (_cameraMode == 3) {
+	if (_useTopDown) {
 
 		if (ds::isMouseButtonPressed(0) && !_shooting) {
 			_shooting = true;
@@ -379,7 +379,7 @@ void InstanceTest::manageBullets(float dt) {
 		}
 	}
 	// create bullet if necessary
-	if (_shooting && _cameraMode == 3) {
+	if (_shooting && _useTopDown) {
 		float freq = 1.0f / _bulletSettings.fireRate;
 		_bulletTimer += dt;
 		if (_bulletTimer >= freq) {
@@ -450,7 +450,7 @@ void InstanceTest::emittCubes(int side, int num) {
 	}
 	for (int i = 0; i < num; ++i) {
 		_queue->emitt(sx + xd * i, sy + yd * i, &_events);
-		_warpingGrid->highlight(sx + xd * i, sy + yd * i);
+		//_warpingGrid->highlight(sx + xd * i, sy + yd * i);
 	}
 }
 
@@ -470,7 +470,14 @@ void InstanceTest::renderGUI() {
 			gui::Tabs(TABS, 3, &_selectedTab);
 
 			gui::Value("FPS", ds::getFramesPerSecond());
-			gui::Input("Camera Mode", &_cameraMode);
+			if (gui::Checkbox("Top Down Camera", &_useTopDown)) {
+				if (!_useTopDown) {
+					_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+				}
+				else {
+					_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+				}
+			}
 			if (_selectedTab == 0) {
 				gui::Input("GX", &_tmpX);
 				gui::Input("GY", &_tmpY);
@@ -501,6 +508,9 @@ void InstanceTest::renderGUI() {
 				}
 				if (gui::Button("Step")) {
 					_cubes.stepForward();
+				}
+				if (gui::Button("Rotate")) {
+					_cubes.rotateCubes();
 				}
 			}
 			if (_selectedTab == 1) {

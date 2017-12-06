@@ -8,9 +8,9 @@ struct InstanceLightBuffer {
 	float padding;
 };
 
-struct MultipleLightsBuffer {
-	InstanceLightBuffer lights[3];
-};
+//struct MultipleLightsBuffer {
+	//InstanceLightBuffer lights[3];
+//};
 
 struct InstanceBuffer {
 	ds::matrix mvp;

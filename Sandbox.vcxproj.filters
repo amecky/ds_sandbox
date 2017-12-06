@@ -182,6 +182,12 @@
     <ClInclude Include="src\viewer\TopDownObjViewer.h">
       <Filter>viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\RenderItem.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\viewer\InstancedObjViewer.h">
+      <Filter>viewer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -289,6 +295,12 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\viewer\TopDownObjViewer.cpp">
+      <Filter>viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\RenderItem.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\viewer\InstancedObjViewer.cpp">
       <Filter>viewer</Filter>
     </ClCompile>
   </ItemGroup>

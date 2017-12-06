@@ -62,7 +62,7 @@ Scene::Scene() {
 	_lightBuffer.lightPosition = ds::vec4(_lightPosition);
 	_lightBuffer.lightDirection = ds::vec4(_lightDirection);
 	_lightBuffer.eyePosition = _camera.position;
-	RID lightBufferID = ds::createConstantBuffer(sizeof(LightBuffer), &_lightBuffer);
+	RID lightBufferID = ds::createConstantBuffer(sizeof(SceneLightBuffer), &_lightBuffer);
 
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 4, -6), ds::vec3(0, 0, 0));

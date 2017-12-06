@@ -4,6 +4,7 @@
 #include "InstanceCommon.h"
 #include "..\utils\EventStream.h"
 #include "..\utils\TransformComponent.h"
+#include "..\Mesh.h"
 
 struct Animation {
 	int type;
@@ -31,16 +32,12 @@ enum CubeState {
 
 struct Cube {
 	CubeState state;
-	ds::vec3 position;
-	ds::vec3 scale;
-	float rotation;
-	float roll;
+	transform transform;
 	ds::Color color;
 	ds::vec3 startPosition;
 	ds::vec3 targetPosition;
 	float startRotation;
 	float endRotation;
-	float timer[3];
 };
 
 class Cubes {
@@ -53,6 +50,7 @@ public:
 	void render(RID renderPass, const ds::matrix viewProjectionMatrix);
 	void create(const ds::vec3& pos, int animationFlags);
 	void createCube(const ds::vec3& pos);
+	void rotateCubes();
 	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	int getNumItems() const {
 		return _numItems;
@@ -64,7 +62,7 @@ private:
 	GridItem _items[256];
 	int _numItems;
 	RID _drawItem;
-
+	Mesh _cubeMesh;
 	Cube _cubes[256];
 	int _numCubes;
 	float _dbgTTL;

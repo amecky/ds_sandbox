@@ -36,7 +36,7 @@ struct EntityInstance {
 	BoundingSphere boundingSphere;
 };
 
-struct LightBuffer {
+struct SceneLightBuffer {
 	ds::Color ambientColor;
 	ds::Color diffuseColor;
 	ds::vec4 lightPosition;
@@ -88,7 +88,7 @@ private:
 	RenderTextureViewer* _rtViewer;
 	RID _basicPass;
 	MatrixBuffer _matrixBuffer;
-	LightBuffer _lightBuffer;
+	SceneLightBuffer _lightBuffer;
 	ds::vec3 _lightPosition;
 	ds::vec3 _lightDirection;
 };

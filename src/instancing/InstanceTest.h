@@ -78,6 +78,7 @@ private:
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
 	TopDownCamera* _topDownCamera;
+	bool _useTopDown;
 	BulletSettings _bulletSettings;
 	ParticleSettings _explosionSettings;
 	//BackgroundGrid* _grid;
@@ -94,7 +95,6 @@ private:
 	int _tmpX;
 	int _tmpY;
 	int _tmpSide;
-	int _cameraMode;
 	int _selectedTab;
 	Bullet _bullets[256];
 	int _numBullets;
