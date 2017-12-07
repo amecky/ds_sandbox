@@ -242,6 +242,17 @@ bool InstanceTest::init() {
 	_particleDescriptor.minScale = ds::vec2(0.2f, 0.03f);
 	_particleDescriptor.acceleration = ds::vec3(0.0f, 0.0f, 0.0f);
 
+	_material = new InstancedAmbientLightningMaterial;
+
+	_lightDir[0] = ds::vec3(1.0f, 0.5f, 1.0f);
+	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
+	_lightDir[2] = ds::vec3(0.0f, 0.5f, 1.0f);
+
+	create_instanced_render_item(&_griddies, "cube", _material, 256);
+
+	_ringEnemies = new RingEnemies(&_griddies);
+	_ringEnemies->create(ds::vec3(2, 0, 0));
+
 	return true;
 }
 
@@ -272,6 +283,8 @@ void InstanceTest::tick(float dt) {
 		_numBullets = _cubes.checkCollisions(_bullets, _numBullets, &_events);
 
 		movePlayer(dt);
+
+		_ringEnemies->tick(dt);
 
 		handleEvents();
 
@@ -417,7 +430,7 @@ void InstanceTest::render() {
 
 	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
 
-	
+	draw_instanced_render_item(&_griddies, _basicPass, _camera.viewProjectionMatrix);
 }
 
 // ----------------------------------------------------

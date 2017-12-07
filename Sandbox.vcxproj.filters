@@ -37,6 +37,9 @@
     <Filter Include="viewer">
       <UniqueIdentifier>{0486a09b-df5a-4d5c-92f0-dfa7f3a87c60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="enemies">
+      <UniqueIdentifier>{24406ffb-b0b9-4555-a8e6-fc722bd599a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -188,6 +191,9 @@
     <ClInclude Include="src\viewer\InstancedObjViewer.h">
       <Filter>viewer</Filter>
     </ClInclude>
+    <ClInclude Include="src\enemies\RingEnemies.h">
+      <Filter>enemies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -302,6 +308,9 @@
     </ClCompile>
     <ClCompile Include="src\viewer\InstancedObjViewer.cpp">
       <Filter>viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\enemies\RingEnemies.cpp">
+      <Filter>enemies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

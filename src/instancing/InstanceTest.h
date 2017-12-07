@@ -11,7 +11,10 @@
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
 #include "Border.h"
+#include "..\Material.h"
 #include "..\gpuparticles\GPUParticlesystem.h"
+#include "..\utils\RenderItem.h"
+#include "..\enemies\RingEnemies.h"
 
 struct BulletSettings {
 	float velocity;
@@ -104,4 +107,9 @@ private:
 	ds::EventStream _events;
 	bool _running;
 	Border _border;
+
+	InstancedAmbientLightningMaterial* _material;
+	instanced_render_item _griddies;
+	ds::vec3 _lightDir[3];
+	RingEnemies* _ringEnemies;
 };
