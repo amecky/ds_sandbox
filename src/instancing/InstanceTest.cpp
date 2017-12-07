@@ -282,6 +282,8 @@ void InstanceTest::tick(float dt) {
 
 		_numBullets = _cubes.checkCollisions(_bullets, _numBullets, &_events);
 
+		_numBullets = _ringEnemies->checkCollisions(_bullets, _numBullets, &_events);
+
 		movePlayer(dt);
 
 		_ringEnemies->tick(dt);
@@ -506,10 +508,8 @@ void InstanceTest::renderGUI() {
 				if (gui::Button("Emitt")) {
 					_queue->emitt(_tmpX, _tmpY, &_events);
 				}
-				if (gui::Button("Emitt Line X")) {
-					for (int i = 0; i < 8; ++i) {
-						_queue->emitt(_tmpX + i, _tmpY, &_events);
-					}
+				if (gui::Button("Emitt ring")) {
+					_ringEnemies->create(ds::vec3(0.0f));
 				}
 				gui::Input("Side", &_tmpSide);
 				if (gui::Button("Emitt Line")) {
