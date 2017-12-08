@@ -40,6 +40,9 @@
     <Filter Include="enemies">
       <UniqueIdentifier>{24406ffb-b0b9-4555-a8e6-fc722bd599a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="background">
+      <UniqueIdentifier>{64b76c23-6cd7-45d5-871f-de1abefcf7d8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -194,6 +197,9 @@
     <ClInclude Include="src\enemies\RingEnemies.h">
       <Filter>enemies</Filter>
     </ClInclude>
+    <ClInclude Include="src\background\Doors.h">
+      <Filter>background</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -311,6 +317,9 @@
     </ClCompile>
     <ClCompile Include="src\enemies\RingEnemies.cpp">
       <Filter>enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\background\Doors.cpp">
+      <Filter>background</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
