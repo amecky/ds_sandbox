@@ -2,9 +2,9 @@
 
 #define INDEX_MASK 0xffff
 
-void create_render_item(render_item* item, const char* objName, Material* m) {
+void create_render_item(render_item* item, const char* objName, Material* m, ds::matrix* world) {
 	item->mesh = new Mesh;
-	item->mesh->loadData(objName);
+	item->mesh->loadData(objName, world);
 	initialize(&item->transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
 	item->material = m;
 	RID hexCubeBuffer = item->mesh->assemble();

@@ -3,44 +3,8 @@
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
-void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
-
-	_scalePath.add(0.0f, 0.05f);
-	_scalePath.add(0.4f, 0.25f);
-	_scalePath.add(0.6f, 0.15f);
-	_scalePath.add(0.8f, 0.25f);
-	_scalePath.add(1.0f, 0.15f);
-
-	_lightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
-	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
-	_lightBuffer.lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
-	_lightBuffer.padding = 0.0f;
-	RID lbid = ds::createConstantBuffer(sizeof(InstanceLightBuffer), &_lightBuffer);
-
-	_cubeMesh.loadData("cube");
-	RID cubeBuffer = _cubeMesh.assemble();
-
-	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, 256, sizeof(InstanceData) };
-	_instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
-
-	RID hexInstanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
-
-	RID cbid = ds::createConstantBuffer(sizeof(InstanceBuffer), &_constantBuffer);
-
-	RID stateGroup = ds::StateGroupBuilder()
-		.constantBuffer(lbid, pixelShaderId, 0)
-		.constantBuffer(cbid, vertexShaderId, 0)
-		.instancedVertexBuffer(hexInstanceBuffer)
-		.build();
-
-	_drawCmd = { _cubeMesh.getCount(), ds::DrawType::DT_INSTANCED, ds::PrimitiveTypes::TRIANGLE_LIST, 256 };
-
-	RID groups[] = { stateGroup,basicGroup };
-	_drawItem = ds::compile(_drawCmd, groups, 2);
-
-	_numCubes = 0;
-	_numItems = 0;
-
+void Cubes::init() {
+	_num_cubes = 0;
 	_dbgTTL = 0.4f;
 
 }
@@ -50,17 +14,19 @@ void Cubes::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
 // ------------------------------------------------
 void Cubes::separate(float minDistance, float relaxation) {
 	float sqrDist = minDistance * minDistance;
-	for (int i = 0; i < _numItems; ++i) {
-		GridItem& current = _items[i];		
+	for (int i = 0; i < _num_cubes; ++i) {
+		Cube& current = _cubes[i];
+		instance_item& item = get_instance(_render_item, current.id);
 		int cnt = 0;
 		ds::vec2 separationForce = ds::vec2(0, 0);
 		ds::vec2 averageDirection = ds::vec2(0, 0);
 		ds::vec2 distance = ds::vec2(0, 0);
-		ds::vec3 currentPos = current.pos;
-		for (int j = 0; j < _numItems; j++) {
+		ds::vec3 currentPos = item.transform.position;
+		for (int j = 0; j < _num_cubes; j++) {
 			if (i != j) {
-				if (_items[j].type == 1) {
-					ds::vec3 dist = _items[j].pos - currentPos;
+				if (_cubes[j].type == 1) {
+					instance_item& other = get_instance(_render_item, _cubes[j].id);
+					ds::vec3 dist = other.transform.position - currentPos;
 					if (sqr_length(dist) < sqrDist) {
 						++cnt;
 						separationForce += ds::vec2(dist.x,dist.y);
@@ -78,15 +44,16 @@ void Cubes::separate(float minDistance, float relaxation) {
 }
 
 void Cubes::stepForward() {
-	for (int i = 0; i < _numCubes; ++i) {
+	for (int i = 0; i < _num_cubes; ++i) {
 		Cube& c = _cubes[i];
+		instance_item& item = get_instance(_render_item, c.id);
 		if (c.state == CubeState::IDLE) {
-			reset_timers(&c.transform);
-			c.startPosition = c.transform.position;
-			ds::vec3 vel = ds::vec3(cos(c.transform.roll) * c.transform.scale.x, c.transform.scale.x * sin(c.transform.roll), 0.0f);
+			reset_timers(&item.transform);
+			c.startPosition = item.transform.position;
+			ds::vec3 vel = ds::vec3(cos(item.transform.roll) * item.transform.scale.x, item.transform.scale.x * sin(item.transform.roll), 0.0f);
 			c.targetPosition = c.startPosition + vel;
-			c.targetPosition.z = _cubeMesh.getExtent().z * 0.5f * c.transform.scale.z * -1.0f;
-			c.startRotation = c.transform.pitch;
+			c.targetPosition.z =_render_item->mesh->getExtent().z * 0.5f * item.transform.scale.z * -1.0f;
+			c.startRotation = item.transform.pitch;
 			c.endRotation = c.startRotation + ds::PI * 0.5f;
 			c.state = CubeState::STEPPING;
 		}
@@ -94,16 +61,17 @@ void Cubes::stepForward() {
 }
 
 void Cubes::rotateCubes() {
-	for (int i = 0; i < _numCubes; ++i) {
+	for (int i = 0; i < _num_cubes; ++i) {
 		Cube& c = _cubes[i];
+		instance_item& item = get_instance(_render_item, c.id);
 		if (c.state == CubeState::IDLE) {
-			reset_timers(&c.transform);
+			reset_timers(&item.transform);
 			float r = ds::random(0.0f, 1.0f);
 			float an = ds::PI * 0.5f;
 			if (r >= 0.5f) {
 				an *= -1.0f;
 			}
-			c.startRotation = c.transform.roll;
+			c.startRotation = item.transform.roll;
 			c.endRotation = c.startRotation + an;
 			c.state = CubeState::ROTATING;
 		}
@@ -116,104 +84,47 @@ void Cubes::rotateCubes() {
 void Cubes::tick(float dt, const ds::vec3& playerPosition) {
 
 
-	for (int i = 0; i < _numCubes; ++i) {
+	for (int i = 0; i < _num_cubes; ++i) {
 		Cube& c = _cubes[i];
+		instance_item& item = get_instance(_render_item, c.id);
 		if (c.state == CubeState::STEPPING) {
-			if (!step_forward_xy(&c.transform, c.startPosition, c.targetPosition, dt, _dbgTTL)) {
+			if (!step_forward_xy(&item.transform, c.startPosition, c.targetPosition, dt, _dbgTTL)) {
 				c.state = CubeState::IDLE;
 			}
-			if (!pitch_to(&c.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
+			if (!pitch_to(&item.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
 				c.state = CubeState::IDLE;
 			}
 		}
 		else if (c.state == CubeState::ROTATING) {
-			if (!roll_to(&c.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
+			if (!roll_to(&item.transform, c.startRotation, c.endRotation, dt, _dbgTTL)) {
 				c.state = CubeState::IDLE;
 			}
 		}
 	}
 
-
-	for (int i = 0; i < _numItems; ++i) {
-		_items[i].force = ds::vec3(0.0f);
+	for (int i = 0; i < _num_cubes; ++i) {
+		_cubes[i].force = ds::vec3(0.0f);
 	}
 
 
-	for (int y = 0; y < _numItems; ++y) {
-		GridItem& item = _items[y];
-		if (item.animationFlags == 0) {
-			item.timer += dt;
-			if (item.type == 0) {
-				item.pos += item.velocity * dt;
-				if (item.pos.x < -2.8f || item.pos.x > 2.8f) {
-					item.velocity.x *= -1.0f;
-					item.angle += ds::PI;
-				}
-				if (item.pos.y < -2.0f || item.pos.y > 2.0f) {
-					item.velocity.y *= -1.0f;
-					item.angle += ds::PI;
-				}
-			}
-			else if (item.type == 1) {
-				// seek
-				float velocity = 1.0f;
-				ds::vec3 diff = playerPosition - item.pos;
-				ds::vec2 n = normalize(ds::vec2(diff.x,diff.y));
-				ds::vec2 desired = n * velocity;
-				item.force += ds::vec3(desired);
-			}
-		}
-		for (int i = 0; i < item.numAnimations; ++i) {
-			Animation& anim = item.animations[i];
-			if (anim.timer <= anim.ttl) {
-				anim.timer += dt;
-				if ( ( anim.type & 1) == 1) {
-					float n = anim.timer / anim.ttl;
-					if (n > 1.0f) {
-						n = 1.0f;
-						//item.animationFlags &= ~1;
-						item.animationFlags = 0;
-					}
-					item.scale = _scalePath.get(n);
-				}
-				if ((anim.type & 2) == 2) {
-					float n = anim.timer / anim.ttl;
-					if (n > 1.0f) {
-						n = 1.0f;
-						item.animationFlags &= ~2;
-					}
-					item.pos.z = 2.0f - n * 2.0f;
-				}
-			}
+	for (int y = 0; y < _num_cubes; ++y) {
+		Cube& c = _cubes[y];
+		instance_item& item = get_instance(_render_item, c.id);
+		if (c.type == 1) {
+			// seek
+			float velocity = 1.0f;
+			ds::vec3 diff = playerPosition - item.transform.position;
+			ds::vec2 n = normalize(ds::vec2(diff.x,diff.y));
+			ds::vec2 desired = n * velocity;
+			c.force += ds::vec3(desired);
 		}
 	}
 
 	separate(0.2f, 0.9f);
 
-	for (int i = 0; i < _numItems; ++i) {
-		_items[i].pos += _items[i].force * dt;
-	}
-}
-
-// ----------------------------------------------------
-// create cube
-// ----------------------------------------------------
-void Cubes::create(const ds::vec3& pos, int animationFlags) {
-	if (_numItems < 256) {
-		GridItem& item = _items[_numItems++];
-		item.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
-		item.type = 1;
-		item.pos = pos;
-		item.timer = 0.0f;
-		item.angle = ds::random(0.0f, ds::TWO_PI);
-		item.velocity = ds::vec3(1.2f * cosf(item.angle), 1.2f * sinf(item.angle), 0.0f);
-		item.animationFlags = animationFlags;
-		item.scale = 0.15f;
-		item.numAnimations = 0;
-		Animation& anim = item.animations[item.numAnimations++];
-		anim.timer = 0.0f;
-		anim.ttl = 0.4f;
-		anim.type = 1;
+	for (int i = 0; i < _num_cubes; ++i) {
+		instance_item& item = get_instance(_render_item, _cubes[i].id);
+		item.transform.position += _cubes[i].force * dt;
 	}
 }
 
@@ -221,47 +132,19 @@ void Cubes::create(const ds::vec3& pos, int animationFlags) {
 // create cube
 // ----------------------------------------------------
 void Cubes::createCube(const ds::vec3& pos) {
-	if (_numCubes< 256) {
-		Cube& c= _cubes[_numCubes++];
-		c.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
+	if (_num_cubes < 256) {
+		Cube& c = _cubes[_num_cubes++];
+		c.id = add_instance(_render_item);
+		instance_item& item = get_instance(_render_item, c.id);
+		item.color = ds::Color(1.0f, 0.0f, 0.0f, 1.0f);
 		ds::vec3 p = pos;
 		ds::vec3 scale = ds::vec3(0.2f, 0.2f, 0.2f);
-		p.z = _cubeMesh.getExtent().z * scale.z * -0.5f;
+		p.z = _render_item->mesh->getExtent().z * scale.z * -0.5f;
 		int rs = ds::random(0.0f, 8.9f);
 		float roll = static_cast<float>(rs) * ds::TWO_PI * 0.25f;// 0.0f;// ds::PI * 0.25f;// ds::random(0.0f, ds::TWO_PI);
-		initialize(&c.transform, p, scale, roll, 0.0f);
+		initialize(&item.transform, p, scale, roll, 0.0f);
 		c.state = CubeState::IDLE;
 	}
-}
-
-// ----------------------------------------------------
-// render
-// ----------------------------------------------------
-void Cubes::render(RID renderPass, const ds::matrix viewProjectionMatrix) {
-	for (int y = 0; y < _numItems; ++y) {
-		GridItem& item = _items[y];
-		ds::matrix pm = ds::matTranslate(item.pos);
-		ds::matrix rx = ds::matRotationX(item.timer * 4.0f);
-		ds::matrix rz = ds::matRotationZ(item.angle);
-		ds::matrix sm = ds::matScale(ds::vec3(item.scale, item.scale, item.scale));
-		ds::matrix world = rx * rz * sm * pm;
-		_instances[y] = { ds::matTranspose(world), item.color };		
-	}
-	ds::mapBufferData(_instanceVertexBuffer, _instances, sizeof(InstanceData) * _numItems);
-	_constantBuffer.mvp = ds::matTranspose(viewProjectionMatrix);
-	_constantBuffer.world = ds::matTranspose(ds::matIdentity());
-	ds::submit(renderPass, _drawItem, -1, _numItems);
-
-	ds::matrix world;
-	for (int i = 0; i < _numCubes; ++i) {
-		Cube& c = _cubes[i];
-		build_world_matrix(c.transform, &world);
-		_instances[i] = { ds::matTranspose(world), c.color };
-	}
-	ds::mapBufferData(_instanceVertexBuffer, _instances, sizeof(InstanceData) * _numCubes);
-	_constantBuffer.mvp = ds::matTranspose(viewProjectionMatrix);
-	_constantBuffer.world = ds::matTranspose(ds::matIdentity());
-	ds::submit(renderPass, _drawItem, -1, _numCubes);
 }
 
 // ----------------------------------------------------
@@ -281,9 +164,10 @@ bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 	int ret = num;
 	int y = 0;
-	while ( y < _numItems) {
-		GridItem& item = _items[y];
-		ds::vec3 ip = item.pos;
+	while ( y < _num_cubes) {
+		const Cube& c = _cubes[y];
+		const instance_item& item = get_instance(_render_item,c.id);
+		ds::vec3 ip = item.transform.position;
 		int cnt = 0;
 		bool hit = false;
 		while (cnt < ret) {
@@ -300,11 +184,13 @@ int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 			}
 		}
 		if (hit) {
-			events->add(101, &_items[y].pos, sizeof(ds::vec3));
-			if (_numItems > 1) {				
-				_items[y] = _items[_numItems - 1];
+			ds::vec3 p = item.transform.position;
+			events->add(101, &p, sizeof(ds::vec3));
+			remove_instance(_render_item,c.id);
+			if (_num_cubes > 1) {
+				_cubes[y] = _cubes[_num_cubes - 1];
 			}
-			--_numItems;
+			--_num_cubes;
 		}
 		else {
 			++y;

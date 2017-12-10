@@ -2,7 +2,7 @@
 #include "..\TestApp.h"
 #include "..\kenney\Camera.h"
 #include "TopDownCamera.h"
-#include "BackgroundGrid.h"
+//#include "BackgroundGrid.h"
 #include "EmitterQueue.h"
 #include "Cubes.h"
 #include "Player.h"
@@ -10,11 +10,12 @@
 #include "..\utils\comon_math.h"
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
-#include "Border.h"
+//#include "Border.h"
 #include "..\Material.h"
 #include "..\gpuparticles\GPUParticlesystem.h"
 #include "..\utils\RenderItem.h"
 #include "..\enemies\RingEnemies.h"
+#include "..\background\Doors.h"
 
 struct BulletSettings {
 	float velocity;
@@ -86,9 +87,9 @@ private:
 	ParticleSettings _explosionSettings;
 	//BackgroundGrid* _grid;
 	EmitterQueue* _queue;
-	Cubes _cubes;
+	Cubes* _cubes;
 	Player* _player;
-	BackgroundGridSettings _gridSettings;
+	//BackgroundGridSettings _gridSettings;
 	WarpingGrid* _warpingGrid;
 	Billboards _billboards;
 	GPUParticlesystem* _particleSystem;
@@ -106,10 +107,16 @@ private:
 	ds::vec3 _cursorPos;
 	ds::EventStream _events;
 	bool _running;
-	Border _border;
+	//Border _border;
+	Doors* _doors;
+	instanced_render_item _doors_render_item;
 
+	AmbientLightningMaterial* _ambient_material;
 	InstancedAmbientLightningMaterial* _material;
+	InstancedMaterial* _instanced_material;
 	instanced_render_item _griddies;
+	instanced_render_item _cube_item;
+	render_item _player_item;
 	ds::vec3 _lightDir[3];
 	RingEnemies* _ringEnemies;
 };

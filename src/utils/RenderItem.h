@@ -11,7 +11,7 @@ struct render_item {
 	RID draw_item;
 };
 
-void create_render_item(render_item* item, const char* objName, Material* m);
+void create_render_item(render_item* item, const char* objName, Material* m, ds::matrix* world = 0);
 
 void draw_render_item(render_item* item, RID renderPass, const ds::matrix& viewProjectionMatrix);
 

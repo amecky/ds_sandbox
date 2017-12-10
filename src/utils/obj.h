@@ -24,5 +24,5 @@ namespace obj {
 
 	int load_material(const char* dir, const char* name, color_definition* defs, int max);
 
-	void load(const char* dir, const char* name, Mesh* mesh);
+	void load(const char* dir, const char* name, Mesh* mesh, ds::matrix* world = 0);
 }

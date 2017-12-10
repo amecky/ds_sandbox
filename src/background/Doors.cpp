@@ -4,35 +4,57 @@
 
 static ds::vec3 convert_grid_coords(int x, int z) {
 	float cx = static_cast<float>(DOORS_NUM_X) * DOOR_SIZE * 0.5f - DOOR_HALF_SIZE;
-	float cz = static_cast<float>(DOORS_NUM_Y) * DOOR_SIZE * 0.5f - DOOR_HALF_SIZE;
-	return ds::vec3(-cx + static_cast<float>(x) * DOOR_SIZE, 0.0f, -cz + static_cast<float>(z) * DOOR_SIZE);
+	float cy = static_cast<float>(DOORS_NUM_Y) * DOOR_SIZE * 0.5f - DOOR_HALF_SIZE;
+	return ds::vec3(-cx + static_cast<float>(x) * DOOR_SIZE, -cy + static_cast<float>(z) * DOOR_SIZE, 0.0f);
 }
 
 
 void Doors::init() {
 	int cnt = 0;
-	for (int x = 0; x < DOORS_NUM_X; ++x) {
+	for (int x = 0; x < DOORS_NUM_X - 1; ++x) {
 		Door& door = _doors[cnt++];
 		door.id = add_instance(_render_item);
 		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.3f);
-		item.transform.position = convert_grid_coords(x, 0);
-		item.transform.position.y = _render_item->mesh->getExtent().y * item.transform.scale.y * 0.5f;
+		item.transform.scale = ds::vec3(0.25f);
+		item.transform.position = convert_grid_coords(x, -1);
+		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
 		door.state = DS_IDLE;
 		door.timer = 0.0f;
 	}
 
-	for (int x = 0; x < DOORS_NUM_X; ++x) {
+	for (int x = 0; x < DOORS_NUM_X - 1; ++x) {
 		Door& door = _doors[cnt++];
 		door.id = add_instance(_render_item);
 		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.3f);
-		item.transform.position = convert_grid_coords(x, DOORS_NUM_Y);
-		item.transform.position.y = _render_item->mesh->getExtent().y * item.transform.scale.y * 0.5f;
+		item.transform.scale = ds::vec3(0.25f);
+		item.transform.position = convert_grid_coords(x, DOORS_NUM_Y - 1);
+		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
 		door.state = DS_IDLE;
 		door.timer = 0.0f;
 	}
-	_num = 2 * DOORS_NUM_X;
+
+	for (int y = 0; y < DOORS_NUM_Y; ++y) {
+		Door& door = _doors[cnt++];
+		door.id = add_instance(_render_item);
+		instance_item& item = get_instance(_render_item, door.id);
+		item.transform.scale = ds::vec3(0.25f);
+		item.transform.position = convert_grid_coords(0, y);
+		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
+		door.state = DS_IDLE;
+		door.timer = 0.0f;
+	}
+	for (int y = 0; y < DOORS_NUM_Y; ++y) {
+		Door& door = _doors[cnt++];
+		door.id = add_instance(_render_item);
+		instance_item& item = get_instance(_render_item, door.id);
+		item.transform.scale = ds::vec3(0.25f);
+		item.transform.position = convert_grid_coords(DOORS_NUM_X - 1, y);
+		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
+		door.state = DS_IDLE;
+		door.timer = 0.0f;
+	}
+
+	_num = TOTAL_DOORS;
 }
 
 void Doors::open(int idx) {
@@ -110,9 +132,9 @@ bool DoorsViewer::init() {
 
 	_lightDir[0] = ds::vec3(1.0f, 0.5f, 1.0f);
 	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
-	_lightDir[2] = ds::vec3(0.0f, 0.5f, 1.0f);
+	_lightDir[2] = ds::vec3(0.0f, 0.5f, 0.5f);
 
-	create_instanced_render_item(&_render_item, "cube", _material, TOTAL_DOORS);
+	create_instanced_render_item(&_render_item, "border_box", _material, TOTAL_DOORS);
 
 	_grid = new SimpleGrid;
 	_grid->init(SGD_XZ, 8.0f, 0.7f, 0.2f);

@@ -63,3 +63,15 @@ public:
 	virtual ~InstancedAmbientLightningMaterial() {}
 private:
 };
+
+class InstancedMaterial : public Material {
+
+public:
+	InstancedMaterial();
+	virtual ~InstancedMaterial() {}
+	void apply();
+	void transform(const ds::matrix& world, const ds::matrix& viewProjection);
+private:
+	LightBuffer _lightBuffer;
+	VBConstantBuffer _constantBuffer;
+};

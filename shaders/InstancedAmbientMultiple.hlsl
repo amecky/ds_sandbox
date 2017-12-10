@@ -54,7 +54,7 @@ float4 PS_Main( PS_Input frag ) : SV_TARGET {
 	    }
 	}
 	//color = saturate(color);
-	color = (A + D) * textureColor;
+	color = saturate(A + D) * textureColor;
 	return color;
 }
 

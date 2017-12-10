@@ -3,6 +3,8 @@
 #include "..\shaders\AmbientMultipleLightning_PS_Main.h"
 #include "..\shaders\InstancedAmbientMultiple_VS_Main.h"
 #include "..\shaders\InstancedAmbientMultiple_PS_Main.h"
+#include "..\shaders\InstancedAmbient_VS_Main.h"
+#include "..\shaders\InstancedAmbient_PS_Main.h"
 
 AmbientLightningMaterial::AmbientLightningMaterial() {
 	_vertexShader = ds::createVertexShader(AmbientMultipleLightning_VS_Main, sizeof(AmbientMultipleLightning_VS_Main));
@@ -77,4 +79,36 @@ InstancedAmbientLightningMaterial::InstancedAmbientLightningMaterial() {
 		.vertexShader(_vertexShader)
 		.pixelShader(_pixelShader)
 		.build();
+}
+
+InstancedMaterial::InstancedMaterial() {
+	_vertexShader = ds::createVertexShader(InstancedAmbientMultiple_VS_Main, sizeof(InstancedAmbientMultiple_VS_Main));
+	_pixelShader = ds::createPixelShader(InstancedAmbientMultiple_PS_Main, sizeof(InstancedAmbientMultiple_PS_Main));
+	ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
+	_blendState = ds::createBlendState(blendInfo);
+	_lightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	_lightBuffer.diffuseColor = ds::Color(1.0f, 1.0f, 1.0f, 1.0f);
+	_lightBuffer.lightDirection = ds::vec3(0.0f, 0.0f, 1.0f);
+	_lightBuffer.padding = 0.0f;
+	
+
+	RID lbid = ds::createConstantBuffer(sizeof(MultipleLightsBuffer), &_lightBuffer);
+
+	RID cbid = ds::createConstantBuffer(sizeof(VBConstantBuffer), &_constantBuffer);
+
+	_basicGroup = ds::StateGroupBuilder()
+		.blendState(_blendState)
+		.constantBuffer(lbid, _pixelShader, 0)
+		.constantBuffer(cbid, _vertexShader, 0)
+		.vertexShader(_vertexShader)
+		.pixelShader(_pixelShader)
+		.build();
+}
+
+void InstancedMaterial::apply() {
+}
+
+void InstancedMaterial::transform(const ds::matrix & world, const ds::matrix & viewProjection) {
+	_constantBuffer.world = ds::matTranspose(world);
+	_constantBuffer.mvp = ds::matTranspose(viewProjection);
 }

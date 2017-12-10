@@ -53,7 +53,7 @@ lt r1.x, l(0.000000), r1.x
 movc r0.xyzw, r1.xxxx, r2.xyzw, r0.xyzw
 add r1.xyzw, cb0[0].xyzw, cb0[3].xyzw
 add r1.xyzw, r1.xyzw, cb0[6].xyzw
-add r0.xyzw, r0.xyzw, r1.xyzw
+add_sat r0.xyzw, r0.xyzw, r1.xyzw
 mul o0.xyzw, r0.xyzw, v1.xyzw
 ret 
 // Approximately 0 instruction slots used
@@ -61,10 +61,10 @@ ret
 
 const BYTE InstancedAmbientMultiple_PS_Main[] =
 {
-     68,  88,  66,  67,  70, 157, 
-    200, 212, 231, 233,  95,  48, 
-     58,  90, 123,  67, 229,  57, 
-      3, 117,   1,   0,   0,   0, 
+     68,  88,  66,  67,  31, 114, 
+     69, 201, 118,  93, 165,  62, 
+    181, 196, 138, 235, 212, 240, 
+     67, 158,   1,   0,   0,   0, 
      72,   4,   0,   0,   3,   0, 
       0,   0,  44,   0,   0,   0, 
     160,   0,   0,   0, 212,   0, 
@@ -233,7 +233,7 @@ const BYTE InstancedAmbientMultiple_PS_Main[] =
       0,   0,  70,  14,  16,   0, 
       1,   0,   0,   0,  70, 142, 
      32,   0,   0,   0,   0,   0, 
-      6,   0,   0,   0,   0,   0, 
+      6,   0,   0,   0,   0,  32, 
       0,   7, 242,   0,  16,   0, 
       0,   0,   0,   0,  70,  14, 
      16,   0,   0,   0,   0,   0, 

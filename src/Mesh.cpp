@@ -411,7 +411,7 @@ void getFileTime(const char* fileName, FILETIME& time) {
 	}
 }
 
-void Mesh::loadData(const char* fileName) {
+void Mesh::loadData(const char* fileName, ds::matrix* world) {
 	bool load_obj = false;
 	char objName[256];
 	sprintf_s(objName, "obj\\%s.obj",fileName);
@@ -433,7 +433,7 @@ void Mesh::loadData(const char* fileName) {
 	}
 	if (load_obj) {
 		sprintf_s(objName, "%s.obj", fileName);
-		obj::load("obj", objName, this);
+		obj::load("obj", objName, this, world);
 		calculate();
 		align();
 		save("models", fileName);

@@ -12,7 +12,7 @@ const int DOORS_NUM_X = 30;
 const int DOORS_NUM_Y = 20;
 const int TOTAL_DOORS = 2 * (DOORS_NUM_X + DOORS_NUM_Y);
 const float DOOR_SIZE = 0.3f;
-const float DOOR_HALF_SIZE = 0.15f;
+const float DOOR_HALF_SIZE = 0.3f;
 
 class Doors {
 

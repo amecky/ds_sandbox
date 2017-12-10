@@ -1,0 +1,17 @@
+# Made using Asset Forge (1.2.1)
+
+:models
+Primitives/block_default[(-1.19E-07, 0, 0.6);(0.0, 180.0, 0.0);(1.0, 1.0, -0.4);(0.0, 0.0, 0.0);customMaterial2]
+Primitives/block_default[(0, 0, 0.3);(0.0, 180.0, 0.0);(1.0, 1.0, -0.2);(0.0, 0.0, 0.0);customMaterial1]
+Primitives/block_default[(8.2E-08, 0, -5.96E-08);(0.0, 180.0, 0.0);(1.0, 1.0, -0.4);(0.0, 0.0, 0.0);customMaterial2]
+Primitives/block_default[(0, 0, -0.3);(0.0, 180.0, 0.0);(1.0, 1.0, -0.2);(0.0, 0.0, 0.0);customMaterial1]
+Primitives/block_default[(0, 4.47E-08, -0.6);(0.0, 180.0, 0.0);(1.0, 1.0, -0.4);(0.0, 0.0, 0.0);customMaterial2]
+
+:materials
+_defaultMat[RGBA(1.000, 1.000, 1.000, 1.000);]
+customMaterial1[RGBA(0.810, 0.764, 0.349, 1.000);]
+customMaterial2[RGBA(0.180, 0.164, 0.164, 1.000);]
+
+:textures
+
+:extra

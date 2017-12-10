@@ -225,7 +225,7 @@ namespace obj {
 		return num;
 	}
 
-	void load(const char* dir, const char* name, Mesh* mesh) {
+	void load(const char* dir, const char* name, Mesh* mesh, ds::matrix* world) {
 		char fileName[256];
 		sprintf_s(fileName, "%s\\%s", dir, name);
 		std::ifstream file(fileName);
@@ -323,8 +323,14 @@ namespace obj {
 			const obj::face& f = faces[i];
 			int end = (f.num - 2) * 3;
 			for (int j = 0; j < end; ++j) {
-				verts[current] = f.entries[sx_ar[j]].pos;
-				ns[current] = f.entries[sx_ar[j]].n;
+				if (world != 0) {
+					verts[current] = f.entries[sx_ar[j]].pos * *world;
+					ns[current] = f.entries[sx_ar[j]].n * *world;
+				}
+				else {
+					verts[current] = f.entries[sx_ar[j]].pos;
+					ns[current] = f.entries[sx_ar[j]].n;
+				}
 				tuv[current] = f.entries[sx_ar[j]].uvs;
 				colors[current] = f.entries[sx_ar[j]].color;
 				++current;

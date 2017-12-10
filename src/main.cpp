@@ -36,12 +36,12 @@
 //int main() {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-	TestApp* app = new DoorsViewer;
+	//TestApp* app = new DoorsViewer;
 	//TestApp* app = new InstancedObjViewer;
 	//TestApp* app = new TopDownObjViewer;
 	//TestApp* app = new ObjViewer;
 	//TestApp* app = new WarpingGridApp;
-	//TestApp* app = new InstanceTest;
+	TestApp* app = new InstanceTest;
 	//TestApp* app = new BinaryClock;
 	//TestApp* app = new AssetViewer;
 	//TestApp* app = new TweeningTest;
