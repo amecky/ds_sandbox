@@ -32,12 +32,14 @@ public:
 	void setRotation(float angle) {
 		_rotation = angle;
 	}
-
+	const ds::vec2 getVelocity() const {
+		return _velocity;
+	}
 private:
+	ds::vec2 _velocity;
 	TopDownCamera* _camera;
 	RID _drawItem;
 	ds::vec3 _position;
-	ds::vec3 _velocity;
 	float _rotation;
 	PlayerConstantBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;

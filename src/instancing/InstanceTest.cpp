@@ -206,7 +206,7 @@ bool InstanceTest::init() {
 	ds::matrix rxMatrix = ds::matRotationX(ds::PI * -0.5f);
 	ds::matrix ryMatrix = ds::matRotationY(ds::PI * -0.5f);
 	ds::matrix importMatrix = ryMatrix * rxMatrix;
-	create_render_item(&_player_item, "octo", _ambient_material, &importMatrix);
+	create_render_item(&_player_item, "ship", _ambient_material);// , &importMatrix);
 	create_instanced_render_item(&_griddies, "octo", _instanced_material, 256);
 	create_instanced_render_item(&_cube_item, "cube", _instanced_material, 256);
 	create_instanced_render_item(&_doors_render_item, "border_box", _material, TOTAL_DOORS);
@@ -221,7 +221,7 @@ bool InstanceTest::init() {
 	_doors = new Doors(&_doors_render_item);
 	_doors->init();
 	
-	_player_item.transform.scale = ds::vec3(0.2f);
+	_player_item.transform.scale = ds::vec3(0.35f);
 	_player_item.transform.position.z = _player_item.mesh->getExtent().z * _player_item.transform.scale.z * -0.5f;
 
 	_dbgDoors = true;
@@ -321,7 +321,12 @@ void InstanceTest::movePlayer(float dt) {
 	// rotate player
 	ds::vec3 delta = _cursorPos - _player->getPosition();
 	_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
-	_player_item.transform.roll = getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0));
+	//_player_item.transform.roll = getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0));
+	ds::vec2 pv = _player->getVelocity();
+	if (sqr_length(pv) != 0.0f) {
+		_player_item.transform.roll = getAngle(pv, ds::vec2(1, 0));
+		_player_item.transform.pitch += ds::TWO_PI * dt;
+	}
 	_player_item.transform.position = _player->getPosition();
 }
 

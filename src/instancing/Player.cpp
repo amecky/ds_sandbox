@@ -58,21 +58,28 @@ void Player::tick(float dt) {
 	}
 	*/
 	//_velocity = ds::vec3(cosf(_rotation) * 2.0f, sinf(_rotation)*2.0f, 0.0f);
-
+	
 	ds::vec3 tmp = _position;
 	float vel = 2.0f;
 
+	_velocity = ds::vec2(0.0f);
+
 	if (ds::isKeyPressed('W')) {
+
 		tmp.y += vel * dt;
+		_velocity.y = 1.0f;
 	}
 	if (ds::isKeyPressed('S')) {
 		tmp.y -= vel * dt;
+		_velocity.y = -1.0f;
 	}
 	if (ds::isKeyPressed('A')) {
 		tmp.x -= vel * dt;
+		_velocity.x = -1.0f;
 	}
 	if (ds::isKeyPressed('D')) {
 		tmp.x += vel * dt;
+		_velocity.x = 1.0f;
 	}
 	
 	setPosition(tmp);
