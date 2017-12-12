@@ -5,8 +5,12 @@
 #include "..\utils\EventStream.h"
 #include "InstanceCommon.h"
 
+struct CubesSettings {
+	float startTTL;
+};
+
 enum CubeState {
-	IDLE, MOVING, STEPPING, ROTATING, WALKING
+	IDLE, MOVING, STEPPING, ROTATING, WALKING, STARTING
 };
 
 struct Cube {
@@ -18,16 +22,18 @@ struct Cube {
 	CubeState state;
 	int type;
 	ds::vec3 force;
+	int steps;
+	ds::vec2 direction;
 };
 
 class Cubes {
 
 public:
-	Cubes(instanced_render_item* render_item) : _render_item(render_item) {}
+	Cubes(instanced_render_item* render_item, CubesSettings* settings) : _render_item(render_item) , _settings(settings) {}
 	~Cubes() {}
 	void init();
 	void tick(float dt, const ds::vec3& playerPosition);
-	void createCube(const ds::vec3& pos);
+	void createCube(const ds::vec3& pos, int side);
 	void rotateCubes();
 	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	int getNumItems() const {
@@ -39,5 +45,6 @@ private:
 	instanced_render_item* _render_item;
 	Cube _cubes[256];
 	int _num_cubes;
+	CubesSettings* _settings;
 	float _dbgTTL;
 };

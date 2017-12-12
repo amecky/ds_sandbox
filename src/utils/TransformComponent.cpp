@@ -121,3 +121,14 @@ bool step_forward_xy(transform* t, const ds::vec3& start, const ds::vec3& end, f
 	return true;
 }
 
+bool float_in(transform* t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl) {
+	t->timer[0] += dt;
+	t->position.z = tweening::interpolate(tweening::linear, start.z, end.z, t->timer[0], ttl);
+	if (t->timer[0] >= ttl) {
+		t->position = end;
+		return false;
+	}
+	return true;
+}
+
+

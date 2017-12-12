@@ -1,8 +1,10 @@
 bullets {
     velocity : 3.0
-    scale : 2.0,0.0
-    bounding_box : -4,-3,4,3
+    scale : 2.0,1.0
+    growth : 2.0,0.0
+    bounding_box : -4.5,-3,4.5,3
     fire_rate : 10
+    color : 255,0,0,255
 }
 explosion {
     num : 64

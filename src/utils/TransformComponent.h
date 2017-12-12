@@ -43,4 +43,6 @@ bool roll_to(transform* t, float start, float end, float dt, float ttl);
 
 bool step_forward_xy(transform* t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
 
+bool float_in(transform* t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
+
 

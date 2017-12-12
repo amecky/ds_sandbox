@@ -19,9 +19,11 @@
 
 struct BulletSettings {
 	float velocity;
+	ds::vec2 growth;
 	ds::vec2 scale;
 	ds::vec4 boundingBox;
 	float fireRate;
+	ds::Color color;
 };
 
 struct ParticleSettings {
@@ -87,6 +89,10 @@ private:
 	ParticleSettings _explosionSettings;
 	//BackgroundGrid* _grid;
 	EmitterQueue* _queue;
+	bool _dbgGameMode;
+	float _gameModeTimer;
+	float _gameModeTTL;
+	CubesSettings _cubesSettings;
 	Cubes* _cubes;
 	Player* _player;
 	//BackgroundGridSettings _gridSettings;
@@ -108,6 +114,8 @@ private:
 	ds::EventStream _events;
 	bool _running;
 	//Border _border;
+	bool _dbgDoors;
+	int _dbgFixedOffset;
 	Doors* _doors;
 	instanced_render_item _doors_render_item;
 

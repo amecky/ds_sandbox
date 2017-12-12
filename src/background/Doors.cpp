@@ -8,65 +8,108 @@ static ds::vec3 convert_grid_coords(int x, int z) {
 	return ds::vec3(-cx + static_cast<float>(x) * DOOR_SIZE, -cy + static_cast<float>(z) * DOOR_SIZE, 0.0f);
 }
 
+void Doors::add(int gx, int gy) {
+	Door& door = _doors[_num++];
+	door.id = add_instance(_render_item);
+	instance_item& item = get_instance(_render_item, door.id);
+	item.transform.scale = ds::vec3(0.25f);
+	item.transform.position = convert_grid_coords(gx,gy);
+	item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
+	door.state = DS_IDLE;
+	door.timer = 0.0f;
+}
 
 void Doors::init() {
-	int cnt = 0;
+	_num = 0;
+	// left side
+	for (int y = 0; y < DOORS_NUM_Y - 1; ++y) {
+		add(-1, DOORS_NUM_Y - y - 2);
+	}
+	// top
 	for (int x = 0; x < DOORS_NUM_X - 1; ++x) {
-		Door& door = _doors[cnt++];
-		door.id = add_instance(_render_item);
-		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.25f);
-		item.transform.position = convert_grid_coords(x, -1);
-		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-		door.state = DS_IDLE;
-		door.timer = 0.0f;
+		add(x, DOORS_NUM_Y - 1);
 	}
-
+	// right side
+	for (int y = 0; y < DOORS_NUM_Y - 1; ++y) {
+		add(DOORS_NUM_X - 1, DOORS_NUM_Y - y - 2);
+	}
+	// bottom
 	for (int x = 0; x < DOORS_NUM_X - 1; ++x) {
-		Door& door = _doors[cnt++];
-		door.id = add_instance(_render_item);
-		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.25f);
-		item.transform.position = convert_grid_coords(x, DOORS_NUM_Y - 1);
-		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-		door.state = DS_IDLE;
-		door.timer = 0.0f;
+		add(x, -1);
 	}
-
-	for (int y = 0; y < DOORS_NUM_Y; ++y) {
-		Door& door = _doors[cnt++];
-		door.id = add_instance(_render_item);
-		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.25f);
-		item.transform.position = convert_grid_coords(0, y);
-		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-		door.state = DS_IDLE;
-		door.timer = 0.0f;
-	}
-	for (int y = 0; y < DOORS_NUM_Y; ++y) {
-		Door& door = _doors[cnt++];
-		door.id = add_instance(_render_item);
-		instance_item& item = get_instance(_render_item, door.id);
-		item.transform.scale = ds::vec3(0.25f);
-		item.transform.position = convert_grid_coords(DOORS_NUM_X - 1, y);
-		item.transform.position.z = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-		door.state = DS_IDLE;
-		door.timer = 0.0f;
-	}
-
-	_num = TOTAL_DOORS;
+	add(-1, -1);
+	add(DOORS_NUM_X - 1, -1);
+	add(-1, DOORS_NUM_Y - 1);
+	add(DOORS_NUM_X - 1, DOORS_NUM_Y - 1);
 }
 
 void Doors::open(int idx) {
 	Door& door = _doors[idx];
 	door.state = DS_OPENING;
 	door.timer = 0.0f;
+	instance_item& item = get_instance(_render_item, door.id);
+	item.transform.scale = ds::vec3(0.25f);
+}
+
+int Doors::getIndex(int side, int gx, int gy) {
+	if (side == 1) {
+		return gy;
+	}
+	else if (side == 2) {
+		return gx + DOORS_NUM_Y - 1;
+	}
+	else if (side == 3) {
+		return gy + DOORS_NUM_Y + DOORS_NUM_X - 2;
+	}
+	else if (side == 4) {
+		return gx + DOORS_NUM_Y * 2 + DOORS_NUM_X - 3;
+	}
+	return -1;
+}
+
+void Doors::wiggle(int gx, int gy) {
+	int side = 1;
+	if (gy == 0) {
+		side = 2;
+	}
+	else if (gx == 0) {
+		side = 1;
+	}
+	else if (gx == DOORS_NUM_X) {
+		side = 3;
+	}
+	else if (gy == DOORS_NUM_Y) {
+		side = 4;
+	}
+	int idx = getIndex(side, gx, gy);
+	if (idx != -1) {
+		Door& door = _doors[idx];
+		if (door.state == DS_IDLE) {
+			door.state = DS_WIGGLE;
+			door.timer = 0.0f;
+		}
+	}
+}
+
+void Doors::open(int side, int gx, int gy) {
+	if (side == 1) {
+		open(gy);
+	}
+	else if (side == 2) {
+		open(gx + DOORS_NUM_Y - 1);
+	}
+	else if (side == 3) {
+		open(gy + DOORS_NUM_Y + DOORS_NUM_X - 2);
+	}
+	else if (side == 4) {
+		open(gx + DOORS_NUM_Y * 2 + DOORS_NUM_X - 3);
+	}
 }
 
 void Doors::close(int idx) {
 	Door& door = _doors[idx];
 	door.state = DS_CLOSING;
-	door.timer = 0.0f;
+	door.timer = 0.0f;	
 }
 
 void Doors::tick(float dt) {
@@ -75,26 +118,39 @@ void Doors::tick(float dt) {
 		instance_item& item = get_instance(_render_item, door.id);
 		if (door.state == DS_OPENING) {
 			float n = door.timer / 0.2f;
-			float start = _render_item->mesh->getExtent().y * item.transform.scale.y * 0.5f;
-			float end = -start;
-			item.transform.position.y = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
+			float start = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
+			float end = start + _render_item->mesh->getExtent().z * item.transform.scale.z;
+			item.transform.position.z = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
 			door.timer += dt;
 			if (door.timer >= 0.2f) {
 				door.state = DS_OPEN;
 				door.timer = 0.0f;
-				item.transform.position.y = end;
+				item.transform.position.z = end;
 			}
 		}
 		else if (door.state == DS_CLOSING) {
 			float n = door.timer / 0.2f;
-			float start = _render_item->mesh->getExtent().y * item.transform.scale.y * -0.5f;
-			float end = _render_item->mesh->getExtent().y * item.transform.scale.y * 0.5f;
-			item.transform.position.y = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
+			float start = _render_item->mesh->getExtent().z * item.transform.scale.z * 0.5f;
+			float end = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
+			item.transform.position.z = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
 			door.timer += dt;
 			if (door.timer >= 0.2f) {
 				door.state = DS_IDLE;
 				door.timer = 0.0f;
-				item.transform.position.y = end;
+				item.transform.position.z = end;
+			}
+		}
+		else if (door.state == DS_WIGGLE) {
+			float n = door.timer / 0.6f;
+			float s = (0.7f + abs(sin(n * ds::TWO_PI))  * 0.3f) * 0.25f;
+			item.transform.scale.x = s;
+			item.transform.scale.y = s;
+			door.timer += dt;
+			if (door.timer >= 0.6f) {
+				door.state = DS_IDLE;
+				door.timer = 0.0f;
+				item.transform.scale.x = 0.25f;
+				item.transform.scale.y = 0.25f;
 			}
 		}
 		else if (door.state == DS_OPEN) {

@@ -84,8 +84,10 @@ bool InstanceTest::init() {
 
 	twk_add("bullets", "velocity", &_bulletSettings.velocity);
 	twk_add("bullets", "scale", &_bulletSettings.scale);
+	twk_add("bullets", "growth", &_bulletSettings.growth);
 	twk_add("bullets", "bounding_box", &_bulletSettings.boundingBox);
 	twk_add("bullets", "fire_rate", &_bulletSettings.fireRate);
+	twk_add("bullets", "color", &_bulletSettings.color);
 
 	registerParticleSettings("explosion", &_explosionSettings);
 
@@ -112,62 +114,15 @@ bool InstanceTest::init() {
 
 	ds::RenderPassInfo particleRPInfo = { &_camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
 	_particlePass = ds::createRenderPass(particleRPInfo);
-
-	/*
-	ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
-	RID bs_id = ds::createBlendState(blendInfo);
-
-	ds::ShaderInfo bumpVSInfo = { 0, InstancedAmbient_VS_Main, sizeof(InstancedAmbient_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID bumpVS = ds::createShader(bumpVSInfo);
-	ds::ShaderInfo bumpPSInfo = { 0, InstancedAmbient_PS_Main, sizeof(InstancedAmbient_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	RID bumpPS = ds::createShader(bumpPSInfo);	
-
-	ds::InputLayoutDefinition decl[] = {
-		{ "POSITION", 0, ds::BufferAttributeType::FLOAT3 },
-		{ "COLOR"   , 0, ds::BufferAttributeType::FLOAT4 },
-		{ "NORMAL"  , 0, ds::BufferAttributeType::FLOAT3 }		
-	};
-
-	ds::InstancedInputLayoutDefinition instDecl[] = {
-		{ "WORLD", 0, ds::BufferAttributeType::FLOAT4 },
-		{ "WORLD", 1, ds::BufferAttributeType::FLOAT4 },
-		{ "WORLD", 2, ds::BufferAttributeType::FLOAT4 },
-		{ "WORLD", 3, ds::BufferAttributeType::FLOAT4 },
-		{ "COLOR", 1, ds::BufferAttributeType::FLOAT4 }
-	};
-	ds::InstancedInputLayoutInfo iilInfo = { decl, 3, instDecl, 5, bumpVS };
-	RID rid = ds::createInstancedInputLayout(iilInfo);
-	*/
+	
 	RID textureID = loadImageFromFile("content\\TextureArray.png");
-
-	//ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, TOTAL, sizeof(InstanceData) };
-	//_instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
-
-	//RID instanceBuffer = ds::createInstancedBuffer(cubeBuffer, _instanceVertexBuffer);
 
 	_topDownCamera = new TopDownCamera(&_camera);
 	_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
-	/*
-	RID baseGroup = ds::StateGroupBuilder()
-		.inputLayout(rid)		
-		.blendState(bs_id)
-		.vertexShader(bumpVS)
-		.pixelShader(bumpPS)
-		.build();
-		*/
-	//_gridSettings.borderColor = ds::Color(64,64,64,255);
-	//_gridSettings.gridColor = ds::Color(48,48,48,255);
-	//_gridSettings.flashColor = ds::Color(192,48,48,255);
-	//_gridSettings.flashTTL = 0.2f;
-	//_gridSettings.pulseTTL = 2.0f;
-	//_gridSettings.pulseAmplitude = 3.0f;
-
-	//_grid = new BackgroundGrid(&_gridSettings);
-	//_grid->init(baseGroup, bumpVS, bumpPS);
-
+	
 	WarpingGridSettings wgs = {
 		30,
 		20,
@@ -182,29 +137,6 @@ bool InstanceTest::init() {
 	_warpingGrid = new WarpingGrid(wgs);
 	_warpingGrid->init();
 
-	//_border.init(baseGroup, bumpVS, bumpPS);
-	//_border.create(ds::vec3(0.0f));
-
-	
-
-
-	/*
-	ds::vec2 gridExtent = _warpingGrid->getExtent();
-	ds::vec3 borderExtent = _border.getItemExtent() * _border.getScale();
-	ds::vec3 borderCenter = _border.getItemCenter();
-	float borderSizeY = borderExtent.x * 0.5f;
-	float halfBorderSizeY = borderSizeY * 0.5f;
-	float sx = gridExtent.x * 0.5f + borderExtent.x;
-	float sy = (gridExtent.y - borderExtent.y * 0.5f) * 0.5f;
-	for (int i = 0; i < 18; ++i) {
-		_border.create(ds::vec3(-sx, -sy + i * borderSizeY, 0.2f));
-		_border.create(ds::vec3( sx, -sy + i * borderSizeY, 0.2f), ds::PI);
-	}
-	for (int i = 0; i < 17; ++i) {
-		_border.create(ds::vec3(-4.2f + i * borderSizeY,  4.2f, 0.2f), ds::PI + ds::PI * 0.5f);
-		_border.create(ds::vec3(-4.2f + i * borderSizeY, -4.2f, 0.2f), ds::PI * 0.5f);
-	}
-	*/
 	_queue = new EmitterQueue;
 
 	_player = new Player(_topDownCamera);
@@ -225,11 +157,18 @@ bool InstanceTest::init() {
 
 	_useTopDown = true;
 
+	_dbgGameMode = false;
+
+	_gameModeTimer = 0.0f;
+	_gameModeTTL = 2.0f;
+
+	_dbgFixedOffset = -1;
+
 	ParticlesystemDescriptor descriptor;
 	descriptor.maxParticles = 16384;
 	descriptor.particleDimension = ds::vec2(32, 32);
-	descriptor.startColor = ds::Color(255, 255, 0, 255);
-	descriptor.endColor = ds::Color(128, 128, 0, 0);
+	descriptor.startColor = ds::Color(255, 255, 255, 255);
+	descriptor.endColor = ds::Color(128, 128, 128, 0);
 
 	float u1 = 220.0f / 1024.0f;
 	float v1 = 30.0f / 1024.0f;
@@ -250,21 +189,24 @@ bool InstanceTest::init() {
 
 	_material = new InstancedAmbientLightningMaterial;
 
-	_lightDir[0] = ds::vec3(1.0f, 0.5f, 1.0f);
-	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
-	_lightDir[2] = ds::vec3(0.0f, 0.5f, 1.0f);
+	float lz = 0.2f;
+	_lightDir[0] = ds::vec3(1.0f, 0.5f, lz);
+	_lightDir[1] = ds::vec3(-1.0f, 0.5f, lz);
+	_lightDir[2] = ds::vec3(0.0f, 0.5f, lz);
 
 	_instanced_material = new InstancedMaterial;
 
 	_ambient_material = new AmbientLightningMaterial;
-
+	for (int i = 0; i < 3; ++i) {
+		_ambient_material->setLightDirection(i, _lightDir[i]);
+	}
 	//
 	// create render items
 	//
 	ds::matrix rxMatrix = ds::matRotationX(ds::PI * -0.5f);
 	ds::matrix ryMatrix = ds::matRotationY(ds::PI * -0.5f);
 	ds::matrix importMatrix = ryMatrix * rxMatrix;
-	create_render_item(&_player_item, "ship", _ambient_material, &importMatrix);
+	create_render_item(&_player_item, "octo", _ambient_material, &importMatrix);
 	create_instanced_render_item(&_griddies, "octo", _instanced_material, 256);
 	create_instanced_render_item(&_cube_item, "cube", _instanced_material, 256);
 	create_instanced_render_item(&_doors_render_item, "border_box", _material, TOTAL_DOORS);
@@ -272,7 +214,8 @@ bool InstanceTest::init() {
 	_ringEnemies = new RingEnemies(&_griddies);
 	//_ringEnemies->create(ds::vec3(2, 0, 0));
 
-	_cubes = new Cubes(&_cube_item);
+	_cubesSettings.startTTL = 0.15f;
+	_cubes = new Cubes(&_cube_item, &_cubesSettings);
 	_cubes->init();
 
 	_doors = new Doors(&_doors_render_item);
@@ -280,6 +223,8 @@ bool InstanceTest::init() {
 	
 	_player_item.transform.scale = ds::vec3(0.2f);
 	_player_item.transform.position.z = _player_item.mesh->getExtent().z * _player_item.transform.scale.z * -0.5f;
+
+	_dbgDoors = true;
 
 	return true;
 }
@@ -320,7 +265,21 @@ void InstanceTest::tick(float dt) {
 
 		_particleSystem->tick(dt);
 
-		_doors->tick(dt);
+		if (_dbgDoors) {
+			_doors->tick(dt);
+		}
+
+		if (_dbgGameMode) {
+			_gameModeTimer += dt;
+			if (_gameModeTimer >= _gameModeTTL) {
+				int num = _cubes->getNumItems();
+				if ((24 - num) >= 8) {
+					_gameModeTimer = 0.0f;
+					int side = ds::random(1.0f, 4.9f);
+					emittCubes(side, 8);
+				}
+			}
+		}
 	}
 	else {
 		if (!_useTopDown) {
@@ -383,7 +342,11 @@ void InstanceTest::handleEvents() {
 		else if (type == 102) {
 			QueueEntry entry;
 			_events.get(i, &entry);
-			_cubes->createCube(_warpingGrid->convert_grid_coords(entry.x, entry.y));
+			_doors->open(entry.side, entry.x, entry.y);
+			ds::vec3 gp = _warpingGrid->convert_grid_coords(entry.x, entry.y);
+			gp.x += 0.15f;
+			gp.y -= 0.15f;
+			_cubes->createCube(gp,entry.side);
 		}
 	}
 }
@@ -412,10 +375,21 @@ void InstanceTest::manageBullets(float dt) {
 	while (cnt < _numBullets) {
 		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
 		_bullets[cnt].timer += dt;
-		//_bullets[cnt].scale.x = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.x;
-		//_bullets[cnt].scale.y = 1.0f + _bullets[cnt].timer * _bulletSettings.scale.y;
+		_bullets[cnt].scale.x = _bulletSettings.scale.x + _bullets[cnt].timer * _bulletSettings.growth.x;
+		_bullets[cnt].scale.y = _bulletSettings.scale.y + _bullets[cnt].timer * _bulletSettings.growth.y;
 		ds::vec3 p = _bullets[cnt].pos;
 		if (p.y < _bulletSettings.boundingBox.y || p.y > _bulletSettings.boundingBox.w || p.x < _bulletSettings.boundingBox.x || p.x > _bulletSettings.boundingBox.z) {
+
+			int ddy = (3.0f - p.y) / 6.0f * 20.0f;
+			if (ddy < 0) {
+				ddy = 0;
+			}
+			int ddx = 30.0f - (4.5f - p.x) / 9.0f * 30.0f;
+
+			printf("==> ddx %d ddy %d\n", ddx, ddy);
+
+			_doors->wiggle(ddx, ddy);
+
 			if (_numBullets > 1) {
 				_bullets[cnt] = _bullets[_numBullets - 1];
 			}
@@ -441,26 +415,21 @@ void InstanceTest::manageBullets(float dt) {
 // ----------------------------------------------------
 void InstanceTest::render() {
 
-	_billboards.begin();
-
-	//_border.render(_basicPass, _camera.viewProjectionMatrix);
-	
-	//_grid->render(_basicPass, _camera.viewProjectionMatrix);
-
 	_warpingGrid->render(_basicPass, _camera.viewProjectionMatrix);
-
-	draw_instanced_render_item(&_doors_render_item, _basicPass, _camera.viewProjectionMatrix);
-
+	if (_dbgDoors) {
+		draw_instanced_render_item(&_doors_render_item, _basicPass, _camera.viewProjectionMatrix);
+	}
 	_particleSystem->render(_particlePass, _camera.viewProjectionMatrix, _camera.position);
 
+	_billboards.begin();
+
 	for (int i = 0; i < _numBullets; ++i) {
-		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, ds::Color(255,128,0,255));
+		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, _bulletSettings.color);
 	}
-	//_billboards.add(_player->getPosition(), ds::vec2(0.3f, 0.3f), ds::vec4(350, 0, 50, 53), _player->getRotation());
 
 	_billboards.add(_cursorPos, ds::vec2(0.2f, 0.2f), ds::vec4(550, 0, 64, 64));
 
-	_billboards.render(_basicPass, _camera.viewProjectionMatrix);
+	_billboards.render(_particlePass, _camera.viewProjectionMatrix);
 
 	draw_render_item(&_player_item, _basicPass, _camera.viewProjectionMatrix);
 
@@ -477,29 +446,40 @@ void InstanceTest::emittCubes(int side, int num) {
 	int yd = 0;
 	int sx = 0;
 	int sy = 0;
-	if (side == 1) {
+	if (side == BS_LEFT_SIDE) {
 		sx = 2;
 		sy = (GRID_HEIGHT - num) / 2;
+		if (_dbgFixedOffset != -1) {
+			sy = _dbgFixedOffset;
+		}
 		yd = 1;
 	}
-	else if (side == 2) {
+	else if (side == BS_TOP_SIDE) {
 		sx = (GRID_WIDTH - num) / 2;
+		if (_dbgFixedOffset != -1) {
+			sx = _dbgFixedOffset;
+		}
 		sy = GRID_HEIGHT - 3;
 		xd = 1;
 	}
-	else if (side == 3) {
+	else if (side == BS_RIGHT_SIDE) {
 		sx = GRID_WIDTH - 2;
 		sy = (GRID_HEIGHT - num) / 2;
+		if (_dbgFixedOffset != -1) {
+			sy = _dbgFixedOffset;
+		}
 		yd = 1;
 	}
-	else if (side == 4) {
+	else if (side == BS_BOTTOM_SIDE) {
 		sx = (GRID_WIDTH - num) / 2;
+		if (_dbgFixedOffset != -1) {
+			sx = _dbgFixedOffset;
+		}
 		sy = 2;
 		xd = 1;
 	}
 	for (int i = 0; i < num; ++i) {
-		_queue->emitt(sx + xd * i, sy + yd * i, &_events);
-		//_warpingGrid->highlight(sx + xd * i, sy + yd * i);
+		_queue->emitt(sx + xd * i, sy + yd * i, side, &_events);
 	}
 }
 
@@ -511,12 +491,12 @@ void InstanceTest::renderGUI() {
 		int state = 1;
 		gui::start();
 
-		const char* TABS[] = { "Emitter","Bullets","Particles" };
+		const char* TABS[] = { "Emitter","Bullets","Particles", "Cubes" };
 
 		p2i sp = p2i(10, 760);
-		if (gui::begin("Debug", &state, &sp, 300)) {
+		if (gui::begin("Debug", &state, &sp, 340)) {
 
-			gui::Tabs(TABS, 3, &_selectedTab);
+			gui::Tabs(TABS, 4, &_selectedTab);
 
 			gui::Value("FPS", ds::getFramesPerSecond());
 			if (gui::Checkbox("Top Down Camera", &_useTopDown)) {
@@ -531,27 +511,18 @@ void InstanceTest::renderGUI() {
 				gui::Input("GX", &_tmpX);
 				gui::Input("GY", &_tmpY);
 				gui::Value("Bullets", _numBullets);
-				/*
-				if (gui::Button("Flash ONE")) {
-					_grid->highlight(_tmpX, _tmpY, BGF_ONE);
+				gui::Checkbox("Doors", &_dbgDoors);
+				if (gui::Button("Wiggle door")) {
+					_doors->wiggle(10,0);
 				}
-				if (gui::Button("Flash PULSE")) {
-					_grid->highlight(_tmpX, _tmpY, BGF_PULSE);
+				if (gui::Checkbox("Acitve Game mode", &_dbgGameMode)) {
+					_gameModeTimer = 0.0f;
 				}
-				*/
 				if (gui::Button("Emitt")) {
-					_queue->emitt(_tmpX, _tmpY, &_events);
+					_queue->emitt(_tmpX, _tmpY, 1, &_events);
 				}
 				if (gui::Button("Emitt ring")) {
 					_ringEnemies->create(ds::vec3(0.0f));
-				}
-				gui::Input("Side", &_tmpSide);
-				if (gui::Button("Emitt Line")) {
-					emittCubes(_tmpSide, 8);
-				}
-				if (gui::Button("Emitt rnd Line")) {
-					int side = ds::random(0.0f, 3.9f);
-					emittCubes(side, 8);
 				}
 				if (gui::Button("Step")) {
 					_cubes->stepForward();
@@ -565,7 +536,7 @@ void InstanceTest::renderGUI() {
 				gui::Value("Camera", _camera.position);
 				ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
 				gui::Value("Cursor", tmp);
-				gui::Value("Cubes", _cubes->getNumItems());
+				
 				tweakableGUI("bullets");
 			}
 			if (gui::Button("Reset Camera")) {
@@ -588,6 +559,19 @@ void InstanceTest::renderGUI() {
 				if (gui::Button("Particles")) {
 					//emittExplosion(ds::vec3(0.0f));
 					emittParticles(ds::vec3(0.0f), _explosionSettings);
+				}
+			}
+			if (_selectedTab == 3) {
+				gui::Value("Cubes", _cubes->getNumItems());
+				gui::Input("Start TTL", &_cubesSettings.startTTL);
+				gui::Input("Side", &_tmpSide);
+				gui::Input("Fixed offset",&_dbgFixedOffset);
+				if (gui::Button("Emitt Line")) {
+					emittCubes(_tmpSide, 8);
+				}
+				if (gui::Button("Emitt rnd Line")) {
+					int side = ds::random(1.0f, 4.9f);
+					emittCubes(side, 8);
 				}
 			}
 

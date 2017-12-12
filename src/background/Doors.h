@@ -17,7 +17,7 @@ const float DOOR_HALF_SIZE = 0.3f;
 class Doors {
 
 	enum DoorState {
-		DS_IDLE,DS_OPENING,DS_CLOSING,DS_OPEN
+		DS_IDLE,DS_OPENING,DS_CLOSING,DS_OPEN,DS_WIGGLE
 	};
 
 	struct Door {
@@ -33,8 +33,12 @@ public:
 	void tick(float dt);
 	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	void open(int idx);
+	void wiggle(int gx, int gy);
 	void close(int idx);
+	void open(int side, int gx, int gy);
 private:
+	int getIndex(int side, int gx, int gy);
+	void add(int gx, int gy);
 	instanced_render_item* _render_item;
 	Door _doors[TOTAL_DOORS];
 	int _num;

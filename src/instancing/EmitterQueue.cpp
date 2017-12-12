@@ -22,11 +22,12 @@ void EmitterQueue::tick(float dt, ds::EventStream* events) {
 	}
 }
 
-void EmitterQueue::emitt(int x, int y, ds::EventStream* events) {
+void EmitterQueue::emitt(int x, int y, int side, ds::EventStream* events) {
 	QueueEntry& entry = _entries[_numEntries++];
 	entry.x = x;
 	entry.y = y;
 	entry.timer = 0.2f;
+	entry.side = side;
 	entry.type = 0;
 	//_grid->highlight(entry.x, entry.y, BGF_PULSE);
 	//_grid->highlight(entry.x, entry.y);

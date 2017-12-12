@@ -82,8 +82,8 @@ InstancedAmbientLightningMaterial::InstancedAmbientLightningMaterial() {
 }
 
 InstancedMaterial::InstancedMaterial() {
-	_vertexShader = ds::createVertexShader(InstancedAmbientMultiple_VS_Main, sizeof(InstancedAmbientMultiple_VS_Main));
-	_pixelShader = ds::createPixelShader(InstancedAmbientMultiple_PS_Main, sizeof(InstancedAmbientMultiple_PS_Main));
+	_vertexShader = ds::createVertexShader(InstancedAmbient_VS_Main, sizeof(InstancedAmbient_VS_Main));
+	_pixelShader = ds::createPixelShader(InstancedAmbient_PS_Main, sizeof(InstancedAmbient_PS_Main));
 	ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 	_blendState = ds::createBlendState(blendInfo);
 	_lightBuffer.ambientColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);

@@ -1,6 +1,13 @@
 #pragma once
 #include <diesel.h>
 
+enum BackgroundSide {
+	BS_LEFT_SIDE = 1,
+	BS_TOP_SIDE,
+	BS_RIGHT_SIDE,
+	BS_BOTTOM_SIDE
+};
+
 struct InstanceLightBuffer {
 	ds::Color ambientColor;
 	ds::Color diffuseColor;
