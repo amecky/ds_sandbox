@@ -45,4 +45,10 @@ bool step_forward_xy(transform* t, const ds::vec3& start, const ds::vec3& end, f
 
 bool float_in(transform* t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
 
+namespace anim {
+
+	bool wiggle(transform* t, const ds::vec3& baseScale, float wiggleFactor, float dt, float ttl);
+
+}
+
 

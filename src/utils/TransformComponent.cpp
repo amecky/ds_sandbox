@@ -131,4 +131,21 @@ bool float_in(transform* t, const ds::vec3& start, const ds::vec3& end, float dt
 	return true;
 }
 
+namespace anim {
+
+	bool wiggle(transform* t, const ds::vec3& baseScale, float wiggleFactor, float dt, float ttl) {
+		float n = t->timer[1] / ttl;
+		float wiggleScale = (1.0f - wiggleFactor) + fabs(sinf(n * ds::TWO_PI))  * wiggleFactor;
+		t->scale.x = wiggleScale * baseScale.x;
+		t->scale.y = wiggleScale * baseScale.y;
+		t->timer[1] += dt;
+		if (t->timer[1] >= ttl) {
+			t->timer[1] = 0.0f;
+			t->scale = baseScale;
+			return false;
+		}
+		return true;
+	}
+
+}
 

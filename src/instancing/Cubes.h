@@ -35,7 +35,7 @@ public:
 	void tick(float dt, const ds::vec3& playerPosition);
 	void createCube(const ds::vec3& pos, int side);
 	void rotateCubes();
-	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
+	void checkCollisions(fixed_array<Bullet>& bullets, ds::EventStream* events);
 	int getNumItems() const {
 		return _num_cubes;
 	}

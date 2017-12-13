@@ -86,7 +86,8 @@ void Doors::wiggle(int gx, int gy) {
 		Door& door = _doors[idx];
 		if (door.state == DS_IDLE) {
 			door.state = DS_WIGGLE;
-			door.timer = 0.0f;
+			instance_item& item = get_instance(_render_item, door.id);
+			item.transform.timer[1] = 0.0f;
 		}
 	}
 }
@@ -141,16 +142,8 @@ void Doors::tick(float dt) {
 			}
 		}
 		else if (door.state == DS_WIGGLE) {
-			float n = door.timer / 0.6f;
-			float s = (0.7f + abs(sin(n * ds::TWO_PI))  * 0.3f) * 0.25f;
-			item.transform.scale.x = s;
-			item.transform.scale.y = s;
-			door.timer += dt;
-			if (door.timer >= 0.6f) {
+			if (!anim::wiggle(&item.transform, ds::vec3(0.25f), 0.3f, dt, 0.6f)) {
 				door.state = DS_IDLE;
-				door.timer = 0.0f;
-				item.transform.scale.x = 0.25f;
-				item.transform.scale.y = 0.25f;
 			}
 		}
 		else if (door.state == DS_OPEN) {
@@ -161,10 +154,6 @@ void Doors::tick(float dt) {
 			}
 		}
 	}
-}
-
-int Doors::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
-	return num;
 }
 
 ds::RenderSettings DoorsViewer::getRenderSettings() {

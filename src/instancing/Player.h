@@ -1,46 +1,23 @@
 #pragma once
 #include <diesel.h>
-#include "InstanceCommon.h"
 #include "TopDownCamera.h"
+#include "..\utils\TransformComponent.h"
+#include "..\utils\RenderItem.h"
 
-struct PlayerConstantBuffer {
-	ds::matrix viewprojectionMatrix;
-	ds::matrix worldMatrix;
+struct Player {
+	render_item render_item;
+	ds::vec3 velocity;
+	ds::vec3 acceleration;
+	bool shooting;
+	float shootingAngle;
 };
 
-class Player {
+namespace player {
 
-public:
-	Player(TopDownCamera* camera) : _camera(camera) {}
+	void reset(Player* player);
 
-	void init();
+	void handle_keys(Player* player, float dt);
 
-	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
+	void move(Player* player, const ds::vec3& cursorPos, float dt);
 
-	void tick(float dt);
-
-	const ds::vec3& getPosition() const {
-		return _position;
-	}
-
-	void setPosition(const ds::vec3& p);
-
-	float getRotation() const {
-		return _rotation;
-	}
-
-	void setRotation(float angle) {
-		_rotation = angle;
-	}
-	const ds::vec2 getVelocity() const {
-		return _velocity;
-	}
-private:
-	ds::vec2 _velocity;
-	TopDownCamera* _camera;
-	RID _drawItem;
-	ds::vec3 _position;
-	float _rotation;
-	PlayerConstantBuffer _constantBuffer;
-	InstanceLightBuffer _lightBuffer;
-};
+}

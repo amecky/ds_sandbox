@@ -36,6 +36,7 @@
 int main() {
 //int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
+
 	//TestApp* app = new DoorsViewer;
 	//TestApp* app = new InstancedObjViewer;
 	//TestApp* app = new TopDownObjViewer;

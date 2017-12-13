@@ -43,7 +43,6 @@ InstanceTest::~InstanceTest() {
 	delete _queue;
 	//delete _grid;
 	delete _warpingGrid;
-	delete _player;
 	delete _fpsCamera;
 	delete _topDownCamera;
 }
@@ -139,8 +138,7 @@ bool InstanceTest::init() {
 
 	_queue = new EmitterQueue;
 
-	_player = new Player(_topDownCamera);
-	_player->init();
+	
 
 	_billboards.init(textureID);
 
@@ -149,9 +147,7 @@ bool InstanceTest::init() {
 
 	_tmpSide = 2;
 	
-	_numBullets = 0;
-
-	_shooting = false;
+	//_numBullets = 0;
 
 	_bulletTimer = 0.0f;
 
@@ -206,7 +202,7 @@ bool InstanceTest::init() {
 	ds::matrix rxMatrix = ds::matRotationX(ds::PI * -0.5f);
 	ds::matrix ryMatrix = ds::matRotationY(ds::PI * -0.5f);
 	ds::matrix importMatrix = ryMatrix * rxMatrix;
-	create_render_item(&_player_item, "ship", _ambient_material);// , &importMatrix);
+	create_render_item(&_player.render_item, "ship", _ambient_material);// , &importMatrix);
 	create_instanced_render_item(&_griddies, "octo", _instanced_material, 256);
 	create_instanced_render_item(&_cube_item, "cube", _instanced_material, 256);
 	create_instanced_render_item(&_doors_render_item, "border_box", _material, TOTAL_DOORS);
@@ -221,8 +217,8 @@ bool InstanceTest::init() {
 	_doors = new Doors(&_doors_render_item);
 	_doors->init();
 	
-	_player_item.transform.scale = ds::vec3(0.35f);
-	_player_item.transform.position.z = _player_item.mesh->getExtent().z * _player_item.transform.scale.z * -0.5f;
+	player::reset(&_player);
+	_cameraPos = ds::vec3(0.0f, 0.0f, -6.0f);
 
 	_dbgDoors = true;
 
@@ -246,16 +242,16 @@ void InstanceTest::tick(float dt) {
 
 		manageBullets(dt);
 
-		_cubes->tick(dt, _player->getPosition());
+		_cubes->tick(dt, _player.render_item.transform.position );
 
 		//_grid->tick(dt);
 		_warpingGrid->tick(dt);
 
 		_queue->tick(dt, &_events);
 
-		_numBullets = _cubes->checkCollisions(_bullets, _numBullets, &_events);
+		_cubes->checkCollisions(_bullets, &_events);
 
-		_numBullets = _ringEnemies->checkCollisions(_bullets, _numBullets, &_events);
+		//_numBullets = _ringEnemies->checkCollisions(_bullets, _numBullets, &_events);
 
 		movePlayer(dt);
 
@@ -304,30 +300,37 @@ void InstanceTest::tick(float dt) {
 // ----------------------------------------------------
 void InstanceTest::movePlayer(float dt) {
 	if (_useTopDown) {
+		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+		r.setOrigin(_camera.position);
+		_cursorPos = _warpingGrid->getIntersectionPoint(r);		
+		player::handle_keys(&_player, dt);
+		player::move(&_player, _cursorPos, dt);
 
-		if (ds::isMouseButtonPressed(0) && !_shooting) {
-			_shooting = true;
-		}
-		if (!ds::isMouseButtonPressed(0) && _shooting) {
-			_shooting = false;
-		}
+		ds::vec3 cameraPos = _player.render_item.transform.position;
+		cameraPos.z = -6.0f;
 
-		_player->tick(dt);
-	}
-	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
-	r.setOrigin(_camera.position);
-	// get cursor position
-	_cursorPos = _warpingGrid->getIntersectionPoint(r);
-	// rotate player
-	ds::vec3 delta = _cursorPos - _player->getPosition();
-	_player->setRotation(getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0)));
-	//_player_item.transform.roll = getAngle(ds::vec2(delta.x, delta.y), ds::vec2(1, 0));
-	ds::vec2 pv = _player->getVelocity();
-	if (sqr_length(pv) != 0.0f) {
-		_player_item.transform.roll = getAngle(pv, ds::vec2(1, 0));
-		_player_item.transform.pitch += ds::TWO_PI * dt;
-	}
-	_player_item.transform.position = _player->getPosition();
+		float velocity = 2.0f;
+		ds::vec3 diff = cameraPos - _cameraPos;
+		if (sqr_length(diff) > 0.1f) {
+			ds::vec2 n = normalize(ds::vec2(diff.x, diff.y));
+			ds::vec2 desired = n * velocity;
+			_cameraPos += ds::vec3(desired) * dt;
+			if (_cameraPos.x < -1.55f) {
+				_cameraPos.x = -1.55f;
+			}
+			if (_cameraPos.x > 1.55f) {
+				_cameraPos.x = 1.55f;
+			}
+			if (_cameraPos.y < -0.8f) {
+				_cameraPos.y = -0.8f;
+			}
+			if (_cameraPos.y > 0.8f) {
+				_cameraPos.y = 0.8f;
+			}
+			
+		}
+		_topDownCamera->setPosition(_cameraPos);
+	}	
 }
 
 // ----------------------------------------------------
@@ -360,15 +363,17 @@ void InstanceTest::handleEvents() {
 // add bullet
 // ----------------------------------------------------
 void InstanceTest::addBullet() {
-	ds::vec3 p = _player->getPosition();
+	ds::vec3 p = _player.render_item.transform.position;
 	p.z += 0.01f;
-	float r = _player->getRotation();
-	Bullet& b = _bullets[_numBullets++];
+	float r = _player.shootingAngle;
+	//Bullet& b = _bullets[_numBullets++];
+	Bullet b;
 	b.pos = p;
 	b.rotation = r;
 	b.velocity = ds::vec3(cosf(r) * _bulletSettings.velocity, sinf(r) * _bulletSettings.velocity, 0.0f);
 	b.timer = 0.0f;
 	b.scale = ds::vec2(1.0f);
+	_bullets.add(b);
 }
 
 // ----------------------------------------------------
@@ -377,12 +382,13 @@ void InstanceTest::addBullet() {
 void InstanceTest::manageBullets(float dt) {
 	// move bullets
 	int cnt = 0;
-	while (cnt < _numBullets) {
-		_bullets[cnt].pos += _bullets[cnt].velocity * dt;
-		_bullets[cnt].timer += dt;
-		_bullets[cnt].scale.x = _bulletSettings.scale.x + _bullets[cnt].timer * _bulletSettings.growth.x;
-		_bullets[cnt].scale.y = _bulletSettings.scale.y + _bullets[cnt].timer * _bulletSettings.growth.y;
-		ds::vec3 p = _bullets[cnt].pos;
+	while (cnt < _bullets.size()) {
+		Bullet& b = _bullets.get(cnt);
+		b.pos += b.velocity * dt;
+		b.timer += dt;
+		b.scale.x = _bulletSettings.scale.x + b.timer * _bulletSettings.growth.x;
+		b.scale.y = _bulletSettings.scale.y + b.timer * _bulletSettings.growth.y;
+		ds::vec3 p = b.pos;
 		if (p.y < _bulletSettings.boundingBox.y || p.y > _bulletSettings.boundingBox.w || p.x < _bulletSettings.boundingBox.x || p.x > _bulletSettings.boundingBox.z) {
 
 			int ddy = (3.0f - p.y) / 6.0f * 20.0f;
@@ -391,21 +397,16 @@ void InstanceTest::manageBullets(float dt) {
 			}
 			int ddx = 30.0f - (4.5f - p.x) / 9.0f * 30.0f;
 
-			printf("==> ddx %d ddy %d\n", ddx, ddy);
-
 			_doors->wiggle(ddx, ddy);
 
-			if (_numBullets > 1) {
-				_bullets[cnt] = _bullets[_numBullets - 1];
-			}
-			--_numBullets;
+			_bullets.remove(cnt);
 		}
 		else {
 			++cnt;
 		}
 	}
 	// create bullet if necessary
-	if (_shooting && _useTopDown) {
+	if (_player.shooting && _useTopDown) {
 		float freq = 1.0f / _bulletSettings.fireRate;
 		_bulletTimer += dt;
 		if (_bulletTimer >= freq) {
@@ -428,15 +429,16 @@ void InstanceTest::render() {
 
 	_billboards.begin();
 
-	for (int i = 0; i < _numBullets; ++i) {
-		_billboards.add(_bullets[i].pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), _bullets[i].rotation, _bullets[i].scale, _bulletSettings.color);
+	for (int i = 0; i < _bullets.size(); ++i) {
+		const Bullet& b = _bullets.get(i);
+		_billboards.add(b.pos, ds::vec2(0.075f, 0.075f), ds::vec4(233, 7, 22, 22), b.rotation, b.scale, _bulletSettings.color);
 	}
 
 	_billboards.add(_cursorPos, ds::vec2(0.2f, 0.2f), ds::vec4(550, 0, 64, 64));
 
 	_billboards.render(_particlePass, _camera.viewProjectionMatrix);
 
-	draw_render_item(&_player_item, _basicPass, _camera.viewProjectionMatrix);
+	draw_render_item(&_player.render_item, _basicPass, _camera.viewProjectionMatrix);
 
 	draw_instanced_render_item(&_cube_item, _basicPass, _camera.viewProjectionMatrix);
 
@@ -515,7 +517,7 @@ void InstanceTest::renderGUI() {
 			if (_selectedTab == 0) {
 				gui::Input("GX", &_tmpX);
 				gui::Input("GY", &_tmpY);
-				gui::Value("Bullets", _numBullets);
+				gui::Value("Bullets", _bullets.size());
 				gui::Checkbox("Doors", &_dbgDoors);
 				if (gui::Button("Wiggle door")) {
 					_doors->wiggle(10,0);
@@ -537,7 +539,7 @@ void InstanceTest::renderGUI() {
 				}
 			}
 			if (_selectedTab == 1) {
-				gui::Value("Pos", _player->getPosition());
+				gui::Value("Pos", _player.render_item.transform.position);
 				gui::Value("Camera", _camera.position);
 				ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
 				gui::Value("Cursor", tmp);
@@ -546,7 +548,7 @@ void InstanceTest::renderGUI() {
 			}
 			if (gui::Button("Reset Camera")) {
 				_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-				_player->setPosition(ds::vec3(0.0f));
+				_player.render_item.transform.position = ds::vec3(0.0f);
 			}
 			if (_running) {
 				if (gui::Button("Stop")) {

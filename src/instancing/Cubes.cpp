@@ -104,6 +104,8 @@ void Cubes::rotateCubes() {
 	}
 }
 
+
+
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
@@ -258,8 +260,7 @@ bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 // ----------------------------------------------------
 // check collisions with bullets
 // ----------------------------------------------------
-int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
-	int ret = num;
+void Cubes::checkCollisions(fixed_array<Bullet>& bullets, ds::EventStream * events) {
 	int y = 0;
 	while ( y < _num_cubes) {
 		const Cube& c = _cubes[y];
@@ -267,13 +268,13 @@ int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 		ds::vec3 ip = item.transform.position;
 		int cnt = 0;
 		bool hit = false;
-		while (cnt < ret) {
-			const Bullet& b = bullets[cnt];
+		while (cnt < bullets.size()) {
+			const Bullet& b = bullets.get(cnt);
 			if (collides(ip, 0.2f, b.pos, 0.1f)) {
-				bullets[cnt] = bullets[ret - 1];
+				bullets.remove(cnt);
 				ds::vec3 bp = b.pos;
 				events->add(100, &bp, sizeof(ds::vec3));
-				--ret;
+				//--ret;
 				hit = true;
 			}
 			else {
@@ -293,5 +294,5 @@ int Cubes::checkCollisions(Bullet* bullets, int num, ds::EventStream* events) {
 			++y;
 		}
 	}
-	return ret;
+	//return ret;
 }

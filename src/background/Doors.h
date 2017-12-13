@@ -31,7 +31,6 @@ public:
 	~Doors() {}
 	void init();
 	void tick(float dt);
-	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
 	void open(int idx);
 	void wiggle(int gx, int gy);
 	void close(int idx);

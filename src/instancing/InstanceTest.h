@@ -94,7 +94,7 @@ private:
 	float _gameModeTTL;
 	CubesSettings _cubesSettings;
 	Cubes* _cubes;
-	Player* _player;
+	Player _player;
 	//BackgroundGridSettings _gridSettings;
 	WarpingGrid* _warpingGrid;
 	Billboards _billboards;
@@ -106,9 +106,9 @@ private:
 	int _tmpY;
 	int _tmpSide;
 	int _selectedTab;
-	Bullet _bullets[256];
-	int _numBullets;
-	bool _shooting;
+	fixed_array<Bullet> _bullets;
+	//Bullet _bullets[256];
+	//int _numBullets;
 	float _bulletTimer;
 	ds::vec3 _cursorPos;
 	ds::EventStream _events;
@@ -118,13 +118,12 @@ private:
 	int _dbgFixedOffset;
 	Doors* _doors;
 	instanced_render_item _doors_render_item;
-
+	ds::vec3 _cameraPos;
 	AmbientLightningMaterial* _ambient_material;
 	InstancedAmbientLightningMaterial* _material;
 	InstancedMaterial* _instanced_material;
 	instanced_render_item _griddies;
 	instanced_render_item _cube_item;
-	render_item _player_item;
 	ds::vec3 _lightDir[3];
 	RingEnemies* _ringEnemies;
 };
