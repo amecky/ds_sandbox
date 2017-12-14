@@ -179,7 +179,7 @@ bool DoorsViewer::init() {
 	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
 	_lightDir[2] = ds::vec3(0.0f, 0.5f, 0.5f);
 
-	create_instanced_render_item(&_render_item, "border_box", _material, TOTAL_DOORS);
+	create_instanced_render_item(&_render_item, "gutter", _material, TOTAL_DOORS);
 
 	_grid = new SimpleGrid;
 	_grid->init(SGD_XZ, 8.0f, 0.7f, 0.2f);

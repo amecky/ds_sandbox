@@ -394,36 +394,49 @@ void InstanceTest::emittCubes(int side, int num) {
 	int sx = 0;
 	int sy = 0;
 	if (side == BS_LEFT_SIDE) {
+		yd = 1;
+		if (ds::random_chance(50.0f)) {
+			++yd;
+		}
 		sx = 2;
-		sy = (GRID_HEIGHT - num) / 2;
+		sy = (GRID_HEIGHT - num * yd) / 2;
 		if (_dbgFixedOffset != -1) {
 			sy = _dbgFixedOffset;
 		}
-		yd = 1;
+		
 	}
 	else if (side == BS_TOP_SIDE) {
-		sx = (GRID_WIDTH - num) / 2;
+		xd = 1;
+		if (ds::random_chance(50.0f)) {
+			++xd;
+		}
+		sx = (GRID_WIDTH - num * xd) / 2;
 		if (_dbgFixedOffset != -1) {
 			sx = _dbgFixedOffset;
 		}
 		sy = GRID_HEIGHT - 3;
-		xd = 1;
 	}
 	else if (side == BS_RIGHT_SIDE) {
+		yd = 1;
+		if (ds::random_chance(50.0f)) {
+			++yd;
+		}
 		sx = GRID_WIDTH - 2;
-		sy = (GRID_HEIGHT - num) / 2;
+		sy = (GRID_HEIGHT - num * yd) / 2;
 		if (_dbgFixedOffset != -1) {
 			sy = _dbgFixedOffset;
 		}
-		yd = 1;
 	}
 	else if (side == BS_BOTTOM_SIDE) {
-		sx = (GRID_WIDTH - num) / 2;
+		xd = 1;
+		if (ds::random_chance(50.0f)) {
+			++xd;
+		}
+		sx = (GRID_WIDTH - num * xd) / 2;
 		if (_dbgFixedOffset != -1) {
 			sx = _dbgFixedOffset;
 		}
 		sy = 2;
-		xd = 1;
 	}
 	for (int i = 0; i < num; ++i) {
 		_queue->emitt(sx + xd * i, sy + yd * i, side, &_events);

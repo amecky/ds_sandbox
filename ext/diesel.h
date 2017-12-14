@@ -1778,6 +1778,8 @@ namespace ds {
 
 	float random(float min, float max);
 
+	bool random_chance(float split);
+
 	const char* getLastError();
 
 	enum SpecialKeys {
@@ -2931,6 +2933,11 @@ namespace ds {
 	float random(float min, float max) {
 		std::uniform_real_distribution<float> dist(min, max);
 		return dist(mt);
+	}
+
+	bool random_chance(float split) {
+		float r = random(0.0f, 100.0f);
+		return r >= split;
 	}
 
 	static const uint64_t TicksPerSecond = 10000000;
