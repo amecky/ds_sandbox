@@ -260,7 +260,7 @@ bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2) {
 // ----------------------------------------------------
 // check collisions with bullets
 // ----------------------------------------------------
-void Cubes::checkCollisions(fixed_array<Bullet>& bullets, ds::EventStream * events) {
+void Cubes::checkCollisions(bullets::Bullets& bullets, ds::EventStream * events) {
 	int y = 0;
 	while ( y < _num_cubes) {
 		const Cube& c = _cubes[y];
@@ -269,7 +269,7 @@ void Cubes::checkCollisions(fixed_array<Bullet>& bullets, ds::EventStream * even
 		int cnt = 0;
 		bool hit = false;
 		while (cnt < bullets.size()) {
-			const Bullet& b = bullets.get(cnt);
+			const bullets::Bullet& b = bullets.get(cnt);
 			if (collides(ip, 0.2f, b.pos, 0.1f)) {
 				bullets.remove(cnt);
 				ds::vec3 bp = b.pos;

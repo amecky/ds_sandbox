@@ -4,6 +4,7 @@
 #include "..\utils\RenderItem.h"
 #include "..\utils\EventStream.h"
 #include "InstanceCommon.h"
+#include "Bullets.h"
 
 struct CubesSettings {
 	float startTTL;
@@ -35,7 +36,7 @@ public:
 	void tick(float dt, const ds::vec3& playerPosition);
 	void createCube(const ds::vec3& pos, int side);
 	void rotateCubes();
-	void checkCollisions(fixed_array<Bullet>& bullets, ds::EventStream* events);
+	void checkCollisions(bullets::Bullets& bullets, ds::EventStream* events);
 	int getNumItems() const {
 		return _num_cubes;
 	}

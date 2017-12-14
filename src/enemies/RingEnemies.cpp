@@ -62,8 +62,8 @@ static bool collides(const ds::vec3& p1, float r1, const ds::vec3& p2, float r2)
 	return false;
 }
 
-int RingEnemies::checkCollisions(Bullet * bullets, int num, ds::EventStream * events) {
-	int ret = num;
+void RingEnemies::checkCollisions(bullets::Bullets& bullets, ds::EventStream * events) {
+	int cnt = 0;
 	for (int i = 0; i < _num; ++i) {
 		int y = 0;
 		Ring& ring = _rings[i];
@@ -72,13 +72,12 @@ int RingEnemies::checkCollisions(Bullet * bullets, int num, ds::EventStream * ev
 			ds::vec3 ip = item.transform.position;
 			int cnt = 0;
 			bool hit = false;
-			while (cnt < ret) {
-				const Bullet& b = bullets[cnt];
+			while (cnt < bullets.size()) {
+				const bullets::Bullet& b = bullets.get(cnt);
 				if (collides(ip, 0.2f, b.pos, 0.1f)) {
-					bullets[cnt] = bullets[ret - 1];
+					bullets.remove(cnt);
 					ds::vec3 bp = b.pos;
 					events->add(100, &bp, sizeof(ds::vec3));
-					--ret;
 					hit = true;
 				}
 				else {
@@ -101,5 +100,5 @@ int RingEnemies::checkCollisions(Bullet * bullets, int num, ds::EventStream * ev
 			// FIXME: move out
 		}
 	}
-	return ret;
+	
 }

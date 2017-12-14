@@ -4,7 +4,7 @@
 #include "..\utils\comon_math.h"
 
 const int GRID_HEIGHT = 20;
-const int GRID_WIDTH = 30;
+const int GRID_WIDTH = 40;
 const int GRID_TOTAL = GRID_HEIGHT * GRID_WIDTH;
 const float GRID_SIZE = 0.3f;
 const float HALF_GRID_SIZE = 0.15f;

@@ -8,7 +8,7 @@
 #include "..\utils\SimpleGrid.h"
 #include "..\Material.h"
 
-const int DOORS_NUM_X = 30;
+const int DOORS_NUM_X = 38;
 const int DOORS_NUM_Y = 20;
 const int TOTAL_DOORS = 2 * (DOORS_NUM_X + DOORS_NUM_Y);
 const float DOOR_SIZE = 0.3f;

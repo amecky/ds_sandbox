@@ -10,21 +10,12 @@
 #include "..\utils\comon_math.h"
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
-//#include "Border.h"
+#include "Bullets.h"
 #include "..\Material.h"
 #include "..\gpuparticles\GPUParticlesystem.h"
 #include "..\utils\RenderItem.h"
 #include "..\enemies\RingEnemies.h"
 #include "..\background\Doors.h"
-
-struct BulletSettings {
-	float velocity;
-	ds::vec2 growth;
-	ds::vec2 scale;
-	ds::vec4 boundingBox;
-	float fireRate;
-	ds::Color color;
-};
 
 struct ParticleSettings {
 	int num;
@@ -38,6 +29,8 @@ struct ParticleSettings {
 	ds::vec2 scale;
 	ds::vec2 scaleVariance;
 	ds::vec2 growth;
+	ds::Color startColor;
+	ds::Color endColor;
 };
 class InstanceTest : public TestApp {
 
@@ -71,11 +64,8 @@ public:
 private:	
 	void registerParticleSettings(const char* category, ParticleSettings* settings);
 	void emittParticles(const ds::vec3& pos, const ParticleSettings& settings);
-	void emittExplosion(const ds::vec3& pos);
 	void tweakableGUI(const char* category);
-	void addBullet();
 	void emittCubes(int side, int num);
-	void manageBullets(float dt);
 	void handleEvents();
 	void movePlayer(float dt);
 	RID _basicPass;
@@ -85,9 +75,8 @@ private:
 	FPSCamera* _fpsCamera;
 	TopDownCamera* _topDownCamera;
 	bool _useTopDown;
-	BulletSettings _bulletSettings;
 	ParticleSettings _explosionSettings;
-	//BackgroundGrid* _grid;
+	ParticleSettings _bulletExplosionSettings;
 	EmitterQueue* _queue;
 	bool _dbgGameMode;
 	float _gameModeTimer;
@@ -95,9 +84,7 @@ private:
 	CubesSettings _cubesSettings;
 	Cubes* _cubes;
 	Player _player;
-	//BackgroundGridSettings _gridSettings;
 	WarpingGrid* _warpingGrid;
-	Billboards _billboards;
 	GPUParticlesystem* _particleSystem;
 	ParticleDescriptor _particleDescriptor;
 	bool _showGUI;
@@ -106,10 +93,9 @@ private:
 	int _tmpY;
 	int _tmpSide;
 	int _selectedTab;
-	fixed_array<Bullet> _bullets;
-	//Bullet _bullets[256];
-	//int _numBullets;
-	float _bulletTimer;
+	
+	bullets::Context _bulletsCtx;
+
 	ds::vec3 _cursorPos;
 	ds::EventStream _events;
 	bool _running;

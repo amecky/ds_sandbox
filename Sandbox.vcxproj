@@ -38,6 +38,7 @@
     <ClInclude Include="src\instancing\BackgroundGrid.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\Border.h" />
+    <ClInclude Include="src\instancing\Bullets.h" />
     <ClInclude Include="src\instancing\Cubes.h" />
     <ClInclude Include="src\instancing\EmitterQueue.h" />
     <ClInclude Include="src\instancing\hex.h" />
@@ -67,6 +68,7 @@
     <ClInclude Include="src\utils\comon_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\EventStream.h" />
+    <ClInclude Include="src\utils\fixed_array.h" />
     <ClInclude Include="src\utils\obj.h" />
     <ClInclude Include="src\utils\RenderItem.h" />
     <ClInclude Include="src\utils\SimpleGrid.h" />
@@ -90,6 +92,7 @@
     <ClCompile Include="src\instancing\BackgroundGrid.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\instancing\Border.cpp" />
+    <ClCompile Include="src\instancing\Bullets.cpp" />
     <ClCompile Include="src\instancing\Cubes.cpp" />
     <ClCompile Include="src\instancing\EmitterQueue.cpp" />
     <ClCompile Include="src\instancing\hex.cpp" />

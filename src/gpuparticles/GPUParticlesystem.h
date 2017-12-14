@@ -11,14 +11,14 @@ struct GPUParticle {
 	ds::vec2 growth;
 	float rotation;
 	float rotationSpeed;
+	ds::Color startColor;
+	ds::Color endColor;
 };
 
 // ---------------------------------------------------------------
 // the sprite constant buffer
 // ---------------------------------------------------------------
-struct ParticleConstantBuffer {
-	ds::Color startColor;
-	ds::Color endColor;
+struct ParticleConstantBuffer {	
 	ds::matrix wvp;
 	ds::matrix world;
 	ds::vec3 eyePos;
@@ -38,12 +38,14 @@ struct ParticleArray {
 	ds::vec3* accelerations;
 	float* rotations;
 	float* rotationSpeeds;
+	ds::Color* startColors;
+	ds::Color* endColors;
 	char* buffer;
 
 	uint32_t count;
 	uint32_t countAlive;
 
-	ParticleArray() : count(0), countAlive(0), buffer(0), positions(0), velocities(0), timers(0), sizes(0), accelerations(0) , rotations(0), rotationSpeeds(0) {}
+	ParticleArray() : count(0), countAlive(0), buffer(0), positions(0), velocities(0), timers(0), sizes(0), accelerations(0) , rotations(0), rotationSpeeds(0), startColors(0) , endColors(0) {}
 
 	~ParticleArray() {
 		if (buffer != 0) {
@@ -52,7 +54,7 @@ struct ParticleArray {
 	}
 
 	void initialize(unsigned int maxParticles) {
-		int size = maxParticles * (sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec4) + sizeof(ds::vec3) + sizeof(float) + sizeof(float));
+		int size = maxParticles * (sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec3) + sizeof(ds::vec4) + sizeof(ds::vec3) + sizeof(float) + sizeof(float) + 2 * sizeof(ds::Color));
 		buffer = new char[size];
 		positions = (ds::vec3*)(buffer);
 		velocities = (ds::vec3*)(positions + maxParticles);
@@ -61,6 +63,8 @@ struct ParticleArray {
 		accelerations = (ds::vec3*)(sizes + maxParticles);
 		rotations = (float*)(accelerations + maxParticles);
 		rotationSpeeds = (float*)(rotations + maxParticles);
+		startColors = (ds::Color*)(rotationSpeeds + maxParticles);
+		endColors = (ds::Color*)(startColors + maxParticles);
 		count = maxParticles;
 		countAlive = 0;
 	}
@@ -74,6 +78,8 @@ struct ParticleArray {
 			accelerations[a] = accelerations[b];
 			rotations[a] = rotations[b];
 			rotationSpeeds[a] = rotationSpeeds[b];
+			startColors[a] = startColors[b];
+			endColors[a] = endColors[b];
 		}
 	}
 
@@ -98,9 +104,7 @@ struct ParticleArray {
 struct ParticlesystemDescriptor {
 	uint16_t maxParticles;
 	RID texture;
-	ds::vec2 particleDimension;
-	ds::Color startColor;
-	ds::Color endColor;
+	ds::vec2 particleDimension;	
 	ds::vec4 textureRect;
 };
 
@@ -116,6 +120,8 @@ struct ParticleDescriptor {
 	ds::vec3 acceleration;
 	float rotation;
 	float rotationSpeed;
+	ds::Color startColor;
+	ds::Color endColor;
 };
 
 // -------------------------------------------------------

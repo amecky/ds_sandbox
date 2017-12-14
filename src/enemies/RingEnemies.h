@@ -3,6 +3,7 @@
 #include "..\utils\RenderItem.h"
 #include "..\instancing\InstanceCommon.h"
 #include "..\utils\EventStream.h"
+#include "..\instancing\Bullets.h"
 
 class Enemies {
 
@@ -11,7 +12,7 @@ public:
 	virtual ~Enemies() {}
 	virtual void create(const ds::vec3& pos) = 0;
 	virtual void tick(float dt) = 0;
-	virtual int checkCollisions(Bullet* bullets, int num, ds::EventStream* events) = 0;
+	virtual void checkCollisions(bullets::Bullets& bullets, ds::EventStream* events) = 0;
 protected:
 	instanced_render_item* _render_item;
 };
@@ -30,7 +31,7 @@ public:
 	RingEnemies(instanced_render_item* render_item) : Enemies(render_item) , _num(0) {}
 	void create(const ds::vec3& pos);
 	void tick(float dt);
-	int checkCollisions(Bullet* bullets, int num, ds::EventStream* events);
+	void checkCollisions(bullets::Bullets& bullets, ds::EventStream* events);
 private:
 	Ring _rings[16];
 	int _num;

@@ -200,6 +200,12 @@
     <ClInclude Include="src\background\Doors.h">
       <Filter>background</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancing\Bullets.h">
+      <Filter>instancing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\fixed_array.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -320,6 +326,9 @@
     </ClCompile>
     <ClCompile Include="src\background\Doors.cpp">
       <Filter>background</Filter>
+    </ClCompile>
+    <ClCompile Include="src\instancing\Bullets.cpp">
+      <Filter>instancing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

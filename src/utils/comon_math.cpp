@@ -1,4 +1,5 @@
 #include "comon_math.h"
+#include <diesel.h>
 
 Plane::Plane(const ds::vec3& p, const ds::vec3& n) {
 	ds::vec3 nn = normalize(n);
@@ -18,8 +19,8 @@ ds::vec3 Plane::getIntersection(const Ray& r) {
 
 ds::vec3 normalizePoint(float x, float y) {
 	ds::vec3 ret;
-	ret.x = 2.0f * x / 1024.0f - 1.0f;
-	ret.y = (2.0f * y / 768.0f - 1.0f);
+	ret.x = 2.0f * x / ds::getScreenWidth() - 1.0f;
+	ret.y = (2.0f * y / ds::getScreenHeight() - 1.0f);
 	ret.z = 0.0f;
 	return ret;
 }

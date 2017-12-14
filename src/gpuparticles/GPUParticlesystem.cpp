@@ -66,6 +66,8 @@ void GPUParticlesystem::add(const ds::vec3& pos, ParticleDescriptor descriptor) 
 		_array.accelerations[start] = descriptor.acceleration;
 		_array.rotations[start] = descriptor.rotation;
 		_array.rotationSpeeds[start] = descriptor.rotationSpeed;
+		_array.startColors[start] = descriptor.startColor;
+		_array.endColors[start] = descriptor.endColor;
 		_array.wake(start);
 	}
 }
@@ -138,8 +140,8 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 	// prepare constant buffers
 	ds::matrix w = ds::matIdentity();
 	_constantBuffer.wvp = ds::matTranspose(viewProjectionMatrix);
-	_constantBuffer.startColor = _descriptor.startColor;
-	_constantBuffer.endColor = _descriptor.endColor;
+	//_constantBuffer.startColor = _descriptor.startColor;
+	//_constantBuffer.endColor = _descriptor.endColor;
 	_constantBuffer.eyePos = eyePos;
 	_constantBuffer.padding = 0.0f;
 	_constantBuffer.world = ds::matTranspose(w);
@@ -153,7 +155,9 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 			ds::vec2(_array.sizes[i].x,_array.sizes[i].y),
 			ds::vec2(_array.sizes[i].z,_array.sizes[i].w),
 			_array.rotations[i],
-			_array.rotationSpeeds[i]
+			_array.rotationSpeeds[i],
+			_array.startColors[i],
+			_array.endColors[i]
 		};
 	}
 	//quickSort(_vertices, 0, _array.countAlive);

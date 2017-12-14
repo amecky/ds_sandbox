@@ -1,21 +1,38 @@
 bullets {
-    velocity : 3.0
+    velocity : 6.0
     scale : 2.0,1.0
     growth : 2.0,0.0
-    bounding_box : -4.5,-3,4.5,3
+    bounding_box : -5.6,-3,5.6,3
     fire_rate : 10
     color : 255,0,0,255
 }
 explosion {
-    num : 64
+    num : 128
     radius : 0.1,0.2
     angle : 0.0,0.1
-    rotation_speed : 0.0,1.0
+    rotation_speed : 0.0,8.0
     ttl : 0.5,1.2
     align_particle : 1
     radial_velocity : 0.4,2.0
     radial_acceleration : 0.0,0.0
-    scale : 0.2,0.2
-    scale_variance : 0.1
-    growth : -0.1,-0.1
+    scale : 0.1,0.1
+    scale_variance : 0.025,0.025
+    growth : -0.08,-0.08
+    start_color : 255,255,255,255
+    end_color : 32,32,32,255
 }        
+bullet_explosion {
+    num : 32
+    radius : 0.01,0.02
+    angle : 0.0,0.1
+    rotation_speed : 0.0,1.0
+    ttl : 0.2,0.6
+    align_particle : 1
+    radial_velocity : 0.4,0.8
+    radial_acceleration : 0.0,0.0
+    scale : 0.05,0.05
+    scale_variance : 0
+    growth : -0.01,-0.01
+    start_color : 255,0,0,255
+    end_color : 64,0,0,64
+}    
