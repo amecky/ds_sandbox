@@ -47,7 +47,34 @@ bool float_in(transform* t, const ds::vec3& start, const ds::vec3& end, float dt
 
 namespace anim {
 
+	struct AnimationSettings {
+		float ttl;
+	};
+
+	struct RollToSettings : AnimationSettings {
+		float start;
+		float end;
+	};
+
+	struct WiggleSettings : AnimationSettings {
+		ds::vec3 base_scale;
+		float wiggle_factor;
+	};
+
+	struct FloatInSettings : AnimationSettings {
+		float start;
+		float end;
+	};
+
+	typedef bool(*animationFunction)(transform*, AnimationSettings*, float);
+
+	bool animate(transform* t, AnimationSettings* settings, float dt);
+
 	bool wiggle(transform* t, const ds::vec3& baseScale, float wiggleFactor, float dt, float ttl);
+
+	bool wiggle(transform* t, AnimationSettings* settings, float dt);
+
+	bool float_in(transform* t, AnimationSettings* settings, float dt);
 
 }
 

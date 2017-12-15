@@ -7,6 +7,7 @@
 #include "..\kenney\Camera.h"
 #include "..\utils\SimpleGrid.h"
 #include "..\Material.h"
+#include "..\utils\TransformComponent.h"
 
 const int DOORS_NUM_X = 38;
 const int DOORS_NUM_Y = 20;
@@ -41,6 +42,9 @@ private:
 	instanced_render_item* _render_item;
 	Door _doors[TOTAL_DOORS];
 	int _num;
+	anim::WiggleSettings _wiggleSettings;
+	anim::FloatInSettings _floatInSettings;
+	anim::FloatInSettings _floatOutSettings;
 };
 
 
@@ -73,5 +77,7 @@ private:
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	int _selectedDoor;
+
+	
 };
 

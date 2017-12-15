@@ -147,5 +147,32 @@ namespace anim {
 		return true;
 	}
 
+	bool wiggle(transform* t, AnimationSettings* settings, float dt) {
+		WiggleSettings* my_settings = (WiggleSettings*)settings;
+		float n = t->timer[1] / my_settings->ttl;
+		float wiggleScale = (1.0f - my_settings->wiggle_factor) + fabs(sinf(n * ds::TWO_PI))  * my_settings->wiggle_factor;
+		t->scale.x = wiggleScale * my_settings->base_scale.x;
+		t->scale.y = wiggleScale * my_settings->base_scale.y;
+		t->timer[1] += dt;
+		if (t->timer[1] >= my_settings->ttl) {
+			t->timer[1] = 0.0f;
+			t->scale = my_settings->base_scale;
+			return false;
+		}
+		return true;
+	}
+
+	bool float_in(transform* t, AnimationSettings* settings, float dt) {
+		FloatInSettings* my_settings = (FloatInSettings*)settings;
+		t->position.z = tweening::interpolate(tweening::easeOutBounce, my_settings->start, my_settings->end, t->timer[0], my_settings->ttl);
+		t->timer[0] += dt;
+		if (t->timer[0] >= my_settings->ttl) {
+			t->timer[0] = 0.0f;
+			t->position.z = my_settings->end;
+			return false;
+		}
+		return true;
+	}
+
 }
 

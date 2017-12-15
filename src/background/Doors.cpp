@@ -41,6 +41,19 @@ void Doors::init() {
 	add(DOORS_NUM_X - 1, -1);
 	add(-1, DOORS_NUM_Y - 1);
 	add(DOORS_NUM_X - 1, DOORS_NUM_Y - 1);
+
+	_wiggleSettings.ttl = 0.6f;
+	_wiggleSettings.base_scale = ds::vec3(0.25f);
+	_wiggleSettings.wiggle_factor = 0.3f;
+
+	_floatInSettings.ttl = 0.2f;
+	_floatInSettings.start = _render_item->mesh->getExtent().z * 0.25f * 0.5f;
+	_floatInSettings.end = _floatInSettings.start + _render_item->mesh->getExtent().z * -0.25f;
+
+	_floatOutSettings.ttl = 0.2f;
+	_floatOutSettings.start = _render_item->mesh->getExtent().z * 0.25f * -0.5f;
+	_floatOutSettings.end = _floatOutSettings.start + _render_item->mesh->getExtent().z * 0.25f;
+
 }
 
 void Doors::open(int idx) {
@@ -118,31 +131,17 @@ void Doors::tick(float dt) {
 		Door& door = _doors[x];
 		instance_item& item = get_instance(_render_item, door.id);
 		if (door.state == DS_OPENING) {
-			float n = door.timer / 0.2f;
-			float start = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-			float end = start + _render_item->mesh->getExtent().z * item.transform.scale.z;
-			item.transform.position.z = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
-			door.timer += dt;
-			if (door.timer >= 0.2f) {
+			if (!anim::float_in(&item.transform, &_floatOutSettings, dt)) {
 				door.state = DS_OPEN;
-				door.timer = 0.0f;
-				item.transform.position.z = end;
 			}
 		}
 		else if (door.state == DS_CLOSING) {
-			float n = door.timer / 0.2f;
-			float start = _render_item->mesh->getExtent().z * item.transform.scale.z * 0.5f;
-			float end = _render_item->mesh->getExtent().z * item.transform.scale.z * -0.5f;
-			item.transform.position.z = tweening::interpolate(tweening::linear, start, end, door.timer, 0.2f);
-			door.timer += dt;
-			if (door.timer >= 0.2f) {
+			if (!anim::float_in(&item.transform, &_floatInSettings, dt)) {
 				door.state = DS_IDLE;
-				door.timer = 0.0f;
-				item.transform.position.z = end;
 			}
 		}
 		else if (door.state == DS_WIGGLE) {
-			if (!anim::wiggle(&item.transform, ds::vec3(0.25f), 0.3f, dt, 0.6f)) {
+			if (!anim::wiggle(&item.transform, &_wiggleSettings, dt)) {
 				door.state = DS_IDLE;
 			}
 		}
@@ -158,8 +157,8 @@ void Doors::tick(float dt) {
 
 ds::RenderSettings DoorsViewer::getRenderSettings() {
 	ds::RenderSettings rs;
-	rs.width = 1024;
-	rs.height = 768;
+	rs.width = 1200;
+	rs.height = 720;
 	rs.title = "DoorsViewer";
 	rs.clearColor = ds::Color(0.01f, 0.01f, 0.01f, 1.0f);
 	rs.multisampling = 4;
@@ -179,7 +178,7 @@ bool DoorsViewer::init() {
 	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
 	_lightDir[2] = ds::vec3(0.0f, 0.5f, 0.5f);
 
-	create_instanced_render_item(&_render_item, "gutter", _material, TOTAL_DOORS);
+	create_instanced_render_item(&_render_item, "border_box", _material, TOTAL_DOORS);
 
 	_grid = new SimpleGrid;
 	_grid->init(SGD_XZ, 8.0f, 0.7f, 0.2f);
@@ -206,7 +205,7 @@ void DoorsViewer::render() {
 void DoorsViewer::renderGUI() {
 	int state = 1;
 	gui::start();
-	p2i sp = p2i(10, 760);
+	p2i sp = p2i(10, 710);
 	if (gui::begin("Object", &state, &sp, 320)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Input("Door", &_selectedDoor);
