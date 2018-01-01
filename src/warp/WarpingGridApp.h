@@ -1,7 +1,7 @@
 #pragma once
 #include "..\TestApp.h"
 #include "..\kenney\Camera.h"
-#include "..\utils\comon_math.h"
+#include "..\utils\common_math.h"
 #include "..\instancing\InstanceCommon.h"
 #include <vector>
 #include "WarpingGrid.h"

@@ -130,9 +130,6 @@
     <ClInclude Include="src\instancing\hex.h">
       <Filter>instancing</Filter>
     </ClInclude>
-    <ClInclude Include="src\instancing\BackgroundGrid.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
     <ClInclude Include="src\instancing\InstanceCommon.h">
       <Filter>instancing</Filter>
     </ClInclude>
@@ -150,9 +147,6 @@
     </ClInclude>
     <ClInclude Include="src\instancing\Billboards.h">
       <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\comon_math.h">
-      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\warp\WarpingGrid.h">
       <Filter>warp</Filter>
@@ -204,6 +198,9 @@
       <Filter>instancing</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\fixed_array.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\common_math.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -263,9 +260,6 @@
     <ClCompile Include="src\instancing\hex.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
-    <ClCompile Include="src\instancing\BackgroundGrid.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
     <ClCompile Include="src\instancing\EmitterQueue.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
@@ -280,9 +274,6 @@
     </ClCompile>
     <ClCompile Include="src\instancing\Billboards.cpp">
       <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\comon_math.cpp">
-      <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\warp\WarpingGrid.cpp">
       <Filter>warp</Filter>
@@ -329,6 +320,9 @@
     </ClCompile>
     <ClCompile Include="src\instancing\Bullets.cpp">
       <Filter>instancing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\common_math.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

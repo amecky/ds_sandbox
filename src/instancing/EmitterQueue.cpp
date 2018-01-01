@@ -1,5 +1,4 @@
 #include "EmitterQueue.h"
-#include "BackgroundGrid.h"
 #include "..\warp\WarpingGrid.h"
 #include "Cubes.h"
 

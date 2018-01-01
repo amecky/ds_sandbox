@@ -35,7 +35,6 @@
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\enemies\RingEnemies.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
-    <ClInclude Include="src\instancing\BackgroundGrid.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\Border.h" />
     <ClInclude Include="src\instancing\Bullets.h" />
@@ -65,7 +64,7 @@
     <ClInclude Include="src\TestApp.h" />
     <ClInclude Include="src\TestSpriteApp.h" />
     <ClInclude Include="src\tweening\TweeningTest.h" />
-    <ClInclude Include="src\utils\comon_math.h" />
+    <ClInclude Include="src\utils\common_math.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\EventStream.h" />
     <ClInclude Include="src\utils\fixed_array.h" />
@@ -89,7 +88,6 @@
     <ClCompile Include="src\binary\BinaryClock.cpp" />
     <ClCompile Include="src\enemies\RingEnemies.cpp" />
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
-    <ClCompile Include="src\instancing\BackgroundGrid.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\instancing\Border.cpp" />
     <ClCompile Include="src\instancing\Bullets.cpp" />
@@ -115,7 +113,7 @@
     <ClCompile Include="src\plugins\PluginRegistry.cpp" />
     <ClCompile Include="src\TestSpriteApp.cpp" />
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
-    <ClCompile Include="src\utils\comon_math.cpp" />
+    <ClCompile Include="src\utils\common_math.cpp" />
     <ClCompile Include="src\utils\EventStream.cpp" />
     <ClCompile Include="src\utils\obj.cpp" />
     <ClCompile Include="src\utils\RenderItem.cpp" />

@@ -1,6 +1,7 @@
 #include "BackgroundGrid.h"
 #include "..\Mesh.h"
 #include "..\utils\tweening.h"
+#include "..\utils\common_math.h"
 
 ds::vec3 BackgroundGrid::convert_grid_coords(int x, int y) {
 	float cx = static_cast<float>(GRID_WIDTH) * GRID_SIZE * 0.5f - HALF_GRID_SIZE;
@@ -9,7 +10,7 @@ ds::vec3 BackgroundGrid::convert_grid_coords(int x, int y) {
 }
 
 void BackgroundGrid::init(RID basicGroup, RID vertexShaderId, RID pixelShaderId) {
-	_plane = Plane(ds::vec3(0.0f, 0.0f, -0.1f), ds::vec3(0.0f, 0.0f, -1.0f));
+	_plane = new Plane(ds::vec3(0.0f, 0.0f, -0.1f), ds::vec3(0.0f, 0.0f, -1.0f));
 	for (int y = 0; y < GRID_HEIGHT; ++y) {
 		for (int x = 0; x < GRID_WIDTH; ++x) {
 			BackgroundGridItem& item = _items[x + y * GRID_WIDTH];
@@ -81,7 +82,7 @@ void BackgroundGrid::highlight(int x, int y, BackgroundGridFlashing type) {
 }
 
 ds::vec3 BackgroundGrid::getIntersectionPoint(const Ray & r) {
-	return _plane.getIntersection(r);
+	return _plane->getIntersection(r);
 }
 
 void BackgroundGrid::tick(float dt) {

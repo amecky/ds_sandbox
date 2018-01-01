@@ -98,6 +98,10 @@ namespace gui {
 
 	void endGroup();
 
+	void start_overlay();
+
+	void end_overlay();
+
 	bool Button(const char* text);
 
 	void Text(const char* text);
@@ -173,6 +177,10 @@ namespace gui {
 	void Diagram(const char* label, float* values, int num, float minValue, float maxValue, float step, int width = 200, int height = 100);
 
 	bool Tabs(const char** entries, int num, int* selected);
+
+	bool BeginMenu(const char** entries, int num, int* selected);
+
+	void EndMenu();
 
 	void pushID(int id);
 
@@ -395,26 +403,34 @@ namespace gui {
 
 		struct UIContext {
 			UIBuffer* buffer;
+			UIBuffer* overlay_buffer;
+			bool use_overlay;
 			SpriteBatchBuffer* sprites;
 			p2i startPos;
 			p2i size;
 			char tmpBuffer[256];
 		};
 
+		static void createBuffer(UIBuffer* buffer, int size) {
+			int sz = size * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(recti) + sizeof(ds::vec2) + sizeof(ds::Color) + sizeof(ResizeType));
+			buffer->num = 0;
+			buffer->capacity = size;
+			buffer->data = new char[sz];
+			buffer->positions = (ds::vec2*)(buffer->data);
+			buffer->sizes = (ds::vec2*)(buffer->positions + buffer->capacity);
+			buffer->rectangles = (recti*)(buffer->sizes + buffer->capacity);
+			buffer->scales = (ds::vec2*)(buffer->rectangles + buffer->capacity);
+			buffer->colors = (ds::Color*)(buffer->scales + buffer->capacity);
+			buffer->resize = (ResizeType*)(buffer->colors + buffer->capacity);
+		}
+
 		UIContext* init() {
 			UIContext* ctx = new UIContext;
 			ctx->buffer = new UIBuffer;
-			int sz = 4096 * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(recti) + sizeof(ds::vec2) + sizeof(ds::Color) + sizeof(ResizeType));
-			ctx->buffer->num = 0;
-			ctx->buffer->capacity = 4096;
-			ctx->buffer->data = new char[sz];
-			ctx->buffer->positions = (ds::vec2*)(ctx->buffer->data);
-			ctx->buffer->sizes = (ds::vec2*)(ctx->buffer->positions + ctx->buffer->capacity);
-			ctx->buffer->rectangles = (recti*)(ctx->buffer->sizes + ctx->buffer->capacity);
-			ctx->buffer->scales = (ds::vec2*)(ctx->buffer->rectangles + ctx->buffer->capacity);
-			ctx->buffer->colors = (ds::Color*)(ctx->buffer->scales + ctx->buffer->capacity);
-			ctx->buffer->resize = (ResizeType*)(ctx->buffer->colors + ctx->buffer->capacity);
-
+			createBuffer(ctx->buffer, 4096);
+			ctx->overlay_buffer = new UIBuffer();
+			ctx->use_overlay = false;
+			createBuffer(ctx->overlay_buffer, 4096);
 			uint8_t* data = new uint8_t[256 * 256 * 4];
 			for (int i = 0; i < 256 * 256 * 4; ++i) {
 				data[i] = 255;
@@ -452,6 +468,8 @@ namespace gui {
 
 		void reset(UIContext* ctx) {
 			ctx->buffer->num = 0;
+			ctx->overlay_buffer->num = 0;
+			ctx->use_overlay = false;
 			ctx->size = p2i(0);
 		}
 
@@ -470,57 +488,66 @@ namespace gui {
 			return ctx->tmpBuffer;
 		}
 
-		void draw_buffer(UIContext* ctx) {
-			ctx->sprites->begin();
-			float h = ctx->size.y - 20.0f;
+		static void draw_buffer(SpriteBatchBuffer* sprites, UIBuffer* buffer, const p2i& startPos, const p2i& size) {
+			float h = size.y - 20.0f;
 			float sy = h / 128.0f;
-			float w = ctx->size.x + 10.0f;
+			float w = size.x + 10.0f;
 			float sx = w / 128.0f;
 
-			float bpx = ctx->startPos.x + w * 0.5f;
-			float bpy = ctx->startPos.y - h * 0.5f - 10.0f;
+			float bpx = startPos.x + w * 0.5f;
+			float bpy = startPos.y - h * 0.5f - 10.0f;
 
-			int num = ctx->buffer->num;
+			int num = buffer->num;
 			for (uint16_t i = 0; i < num; ++i) {
-				ds::vec2 p = ctx->buffer->positions[i];
-				if (ctx->buffer->resize[i] == ResizeType::RT_X) {
-					recti rect = ctx->buffer->rectangles[i];
+				ds::vec2 p = buffer->positions[i];
+				if (buffer->resize[i] == ResizeType::RT_X) {
+					recti rect = buffer->rectangles[i];
 					rect.width = 128;
 					p.x = bpx;
-					ctx->sprites->add(p, rect.convert(), ds::vec2(sx, 1.0f), 0.0f, ctx->buffer->colors[i]);
+					sprites->add(p, rect.convert(), ds::vec2(sx, 1.0f), 0.0f, buffer->colors[i]);
 				}
-				else if (ctx->buffer->resize[i] == ResizeType::RT_Y) {
-					recti rect = ctx->buffer->rectangles[i];
+				else if (buffer->resize[i] == ResizeType::RT_Y) {
+					recti rect = buffer->rectangles[i];
 					rect.height = 128;
 					p.y = bpy;
-					ctx->sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, ctx->buffer->colors[i]);
+					sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, buffer->colors[i]);
 				}
-				else if (ctx->buffer->resize[i] == ResizeType::RT_BOTH) {
-					recti rect = ctx->buffer->rectangles[i];
+				else if (buffer->resize[i] == ResizeType::RT_BOTH) {
+					recti rect = buffer->rectangles[i];
 					rect.width = 128;
 					rect.height = 128;
 					p.x = bpx;
 					p.y = bpy;
-					ctx->sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, ctx->buffer->colors[i]);
+					sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, buffer->colors[i]);
 				}
 				else {
-					ctx->sprites->add(p, ctx->buffer->rectangles[i].convert(), ctx->buffer->scales[i], 0.0f, ctx->buffer->colors[i]);
+					sprites->add(p, buffer->rectangles[i].convert(), buffer->scales[i], 0.0f, buffer->colors[i]);
 				}
 			}
-			ctx->buffer->num = 0;
+			buffer->num = 0;
+		}
+
+		void draw_buffer(UIContext* ctx) {
+			ctx->sprites->begin();
+			draw_buffer(ctx->sprites, ctx->buffer, ctx->startPos, ctx->size);
+			draw_buffer(ctx->sprites, ctx->overlay_buffer, ctx->startPos, ctx->size);			
 			ctx->sprites->flush();
 		}
 
 		void add_to_buffer(UIContext* ctx, const p2i& p, const recti& rect, const ds::vec2& scale, const ds::Color& color, ResizeType resize = ResizeType::RT_NONE) {
-			if ((ctx->buffer->num + 1) >= ctx->buffer->capacity) {
+			UIBuffer* buffer = ctx->buffer;
+			if (ctx->use_overlay) {
+				buffer = ctx->overlay_buffer;
+			}
+			if ((buffer->num + 1) >= buffer->capacity) {
 				draw_buffer(ctx);
 			}
-			ctx->buffer->positions[ctx->buffer->num] = ds::vec2(p.x, p.y);
-			ctx->buffer->scales[ctx->buffer->num] = scale;
-			ctx->buffer->rectangles[ctx->buffer->num] = rect;
-			ctx->buffer->colors[ctx->buffer->num] = color;
-			ctx->buffer->resize[ctx->buffer->num] = resize;
-			++ctx->buffer->num;
+			buffer->positions[buffer->num] = ds::vec2(p.x, p.y);
+			buffer->scales[buffer->num] = scale;
+			buffer->rectangles[buffer->num] = rect;
+			buffer->colors[buffer->num] = color;
+			buffer->resize[buffer->num] = resize;
+			++buffer->num;
 		}
 
 		// --------------------------------------------------------
@@ -586,6 +613,8 @@ namespace gui {
 			delete ctx->sprites;
 			delete[] ctx->buffer->data;
 			delete ctx->buffer;
+			delete[] ctx->overlay_buffer->data;
+			delete ctx->overlay_buffer;
 		}
 
 	}
@@ -1244,6 +1273,19 @@ namespace gui {
 		moveForward(p2i(10, 30));
 	}
 
+	// --------------------------------------------------------
+	// start overlay
+	// --------------------------------------------------------
+	void start_overlay() {
+		_guiCtx->uiContext->use_overlay = true;
+	}
+
+	// --------------------------------------------------------
+	// end overlay
+	// --------------------------------------------------------
+	void end_overlay() {
+		_guiCtx->uiContext->use_overlay = false;
+	}
 	// --------------------------------------------------------
 	// Button
 	// --------------------------------------------------------
@@ -2136,6 +2178,44 @@ namespace gui {
 		popID();
 		moveForward(p2i(300, 20));
 		return changed;
+	}
+
+	bool BeginMenu(const char** entries, int num, int* selected) {
+		start_overlay();
+		bool changed = false;
+		pushID("Menu", entries[0]);
+		p2i p = _guiCtx->currentPos;
+		p.x -= 10;
+		int tab_size = _guiCtx->width / num;
+		for (int i = 0; i < num; ++i) {
+			pushID(i);
+			p2i ts = textSize(entries[i]);
+			ts.x += 20;
+			checkItem(p, p2i(ts.x, 20));
+			if (isClicked()) {
+				if (*selected != i) {
+					changed = true;
+				}
+				*selected = i;
+			}
+			if (*selected == i) {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.boxSelectionColor);
+			}
+			else {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(0, 0, 64, 255));
+			}
+			p.x += 5;
+			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
+			p.x += tab_size;
+			popID();
+		}
+		popID();
+		moveForward(p2i(300, 20));
+		return changed;
+	}
+
+	void EndMenu() {
+		end_overlay();
 	}
 
 	// -------------------------------------------------------

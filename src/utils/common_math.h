@@ -36,3 +36,13 @@ private:
 };
 
 Ray get_picking_ray(const ds::matrix& projection, const ds::matrix& view);
+
+namespace math {
+
+	bool out_of_bounds(const ds::vec3& pos, const ds::vec4& box);
+
+	float get_angle(const ds::vec2& v1, const ds::vec2& v2);
+
+	float get_rotation(const ds::vec2& v1);	
+	
+}

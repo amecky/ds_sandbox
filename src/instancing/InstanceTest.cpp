@@ -8,35 +8,15 @@
 const int GRID_HEIGHT = 20;
 const int GRID_WIDTH = 30;
 
-float getAngle(const ds::vec2& v1, const ds::vec2& v2) {
-	if (v1 != v2) {
-		ds::vec2 vn1 = normalize(v1);
-		ds::vec2 vn2 = normalize(v2);
-		float dt = dot(vn1, vn2);
-		if (dt < -1.0f) {
-			dt = -1.0f;
-		}
-		if (dt > 1.0f) {
-			dt = 1.0f;
-		}
-		float tmp = acos(dt);
-		float cross = -1.0f * (vn2 - vn1).y;
-		//float crs = cross(vn1, vn2);
-		if (cross < 0.0f) {
-			tmp = ds::TWO_PI - tmp;
-		}
-		return tmp;
-	}
-	else {
-		return 0.0f;
-	}
-}
-
 InstanceTest::InstanceTest() {
 	_running = true;
 	_showGUI = true;
 	_pressed = false;
 	_selectedTab = 0;
+
+	_fading_message.timer = 0.0f;
+	_fading_message.active = false;
+	_fading_message.ttl = 2.0f;
 }
 
 InstanceTest::~InstanceTest() {
@@ -44,7 +24,7 @@ InstanceTest::~InstanceTest() {
 	//delete _grid;
 	delete _warpingGrid;
 	delete _fpsCamera;
-	delete _topDownCamera;
+	//delete _topDownCamera;
 }
 
 // ----------------------------------------------------
@@ -61,6 +41,17 @@ ds::RenderSettings InstanceTest::getRenderSettings() {
 	rs.supportDebug = true;
 	
 	return rs;
+}
+
+void InstanceTest::startFadingMessage(const char* message) {
+	_fading_message.timer = 0.0f;
+	_fading_message.active = true;
+	_fading_message.ttl = 2.0f;
+	_fading_message.message = message;
+}
+
+void InstanceTest::OnReload() {
+	startFadingMessage("Variables reloaded");
 }
 
 void InstanceTest::registerParticleSettings(const char* category, ParticleSettings* settings) {
@@ -112,8 +103,10 @@ bool InstanceTest::init() {
 	
 	RID textureID = loadImageFromFile("content\\TextureArray.png");
 
-	_topDownCamera = new TopDownCamera(&_camera);
-	_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+	//_topDownCamera = new TopDownCamera(&_camera);
+	//_topDownCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+
+	camera::init(&_gameCamera, &_camera);
 
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
@@ -209,12 +202,25 @@ bool InstanceTest::init() {
 	_doors = new Doors(&_doors_render_item);
 	_doors->init();
 	
-	player::reset(&_player);
+	player::init(&_player);
 	_cameraPos = ds::vec3(0.0f, 0.0f, -6.0f);
 
 	_dbgDoors = true;
 
+	_mode = GM_RUNNING;
+
 	return true;
+}
+
+// ----------------------------------------------------
+// stop game
+// ----------------------------------------------------
+void InstanceTest::stopGame() {
+	_player.shooting = false;
+	_mode = GM_DYING;
+	_gameCamera.zooming = true;
+	_gameCamera.zoom_timer = 0.0f;
+	camera::translate(&_gameCamera, ds::vec3(0.0f));
 }
 
 // ----------------------------------------------------
@@ -228,26 +234,37 @@ void InstanceTest::tick(float dt) {
 		if (!_useTopDown) {
 			_fpsCamera->update(dt);
 		}
-		else {
-			_topDownCamera->update(dt);
-		}
 
 		bullets::tick(&_bulletsCtx, _player.render_item.transform.position, _player.shootingAngle, dt, &_events);
 
-		_cubes->tick(dt, _player.render_item.transform.position );
+		if (_mode == GM_RUNNING) {
+
+			_cubes->tick(dt, _player.render_item.transform.position);
+
+			_queue->tick(dt, &_events);
+
+			movePlayer(dt);
+
+			_ringEnemies->tick(dt);
+
+		}
+
+		if (_mode == GM_DYING) {
+			// kill every cube one after the other
+
+			// move camera z-pos to -8
+			if (_gameCamera.zooming) {
+				camera::zoom_out(&_gameCamera, dt);
+			}
+			// move camera to center
+		}
 
 		//_grid->tick(dt);
 		_warpingGrid->tick(dt);
 
-		_queue->tick(dt, &_events);
-
 		_cubes->checkCollisions(_bulletsCtx.bullets, &_events);
 
 		//_numBullets = _ringEnemies->checkCollisions(_bullets, _numBullets, &_events);
-
-		movePlayer(dt);
-
-		_ringEnemies->tick(dt);
 
 		handleEvents();
 
@@ -273,9 +290,6 @@ void InstanceTest::tick(float dt) {
 		if (!_useTopDown) {
 			_fpsCamera->update(dt);
 		}
-		else {
-			_topDownCamera->update(dt);
-		}
 	}
 
 	if (ds::isKeyPressed('M') && !_pressed) {
@@ -284,6 +298,13 @@ void InstanceTest::tick(float dt) {
 	}
 	if (!ds::isKeyPressed('M') && _pressed) {
 		_pressed = false;
+	}
+
+	if (_fading_message.active) {
+		_fading_message.timer += dt;
+		if (_fading_message.timer >= _fading_message.ttl) {
+			_fading_message.active = false;
+		}
 	}
 }
 
@@ -295,33 +316,10 @@ void InstanceTest::movePlayer(float dt) {
 		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 		r.setOrigin(_camera.position);
 		_cursorPos = _warpingGrid->getIntersectionPoint(r);		
+
 		player::handle_keys(&_player, dt);
 		player::move(&_player, _cursorPos, dt);
-
-		ds::vec3 cameraPos = _player.render_item.transform.position;
-		cameraPos.z = -6.0f;
-
-		float velocity = 2.0f;
-		ds::vec3 diff = cameraPos - _cameraPos;
-		if (sqr_length(diff) > 0.1f) {
-			ds::vec2 n = normalize(ds::vec2(diff.x, diff.y));
-			ds::vec2 desired = n * velocity;
-			_cameraPos += ds::vec3(desired) * dt;
-			if (_cameraPos.x < -1.55f) {
-				_cameraPos.x = -1.55f;
-			}
-			if (_cameraPos.x > 1.55f) {
-				_cameraPos.x = 1.55f;
-			}
-			if (_cameraPos.y < -0.8f) {
-				_cameraPos.y = -0.8f;
-			}
-			if (_cameraPos.y > 0.8f) {
-				_cameraPos.y = 0.8f;
-			}
-			
-		}
-		_topDownCamera->setPosition(_cameraPos);
+		camera::follow(&_gameCamera,_player.render_item.transform.position, dt);		
 	}	
 }
 
@@ -464,7 +462,7 @@ void InstanceTest::renderGUI() {
 					_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 				}
 				else {
-					_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
+					//_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 				}
 			}
 			if (_selectedTab == 0) {
@@ -477,6 +475,9 @@ void InstanceTest::renderGUI() {
 				}
 				if (gui::Checkbox("Acitve Game mode", &_dbgGameMode)) {
 					_gameModeTimer = 0.0f;
+				}
+				if (gui::Button("Stop game")) {
+					stopGame();
 				}
 				if (gui::Button("Emitt")) {
 					_queue->emitt(_tmpX, _tmpY, 1, &_events);
@@ -540,6 +541,12 @@ void InstanceTest::renderGUI() {
 				}
 			}
 
+		}
+		if (_fading_message.active) {
+			gui::Message(_fading_message.message);
+		}
+		else {
+			gui::Message("");
 		}
 		gui::end();
 	}

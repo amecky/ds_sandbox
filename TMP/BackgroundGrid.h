@@ -1,7 +1,6 @@
 #pragma once
 #include <diesel.h>
 #include "InstanceCommon.h"
-#include "..\utils\comon_math.h"
 
 const int GRID_HEIGHT = 20;
 const int GRID_WIDTH = 40;
@@ -31,6 +30,9 @@ struct BackgroundGridSettings {
 	float pulseAmplitude;
 };
 
+class Ray;
+class Plane;
+
 class BackgroundGrid {
 
 public:
@@ -50,5 +52,5 @@ private:
 	InstanceBuffer _constantBuffer;
 	InstanceLightBuffer _lightBuffer;
 	BackgroundGridSettings* _settings;
-	Plane _plane;
+	Plane* _plane;
 };

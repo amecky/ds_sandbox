@@ -403,7 +403,7 @@ void Mesh::loadBin(const char* fileName, bool scale) {
 void getFileTime(const char* fileName, FILETIME& time) {
 	WORD ret = -1;
 	// no file sharing mode
-	HANDLE hFile = CreateFile(fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile != INVALID_HANDLE_VALUE) {
 		// Retrieve the file times for the file.
 		GetFileTime(hFile, NULL, NULL, &time);

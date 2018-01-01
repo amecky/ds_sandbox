@@ -23,6 +23,8 @@ public:
 
 	virtual void renderGUI() {}
 
+	virtual void OnReload() {}
+
 	virtual bool useFixedTimestep() const {
 		return false;
 	}

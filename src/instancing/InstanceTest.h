@@ -7,7 +7,6 @@
 #include "Cubes.h"
 #include "Player.h"
 #include "Billboards.h"
-#include "..\utils\comon_math.h"
 #include "..\warp\WarpingGrid.h"
 #include "..\utils\EventStream.h"
 #include "Bullets.h"
@@ -16,6 +15,19 @@
 #include "..\utils\RenderItem.h"
 #include "..\enemies\RingEnemies.h"
 #include "..\background\Doors.h"
+
+enum GameMode {
+	GM_PREPARING,
+	GM_RUNNING,
+	GM_DYING
+};
+
+struct FadingMessage {
+	bool active;
+	const char* message;
+	float timer;
+	float ttl;
+};
 
 struct ParticleSettings {
 	int num;
@@ -61,19 +73,25 @@ public:
 		return "data\\settings.json";
 	}
 
+	void OnReload();
+
 private:	
+	void startFadingMessage(const char* message);
 	void registerParticleSettings(const char* category, ParticleSettings* settings);
 	void emittParticles(const ds::vec3& pos, const ParticleSettings& settings);
 	void tweakableGUI(const char* category);
 	void emittCubes(int side, int num);
 	void handleEvents();
 	void movePlayer(float dt);
+	void stopGame();
+	void startGame();
+
+	FadingMessage _fading_message;
 	RID _basicPass;
 	RID _particlePass;
 	RID _instanceVertexBuffer;
 	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
-	TopDownCamera* _topDownCamera;
 	bool _useTopDown;
 	ParticleSettings _explosionSettings;
 	ParticleSettings _bulletExplosionSettings;
@@ -96,10 +114,11 @@ private:
 	
 	bullets::Context _bulletsCtx;
 
+	GameMode _mode;
+	GameCamera _gameCamera;
 	ds::vec3 _cursorPos;
 	ds::EventStream _events;
 	bool _running;
-	//Border _border;
 	bool _dbgDoors;
 	int _dbgFixedOffset;
 	Doors* _doors;

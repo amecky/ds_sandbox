@@ -2,32 +2,29 @@
 #include <diesel.h>
 #include <cmath>
 
-class TopDownCamera {
-
-public:
-	TopDownCamera(ds::Camera* camera);
-	virtual ~TopDownCamera();
-	void setPosition(const ds::vec3& pos);
-	const ds::vec3& getPosition() const {
-		return _camera->position;
-	}
-	void setPosition(const ds::vec3& pos, const ds::vec3& lookAt);
-	void setSpeed(float spd) {
-		_speed = spd;
-	}
-	// moving the camera
-	void move(float unit);
-	void strafe(float unit);
-	void up(float unit);
-	// Y axis
-	void setPitch(float angle);
-	void resetPitch(float angle);
-	// Z axis
-	void resetYaw(float angle);
-	void setYaw(float angle);
-	void update(float elapsedTime);
-	void buildView();
-private:
-	ds::Camera* _camera;
-	float _speed;
+struct GameCameraSettings {
+	float regular_height;
+	float zoom_out_height;
+	float zoom_ttl;
 };
+
+struct GameCamera {
+	ds::Camera* camera;
+	GameCameraSettings settings;
+	ds::vec3 position;
+	float zoom_timer;
+	bool zooming;
+};
+
+namespace camera {
+
+	void init(GameCamera* gameCamera, ds::Camera* camera);
+
+	bool zoom_out(GameCamera* gameCamera, float dt);
+
+	bool zoom_in(GameCamera* gameCamera, float dt);
+
+	void follow(GameCamera* gameCamera, const ds::vec3& playerPosition, float dt);
+
+	void translate(GameCamera* gameCamera, const ds::vec3& position);
+}

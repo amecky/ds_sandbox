@@ -1,5 +1,6 @@
 #include "Bullets.h"
 #include <ds_tweakable.h>
+#include "..\utils\common_math.h"
 
 namespace bullets {
 
@@ -63,7 +64,8 @@ namespace bullets {
 			b.scale.x = ctx->settings.scale.x + b.timer * ctx->settings.growth.x;
 			b.scale.y = ctx->settings.scale.y + b.timer * ctx->settings.growth.y;
 			ds::vec3 p = b.pos;
-			if (p.y < ctx->settings.boundingBox.y || p.y > ctx->settings.boundingBox.w || p.x < ctx->settings.boundingBox.x || p.x > ctx->settings.boundingBox.z) {
+			if ( math::out_of_bounds(b.pos,ctx->settings.boundingBox)) {
+			//if (p.y < ctx->settings.boundingBox.y || p.y > ctx->settings.boundingBox.w || p.x < ctx->settings.boundingBox.x || p.x > ctx->settings.boundingBox.z) {
 
 				int ddy = (3.0f - p.y) / 6.0f * 20.0f;
 				if (ddy < 0) {
