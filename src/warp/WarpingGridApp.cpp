@@ -66,9 +66,10 @@ void WarpingGridApp::render() {
 
 void WarpingGridApp::renderGUI() {
 	int state = 1;
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &state, &sp, 250)) {
+	gui::start(&sp, 250);
+	
+	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 	}
 	gui::Input("X", &_dbgX);

@@ -139,9 +139,10 @@ ParticlePluginTest::~ParticlePluginTest() {
 }
 
 void ParticlePluginTest::renderGUI() {
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 420)) {
+	gui::start(&sp,420);
+	
+	if (gui::begin("Debug", &_dialogState)) {
 		float fps = ds::getFramesPerSecond();
 		gui::Value("FPS", fps);
 		float ti = 0.0f;

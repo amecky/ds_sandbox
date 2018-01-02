@@ -13,6 +13,8 @@ namespace bullets {
 		ds::vec4 boundingBox;
 		float fireRate;
 		ds::Color color;
+		float radius_offset;
+		float angle_offset;
 	};
 
 	struct Bullet {
@@ -37,7 +39,7 @@ namespace bullets {
 
 	void init(Context* ctx, RID textureID);
 
-	void add(Context* ctx, const ds::vec3& position, float angle);
+	void add(Context* ctx, const ds::vec3& position, float angle, float radiusOffset, float angleOffset);
 
 	void tick(Context* ctx, const ds::vec3& playerPosition, float shootingAngle, float dt, ds::EventStream* events);
 

@@ -192,9 +192,9 @@ void ParticleExpressionTest::convertFloat(float v,int precision) {
 
 void ParticleExpressionTest::renderGUI() {
 	perf::ZoneTracker("renderGUI");
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 300)) {
+	gui::start(&sp,300);
+	if (gui::begin("Debug", &_dialogState)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		float ti = 1.0f / ds::getFramesPerSecond() * 1000.0f;
 		gui::Value("TI", ti,3,4);

@@ -179,9 +179,6 @@
     <ClInclude Include="src\utils\TransformComponent.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\viewer\TopDownObjViewer.h">
-      <Filter>viewer</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\RenderItem.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -302,9 +299,6 @@
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\utils\TransformComponent.cpp">
       <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\viewer\TopDownObjViewer.cpp">
-      <Filter>viewer</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\RenderItem.cpp">
       <Filter>utils</Filter>

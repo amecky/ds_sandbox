@@ -204,9 +204,9 @@ void DoorsViewer::render() {
 
 void DoorsViewer::renderGUI() {
 	int state = 1;
-	gui::start();
 	p2i sp = p2i(10, 710);
-	if (gui::begin("Object", &state, &sp, 320)) {
+	gui::start(&sp,320);	
+	if (gui::begin("Object", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Input("Door", &_selectedDoor);
 		if (gui::Button("Open door")) {

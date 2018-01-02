@@ -301,9 +301,9 @@ void BinaryClock::render() {
 // ---------------------------------------------------------------
 void BinaryClock::renderGUI() {
 	int state = 1;
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &state, &sp, 300)) {
+	gui::start(&sp,300);	
+	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		if (gui::Input("Light", &_lightPos)) {
 			_fpsCamera->setPosition(_lightPos, ds::vec3(0.0f, 0.0f, 0.0f));

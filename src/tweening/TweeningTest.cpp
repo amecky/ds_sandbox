@@ -42,10 +42,9 @@ ds::RenderSettings TweeningTest::getRenderSettings() {
 }
 
 void TweeningTest::renderGUI() {
-	
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 540)) {
+	gui::start(&sp,540);
+	if (gui::begin("Debug", &_dialogState)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Input("Start", &_startPos);
 		gui::Input("End", &_endPos);

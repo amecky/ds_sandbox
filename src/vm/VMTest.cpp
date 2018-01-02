@@ -73,10 +73,9 @@ void VMTest::compile(const char* source) {
 }
 
 void VMTest::renderGUI() {
-	
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 540)) {
+	gui::start(&_dialogPos, 540);	
+	if (gui::begin("Debug", &_dialogState)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::ListBox("Source", _listModel, 5);
 		if (_listModel.hasSelection()) {

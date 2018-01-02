@@ -169,7 +169,7 @@ void Cubes::tick(float dt, const ds::vec3& playerPosition) {
 			instance_item& item = get_instance(_render_item, c.id);
 			if (c.type == 1) {
 				// seek
-				float velocity = 1.0f;
+				float velocity = _settings->seek_velocity;
 				ds::vec3 diff = playerPosition - item.transform.position;
 				ds::vec2 n = normalize(ds::vec2(diff.x, diff.y));
 				ds::vec2 desired = n * velocity;
@@ -179,7 +179,7 @@ void Cubes::tick(float dt, const ds::vec3& playerPosition) {
 		}
 	}
 
-	separate(0.3f, 0.9f);
+	separate(_settings->min_distance, _settings->relaxation);
 
 	for (int i = 0; i < _num_cubes; ++i) {
 		Cube& c = _cubes[i];

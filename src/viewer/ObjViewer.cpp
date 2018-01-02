@@ -132,9 +132,10 @@ void ObjViewer::render() {
 // ----------------------------------------------------
 void ObjViewer::renderGUI() {
 	int state = 1;
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Object", &state, &sp, 320)) {
+	gui::start(&sp, 320);
+	
+	if (gui::begin("Object", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Center", _renderItem.mesh->getCenter());
 		gui::Value("Extent", _renderItem.mesh->getExtent());

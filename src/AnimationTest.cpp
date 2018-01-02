@@ -78,10 +78,10 @@ void showRotationTimeline(AnimationTimeline& data) {
 
 
 void AnimationTest::renderGUI() {
-	
-	gui::start();
 	p2i sp = p2i(10, 760);
-	if (gui::begin("Debug", &_dialogState, &_dialogPos, 540)) {
+	gui::start(&_dialogPos, 540);
+	
+	if (gui::begin("Debug", &_dialogState)) {
 		gui::Value("FPS", ds::getFramesPerSecond());	
 		gui::Value("Mouse", ds::getMousePosition());
 		gui::Value("Sprites", _world.numSprites());
@@ -96,7 +96,7 @@ void AnimationTest::renderGUI() {
 	}
 	gui::ListBox("AnimationParts", _objectModel, 5);
 	if (_selected != INVALID_ID) {
-		if (gui::begin("Sprite", &_spriteDialogState, 540)) {
+		if (gui::begin("Sprite", &_spriteDialogState)) {
 			gui::Value("Selected", _selected);
 			MySprite& sp = _world.get(_selected);
 			gui::Input("Pos", &sp.position);
@@ -111,7 +111,7 @@ void AnimationTest::renderGUI() {
 			}
 			
 		}
-		if (gui::begin("Animations", &_spriteAnimDialogState, 540)) {
+		if (gui::begin("Animations", &_spriteAnimDialogState)) {
 			gui::Input("TTL", &_ttl);
 			gui::Input("Repeat", &_repeat);
 			gui::ListBox("Animations", _listModel, 5);

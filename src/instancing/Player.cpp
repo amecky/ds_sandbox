@@ -28,7 +28,7 @@ namespace player {
 	// reset player
 	// ----------------------------------------------------
 	void reset(Player* player) {
-		initialize(&player->render_item.transform, ds::vec3(0.0f), ds::vec3(0.35f), 0.0f, 0.0f);
+		initialize(&player->render_item.transform, ds::vec3(0.0f), ds::vec3(0.22f), 0.0f, 0.0f);
 		player->render_item.transform.position.z = player->render_item.mesh->getExtent().z * player->render_item.transform.scale.z * -0.5f;
 		player->shooting = false;
 		player->shootingAngle = 0.0f;

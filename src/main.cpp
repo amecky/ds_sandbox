@@ -27,7 +27,6 @@
 #include "instancing\InstanceTest.h"
 #include "warp\WarpingGridApp.h"
 #include "viewer\ObjViewer.h"
-#include "viewer\TopDownObjViewer.h"
 #include "viewer\InstancedObjViewer.h"
 #include "background\Doors.h"
 // ---------------------------------------------------------------
@@ -51,7 +50,9 @@ int main() {
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 
-	ds::init(app->getRenderSettings());
+	ds::RenderSettings settings = app->getRenderSettings();
+	settings.supportDebug = true;
+	ds::init(settings);
 
 	
 
@@ -86,6 +87,11 @@ int main() {
 	float currentTime = 0.0f;
 	float accu = 0.0f;
 
+	p2i sp = p2i(10, ds::getScreenHeight() - 10);
+
+	bool show_gui = true;
+	bool one_pressed = false;
+
 	while (ds::isRunning() && running) {
 
 		ds::begin();
@@ -93,6 +99,14 @@ int main() {
 		perf::reset();
 
 		perf::ZoneTracker("main");
+
+		if (ds::isKeyPressed('1') && !one_pressed) {
+			show_gui = !show_gui;
+			one_pressed = true;
+		}
+		if (!ds::isKeyPressed('1') && one_pressed) {
+			one_pressed = false;
+		}
 
 		if (useTweaking) {
 			tweakingReloadTimer += ds::getElapsedSeconds();
@@ -123,9 +137,13 @@ int main() {
 
 		app->render();
 
-		if (app->usesGUI()) {
+		if (app->usesGUI() && show_gui) {
+			gui::start(&sp, 350);
 			app->renderGUI();
+			gui::end();
 		}
+
+		ds::dbgPrint(0, 34, "FPS: %d", ds::getFramesPerSecond());
 			
 		ds::end();
 

@@ -84,15 +84,17 @@ namespace gui {
 
 	void init(IMGUISettings* settings = 0);
 
-	void start();
+	void start(p2i* position, int width);
 
-	void begin(const char* header, int width = 200);
+	//void begin(const char* header, int width = 200);
 
-	void begin(const p2i& pos);
+	//void begin(const p2i& pos);
 
-	bool begin(const char* header, int* state, int width = 200);
+	//bool begin(const char* header, int* state, int width = 200);
 
-	bool begin(const char* header, int* state, p2i* position, int width = 200);
+	bool begin(const char* header, int* state);
+
+	//bool begin(const char* header, int* state, p2i* position, int width = 200);
 
 	void beginGroup();
 
@@ -180,6 +182,8 @@ namespace gui {
 
 	bool BeginMenu(const char** entries, int num, int* selected);
 
+	bool MenuItems(const char** entries, int num, int* selected);
+
 	void EndMenu();
 
 	void pushID(int id);
@@ -225,9 +229,73 @@ namespace gui {
 }
 
 #ifdef DS_IMGUI_IMPLEMENTATION
-#include <SpriteBatchBuffer.h>
 #include <string.h>
 #include <stdarg.h>
+
+const BYTE gui_PS_Main[] = {
+	 68,  88,  66,  67, 133, 123, 244, 109,  36, 101, 150, 228,  91, 135, 209, 221,
+	 54, 143,  33,  28,   1,   0,   0,   0, 112,   1,   0,   0,   3,   0,   0,   0,
+	 44,   0,   0,   0, 160,   0,   0,   0, 212,   0,   0,   0,  73,  83,  71,  78,
+	108,   0,   0,   0,   3,   0,   0,   0,   8,   0,   0,   0,  80,   0,   0,   0,
+	  0,   0,   0,   0,   1,   0,   0,   0,   3,   0,   0,   0,   0,   0,   0,   0,
+	 15,   0,   0,   0,  92,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+	  3,   0,   0,   0,   1,   0,   0,   0,   3,   3,   0,   0, 101,   0,   0,   0,
+	  0,   0,   0,   0,   0,   0,   0,   0,   3,   0,   0,   0,   2,   0,   0,   0,
+	 15,  15,   0,   0,  83,  86,  95,  80,  79,  83,  73,  84,  73,  79,  78,   0,
+	 84,  69,  88,  67,  79,  79,  82,  68,   0,  67,  79,  76,  79,  82,   0, 171,
+	 79,  83,  71,  78,  44,   0,   0,   0,   1,   0,   0,   0,   8,   0,   0,   0,
+	 32,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   3,   0,   0,   0,
+	  0,   0,   0,   0,  15,   0,   0,   0,  83,  86,  95,  84,  65,  82,  71,  69,
+	 84,   0, 171, 171,  83,  72,  68,  82, 148,   0,   0,   0,  64,   0,   0,   0,
+	 37,   0,   0,   0,  90,   0,   0,   3,   0,  96,  16,   0,   0,   0,   0,   0,
+	 88,  24,   0,   4,   0, 112,  16,   0,   0,   0,   0,   0,  85,  85,   0,   0,
+	 98,  16,   0,   3,  50,  16,  16,   0,   1,   0,   0,   0,  98,  16,   0,   3,
+	242,  16,  16,   0,   2,   0,   0,   0, 101,   0,   0,   3, 242,  32,  16,   0,
+	  0,   0,   0,   0, 104,   0,   0,   2,   1,   0,   0,   0,  69,   0,   0,   9,
+	242,   0,  16,   0,   0,   0,   0,   0,  70,  16,  16,   0,   1,   0,   0,   0,
+	 70, 126,  16,   0,   0,   0,   0,   0,   0,  96,  16,   0,   0,   0,   0,   0,
+	 56,   0,   0,   7, 242,  32,  16,   0,   0,   0,   0,   0,  70,  14,  16,   0,
+	  0,   0,   0,   0,  70,  30,  16,   0,   2,   0,   0,   0,  62,   0,   0,   1,
+};
+
+const BYTE gui_VS_Main[] = {
+	 68,  88,  66,  67, 173, 242, 138, 111, 190, 246, 106,  57, 137, 180,  96, 109, 233, 181,  39,  76,   1,   0,   0,   0,  96,   4,   0,   0,   4,   0,   0,   0,
+	 48,   0,   0,   0, 100,   0,   0,   0, 216,   0,   0,   0,  80,   4,   0,   0,  73,  83,  71,  78,  44,   0,   0,   0,   1,   0,   0,   0,   8,   0,   0,   0,
+	 32,   0,   0,   0,   0,   0,   0,   0,   6,   0,   0,   0,   1,   0,   0,   0,   0,   0,   0,   0,   1,   1,   0,   0,  83,  86,  95,  86,  69,  82,  84,  69,
+	 88,  73,  68,   0,  79,  83,  71,  78, 108,   0,   0,   0,   3,   0,   0,   0,   8,   0,   0,   0,  80,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   0,
+	  3,   0,   0,   0,   0,   0,   0,   0,  15,   0,   0,   0,  92,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   3,   0,   0,   0,   1,   0,   0,   0,
+	  3,  12,   0,   0, 101,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   3,   0,   0,   0,   2,   0,   0,   0,  15,   0,   0,   0,  83,  86,  95,  80,
+	 79,  83,  73,  84,  73,  79,  78,   0,  84,  69,  88,  67,  79,  79,  82,  68,   0,  67,  79,  76,  79,  82,   0, 171,  83,  72,  69,  88, 112,   3,   0,   0,
+	 64,   0,   1,   0, 220,   0,   0,   0, 106,  72,   0,   1,  89,   0,   0,   4,  70, 142,  32,   0,   0,   0,   0,   0,   5,   0,   0,   0, 162,   0,   0,   4,
+	  0, 112,  16,   0,   1,   0,   0,   0,  48,   0,   0,   0,  96,   0,   0,   4,  18,  16,  16,   0,   0,   0,   0,   0,   6,   0,   0,   0, 103,   0,   0,   4,
+	242,  32,  16,   0,   0,   0,   0,   0,   1,   0,   0,   0, 101,   0,   0,   3,  50,  32,  16,   0,   1,   0,   0,   0, 101,   0,   0,   3, 242,  32,  16,   0,
+	  2,   0,   0,   0, 104,   0,   0,   2,   4,   0,   0,   0, 105,   0,   0,   4,   0,   0,   0,   0,   4,   0,   0,   0,   4,   0,   0,   0,  85,   0,   0,   7,
+	 18,   0,  16,   0,   0,   0,   0,   0,  10,  16,  16,   0,   0,   0,   0,   0,   1,  64,   0,   0,   2,   0,   0,   0, 167,   0,   0,   9, 242,   0,  16,   0,
+	  1,   0,   0,   0,  10,   0,  16,   0,   0,   0,   0,   0,   1,  64,   0,   0,   8,   0,   0,   0,  70, 126,  16,   0,   1,   0,   0,   0,  14,   0,   0,   8,
+	242,   0,  16,   0,   2,   0,   0,   0,  70,  14,  16,   0,   1,   0,   0,   0, 230, 142,  32,   0,   0,   0,   0,   0,   0,   0,   0,   0,  54,   0,   0,   6,
+	 50,  48,  32,   0,   0,   0,   0,   0,   0,   0,   0,   0,  70,   0,  16,   0,   2,   0,   0,   0,  54,   0,   0,   5, 194,   0,  16,   0,   3,   0,   0,   0,
+	 86,   1,  16,   0,   2,   0,   0,   0,   0,   0,   0,   7,  50,   0,  16,   0,   3,   0,   0,   0, 230,  10,  16,   0,   2,   0,   0,   0,  70,   0,  16,   0,
+	  2,   0,   0,   0,  54,   0,   0,   6,  50,  48,  32,   0,   0,   0,   0,   0,   1,   0,   0,   0, 134,   0,  16,   0,   3,   0,   0,   0,  54,   0,   0,   6,
+	 50,  48,  32,   0,   0,   0,   0,   0,   2,   0,   0,   0, 118,  15,  16,   0,   3,   0,   0,   0,  54,   0,   0,   6,  50,  48,  32,   0,   0,   0,   0,   0,
+	  3,   0,   0,   0,  70,   0,  16,   0,   3,   0,   0,   0, 167,   0,   0,   9,  50,   0,  16,   0,   2,   0,   0,   0,  10,   0,  16,   0,   0,   0,   0,   0,
+	  1,  64,   0,   0,   0,   0,   0,   0,  70, 112,  16,   0,   1,   0,   0,   0,   0,   0,   0,   9,  98,   0,  16,   0,   0,   0,   0,   0,   6,   1,  16,   0,
+	  2,   0,   0,   0,   6, 129,  32, 128,  65,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,  10, 114,   0,  16,   0,   2,   0,   0,   0,
+	  6,  16,  16,   0,   0,   0,   0,   0,   2,  64,   0,   0,   3,   0,   0,   0,   1,   0,   0,   0,   2,   0,   0,   0,   0,   0,   0,   0,  55,   0,   0,  15,
+	 50,   0,  16,   0,   1,   0,   0,   0, 150,   5,  16,   0,   2,   0,   0,   0,   2,  64,   0,   0,   0,   0,   0,  63,   0,   0,   0, 191,   0,   0,   0,   0,
+	  0,   0,   0,   0,   2,  64,   0,   0,   0,   0,   0, 191,   0,   0,   0,  63,   0,   0,   0,   0,   0,   0,   0,   0,  54,   0,   0,   7,  50,  32,  16,   0,
+	  1,   0,   0,   0,  70,  48,  32,   4,   0,   0,   0,   0,  10,   0,  16,   0,   2,   0,   0,   0,  56,   0,   0,   7,  50,   0,  16,   0,   1,   0,   0,   0,
+	230,  10,  16,   0,   1,   0,   0,   0,  70,   0,  16,   0,   1,   0,   0,   0, 167,   0,   0,   9, 242,   0,  16,   0,   2,   0,   0,   0,  10,   0,  16,   0,
+	  0,   0,   0,   0,   1,  64,   0,   0,  24,   0,   0,   0,  70, 126,  16,   0,   1,   0,   0,   0, 167,   0,   0,   9,  50,   0,  16,   0,   3,   0,   0,   0,
+	 10,   0,  16,   0,   0,   0,   0,   0,   1,  64,   0,   0,  40,   0,   0,   0,  70, 112,  16,   0,   1,   0,   0,   0,  50,   0,   0,   9,  50,   0,  16,   0,
+	  0,   0,   0,   0,  70,   0,  16,   0,   1,   0,   0,   0,  70,   0,  16,   0,   2,   0,   0,   0, 150,   5,  16,   0,   0,   0,   0,   0,  54,   0,   0,   5,
+	194,   0,  16,   0,   3,   0,   0,   0, 166,  14,  16,   0,   2,   0,   0,   0,  54,   0,   0,   5, 242,  32,  16,   0,   2,   0,   0,   0, 230,   4,  16,   0,
+	  3,   0,   0,   0,  54,   0,   0,   5,  66,   0,  16,   0,   0,   0,   0,   0,   1,  64,   0,   0,   0,   0, 128,  63,  16,   0,   0,   8,  18,  32,  16,   0,
+	  0,   0,   0,   0,  70,   2,  16,   0,   0,   0,   0,   0,  70, 131,  32,   0,   0,   0,   0,   0,   1,   0,   0,   0,  16,   0,   0,   8,  34,  32,  16,   0,
+	  0,   0,   0,   0,  70,   2,  16,   0,   0,   0,   0,   0,  70, 131,  32,   0,   0,   0,   0,   0,   2,   0,   0,   0,  16,   0,   0,   8, 130,  32,  16,   0,
+	  0,   0,   0,   0,  70,   2,  16,   0,   0,   0,   0,   0,  70, 131,  32,   0,   0,   0,   0,   0,   4,   0,   0,   0,  54,   0,   0,   5,  66,  32,  16,   0,
+	  0,   0,   0,   0,   1,  64,   0,   0,   0,   0, 128,  63,  62,   0,   0,   1,  83,  70,  73,  48,   8,   0,   0,   0,   2,   0,   0,   0,   0,   0,   0,   0,
+};
+
 
 const unsigned char DS_IMGUI_FONT[128][16] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
@@ -401,15 +469,110 @@ namespace gui {
 			char* data;
 		};
 
+		struct GUIConstantBuffer {
+			ds::vec4 screenCenter;
+			ds::matrix wvp;
+		};
+
+		struct GUIItem {
+			ds::vec2 position;
+			ds::vec4 textureRect;
+			ds::vec2 scaling;
+			ds::Color color;
+
+		};
+		
+		struct UIBatchBuffer {
+			GUIItem* items;
+			RID renderPass;
+			RID drawItem;
+			RID structuredBufferId;
+			GUIConstantBuffer constantBuffer;
+			int max;
+			int current;
+		};
+
 		struct UIContext {
 			UIBuffer* buffer;
 			UIBuffer* overlay_buffer;
 			bool use_overlay;
-			SpriteBatchBuffer* sprites;
 			p2i startPos;
 			p2i size;
 			char tmpBuffer[256];
+			UIBatchBuffer sprites;
 		};
+
+		static void createBatchBuffer(UIContext* ctx, int max, RID textureID, ds::TextureFilters textureFilter) {
+			ctx->sprites.max = max;
+			ctx->sprites.current = 0;
+			ctx->sprites.items = new GUIItem[max];
+			ds::vec2 textureSize = ds::getTextureSize(textureID);
+			ctx->sprites.constantBuffer.screenCenter = ds::vec4(static_cast<float>(ds::getScreenWidth() / 2), static_cast<float>(ds::getScreenHeight() / 2), textureSize.x, textureSize.y);
+
+			ds::ShaderInfo vsInfo = { 0 , gui_VS_Main, sizeof(gui_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
+			RID vertexShader = ds::createShader(vsInfo, "GUI_VS");
+			ds::ShaderInfo psInfo = { 0 , gui_PS_Main, sizeof(gui_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
+			RID pixelShader = ds::createShader(psInfo, "GUI_PS");
+
+			ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
+			RID bs_id = ds::createBlendState(blendInfo);
+
+			RID constantBuffer = ds::createConstantBuffer(sizeof(GUIConstantBuffer), &ctx->sprites.constantBuffer);
+
+			ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, textureFilter };
+			RID ssid = ds::createSamplerState(samplerInfo);
+
+			int indices[] = { 0,1,2,1,3,2 };
+			RID idxBuffer = ds::createQuadIndexBuffer(max, indices);
+
+			ds::StructuredBufferInfo sbInfo;
+			sbInfo.cpuWritable = true;
+			sbInfo.data = 0;
+			sbInfo.elementSize = sizeof(GUIItem);
+			sbInfo.numElements = max;
+			sbInfo.gpuWritable = false;
+			sbInfo.renderTarget = NO_RID;
+			sbInfo.textureID = NO_RID;
+			ctx->sprites.structuredBufferId = ds::createStructuredBuffer(sbInfo);
+
+			RID basicGroup = ds::StateGroupBuilder()
+				.constantBuffer(constantBuffer, vertexShader)
+				.structuredBuffer(ctx->sprites.structuredBufferId, vertexShader, 1)
+				.vertexBuffer(NO_RID)
+				.vertexShader(vertexShader)
+				.indexBuffer(idxBuffer)
+				.pixelShader(pixelShader)
+				.samplerState(ssid, pixelShader)
+				.texture(textureID, pixelShader, 0)
+				.build();
+
+			ds::DrawCommand drawCmd = { 100, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST };
+
+			ctx->sprites.drawItem = ds::compile(drawCmd, basicGroup, "GUIDrawItem");
+
+			// create orthographic view
+			ds::matrix orthoView = ds::matIdentity();
+			ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
+			ds::Camera camera = {
+				orthoView,
+				orthoProjection,
+				orthoView * orthoProjection,
+				ds::vec3(0,0,-1),
+				ds::vec3(0,0,1),
+				ds::vec3(0,1,0),
+				ds::vec3(1,0,0),
+				0.0f,
+				0.0f,
+				0.0f
+			};
+
+			ds::ViewportInfo vpInfo = { ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+			RID vp = ds::createViewport(vpInfo);
+
+			ds::RenderPassInfo rpInfo = { &camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
+			ctx->sprites.renderPass = ds::createRenderPass(rpInfo, "GUIOrthoPass");
+			ctx->sprites.constantBuffer.wvp = camera.viewProjectionMatrix;
+		}
 
 		static void createBuffer(UIBuffer* buffer, int size) {
 			int sz = size * (sizeof(ds::vec2) + sizeof(ds::vec2) + sizeof(recti) + sizeof(ds::vec2) + sizeof(ds::Color) + sizeof(ResizeType));
@@ -430,7 +593,7 @@ namespace gui {
 			createBuffer(ctx->buffer, 4096);
 			ctx->overlay_buffer = new UIBuffer();
 			ctx->use_overlay = false;
-			createBuffer(ctx->overlay_buffer, 4096);
+			createBuffer(ctx->overlay_buffer, 4096);			
 			uint8_t* data = new uint8_t[256 * 256 * 4];
 			for (int i = 0; i < 256 * 256 * 4; ++i) {
 				data[i] = 255;
@@ -459,8 +622,7 @@ namespace gui {
 
 			ds::TextureInfo texInfo = { 256, 256, 4, data, ds::TextureFormat::R8G8B8A8_UNORM, ds::BindFlag::BF_SHADER_RESOURCE };
 			RID textureID = ds::createTexture(texInfo);
-			SpriteBatchBufferInfo sbbInfo = { 4096,textureID, ds::TextureFilters::POINT };
-			ctx->sprites = new SpriteBatchBuffer(sbbInfo);
+			createBatchBuffer(ctx, 4096, textureID, ds::TextureFilters::POINT);
 			delete[] data;
 
 			return ctx;
@@ -488,50 +650,67 @@ namespace gui {
 			return ctx->tmpBuffer;
 		}
 
-		static void draw_buffer(SpriteBatchBuffer* sprites, UIBuffer* buffer, const p2i& startPos, const p2i& size) {
+		static void clear_items(UIContext* ctx) {
+			ctx->sprites.current = 0;
+		}
+
+		static void flush_items(UIContext* ctx) {
+			if (ctx->sprites.current > 0) {
+				ds::mapBufferData(ctx->sprites.structuredBufferId, ctx->sprites.items, ctx->sprites.current * sizeof(GUIItem));
+				ds::submit(ctx->sprites.renderPass, ctx->sprites.drawItem, ctx->sprites.current * 6);
+				ctx->sprites.current = 0;
+			}
+		}
+
+		static void add_item(UIContext* ctx, const ds::vec2& position, const ds::vec4& rect, const ds::vec2& scale, const ds::Color& clr) {
+			if ((ctx->sprites.current + 1) >= ctx->sprites.max) {
+				flush_items(ctx);
+			}
+			ctx->sprites.items[ctx->sprites.current++] = { position, rect, scale, clr };
+		}
+
+		static void draw_buffer(UIContext* ctx, UIBuffer* buffer, const p2i& startPos, const p2i& size) {
 			float h = size.y - 20.0f;
 			float sy = h / 128.0f;
 			float w = size.x + 10.0f;
 			float sx = w / 128.0f;
 
-			float bpx = startPos.x + w * 0.5f;
+			float bpx = startPos.x + w * 0.5f - 10.0f;
 			float bpy = startPos.y - h * 0.5f - 10.0f;
-
 			int num = buffer->num;
 			for (uint16_t i = 0; i < num; ++i) {
 				ds::vec2 p = buffer->positions[i];
+				recti rect = buffer->rectangles[i];
+				ds::vec2 s = buffer->scales[i];
 				if (buffer->resize[i] == ResizeType::RT_X) {
-					recti rect = buffer->rectangles[i];
 					rect.width = 128;
 					p.x = bpx;
-					sprites->add(p, rect.convert(), ds::vec2(sx, 1.0f), 0.0f, buffer->colors[i]);
+					s.x = sx;
 				}
 				else if (buffer->resize[i] == ResizeType::RT_Y) {
-					recti rect = buffer->rectangles[i];
 					rect.height = 128;
 					p.y = bpy;
-					sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, buffer->colors[i]);
+					s.x = sx;
+					s.y = sy;
 				}
 				else if (buffer->resize[i] == ResizeType::RT_BOTH) {
-					recti rect = buffer->rectangles[i];
 					rect.width = 128;
 					rect.height = 128;
 					p.x = bpx;
 					p.y = bpy;
-					sprites->add(p, rect.convert(), ds::vec2(sx, sy), 0.0f, buffer->colors[i]);
+					s.x = sx;
+					s.y = sy;
 				}
-				else {
-					sprites->add(p, buffer->rectangles[i].convert(), buffer->scales[i], 0.0f, buffer->colors[i]);
-				}
+				add_item(ctx, p, rect.convert(), s, buffer->colors[i]);
 			}
 			buffer->num = 0;
 		}
 
 		void draw_buffer(UIContext* ctx) {
-			ctx->sprites->begin();
-			draw_buffer(ctx->sprites, ctx->buffer, ctx->startPos, ctx->size);
-			draw_buffer(ctx->sprites, ctx->overlay_buffer, ctx->startPos, ctx->size);			
-			ctx->sprites->flush();
+			clear_items(ctx);
+			draw_buffer(ctx, ctx->buffer, ctx->startPos, ctx->size);
+			draw_buffer(ctx, ctx->overlay_buffer, ctx->startPos, ctx->size);
+			flush_items(ctx);
 		}
 
 		void add_to_buffer(UIContext* ctx, const p2i& p, const recti& rect, const ds::vec2& scale, const ds::Color& color, ResizeType resize = ResizeType::RT_NONE) {
@@ -610,7 +789,7 @@ namespace gui {
 		}
 
 		void shutdown(UIContext* ctx) {
-			delete ctx->sprites;
+			//delete ctx->sprites;
 			delete[] ctx->buffer->data;
 			delete ctx->buffer;
 			delete[] ctx->overlay_buffer->data;
@@ -619,18 +798,18 @@ namespace gui {
 
 	}
 	static const IMGUISettings DEFAULT_SETTINGS = {
-		ds::Color(40,117,114, 255), // header
-		ds::Color(68, 68, 68, 255), // button
-		ds::Color(16, 16, 16, 255), // background
-		ds::Color(32, 32, 32, 255), // label 
-		ds::Color(0, 192, 0, 255), // enabled
-		ds::Color(192, 0, 0, 255), // disabled
-		ds::Color(64,64,64,255), // active input
-		ds::Color(32,32,32,255), // input
-		ds::Color(38,38,38,255), // box background color
-		ds::Color(167,77,75,255), // box selection color
-		ds::Color(96,96,96,255), // slider color
-		ds::Color(80,80,80,255), // scroll slider color
+		ds::Color( 40,117,114, 255), // header
+		ds::Color( 81, 83, 96, 255), // button
+		ds::Color( 24, 24, 24, 255), // background
+		ds::Color( 39, 39, 49, 255), // label 
+		ds::Color(  0, 192, 0, 255), // enabled
+		ds::Color(192,   0, 0, 255), // disabled
+		ds::Color( 64, 64, 64, 255), // active input
+		ds::Color( 62, 64, 76, 255), // input
+		ds::Color( 38, 38, 38, 255), // box background color
+		ds::Color(167, 77, 75, 255), // box selection color
+		ds::Color( 96, 96, 96, 255), // slider color
+		ds::Color( 80, 80, 80, 255), // scroll slider color
 		5.0f // line spacing
 	};
 
@@ -809,6 +988,7 @@ namespace gui {
 		renderer::UIContext* uiContext;
 		IDStack idStack;
 		int width;
+		p2i menuPos;
 	};
 
 	static GUIContext* _guiCtx = 0;
@@ -932,6 +1112,7 @@ namespace gui {
 		_guiCtx->hotItem = 0;
 		_guiCtx->activeItem = 0;
 		_guiCtx->inputItem = 0;
+		_guiCtx->menuPos = p2i(0, 0);
 	}
 
 	// --------------------------------------------------------
@@ -1124,7 +1305,7 @@ namespace gui {
 	// --------------------------------------------------------
 	// start
 	// --------------------------------------------------------
-	void start() {
+	void start(p2i* position, int width) {
 		renderer::reset(_guiCtx->uiContext);
 		_guiCtx->idStack.reset();
 		ds::vec2 mp = ds::getMousePosition();
@@ -1139,81 +1320,23 @@ namespace gui {
 		}
 		_guiCtx->size = p2i(0);
 		_guiCtx->grouping = false;
-	}
-
-	// --------------------------------------------------------
-	// begin
-	// --------------------------------------------------------
-	bool begin(const char* header, int* state, int width) {
-		pushID(header);
-		p2i pos = _guiCtx->currentPos;
-		// header
-		renderer::add_box(_guiCtx->uiContext, pos, width, 20, _guiCtx->settings.headerBoxColor);
-		pos.x += 30;
-		renderer::add_text(_guiCtx->uiContext, pos, header);
-		// open/close
-		pos = _guiCtx->currentPos;
-		pos.x -= 10;
-		renderer::add_box(_guiCtx->uiContext, pos, 20, 20, _guiCtx->settings.buttonColor);
-		pushID("Box");
-		checkItem(pos, p2i(20, 20));
-		if (*state == 0) {
-			renderer::add_text(_guiCtx->uiContext, pos, "+");
-		}
-		else {
-			renderer::add_text(_guiCtx->uiContext, pos, "-");
-		}
-
-		if (isClicked()) {
-			if (*state == 0) {
-				*state = 1;
-			}
-			else {
-				*state = 0;
-			}
-		}
-		popID();
-		int advance = 20 + _guiCtx->settings.lineSpacing;
-		moveForward(p2i(10, advance));
-		popID();
-		return *state == 1;
-	}
-
-	// --------------------------------------------------------
-	// begin
-	// --------------------------------------------------------
-	void begin(const p2i& pos) {
-		end();
-		_guiCtx->currentPos = pos;
-	}
-
-	// --------------------------------------------------------
-	// begin
-	// --------------------------------------------------------
-	void begin(const char* header, int width) {
-		pushID(header);
-		_guiCtx->width = width;
-		p2i pos = _guiCtx->currentPos;
-		// header
-		renderer::add_box(_guiCtx->uiContext, pos, width, 20, _guiCtx->settings.headerBoxColor);
-		pos.x += 30;
-		renderer::add_text(_guiCtx->uiContext, pos, header);
-		int advance = 20 + _guiCtx->settings.lineSpacing;
-		moveForward(p2i(10, advance));
-		popID();
-	}
-	// --------------------------------------------------------
-	// begin with header
-	// --------------------------------------------------------
-	bool begin(const char* header, int* state, p2i* position, int width) {
-		pushID(header);
 		_guiCtx->width = width;
 		_guiCtx->currentPos = *position;
 		_guiCtx->startPos = _guiCtx->currentPos;
 		_guiCtx->uiContext->startPos = _guiCtx->currentPos;
 		_guiCtx->currentPos = _guiCtx->currentPos;
+	}
+	
+	// --------------------------------------------------------
+	// begin with header
+	// --------------------------------------------------------
+	bool begin(const char* header, int* state) {
+		pushID(header);
+		_guiCtx->startPos = _guiCtx->currentPos;
+		_guiCtx->uiContext->startPos = _guiCtx->currentPos;
+		_guiCtx->currentPos = _guiCtx->currentPos;
 		pushID("Box");
-		checkItem(*position, p2i(20, 20));
+		checkItem(_guiCtx->currentPos, p2i(20, 20));
 		if (isClicked()) {
 			if (*state == 0) {
 				*state = 1;
@@ -1223,15 +1346,15 @@ namespace gui {
 			}
 		}
 		popID();
-		p2i np = *position;
+		p2i np = _guiCtx->currentPos;
 		np.x += 20;
-		checkItem(np, p2i(width - 20, 20));		
+		checkItem(np, p2i(_guiCtx->width - 20, 20));
 		p2i pos = _guiCtx->currentPos;
 		pos.x -= 5;
-		renderer::add_box(_guiCtx->uiContext, pos, width, 256, _guiCtx->settings.backgroundColor, renderer::ResizeType::RT_Y);
+		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 256, _guiCtx->settings.backgroundColor, renderer::ResizeType::RT_Y);
 		// header
 		pos.x += 5;
-		renderer::add_box(_guiCtx->uiContext, pos, width, 20, _guiCtx->settings.headerBoxColor);
+		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 20, _guiCtx->settings.headerBoxColor);
 		pos.x += 30;
 		renderer::add_text(_guiCtx->uiContext, pos, header);
 		// open/close
@@ -1245,13 +1368,14 @@ namespace gui {
 			renderer::add_text(_guiCtx->uiContext, pos, "-");
 		}
 		
-		
+		/*
 		if (isHot(np, p2i(width - 20, 20))) {
 			if (_guiCtx->mouseDown) {
 				position->x = _guiCtx->mousePosition.x - width / 2;
 				position->y = _guiCtx->mousePosition.y;
 			}
 		}
+		*/
 		int advance = 20 + _guiCtx->settings.lineSpacing;
 		moveForward(p2i(10, advance));
 		popID();
@@ -1556,6 +1680,7 @@ namespace gui {
 	// --------------------------------------------------------
 	void Message(const char* fmt, ...) {
 		p2i pos = _guiCtx->currentPos;
+		pos.x -= 10;
 		renderer::add_box(_guiCtx->uiContext, pos, 10, 20, _guiCtx->settings.labelBoxColor, renderer::ResizeType::RT_X);
 		char buffer[1024];
 		va_list args;
@@ -1751,6 +1876,7 @@ namespace gui {
 	// -------------------------------------------------------	
 	void Separator() {
 		p2i p = _guiCtx->currentPos;
+		p.x -= 10;
 		p.y += 8;
 		renderer::add_box(_guiCtx->uiContext, p, p2i(10, 4), ds::Color(32, 32, 32, 255), renderer::ResizeType::RT_X);
 		moveForward(p2i(10, 16));
@@ -2152,12 +2278,10 @@ namespace gui {
 		pushID("Tabs",entries[0]);
 		p2i p = _guiCtx->currentPos;
 		p.x -= 10;
-		int tab_size = _guiCtx->width / num;
+		int tab_size = (_guiCtx->width + 10) / num;
 		for (int i = 0; i < num; ++i) {
 			pushID(i);
-			p2i ts = textSize(entries[i]);
-			ts.x += 20;
-			checkItem(p, p2i(ts.x, 20));
+			checkItem(p, p2i(tab_size, 20));
 			if (isClicked()) {
 				if (*selected != i) {
 					changed = true;
@@ -2165,18 +2289,18 @@ namespace gui {
 				*selected = i;
 			}
 			if (*selected == i) {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.boxSelectionColor);
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(43,126,196,255));
 			}
 			else {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(0,0,64,255));
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(54,61,69,255));
 			}
 			p.x += 5;
 			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
-			p.x += tab_size;
+			p.x += tab_size - 5;
 			popID();
 		}
 		popID();
-		moveForward(p2i(300, 20));
+		moveForward(p2i(300, 30));
 		return changed;
 	}
 
@@ -2186,31 +2310,77 @@ namespace gui {
 		pushID("Menu", entries[0]);
 		p2i p = _guiCtx->currentPos;
 		p.x -= 10;
-		int tab_size = _guiCtx->width / num;
+		int tab_size = (_guiCtx->width - 10) / num;
 		for (int i = 0; i < num; ++i) {
 			pushID(i);
 			p2i ts = textSize(entries[i]);
-			ts.x += 20;
+			ts.x += 20;			
 			checkItem(p, p2i(ts.x, 20));
+			bool hot = isHot(p, p2i(ts.x, 20));
 			if (isClicked()) {
 				if (*selected != i) {
 					changed = true;
 				}
 				*selected = i;
+				_guiCtx->menuPos = p;
 			}
-			if (*selected == i) {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), _guiCtx->settings.boxSelectionColor);
+			if (*selected == i || hot) {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), ds::Color(43,126,196,255));
 			}
 			else {
-				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(0, 0, 64, 255));
+				renderer::add_box(_guiCtx->uiContext, p, p2i(ts.x, 20), ds::Color( 54, 61, 69, 255));
 			}
 			p.x += 5;
 			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
-			p.x += tab_size;
+			p.x += ts.x - 5;
 			popID();
 		}
 		popID();
-		moveForward(p2i(300, 20));
+		moveForward(p2i(300, 26));
+		return changed;
+	}
+
+	bool MenuItems(const char** entries, int num, int* selected) {
+		bool changed = false;
+		pushID("MenuItems", entries[0]);
+		p2i p = _guiCtx->menuPos;
+		p.y -= 20;
+		int height = 0;
+		int tab_size = 0;
+		for (int i = 0; i < num; ++i) {
+			p2i ts = textSize(entries[i]);
+			if (ts.x > tab_size) {
+				tab_size = ts.x;
+			}
+		}
+		tab_size += 30;
+		for (int i = 0; i < num; ++i) {
+			pushID(i);
+			p2i ts = textSize(entries[i]);
+			ts.x += 20;
+			checkItem(p, p2i(ts.x, 20));
+			bool hot = isHot(p, p2i(ts.x, 20));
+			if (isClicked()) {
+				if (*selected != i) {
+					changed = true;
+				}
+				*selected = i;
+				_guiCtx->menuPos = p;
+			}			
+			if (*selected == i || hot) {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(43, 126, 196, 255));
+			}
+			else {
+				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(54, 61, 69, 255));
+			}
+			p.x += 5;
+			renderer::add_text(_guiCtx->uiContext, p, entries[i]);
+			p.x -= 5;
+			p.y -= 20;
+			height += 20;
+			popID();
+		}
+		popID();
 		return changed;
 	}
 

@@ -8,6 +8,9 @@
 
 struct CubesSettings {
 	float startTTL;
+	float seek_velocity;
+	float min_distance;
+	float relaxation;
 };
 
 enum CubeState {

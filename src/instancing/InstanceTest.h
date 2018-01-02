@@ -105,8 +105,6 @@ private:
 	WarpingGrid* _warpingGrid;
 	GPUParticlesystem* _particleSystem;
 	ParticleDescriptor _particleDescriptor;
-	bool _showGUI;
-	bool _pressed;
 	int _tmpX;
 	int _tmpY;
 	int _tmpSide;

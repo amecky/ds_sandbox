@@ -12,6 +12,8 @@ namespace bullets {
 		twk_add("bullets", "bounding_box", &ctx->settings.boundingBox);
 		twk_add("bullets", "fire_rate", &ctx->settings.fireRate);
 		twk_add("bullets", "color", &ctx->settings.color);
+		twk_add("bullets", "radius_offset", &ctx->settings.radius_offset);
+		twk_add("bullets", "angle_offset", &ctx->settings.angle_offset);
 
 	}
 
@@ -30,8 +32,10 @@ namespace bullets {
 	// ----------------------------------------------------
 	// add bullet
 	// ----------------------------------------------------
-	void add(Context* ctx, const ds::vec3& position, float angle) {
+	void add(Context* ctx, const ds::vec3& position, float angle, float radiusOffset, float angleOffset) {
 		ds::vec3 p = position;
+		p.x += cos(angle) * radiusOffset + cos(angle + ds::PI * 0.5f) * angleOffset;
+		p.y += sin(angle) * radiusOffset + sin(angle + ds::PI * 0.5f) * angleOffset;
 		p.z += 0.01f;
 		Bullet b;
 		b.pos = p;
@@ -89,7 +93,8 @@ namespace bullets {
 			float freq = 1.0f / ctx->settings.fireRate;
 			ctx->bullet_timer += dt;
 			if (ctx->bullet_timer >= freq) {
-				add(ctx,playerPosition,shootingAngle);
+				add(ctx, playerPosition, shootingAngle, ctx->settings.radius_offset,  ctx->settings.angle_offset);
+				add(ctx, playerPosition, shootingAngle, ctx->settings.radius_offset, -ctx->settings.angle_offset);
 				ctx->bullet_timer -= freq;
 			}
 		}

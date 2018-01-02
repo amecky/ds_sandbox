@@ -10,8 +10,6 @@ const int GRID_WIDTH = 30;
 
 InstanceTest::InstanceTest() {
 	_running = true;
-	_showGUI = true;
-	_pressed = false;
 	_selectedTab = 0;
 
 	_fading_message.timer = 0.0f;
@@ -196,6 +194,11 @@ bool InstanceTest::init() {
 	//_ringEnemies->create(ds::vec3(2, 0, 0));
 
 	_cubesSettings.startTTL = 0.15f;
+	twk_add("cubes", "start_ttl", &_cubesSettings.startTTL);
+	twk_add("cubes", "seek_velocity", &_cubesSettings.seek_velocity);
+	twk_add("cubes", "min_distance", &_cubesSettings.min_distance);
+	twk_add("cubes", "relaxation", &_cubesSettings.relaxation);
+
 	_cubes = new Cubes(&_cube_item, &_cubesSettings);
 	_cubes->init();
 
@@ -290,14 +293,6 @@ void InstanceTest::tick(float dt) {
 		if (!_useTopDown) {
 			_fpsCamera->update(dt);
 		}
-	}
-
-	if (ds::isKeyPressed('M') && !_pressed) {
-		_showGUI = !_showGUI;
-		_pressed = true;
-	}
-	if (!ds::isKeyPressed('M') && _pressed) {
-		_pressed = false;
 	}
 
 	if (_fading_message.active) {
@@ -445,110 +440,102 @@ void InstanceTest::emittCubes(int side, int num) {
 // renderGUI
 // ----------------------------------------------------
 void InstanceTest::renderGUI() {
-	if (_showGUI) {
-		int state = 1;
-		gui::start();
+	int state = 1;
+	const char* TABS[] = { "Emitter","Bullets","Particles", "Cubes" };
+	if (gui::begin("Debug", &state)) {
 
-		const char* TABS[] = { "Emitter","Bullets","Particles", "Cubes" };
+		gui::Tabs(TABS, 4, &_selectedTab);
 
-		p2i sp = p2i(10, 710);
-		if (gui::begin("Debug", &state, &sp, 360)) {
-
-			gui::Tabs(TABS, 4, &_selectedTab);
-
-			gui::Value("FPS", ds::getFramesPerSecond());
-			if (gui::Checkbox("Top Down Camera", &_useTopDown)) {
-				if (!_useTopDown) {
-					_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
-				}
-				else {
-					//_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
-				}
-			}
-			if (_selectedTab == 0) {
-				gui::Input("GX", &_tmpX);
-				gui::Input("GY", &_tmpY);
-				gui::Value("Bullets", _bulletsCtx.bullets.size());
-				gui::Checkbox("Doors", &_dbgDoors);
-				if (gui::Button("Wiggle door")) {
-					_doors->wiggle(10,0);
-				}
-				if (gui::Checkbox("Acitve Game mode", &_dbgGameMode)) {
-					_gameModeTimer = 0.0f;
-				}
-				if (gui::Button("Stop game")) {
-					stopGame();
-				}
-				if (gui::Button("Emitt")) {
-					_queue->emitt(_tmpX, _tmpY, 1, &_events);
-				}
-				if (gui::Button("Emitt ring")) {
-					_ringEnemies->create(ds::vec3(0.0f));
-				}
-				if (gui::Button("Step")) {
-					_cubes->stepForward();
-				}
-				if (gui::Button("Rotate")) {
-					_cubes->rotateCubes();
-				}
-			}
-			if (_selectedTab == 1) {
-				gui::Value("Pos", _player.render_item.transform.position);
-				gui::Value("Camera", _camera.position);
-				ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
-				gui::Value("Cursor", tmp);
-				
-				tweakableGUI("bullets");
-			}
-			if (gui::Button("Reset Camera")) {
-				_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-				_player.render_item.transform.position = ds::vec3(0.0f);
-			}
-			if (_running) {
-				if (gui::Button("Stop")) {
-					_running = false;
-				}
+		gui::Value("FPS", ds::getFramesPerSecond());
+		if (gui::Checkbox("Top Down Camera", &_useTopDown)) {
+			if (!_useTopDown) {
+				_fpsCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 			}
 			else {
-				if (gui::Button("Start")) {
-					_running = true;
-				}
+				//_topDownCamera->setPosition(ds::vec3(0, 0, -5), ds::vec3(0.0f, 0.0f, 0.0f));
 			}
-			// Tab 3 -> particles
-			if (_selectedTab == 2) {
-				gui::Value("Particles",_particleSystem->countAlive());
-				tweakableGUI("explosion");
-				if (gui::Button("Particles")) {
-					//emittExplosion(ds::vec3(0.0f));
-					emittParticles(ds::vec3(0.0f), _explosionSettings);
-				}
-				if (gui::Button("Bullet explosion")) {
-					emittParticles(ds::vec3(0.0f), _bulletExplosionSettings);
-				}
-			}
-			// Tab 4 -> cubes
-			if (_selectedTab == 3) {
-				gui::Value("Cubes", _cubes->getNumItems());
-				gui::Input("Start TTL", &_cubesSettings.startTTL);
-				gui::Input("Side", &_tmpSide);
-				gui::Input("Fixed offset",&_dbgFixedOffset);
-				if (gui::Button("Emitt Line")) {
-					emittCubes(_tmpSide, 8);
-				}
-				if (gui::Button("Emitt rnd Line")) {
-					int side = ds::random(1.0f, 4.9f);
-					emittCubes(side, 8);
-				}
-			}
-
 		}
-		if (_fading_message.active) {
-			gui::Message(_fading_message.message);
+		if (_selectedTab == 0) {
+			gui::Input("GX", &_tmpX);
+			gui::Input("GY", &_tmpY);
+			gui::Value("Bullets", _bulletsCtx.bullets.size());
+			gui::Checkbox("Doors", &_dbgDoors);
+			if (gui::Button("Wiggle door")) {
+				_doors->wiggle(10,0);
+			}
+			if (gui::Checkbox("Acitve Game mode", &_dbgGameMode)) {
+				_gameModeTimer = 0.0f;
+			}
+			if (gui::Button("Stop game")) {
+				stopGame();
+			}
+			if (gui::Button("Emitt")) {
+				_queue->emitt(_tmpX, _tmpY, 1, &_events);
+			}
+			if (gui::Button("Emitt ring")) {
+				_ringEnemies->create(ds::vec3(0.0f));
+			}
+			if (gui::Button("Step")) {
+				_cubes->stepForward();
+			}
+			if (gui::Button("Rotate")) {
+				_cubes->rotateCubes();
+			}
+		}
+		if (_selectedTab == 1) {
+			gui::Value("Pos", _player.render_item.transform.position);
+			gui::Value("Camera", _camera.position);
+			ds::vec2 tmp = ds::vec2(_cursorPos.x, _cursorPos.y);
+			gui::Value("Cursor", tmp);
+				
+			tweakableGUI("bullets");
+		}
+		if (gui::Button("Reset Camera")) {
+			_fpsCamera->setPosition(ds::vec3(0, 0, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+			_player.render_item.transform.position = ds::vec3(0.0f);
+		}
+		if (_running) {
+			if (gui::Button("Stop")) {
+				_running = false;
+			}
 		}
 		else {
-			gui::Message("");
+			if (gui::Button("Start")) {
+				_running = true;
+			}
 		}
-		gui::end();
+		// Tab 3 -> particles
+		if (_selectedTab == 2) {
+			gui::Value("Particles",_particleSystem->countAlive());
+			tweakableGUI("explosion");
+			if (gui::Button("Particles")) {
+				//emittExplosion(ds::vec3(0.0f));
+				emittParticles(ds::vec3(0.0f), _explosionSettings);
+			}
+			if (gui::Button("Bullet explosion")) {
+				emittParticles(ds::vec3(0.0f), _bulletExplosionSettings);
+			}
+		}
+		// Tab 4 -> cubes
+		if (_selectedTab == 3) {
+			gui::Value("Cubes", _cubes->getNumItems());
+			gui::Input("Side", &_tmpSide);
+			gui::Input("Fixed offset",&_dbgFixedOffset);
+			if (gui::Button("Emitt Line")) {
+				emittCubes(_tmpSide, 8);
+			}
+			if (gui::Button("Emitt rnd Line")) {
+				int side = ds::random(1.0f, 4.9f);
+				emittCubes(side, 8);
+			}
+		}
+
+	}
+	if (_fading_message.active) {
+		gui::Message(_fading_message.message);
+	}
+	else {
+		gui::Message("");
 	}
 }
 

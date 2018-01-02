@@ -74,7 +74,8 @@ namespace perfpanel {
 	void show_profiler() {
 		gui::end();
 		_perfHistory.dialogPos = p2i(ds::getScreenWidth() - 300, ds::getScreenHeight() - 10);
-		gui::begin("Profiler", &_perfHistory.state, &_perfHistory.dialogPos, 300);
+		gui::start(&_perfHistory.dialogPos, 300);
+		gui::begin("Profiler", &_perfHistory.state);
 		if (_perfHistory.state == 1) {
 			gui::Checkbox("Profiler", &_perfHistory.showProfiler);
 			if (perf::num_events() > 0 && _perfHistory.showProfiler) {
