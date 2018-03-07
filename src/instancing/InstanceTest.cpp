@@ -185,7 +185,7 @@ bool InstanceTest::init() {
 	ds::matrix rxMatrix = ds::matRotationX(ds::PI * -0.5f);
 	ds::matrix ryMatrix = ds::matRotationY(ds::PI * -0.5f);
 	ds::matrix importMatrix = ryMatrix * rxMatrix;
-	create_render_item(&_player.render_item, "ship", _ambient_material);// , &importMatrix);
+	create_render_item(&_player.render_item, "ring_cube", _ambient_material);// , &importMatrix);
 	create_instanced_render_item(&_griddies, "octo", _instanced_material, 256);
 	create_instanced_render_item(&_cube_item, "cube", _instanced_material, 256);
 	create_instanced_render_item(&_doors_render_item, "border_box", _material, TOTAL_DOORS);

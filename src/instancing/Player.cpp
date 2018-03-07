@@ -116,7 +116,7 @@ namespace player {
 		else {
 			if (sqr_length(pv) != 0.0f) {
 				player->render_item.transform.roll = math::get_rotation(pv);
-				player->render_item.transform.pitch += ds::TWO_PI * dt;
+				player->render_item.transform.pitch += ds::PI * dt;
 			}
 			player->render_item.transform.position += player->velocity * dt;
 			player->velocity = player->velocity * player->settings.velocity_damping;

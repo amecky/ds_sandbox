@@ -1,0 +1,14 @@
+# Made using Asset Forge (1.3)
+
+:models
+Aircraft/solar_square%[(0, 0, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);solar_square%_1;_defaultMat+satellite]
+Aircraft/solar_square%[(0, 0, 0);(0.0, 0.0, 0.0);(1.0, 1.0, 1.0);solar_square%_2;_defaultMat+satellite]
+
+:materials
+black[RGBA(0.267, 0.267, 0.267, 1.000);]
+_defaultMat[RGBA(1.000, 1.000, 1.000, 1.000);]
+satellite[RGBA(0.027, 0.400, 0.694, 1.000);hexagon]
+
+:textures
+
+:extra
