@@ -34,6 +34,9 @@
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\enemies\RingEnemies.h" />
+    <ClInclude Include="src\flow\FlowField.h" />
+    <ClInclude Include="src\flow\FlowFieldApp.h" />
+    <ClInclude Include="src\flow\Grid.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\Border.h" />
@@ -86,6 +89,8 @@
     <ClCompile Include="src\background\Doors.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
     <ClCompile Include="src\enemies\RingEnemies.cpp" />
+    <ClCompile Include="src\flow\FlowField.cpp" />
+    <ClCompile Include="src\flow\FlowFieldApp.cpp" />
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\instancing\Border.cpp" />

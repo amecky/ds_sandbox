@@ -43,6 +43,9 @@
     <Filter Include="background">
       <UniqueIdentifier>{64b76c23-6cd7-45d5-871f-de1abefcf7d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="flow">
+      <UniqueIdentifier>{d366166a-050f-440d-8d9b-480565feaea1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -200,6 +203,15 @@
     <ClInclude Include="src\utils\common_math.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\flow\FlowFieldApp.h">
+      <Filter>flow</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flow\Grid.h">
+      <Filter>flow</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flow\FlowField.h">
+      <Filter>flow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -317,6 +329,12 @@
     </ClCompile>
     <ClCompile Include="src\utils\common_math.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\flow\FlowFieldApp.cpp">
+      <Filter>flow</Filter>
+    </ClCompile>
+    <ClCompile Include="src\flow\FlowField.cpp">
+      <Filter>flow</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

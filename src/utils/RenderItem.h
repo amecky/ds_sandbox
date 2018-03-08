@@ -4,6 +4,24 @@
 #include "..\Mesh.h"
 #include "TransformComponent.h"
 
+class RenderItem {
+
+public:
+	RenderItem(const char* objName, Material* m, ds::matrix* world = 0);
+	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix);
+	transform& getTransform() {
+		return _transform;
+	}
+	const transform& getTransform() const {
+		return _transform;
+	}
+private:
+	Mesh* _mesh;
+	transform _transform;
+	Material* _material;
+	RID _drawItem;
+};
+
 struct render_item {
 	Mesh* mesh;
 	transform transform;
@@ -61,3 +79,31 @@ void remove_instance(instanced_render_item* item, ID id);
 void create_instanced_render_item(instanced_render_item* item, const char* objName, Material* m, int maxInstances);
 
 void draw_instanced_render_item(instanced_render_item* item, RID renderPass, const ds::matrix& viewProjectionMatrix);
+
+// ------------------------------------------------------------
+// Instanced render item
+// ------------------------------------------------------------
+class InstancedRenderItem {
+
+public:
+	InstancedRenderItem(const char* objName, Material* m, int maxInstances);
+	~InstancedRenderItem() {}
+	bool contains(ID id);
+	instance_item& get(ID id);
+	ID add();
+	void remove(ID id);
+	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix);
+private:
+	Mesh* _mesh;
+	Material* _material;
+	RID _drawItem;
+	RID _instanceVertexBuffer;
+	RenderItemInstanceData* _instanceData;
+	unsigned int _numObjects;
+	item_index* _indices;
+	instance_item* _objects;
+	unsigned short _free_enqueue;
+	unsigned short _free_dequeue;
+};
+
+

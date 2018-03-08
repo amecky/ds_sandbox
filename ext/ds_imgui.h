@@ -1325,6 +1325,9 @@ namespace gui {
 		_guiCtx->startPos = _guiCtx->currentPos;
 		_guiCtx->uiContext->startPos = _guiCtx->currentPos;
 		_guiCtx->currentPos = _guiCtx->currentPos;
+		p2i pos = _guiCtx->currentPos;
+		pos.x -= 5;
+		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width + 5, 256, _guiCtx->settings.backgroundColor, renderer::ResizeType::RT_Y);
 	}
 	
 	// --------------------------------------------------------
@@ -1332,9 +1335,9 @@ namespace gui {
 	// --------------------------------------------------------
 	bool begin(const char* header, int* state) {
 		pushID(header);
-		_guiCtx->startPos = _guiCtx->currentPos;
-		_guiCtx->uiContext->startPos = _guiCtx->currentPos;
-		_guiCtx->currentPos = _guiCtx->currentPos;
+		//_guiCtx->startPos = _guiCtx->currentPos;
+		//_guiCtx->uiContext->startPos = _guiCtx->currentPos;
+		//_guiCtx->currentPos = _guiCtx->currentPos;
 		pushID("Box");
 		checkItem(_guiCtx->currentPos, p2i(20, 20));
 		if (isClicked()) {
@@ -1350,8 +1353,8 @@ namespace gui {
 		np.x += 20;
 		checkItem(np, p2i(_guiCtx->width - 20, 20));
 		p2i pos = _guiCtx->currentPos;
-		pos.x -= 5;
-		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 256, _guiCtx->settings.backgroundColor, renderer::ResizeType::RT_Y);
+		//pos.x -= 5;
+		//renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 256, _guiCtx->settings.backgroundColor, renderer::ResizeType::RT_Y);
 		// header
 		pos.x += 5;
 		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 20, _guiCtx->settings.headerBoxColor);

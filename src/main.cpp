@@ -29,6 +29,7 @@
 #include "viewer\ObjViewer.h"
 #include "viewer\InstancedObjViewer.h"
 #include "background\Doors.h"
+#include "flow\FlowFieldApp.h"
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
@@ -37,7 +38,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 
 	//TestApp* app = new DoorsViewer;
-	TestApp* app = new InstancedObjViewer;
+	//TestApp* app = new InstancedObjViewer;
 	//TestApp* app = new TopDownObjViewer;
 	//TestApp* app = new ObjViewer;
 	//TestApp* app = new WarpingGridApp;
@@ -47,6 +48,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	//TestApp* app = new TweeningTest;
 	//TestApp* app = new VMTest;
 	//TestApp* app = new ParticleExpressionTest;
+	TestApp* app = new FlowFieldApp;
 	//_CrtSetBreakAlloc(160);
 	SetThreadAffinityMask(GetCurrentThread(), 1);
 

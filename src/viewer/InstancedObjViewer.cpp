@@ -40,7 +40,7 @@ bool InstancedObjViewer::init() {
 	_lightDir[1] = ds::vec3(-1.0f, 0.5f, 1.0f);
 	_lightDir[2] = ds::vec3(0.0f, 0.5f, 1.0f);
 	
-	create_instanced_render_item(&_renderItem, "simple_walker", _material, 256);
+	create_instanced_render_item(&_renderItem, "basic_floor", _material, 256);
 
 	ds::vec3 POSITIONS[] = { ds::vec3(-2.0f,0.0f,-2.0f),ds::vec3(-2.0f,0.0f,2.0f),ds::vec3(0.0f),ds::vec3(2.0f,0.0f,-2.0f),ds::vec3(2.0f,0.0f,2.0f) };
 	for (int i = 0; i < 5; ++i) {
