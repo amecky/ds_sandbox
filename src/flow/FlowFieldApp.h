@@ -42,6 +42,7 @@ private:
 	AmbientLightningMaterial* _ambient_material;
 	InstancedAmbientLightningMaterial* _material;
 	InstancedRenderItem* _renderItem;
+	InstancedRenderItem* _overlayItem;
 	//RenderItem* _walker;
 	Walker _walker;
 	FPSCamera* _fpsCamera;
@@ -52,4 +53,11 @@ private:
 	p2i _startPoint;
 	p2i _endPoint;
 	FlowField* _flowField;
+
+	float _dbgLength;
+	ds::vec3 _dbgNextPos;
+	p2i _dbgFlowNext;
+	ds::vec3 _dbgDiff;
+	bool _dbgMove;
+	ds::vec3 _dbgV;
 };

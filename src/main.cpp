@@ -2,6 +2,7 @@
 #include <diesel.h>
 //#include <SpriteBatchBuffer.h>
 #define DS_IMGUI_IMPLEMENTATION
+#include <ds_imgui.h>
 #define STB_IMAGE_IMPLEMENTATION
 #define SPRITE_IMPLEMENTATION
 //#include <stb_image.h>
