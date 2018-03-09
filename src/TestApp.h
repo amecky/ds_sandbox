@@ -25,6 +25,8 @@ public:
 
 	virtual void OnReload() {}
 
+	virtual void OnButtonClicked(int index) {}
+
 	virtual bool useFixedTimestep() const {
 		return false;
 	}

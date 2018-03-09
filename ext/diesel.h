@@ -1848,6 +1848,14 @@ namespace ds {
 #define SID_VAL(str) (fnv1a(str))
 #endif
 
+#ifndef DBG_LOG
+#define DBG_LOG(s, ...) do { ds::log(LogLevel::LL_DEBUG,s,__VA_ARGS__); } while(false);
+#endif
+
+#ifndef REPORT
+#define REPORT(s, ...) do { ds::log(LogLevel::LL_ERROR,s,__VA_ARGS__); } while(false);
+#endif
+
 #ifdef DS_IMPLEMENTATION
 
 #include <Windows.h>
@@ -1871,13 +1879,7 @@ namespace ds {
 #define XASSERT(Expr, s, ...) do { ds::assert_fmt(#Expr, Expr,s,__VA_ARGS__); } while(false);
 #endif
 
-#ifndef DBG_LOG
-#define DBG_LOG(s, ...) do { ds::log(LogLevel::LL_DEBUG,s,__VA_ARGS__); } while(false);
-#endif
 
-#ifndef REPORT
-#define REPORT(s, ...) do { ds::log(LogLevel::LL_ERROR,s,__VA_ARGS__); } while(false);
-#endif
 
 namespace ds {
 

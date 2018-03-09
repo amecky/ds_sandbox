@@ -31,13 +31,45 @@
 #include "viewer\InstancedObjViewer.h"
 #include "background\Doors.h"
 #include "flow\FlowFieldApp.h"
+
+struct ButtonState {
+	bool pressed;
+	bool clicked;
+};
+
+// ---------------------------------------------------------------
+// handle buttons
+// ---------------------------------------------------------------
+void handleButton(int index, ButtonState* state) {
+	if (ds::isMouseButtonPressed(index)) {
+		state->pressed = true;
+	}
+	else if (state->pressed) {
+		state->pressed = false;
+		if (!state->clicked) {
+			state->clicked = true;
+		}
+		else {
+			state->clicked = false;
+		}
+	}
+}
+
+void debug(const LogLevel& level, const char* message) {
+#ifdef DEBUG
+	OutputDebugString(message);
+	OutputDebugString("\n");
+#endif
+}
+
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
 //int main() {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
-
+	ButtonState leftButton;
+	ButtonState rightButton;
 	//TestApp* app = new DoorsViewer;
 	//TestApp* app = new InstancedObjViewer;
 	//TestApp* app = new TopDownObjViewer;
@@ -55,6 +87,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	ds::RenderSettings settings = app->getRenderSettings();
 	settings.supportDebug = true;
+	settings.logHandler = debug;
 	ds::init(settings);
 
 	
@@ -119,6 +152,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 					app->OnReload();
 				}
 			}
+		}
+
+		handleButton(0, &leftButton);
+		if (leftButton.clicked) {
+			app->OnButtonClicked(0);
+			leftButton.clicked = false;
+		}
+		handleButton(1, &rightButton);
+		if (rightButton.clicked) {
+			app->OnButtonClicked(1);
+			rightButton.clicked = false;
 		}
 
 		if (app->useFixedTimestep()) {

@@ -1,5 +1,6 @@
 #pragma once
 #include <ds_imgui.h>
+#include "..\utils\common_math.h"
 
 const static int START_X = 200;
 const static int START_Y = 62;
@@ -21,9 +22,9 @@ inline p2i operator +(const p2i& lhs, const p2i& rhs) {
 // ---------------------------------------------------------------
 // convert screen coordinates to grid position if possible
 // ---------------------------------------------------------------
-inline bool convert(int screenX, int screenY, int startX, int startY, p2i* ret) {
-	ret->x = (screenX - startX);
-	ret->y = (screenY - startY);
+inline bool convert(float screenX, float screenY, float startX, float startY, p2i* ret) {
+	ret->x = (screenX - startX + 0.5f);
+	ret->y = (screenY - startY + 0.5f);
 	return true;
 	/*
 	if (screenX >= (startX - 23) && screenY >= (startY - 23)) {
@@ -83,7 +84,8 @@ struct Grid {
 	int height;
 	p2i start;
 	p2i end;
-	
+	Plane plane;
+
 	Grid() : items(0), width(0), height(0), start(-1, -1), end(-1, -1) {}
 	
 	Grid(int w, int h) : width(w), height(h) {

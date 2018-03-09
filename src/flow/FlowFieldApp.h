@@ -9,6 +9,7 @@
 #include "..\utils\RenderItem.h"
 #include "Grid.h"
 #include "FlowField.h"
+#include <vector>
 
 struct Walker {
 	ID id;
@@ -20,6 +21,23 @@ struct Walker {
 	int energy;
 	RenderItem* renderItem;
 };
+
+struct Tower {
+	int type;
+	int gx;
+	int gy;
+	ds::vec3 position;
+	float radius;
+	int energy;
+	float timer;
+	float bulletTTL;
+	float direction;
+	ID target;
+	int level;
+	RenderItem* renderItem;
+};
+
+typedef std::vector<Tower> Towers;
 
 class FlowFieldApp : public TestApp {
 
@@ -37,17 +55,22 @@ public:
 	void tick(float dt);
 	void render();
 	void renderGUI();
+	void OnButtonClicked(int index);
 private:
 	void moveWalkers(float dt);
+	void addTower(p2i gridPos);
+	void updateOverlay();
 	AmbientLightningMaterial* _ambient_material;
 	InstancedAmbientLightningMaterial* _material;
 	InstancedRenderItem* _renderItem;
 	InstancedRenderItem* _overlayItem;
-	//RenderItem* _walker;
+	Towers _towers;
+	RenderItem* _towerItem;
 	Walker _walker;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	ID _ids[GRID_SIZE_X * GRID_SIZE_Y];
+	ID _overlay_ids[GRID_SIZE_X * GRID_SIZE_Y];
 	int _selected;
 	Grid* _grid;
 	p2i _startPoint;
@@ -60,4 +83,6 @@ private:
 	ds::vec3 _dbgDiff;
 	bool _dbgMove;
 	ds::vec3 _dbgV;
+	p2i _dbgSelected;
+	bool _dbgShowOverlay;
 };

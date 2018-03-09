@@ -5,6 +5,7 @@
 #include "..\utils\tweening.h"
 #include "..\..\shaders\RepeatingGrid_VS_Main.h"
 #include "..\..\shaders\RepeatingGrid_PS_MainXZ.h"
+#include "..\utils\common_math.h"
 
 FlowFieldApp::FlowFieldApp() : TestApp() {
 	_grid = new Grid(GRID_SIZE_X, GRID_SIZE_Y);
@@ -18,6 +19,9 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_dbgLength = 0.0f;
 	_dbgMove = true;
 	_dbgNextPos = ds::vec3(0);
+	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));
+	_dbgSelected = p2i(-1, -1);
+	_dbgShowOverlay = true;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -62,19 +66,20 @@ bool FlowFieldApp::init() {
 	for (int y = 0; y < _grid->height; ++y) {
 		for (int x = 0; x < _grid->width; ++x) {			
 			int type = _grid->get(x,y);
+			int idx = x + y * _grid->width;
 			if (type == 0) {
 				ds::vec3 p = ds::vec3(-10 + x, 0, -6 + y);
-				_ids[x + y * _grid->width] = _renderItem->add();
-				instance_item& item = _renderItem->get(_ids[x + y * _grid->width]);
+				_ids[idx] = _renderItem->add();
+				instance_item& item = _renderItem->get(_ids[idx]);
 				item.transform.position = p;
 
 				int d = _flowField->get(x, y);
 				if (d >= 0 && d < 9) {
-					ID id = _overlayItem->add();
+					_overlay_ids[idx] = _overlayItem->add();
 					p.y = 0.1f;
-					instance_item& overitem = _overlayItem->get(id);
+					instance_item& overitem = _overlayItem->get(_overlay_ids[idx]);
 					overitem.transform.position = p;
-					overitem.transform.pitch = d / 9.0f * ds::TWO_PI;
+					overitem.transform.pitch = static_cast<float>(d) * ds::PI * 0.25f;
 				}
 			}
 		}
@@ -89,7 +94,10 @@ bool FlowFieldApp::init() {
 	transform& t = _walker.renderItem->getTransform();
 	t.position = _walker.pos;
 	_selected = -1;
-	
+
+	_towerItem = new RenderItem("cube", _ambient_material);
+	_towerItem->getTransform().position = ds::vec3(0.0f);
+
 	return true;
 }
 
@@ -137,6 +145,53 @@ void FlowFieldApp::moveWalkers(float dt) {
 	}
 }
 
+void FlowFieldApp::OnButtonClicked(int index) {
+	if (index == 0) {
+		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+		r.setOrigin(_camera.position);
+		ds::vec3 ip = _grid->plane.getIntersection(r);
+		DBG_LOG("intersection point %2.3f %2.3f %2.3f", ip.x, ip.y, ip.z);
+		p2i gridPos;
+		if (convert(ip.x, ip.z, -10.0f, -6.0f, &gridPos)) {
+			_dbgSelected = gridPos;
+		}
+		else {
+			_dbgSelected = p2i(-1, -1);
+		}
+	}
+}
+
+void FlowFieldApp::updateOverlay() {
+	for (int y = 0; y < _grid->height; ++y) {
+		for (int x = 0; x < _grid->width; ++x) {
+			int type = _grid->get(x, y);
+			if (type == 0) {
+				int idx = x + y * _grid->width;
+				int d = _flowField->get(x, y);
+				if (d >= 0 && d < 9) {
+					instance_item& overitem = _overlayItem->get(_overlay_ids[idx]);
+					overitem.transform.pitch = static_cast<float>(d) * ds::PI * 0.25f;
+				}
+			}
+		}
+	}
+}
+
+void FlowFieldApp::addTower(p2i gridPos) {
+	if (_grid->get(gridPos) == 0) {
+		_grid->set(gridPos.x, gridPos.y, 1);
+		_flowField->build(_endPoint);
+		updateOverlay();
+		Tower t;
+		t.renderItem = _towerItem;
+		t.gx = gridPos.x;
+		t.gy = gridPos.y;
+		t.position = ds::vec3(-10.0f + gridPos.x, 0.5f, -6.0f + gridPos.y);
+		t.level = 1;
+		_towers.push_back(t);
+	}
+}
+
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
@@ -152,8 +207,16 @@ void FlowFieldApp::tick(float dt) {
 void FlowFieldApp::render() {
 
 	_renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
-	_overlayItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	if (_dbgShowOverlay) {
+		_overlayItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	}
 	_walker.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
+
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		const Tower& t = _towers[i];
+		t.renderItem->getTransform().position = t.position;
+		t.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	}
 }
 
 // ----------------------------------------------------
@@ -166,13 +229,20 @@ void FlowFieldApp::renderGUI() {
 	gui::setAlphaLevel(0.3f);
 	if (gui::begin("Object", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
+		gui::Checkbox("Overlay", &_dbgShowOverlay);
+		gui::Value("Selected", _dbgSelected);
+		if (_dbgSelected.x != -1 && _dbgSelected.y != -1) {
+			int type = _grid->get(_dbgSelected);
+			gui::Value("Grid Type", type);
+			int d = _flowField->get(_dbgSelected.x, _dbgSelected.y);
+			gui::Value("Flowfield", d);
+			if (gui::Button("Add tower")) {
+				addTower(_dbgSelected);
+			}
+		}
 		gui::Checkbox("Move", &_dbgMove);
 		gui::Value("Pos", _walker.renderItem->getTransform().position,"%2.2f %2.2f %2.2f");
-		gui::Value("Pitch", (_walker.renderItem->getTransform().pitch * 360.0f / ds::TWO_PI));
 		gui::Value("Grid Pos", _walker.gridPos);
-		gui::Value("V", _dbgV, "%2.2f %2.2f %2.2f"); 
-		gui::Value("SQR_LEN", _dbgLength);
-		gui::Value("Diff", _dbgDiff, "%2.2f %2.2f %2.2f");
 		gui::Value("Next", _dbgNextPos);
 		gui::Value("Next GP", _dbgFlowNext);
 		if (gui::Button("Reset")) {
