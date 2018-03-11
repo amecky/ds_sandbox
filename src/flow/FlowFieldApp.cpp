@@ -22,6 +22,9 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));
 	_dbgSelected = p2i(-1, -1);
 	_dbgShowOverlay = true;
+	_selectedTower = -1;
+	_dbgMoveCamera = true;
+	_dbgSelectedLight = 0;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -51,13 +54,13 @@ ds::RenderSettings FlowFieldApp::getRenderSettings() {
 bool FlowFieldApp::init() {
 	
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 14, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-
+	_fpsCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	
 	_material = new InstancedAmbientLightningMaterial;
 
 	float lz = 0.2f;
-	_lightDir[0] = ds::vec3(1.0f, 0.5f, lz);
-	_lightDir[1] = ds::vec3(-1.0f, 0.5f, lz);
+	_lightDir[0] = ds::vec3(-1.0f, -0.5f, lz);
+	_lightDir[1] = ds::vec3(0.0f, -0.5f, lz);
 	_lightDir[2] = ds::vec3(0.0f, 0.5f, lz);
 	
 	_renderItem = new InstancedRenderItem("basic_floor", _material, GRID_SIZE_X * GRID_SIZE_Y);
@@ -76,7 +79,7 @@ bool FlowFieldApp::init() {
 				int d = _flowField->get(x, y);
 				if (d >= 0 && d < 9) {
 					_overlay_ids[idx] = _overlayItem->add();
-					p.y = 0.1f;
+					p.y = 0.05f;
 					instance_item& overitem = _overlayItem->get(_overlay_ids[idx]);
 					overitem.transform.position = p;
 					overitem.transform.pitch = static_cast<float>(d) * ds::PI * 0.25f;
@@ -85,7 +88,7 @@ bool FlowFieldApp::init() {
 		}
 	}
 	_ambient_material = new AmbientLightningMaterial;
-	_walker.renderItem = new RenderItem("rounded_cube", _ambient_material);
+	_walker.renderItem = new RenderItem("simple_walker", _ambient_material);
 	_walker.velocity = 0.5f;
 	_walker.definitionIndex = 0;
 	_walker.gridPos = _startPoint;
@@ -95,8 +98,18 @@ bool FlowFieldApp::init() {
 	t.position = _walker.pos;
 	_selected = -1;
 
-	_towerItem = new RenderItem("cube", _ambient_material);
+	_towerItem = new RenderItem("cannon", _ambient_material);
 	_towerItem->getTransform().position = ds::vec3(0.0f);
+
+	_baseItems[0] = new RenderItem("green_base", _ambient_material);
+	_baseItems[1] = new RenderItem("yellow_base", _ambient_material);
+	_baseItems[2] = new RenderItem("red_base", _ambient_material);
+
+	_startItem = new RenderItem("start", _ambient_material);
+	_startItem->getTransform().position = ds::vec3(-10.0f + _startPoint.x, 0.2f, -6.0f + _startPoint.y);
+
+	_endItem = new RenderItem("end", _ambient_material);
+	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
 
 	return true;
 }
@@ -145,6 +158,16 @@ void FlowFieldApp::moveWalkers(float dt) {
 	}
 }
 
+int FlowFieldApp::findTower(const p2i& gridPos) {
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		const Tower& t = _towers[i];
+		if (t.gx == gridPos.x && t.gy == gridPos.y) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 void FlowFieldApp::OnButtonClicked(int index) {
 	if (index == 0) {
 		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
@@ -154,6 +177,14 @@ void FlowFieldApp::OnButtonClicked(int index) {
 		p2i gridPos;
 		if (convert(ip.x, ip.z, -10.0f, -6.0f, &gridPos)) {
 			_dbgSelected = gridPos;
+			int type = _grid->get(gridPos);
+			if (type == 0) {
+				DBG_LOG("Adding tower at %d %d", gridPos.x, gridPos.y);
+				addTower(gridPos);
+			}
+			else {
+				_selectedTower = findTower(gridPos);
+			}
 		}
 		else {
 			_dbgSelected = p2i(-1, -1);
@@ -177,6 +208,17 @@ void FlowFieldApp::updateOverlay() {
 	}
 }
 
+void FlowFieldApp::upgradeTower(int index) {
+	if (index != -1) {
+		Tower& t = _towers[index];
+		++t.level;
+		if (t.level > 2) {
+			t.level = 2;
+		}
+		t.baseItem = _baseItems[t.level];
+	}
+}
+
 void FlowFieldApp::addTower(p2i gridPos) {
 	if (_grid->get(gridPos) == 0) {
 		_grid->set(gridPos.x, gridPos.y, 1);
@@ -184,10 +226,11 @@ void FlowFieldApp::addTower(p2i gridPos) {
 		updateOverlay();
 		Tower t;
 		t.renderItem = _towerItem;
+		t.baseItem = _baseItems[0];
 		t.gx = gridPos.x;
 		t.gy = gridPos.y;
-		t.position = ds::vec3(-10.0f + gridPos.x, 0.5f, -6.0f + gridPos.y);
-		t.level = 1;
+		t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
+		t.level = 0;
 		_towers.push_back(t);
 	}
 }
@@ -196,8 +239,9 @@ void FlowFieldApp::addTower(p2i gridPos) {
 // tick
 // ----------------------------------------------------
 void FlowFieldApp::tick(float dt) {
-	_fpsCamera->update(dt);
-
+	if (_dbgMoveCamera) {
+		_fpsCamera->update(dt);
+	}
 	moveWalkers(dt);
 }
 
@@ -205,16 +249,24 @@ void FlowFieldApp::tick(float dt) {
 // render
 // ----------------------------------------------------
 void FlowFieldApp::render() {
-
+	for (int i = 0; i < 3; ++i) {
+		_material->setLightDirection(i, _lightDir[i]);
+		_ambient_material->setLightDirection(i, _lightDir[i]);
+	}
 	_renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	if (_dbgShowOverlay) {
 		_overlayItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
+	_startItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_endItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	_walker.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
 
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		const Tower& t = _towers[i];
-		t.renderItem->getTransform().position = t.position;
+		t.baseItem->getTransform().position = t.position;
+		t.baseItem->draw(_basicPass, _camera.viewProjectionMatrix);
+		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.25f, 0.0f);
+		t.renderItem->getTransform().position = tp;
 		t.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
 }
@@ -226,9 +278,14 @@ void FlowFieldApp::renderGUI() {
 	int state = 1;
 	p2i sp = p2i(10, 710);
 	gui::start(&sp, 320);
-	gui::setAlphaLevel(0.3f);
+	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Object", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
+		gui::Checkbox("Move camera", &_dbgMoveCamera);
+		gui::StepInput("Light Index", &_dbgSelectedLight, 0, 2, 1);
+		gui::Slider("L-X", &_lightDir[_dbgSelectedLight].x, -1.0f, 1.0f);
+		gui::Slider("L-Y", &_lightDir[_dbgSelectedLight].y, -1.0f, 1.0f);
+		gui::Slider("L-Z", &_lightDir[_dbgSelectedLight].z, -1.0f, 1.0f);
 		gui::Checkbox("Overlay", &_dbgShowOverlay);
 		gui::Value("Selected", _dbgSelected);
 		if (_dbgSelected.x != -1 && _dbgSelected.y != -1) {
@@ -238,6 +295,14 @@ void FlowFieldApp::renderGUI() {
 			gui::Value("Flowfield", d);
 			if (gui::Button("Add tower")) {
 				addTower(_dbgSelected);
+			}
+		}
+		if (_selectedTower != -1) {
+			const Tower& t = _towers[_selectedTower];
+			gui::Value("Tower", _selectedTower);
+			gui::Value("Level", t.level);
+			if (gui::Button("Upgrade")) {
+				upgradeTower(_selectedTower);
 			}
 		}
 		gui::Checkbox("Move", &_dbgMove);

@@ -35,6 +35,7 @@ struct Tower {
 	ID target;
 	int level;
 	RenderItem* renderItem;
+	RenderItem* baseItem;
 };
 
 typedef std::vector<Tower> Towers;
@@ -59,13 +60,18 @@ public:
 private:
 	void moveWalkers(float dt);
 	void addTower(p2i gridPos);
+	void upgradeTower(int index);
 	void updateOverlay();
+	int findTower(const p2i& gridPos);
 	AmbientLightningMaterial* _ambient_material;
 	InstancedAmbientLightningMaterial* _material;
 	InstancedRenderItem* _renderItem;
 	InstancedRenderItem* _overlayItem;
 	Towers _towers;
 	RenderItem* _towerItem;
+	RenderItem* _baseItems[3];
+	RenderItem* _startItem;
+	RenderItem* _endItem;
 	Walker _walker;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
@@ -76,7 +82,10 @@ private:
 	p2i _startPoint;
 	p2i _endPoint;
 	FlowField* _flowField;
+	int _selectedTower;
 
+	int _dbgSelectedLight;
+	bool _dbgMoveCamera;
 	float _dbgLength;
 	ds::vec3 _dbgNextPos;
 	p2i _dbgFlowNext;

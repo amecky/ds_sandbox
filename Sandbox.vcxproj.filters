@@ -212,6 +212,9 @@
     <ClInclude Include="src\flow\FlowField.h">
       <Filter>flow</Filter>
     </ClInclude>
+    <ClInclude Include="src\flow\Towers.h">
+      <Filter>flow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -334,6 +337,9 @@
       <Filter>flow</Filter>
     </ClCompile>
     <ClCompile Include="src\flow\FlowField.cpp">
+      <Filter>flow</Filter>
+    </ClCompile>
+    <ClCompile Include="src\flow\Towers.cpp">
       <Filter>flow</Filter>
     </ClCompile>
   </ItemGroup>

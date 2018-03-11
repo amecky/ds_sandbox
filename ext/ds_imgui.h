@@ -1957,12 +1957,12 @@ namespace gui {
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
-			val = static_cast<int>(dx * d / width);
+			val = minValue + static_cast<int>(dx * d / width);
 		}
 		if (isDragging()) {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
-			val = static_cast<int>(dx * d / width);
+			val = minValue + static_cast<int>(dx * d / width);
 		}
 		*v = val;
 		if (*v < minValue) {
@@ -1971,7 +1971,7 @@ namespace gui {
 		if (*v > maxValue) {
 			*v = maxValue;
 		}
-		p.x += static_cast<float>(*v) / static_cast<float>(d) * width;
+		p.x += static_cast<float>(*v - minValue) / static_cast<float>(d) * width;
 		renderer::add_box(_guiCtx->uiContext, p, p2i(8, 24), _guiCtx->settings.sliderColor);
 		p = _guiCtx->currentPos;
 		sprintf_s(_guiCtx->tmpBuffer, 256, "%d", *v);
@@ -1998,12 +1998,12 @@ namespace gui {
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
-			*v = dx * d / width;
+			*v = minValue + dx * d / width;
 		}
 		if (isDragging()) {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
-			*v = dx * d / width;
+			*v = minValue + dx * d / width;
 		}
 		if (*v < minValue) {
 			*v = minValue;
@@ -2015,7 +2015,7 @@ namespace gui {
 			float prec = 10.0f * static_cast<float>(precision);
 			*v = roundf(*v * prec) / prec;
 		}
-		p.x += *v / d * width;
+		p.x += (*v - minValue) / d * width;
 		renderer::add_box(_guiCtx->uiContext, p, p2i(8, 28), _guiCtx->settings.sliderColor);
 		p = _guiCtx->currentPos;
 		sprintf_s(_guiCtx->tmpBuffer, 256, "%g", *v);

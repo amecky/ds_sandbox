@@ -1,0 +1,13 @@
+# Made using Asset Forge (1.3)
+
+:models
+#ShipParts/Hull14[(0.1, 0, 0);(0.0, 90.0, 0.0);(0.6, 1.0, 0.4);Hull14_0;_defaultMat+black+blueSteel]
+
+:materials
+_defaultMat[RGBA(1.000, 1.000, 1.000, 1.000);]
+black[RGBA(0.267, 0.267, 0.267, 1.000);]
+blueSteel[RGBA(0.027, 0.400, 0.694, 1.000);]
+
+:textures
+
+:extra

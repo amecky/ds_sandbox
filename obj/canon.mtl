@@ -5,13 +5,18 @@ Ka 0.000000 0.000000 0.000000
 Kd 1 1 1 
 Ks 0.330000 0.330000 0.330000 
 
-newmtl black (Instance)
+newmtl blueSteel (Instance) (Instance)
 Ka 0.000000 0.000000 0.000000 
-Kd 0.266667 0.266667 0.266667 
+Kd 0.141 0.565 0.831 
 Ks 0.330000 0.330000 0.330000 
 
-newmtl blueSteel (Instance)
+newmtl _defaultMat (Instance) (Instance)
 Ka 0.000000 0.000000 0.000000 
-Kd 0.027451 0.4 0.694118 
+Kd 1 1 1 
+Ks 0.330000 0.330000 0.330000 
+
+newmtl black (Instance)
+Ka 0.000000 0.000000 0.000000 
+Kd 0.2666667 0.2666667 0.2666667 
 Ks 0.330000 0.330000 0.330000 
 

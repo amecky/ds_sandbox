@@ -136,11 +136,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		perf::ZoneTracker("main");
 
-		if (ds::isKeyPressed('1') && !one_pressed) {
+		if (ds::isKeyPressed('D') && !one_pressed) {
 			show_gui = !show_gui;
 			one_pressed = true;
 		}
-		if (!ds::isKeyPressed('1') && one_pressed) {
+		if (!ds::isKeyPressed('D') && one_pressed) {
 			one_pressed = false;
 		}
 
