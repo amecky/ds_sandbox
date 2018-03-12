@@ -23,17 +23,19 @@ inline p2i operator +(const p2i& lhs, const p2i& rhs) {
 // convert screen coordinates to grid position if possible
 // ---------------------------------------------------------------
 inline bool convert(float screenX, float screenY, float startX, float startY, p2i* ret) {
-	ret->x = (screenX - startX + 0.5f);
-	ret->y = (screenY - startY + 0.5f);
-	return true;
+	if (screenX >= (startX - 0.5f) && screenY >= (startY - 0.5f)) {
+		ret->x = (screenX - startX + 0.5f);
+		ret->y = (screenY - startY + 0.5f);
+		return true;
+	}
 	/*
 	if (screenX >= (startX - 23) && screenY >= (startY - 23)) {
 		ret->x = (screenX - startX + 23) / 46;
 		ret->y = (screenY - startY + 23) / 46;
 		return true;
 	}
-	return false;
 	*/
+	return false;
 }
 
 inline bool convert(int screenX, int screenY, p2i* ret) {

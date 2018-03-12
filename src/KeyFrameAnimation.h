@@ -1,6 +1,6 @@
 #pragma once
 #include <diesel.h>
-#include "DataArray.h"
+#include "lib\DataArray.h"
 #include "utils\tweening.h"
 #include <vector>
 #include <SpriteBatchBuffer.h>

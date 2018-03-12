@@ -2,7 +2,7 @@
 #include <diesel.h>
 #include <ds_imgui.h>
 #include <SpriteBatchBuffer.h>
-#include "DataArray.h"
+#include "lib\DataArray.h"
 #include "World.h"
 #include "KeyFrameAnimation.h"
 #include <vector>

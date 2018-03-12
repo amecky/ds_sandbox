@@ -16,15 +16,18 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_endPoint = _grid->getEnd();
 	_flowField = new FlowField(_grid);
 	_flowField->build(_endPoint);
+	buildPath();
 	_dbgLength = 0.0f;
 	_dbgMove = true;
 	_dbgNextPos = ds::vec3(0);
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));
 	_dbgSelected = p2i(-1, -1);
-	_dbgShowOverlay = true;
+	_dbgShowOverlay = false;
 	_selectedTower = -1;
 	_dbgMoveCamera = true;
 	_dbgSelectedLight = 0;
+	_dbgShowPath = true;
+	_dbgHandleButtons = true;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -36,6 +39,9 @@ FlowFieldApp::~FlowFieldApp() {
 	delete _material;
 }
 
+// -------------------------------------------------------------
+// get render settings
+// -------------------------------------------------------------
 ds::RenderSettings FlowFieldApp::getRenderSettings() {
 	ds::RenderSettings rs;
 	rs.width = 1280;
@@ -58,10 +64,9 @@ bool FlowFieldApp::init() {
 	
 	_material = new InstancedAmbientLightningMaterial;
 
-	float lz = 0.2f;
-	_lightDir[0] = ds::vec3(-1.0f, -0.5f, lz);
-	_lightDir[1] = ds::vec3(0.0f, -0.5f, lz);
-	_lightDir[2] = ds::vec3(0.0f, 0.5f, lz);
+	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
+	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
+	_lightDir[2] = ds::vec3(-0.3f,0.7f,-0.2f);
 	
 	_renderItem = new InstancedRenderItem("basic_floor", _material, GRID_SIZE_X * GRID_SIZE_Y);
 	_overlayItem = new InstancedRenderItem("arrow", _material, GRID_SIZE_X * GRID_SIZE_Y);
@@ -88,22 +93,12 @@ bool FlowFieldApp::init() {
 		}
 	}
 	_ambient_material = new AmbientLightningMaterial;
-	_walker.renderItem = new RenderItem("simple_walker", _ambient_material);
-	_walker.velocity = 0.5f;
-	_walker.definitionIndex = 0;
-	_walker.gridPos = _startPoint;
-	_walker.pos = ds::vec3(-10.0f + _startPoint.x, 0.2f, -6.0f + _startPoint.y);
-	_walker.rotation = 0.0f;
-	transform& t = _walker.renderItem->getTransform();
-	t.position = _walker.pos;
+	_walkerItem = new RenderItem("simple_walker", _ambient_material);
 	_selected = -1;
 
-	_towerItem = new RenderItem("cannon", _ambient_material);
-	_towerItem->getTransform().position = ds::vec3(0.0f);
-
-	_baseItems[0] = new RenderItem("green_base", _ambient_material);
-	_baseItems[1] = new RenderItem("yellow_base", _ambient_material);
-	_baseItems[2] = new RenderItem("red_base", _ambient_material);
+	_pathItem = new RenderItem("arrow", _ambient_material);
+	
+	_towers.init(_ambient_material);
 
 	_startItem = new RenderItem("start", _ambient_material);
 	_startItem->getTransform().position = ds::vec3(-10.0f + _startPoint.x, 0.2f, -6.0f + _startPoint.y);
@@ -112,6 +107,18 @@ bool FlowFieldApp::init() {
 	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
 
 	return true;
+}
+
+void FlowFieldApp::startWalker() {
+	ID id = _walkers.add();
+	Walker& walker = _walkers.get(id);
+	walker.renderItem = _walkerItem;
+	walker.velocity = 1.5f;
+	walker.definitionIndex = 0;
+	walker.gridPos = _startPoint;
+	walker.pos = ds::vec3(-10.0f + _startPoint.x, 0.2f, -6.0f + _startPoint.y);
+	walker.rotation = 0.0f;
+	walker.renderItem->getTransform().position = walker.pos;
 }
 
 // ---------------------------------------------------------------
@@ -124,74 +131,88 @@ float getAngle(const ds::vec2& u, const ds::vec2& v) {
 	return (float)ang;
 }
 
+void FlowFieldApp::buildPath() {
+	_path.clear();
+	p2i gp = _startPoint;
+	//_path.push_back(gp);
+	while (_flowField->hasNext(gp)) {
+		PathItem item;
+		int d = _flowField->get(gp.x, gp.y);
+		gp = _flowField->next(gp);		
+		item.pos = ds::vec3(-10.0f + gp.x, 0.05f, -6.0f + gp.y);
+		item.grid = gp;
+		item.direction = static_cast<float>(d) * ds::PI * 0.25f;
+		_path.push_back(item);
+	}
+
+}
 // ---------------------------------------------------------------
 // move walkers
 // ---------------------------------------------------------------
 void FlowFieldApp::moveWalkers(float dt) {
-
-	ds::vec3 p1(-10.0f, 0.2f, 0.0f);
-	ds::vec3 p2(-9.0f, 0.2f, 1.0f);
-	ds::vec3 dp = p2 - p1;
-	ds::vec3 np = normalize(dp);
 	if (_dbgMove) {
-		if (_flowField->hasNext(_walker.gridPos)) {
-			p2i n = _flowField->next(_walker.gridPos);
-			_dbgFlowNext = n;
-			ds::vec3 nextPos = ds::vec3(-10.0f + n.x, 0.2f, -6.0f + n.y);
-			_dbgNextPos = nextPos;
-			ds::vec3 diff = _walker.pos - nextPos;
-			_dbgDiff = diff;
-			_dbgLength = sqr_length(diff);
-			if (sqr_length(diff) < 0.001f) {
-				convert(nextPos.x, nextPos.z, -10, -6, &_walker.gridPos);
+		for (uint32_t i = 0; i < _walkers.numObjects; ++i) {
+			Walker& walker = _walkers.objects[i];
+			if (_flowField->hasNext(walker.gridPos)) {
+				p2i n = _flowField->next(walker.gridPos);
+				_dbgFlowNext = n;
+				ds::vec3 nextPos = ds::vec3(-10.0f + n.x, 0.2f, -6.0f + n.y);
+				_dbgNextPos = nextPos;
+				ds::vec3 diff = walker.pos - nextPos;
+				_dbgDiff = diff;
+				_dbgLength = sqr_length(diff);
+				if (sqr_length(diff) < 0.001f) {
+					convert(nextPos.x, nextPos.z, -10, -6, &walker.gridPos);
+				}
+				walker.pos.y = 0.2f;
+				ds::vec3 v = normalize(nextPos - walker.pos);
+				_dbgV = v;
+				v *= walker.velocity;
+				walker.pos += v * dt;
+				walker.pos.y = 0.2f;
+				walker.rotation = getAngle(ds::vec2(walker.pos.x, walker.pos.z), ds::vec2(nextPos.x, nextPos.z));
+				//transform& t = walker.renderItem->getTransform();
+				//t.position = walker.pos;
+				//t.pitch = getAngle(ds::vec2(walker.pos.x, walker.pos.z), ds::vec2(nextPos.x, nextPos.z));
 			}
-			_walker.pos.y = 0.2f;
-			ds::vec3 v = normalize(nextPos - _walker.pos);
-			_dbgV = v;
-			v *= _walker.velocity;
-			_walker.pos += v * dt;
-			_walker.pos.y = 0.2f;
-			transform& t = _walker.renderItem->getTransform();
-			t.position = _walker.pos;
-			t.pitch = getAngle(ds::vec2(_walker.pos.x, _walker.pos.z), ds::vec2(nextPos.x, nextPos.z));
 		}
 	}
 }
 
-int FlowFieldApp::findTower(const p2i& gridPos) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		const Tower& t = _towers[i];
-		if (t.gx == gridPos.x && t.gy == gridPos.y) {
-			return i;
-		}
-	}
-	return -1;
-}
 
+
+// -------------------------------------------------------------
+// on button clicked
+// -------------------------------------------------------------
 void FlowFieldApp::OnButtonClicked(int index) {
-	if (index == 0) {
-		Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
-		r.setOrigin(_camera.position);
-		ds::vec3 ip = _grid->plane.getIntersection(r);
-		DBG_LOG("intersection point %2.3f %2.3f %2.3f", ip.x, ip.y, ip.z);
-		p2i gridPos;
-		if (convert(ip.x, ip.z, -10.0f, -6.0f, &gridPos)) {
-			_dbgSelected = gridPos;
-			int type = _grid->get(gridPos);
-			if (type == 0) {
-				DBG_LOG("Adding tower at %d %d", gridPos.x, gridPos.y);
-				addTower(gridPos);
+	if (_dbgHandleButtons) {
+		if (index == 0) {
+			Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+			r.setOrigin(_camera.position);
+			ds::vec3 ip = _grid->plane.getIntersection(r);
+			DBG_LOG("intersection point %2.3f %2.3f %2.3f", ip.x, ip.y, ip.z);
+			p2i gridPos;
+			if (convert(ip.x, ip.z, -10.0f, -6.0f, &gridPos)) {
+				_dbgSelected = gridPos;
+				int type = _grid->get(gridPos);
+				if (type == 0) {
+					DBG_LOG("Adding tower at %d %d", gridPos.x, gridPos.y);
+					addTower(gridPos);
+				}
+				else {
+					_selectedTower = _towers.findTower(gridPos);
+				}
 			}
 			else {
-				_selectedTower = findTower(gridPos);
+				_dbgSelected = p2i(-1, -1);
 			}
-		}
-		else {
-			_dbgSelected = p2i(-1, -1);
 		}
 	}
 }
 
+// -------------------------------------------------------------
+// update overlay
+// -------------------------------------------------------------
 void FlowFieldApp::updateOverlay() {
 	for (int y = 0; y < _grid->height; ++y) {
 		for (int x = 0; x < _grid->width; ++x) {
@@ -208,30 +229,16 @@ void FlowFieldApp::updateOverlay() {
 	}
 }
 
-void FlowFieldApp::upgradeTower(int index) {
-	if (index != -1) {
-		Tower& t = _towers[index];
-		++t.level;
-		if (t.level > 2) {
-			t.level = 2;
-		}
-		t.baseItem = _baseItems[t.level];
-	}
-}
-
-void FlowFieldApp::addTower(p2i gridPos) {
+// -------------------------------------------------------------
+// add tower
+// -------------------------------------------------------------
+void FlowFieldApp::addTower(const p2i& gridPos) {
 	if (_grid->get(gridPos) == 0) {
 		_grid->set(gridPos.x, gridPos.y, 1);
 		_flowField->build(_endPoint);
 		updateOverlay();
-		Tower t;
-		t.renderItem = _towerItem;
-		t.baseItem = _baseItems[0];
-		t.gx = gridPos.x;
-		t.gy = gridPos.y;
-		t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
-		t.level = 0;
-		_towers.push_back(t);
+		buildPath();
+		_towers.addTower(gridPos);
 	}
 }
 
@@ -249,26 +256,38 @@ void FlowFieldApp::tick(float dt) {
 // render
 // ----------------------------------------------------
 void FlowFieldApp::render() {
+	// update lights
 	for (int i = 0; i < 3; ++i) {
 		_material->setLightDirection(i, _lightDir[i]);
-		_ambient_material->setLightDirection(i, _lightDir[i]);
+		_ambient_material->setLightDirection(i, normalize(_lightDir[i]));
 	}
 	_renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	// overlay
 	if (_dbgShowOverlay) {
 		_overlayItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
+	if (_dbgShowPath) {
+		for (size_t i = 0; i < _path.size(); ++i) {
+			const PathItem& item = _path[i];
+			_pathItem->getTransform().position = item.pos;
+			_pathItem->getTransform().pitch = item.direction;
+			_pathItem->draw(_basicPass, _camera.viewProjectionMatrix);
+		}
+	}
+	// start and end
 	_startItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	_endItem->draw(_basicPass, _camera.viewProjectionMatrix);
-	_walker.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
-
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		const Tower& t = _towers[i];
-		t.baseItem->getTransform().position = t.position;
-		t.baseItem->draw(_basicPass, _camera.viewProjectionMatrix);
-		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.25f, 0.0f);
-		t.renderItem->getTransform().position = tp;
-		t.renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	// walkers
+	for (uint32_t i = 0; i < _walkers.numObjects; ++i) {
+		const Walker& walker = _walkers.objects[i];
+		transform& t = _walkerItem->getTransform();
+		t.position = walker.pos;
+		t.pitch = walker.rotation;
+		_walkerItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
+
+	// towers
+	_towers.render(_basicPass, _camera.viewProjectionMatrix);
 }
 
 // ----------------------------------------------------
@@ -282,6 +301,7 @@ void FlowFieldApp::renderGUI() {
 	if (gui::begin("Object", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Checkbox("Move camera", &_dbgMoveCamera);
+		gui::Checkbox("Handle buttons", &_dbgHandleButtons);
 		gui::StepInput("Light Index", &_dbgSelectedLight, 0, 2, 1);
 		gui::Slider("L-X", &_lightDir[_dbgSelectedLight].x, -1.0f, 1.0f);
 		gui::Slider("L-Y", &_lightDir[_dbgSelectedLight].y, -1.0f, 1.0f);
@@ -298,38 +318,21 @@ void FlowFieldApp::renderGUI() {
 			}
 		}
 		if (_selectedTower != -1) {
-			const Tower& t = _towers[_selectedTower];
+			const Tower& t = _towers.get(_selectedTower);
 			gui::Value("Tower", _selectedTower);
 			gui::Value("Level", t.level);
 			if (gui::Button("Upgrade")) {
-				upgradeTower(_selectedTower);
+				_towers.upgradeTower(_selectedTower);
 			}
 		}
 		gui::Checkbox("Move", &_dbgMove);
-		gui::Value("Pos", _walker.renderItem->getTransform().position,"%2.2f %2.2f %2.2f");
-		gui::Value("Grid Pos", _walker.gridPos);
+		//gui::Value("Pos", _walker.renderItem->getTransform().position,"%2.2f %2.2f %2.2f");
+		//gui::Value("Grid Pos", _walker.gridPos);
 		gui::Value("Next", _dbgNextPos);
 		gui::Value("Next GP", _dbgFlowNext);
-		if (gui::Button("Reset")) {
-			_walker.gridPos = _startPoint;
-			_walker.pos = ds::vec3(-10 + _startPoint.x, 0, -6 + _startPoint.y);
-			_walker.rotation = 0.0f;
-			transform& t = _walker.renderItem->getTransform();
-			t.position = _walker.pos;
-		}
-		/*
-		gui::Value("Center", _renderItem.mesh->getCenter());
-		gui::Value("Extent", _renderItem.mesh->getExtent());
-		gui::Value("Min", _renderItem.mesh->getMin());
-		gui::Value("Max", _renderItem.mesh->getMax());
-		gui::Input("Selected", &_selected);
-		if (_selected != -1) {
-			instance_item& item = get_instance(&_renderItem, _ids[_selected]);
-			if (gui::Input("Scale", &item.transform.scale)) {
-				item.transform.position.y = _renderItem.mesh->getExtent().y * item.transform.scale.y * 0.5f;
-			}
-		}
-		*/
+		if (gui::Button("Start Walker")) {
+			startWalker();
+		}		
 	}
 	gui::end();
 }

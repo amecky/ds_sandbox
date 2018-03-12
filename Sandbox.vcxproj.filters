@@ -46,6 +46,9 @@
     <Filter Include="flow">
       <UniqueIdentifier>{d366166a-050f-440d-8d9b-480565feaea1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{9e127dac-be36-41bf-a25c-4beefa2c14f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants.h" />
@@ -68,7 +71,6 @@
     <ClInclude Include="ext\SpriteBatchBuffer.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\DataArray.h" />
     <ClInclude Include="src\AABBox.h" />
     <ClInclude Include="src\World.h" />
     <ClInclude Include="src\AnimationTest.h" />
@@ -214,6 +216,9 @@
     </ClInclude>
     <ClInclude Include="src\flow\Towers.h">
       <Filter>flow</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h">
+      <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

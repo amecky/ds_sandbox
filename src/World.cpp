@@ -52,7 +52,12 @@ World::~World() {
 // ---------------------------------------------------------------
 ID World::add(const ds::vec2& pos, const ds::vec4& rect, ID parent) {
 	if (_spriteArray.numObjects < 256) {
-		return _spriteArray.add(MySprite(INVALID_ID, parent, pos, rect));
+		ID id = _spriteArray.add();
+		MySprite& sprite = _spriteArray.get(id);
+		sprite.parent = parent;
+		sprite.position = pos;
+		sprite.textureRect = rect;
+		return id;
 	}
 	return INVALID_ID;
 }

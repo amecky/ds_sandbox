@@ -1,7 +1,7 @@
 #pragma once
 #include "..\TestSpriteApp.h"
 #include <ds_imgui.h>
-#include "..\DataArray.h"
+#include "..\lib\DataArray.h"
 #include "..\World.h"
 
 class TweeningListModel : public gui::ListBoxModel {

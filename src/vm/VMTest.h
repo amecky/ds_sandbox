@@ -1,6 +1,6 @@
 #pragma once
 #include "..\TestSpriteApp.h"
-#include "..\DataArray.h"
+#include "..\lib\DataArray.h"
 #include "..\World.h"
 #include <ds_vm.h>
 #include <ds_imgui.h>

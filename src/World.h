@@ -1,7 +1,7 @@
 #pragma once
 #include <diesel.h>
 #include <SpriteBatchBuffer.h>
-#include "DataArray.h"
+#include "lib\DataArray.h"
 #include "AABBox.h"
 #include <vector>
 #include "utils\DynamicPath.h"
@@ -129,7 +129,7 @@ struct AnimationData {
 class BaseAnimation {
 
 public:
-	BaseAnimation(DataArray<MySprite, 256>* sprites) : _sprites(sprites) {}
+	BaseAnimation(ds::DataArray<MySprite, 256>* sprites) : _sprites(sprites) {}
 	virtual ~BaseAnimation() {}
 	virtual void tick(float dt, EventQueue& queue) = 0;
 	void stop(ID id) {
@@ -163,8 +163,8 @@ protected:
 		return INVALID_ID;
 	}
 	ds::vec4 _boundingRect;
-	DataArray<MySprite, 256>* _sprites;
-	DataArray<AnimationData, 256> _data;
+	ds::DataArray<MySprite, 256>* _sprites;
+	ds::DataArray<AnimationData, 256> _data;
 };
 
 // ---------------------------------------------------------------
@@ -173,7 +173,7 @@ protected:
 class KFAnimation : public BaseAnimation {
 
 public:
-	KFAnimation(DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
+	KFAnimation(ds::DataArray<MySprite, 256>* sprites) : BaseAnimation(sprites) {}
 	virtual ~KFAnimation() {}
 	void tick(float dt, EventQueue& queue);
 	void remove(ID id);
@@ -253,7 +253,7 @@ public:
 private:
 	ds::vec4 _boundingRect;
 	SpriteBatchBuffer* _buffer;
-	DataArray<MySprite, 256> _spriteArray;	
+	ds::DataArray<MySprite, 256> _spriteArray;	
 	KFAnimation _animations;
 	EventQueue _queue;
 };
