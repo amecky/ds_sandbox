@@ -36,6 +36,7 @@
     <ClInclude Include="src\enemies\RingEnemies.h" />
     <ClInclude Include="src\flow\FlowField.h" />
     <ClInclude Include="src\flow\FlowFieldApp.h" />
+    <ClInclude Include="src\flow\FlowFieldContext.h" />
     <ClInclude Include="src\flow\Grid.h" />
     <ClInclude Include="src\flow\Towers.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />

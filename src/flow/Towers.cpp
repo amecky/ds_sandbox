@@ -1,4 +1,5 @@
 #include "Towers.h"
+#include "..\utils\common_math.h"
 
 void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
@@ -7,6 +8,7 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 		t.baseItem->draw(renderPass, viewProjectionMatrix);
 		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.25f, 0.0f);
 		t.renderItem->getTransform().position = tp;
+		t.renderItem->getTransform().pitch = t.direction;
 		t.renderItem->draw(renderPass, viewProjectionMatrix);
 	}
 }
@@ -58,5 +60,60 @@ void Towers::addTower(const p2i& gridPos) {
 	t.gy = gridPos.y;
 	t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
 	t.level = 0;
+	t.radius = 2.0f;
 	_towers.push_back(t);
+}
+
+// ---------------------------------------------------------------
+// is close (walker still in reach of tower)
+// ---------------------------------------------------------------
+bool isClose(const Tower& tower, const Walker& walker) {
+	float diff = sqr_length(tower.position - walker.pos);
+	return (diff < tower.radius * tower.radius);
+}
+
+
+void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		Tower& t = _towers[i];
+		if (t.target != INVALID_ID) {
+			if (walkers->contains(t.target)) {
+				const Walker& w = walkers->get(t.target);
+				if (!isClose(t, w)) {
+					t.target = INVALID_ID;
+				}
+				else {
+					ds::vec3 delta = w.pos - t.position;
+					t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
+				}
+			}
+			else {
+				t.target = INVALID_ID;
+			}
+		}
+		if (t.target == INVALID_ID) {
+			for (uint32_t i = 0; i < walkers->numObjects; ++i) {
+				const Walker& w = walkers->objects[i];
+				ds::vec3 delta = w.pos - t.position;
+				float diff = sqr_length(delta);
+				if (diff < t.radius * t.radius) {
+					t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
+					t.target = w.id;
+
+				}
+			}
+		}
+	}
+}
+
+void Towers::rotateTowers(const ds::vec3& pos) {
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		Tower& t = _towers[i];
+		ds::vec3 delta = pos - t.position;
+		float diff = sqr_length(delta);
+		if (diff < t.radius * t.radius) {
+			t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
+			
+		}
+	}
 }

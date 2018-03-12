@@ -12,23 +12,9 @@
 #include "FlowField.h"
 #include "Towers.h"
 #include <vector>
+#include "FlowFieldContext.h"
 
-struct Walker {
-	ID id;
-	p2i gridPos;
-	float velocity;
-	ds::vec3 pos;
-	float rotation;
-	int definitionIndex;
-	int energy;
-	RenderItem* renderItem;
-};
 
-struct PathItem {
-	ds::vec3 pos;
-	p2i grid;
-	float direction;
-};
 
 class FlowFieldApp : public TestApp {
 
@@ -63,6 +49,7 @@ private:
 	RenderItem* _endItem;
 	RenderItem* _pathItem;
 	RenderItem* _walkerItem;
+	RenderItem* _cursorItem;
 	
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];

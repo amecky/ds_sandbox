@@ -4,22 +4,8 @@
 #include "..\utils\RenderItem.h"
 #include <vector>
 #include "..\Material.h"
-
-struct Tower {
-	int type;
-	int gx;
-	int gy;
-	ds::vec3 position;
-	float radius;
-	int energy;
-	float timer;
-	float bulletTTL;
-	float direction;
-	ID target;
-	int level;
-	RenderItem* renderItem;
-	RenderItem* baseItem;
-};
+#include "..\lib\DataArray.h"
+#include "FlowFieldContext.h"
 
 class Towers {
 
@@ -38,6 +24,8 @@ public:
 		int idx = findTower(gridPos);
 		return _towers[idx];
 	}
+	void rotateTowers(ds::DataArray<Walker>* walkers);
+	void rotateTowers(const ds::vec3& target);
 private:
 	std::vector<Tower> _towers;
 	RenderItem* _towerItem;

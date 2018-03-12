@@ -97,6 +97,7 @@ bool FlowFieldApp::init() {
 	_selected = -1;
 
 	_pathItem = new RenderItem("arrow", _ambient_material);
+	_cursorItem = new RenderItem("cursor", _ambient_material);
 	
 	_towers.init(_ambient_material);
 
@@ -250,6 +251,16 @@ void FlowFieldApp::tick(float dt) {
 		_fpsCamera->update(dt);
 	}
 	moveWalkers(dt);
+
+	_towers.rotateTowers(&_walkers);
+
+	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+	r.setOrigin(_camera.position);
+	ds::vec3 ip = _grid->plane.getIntersection(r);
+	ip.y = 0.1f;
+	_cursorItem->getTransform().position = ip;
+
+	//_towers.rotateTowers(ip);
 }
 
 // ----------------------------------------------------
@@ -286,6 +297,7 @@ void FlowFieldApp::render() {
 		_walkerItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
 
+	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
 	_towers.render(_basicPass, _camera.viewProjectionMatrix);
 }

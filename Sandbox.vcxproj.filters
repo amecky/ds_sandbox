@@ -220,6 +220,9 @@
     <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="src\flow\FlowFieldContext.h">
+      <Filter>flow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
