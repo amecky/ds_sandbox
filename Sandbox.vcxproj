@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.h" />
     <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h" />
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_imgui.h" />
@@ -39,6 +38,7 @@
     <ClInclude Include="src\flow\FlowFieldApp.h" />
     <ClInclude Include="src\flow\FlowFieldContext.h" />
     <ClInclude Include="src\flow\Grid.h" />
+    <ClInclude Include="src\flow\IsometricCamera.h" />
     <ClInclude Include="src\flow\Towers.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
@@ -88,13 +88,13 @@
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\background\Doors.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
     <ClCompile Include="src\enemies\RingEnemies.cpp" />
     <ClCompile Include="src\flow\FlowField.cpp" />
     <ClCompile Include="src\flow\FlowFieldApp.cpp" />
+    <ClCompile Include="src\flow\IsometricCamera.cpp" />
     <ClCompile Include="src\flow\Towers.cpp" />
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />

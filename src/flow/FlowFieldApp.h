@@ -51,7 +51,7 @@ private:
 	RenderItem* _walkerItem;
 	RenderItem* _cursorItem;
 	
-	IsometricCamera* _fpsCamera;
+	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	ID _ids[GRID_SIZE_X * GRID_SIZE_Y];
 	ID _overlay_ids[GRID_SIZE_X * GRID_SIZE_Y];
@@ -76,4 +76,5 @@ private:
 	bool _dbgShowOverlay;
 	bool _dbgShowPath;
 	bool _dbgHandleButtons;
+	bool _dbgSnapToGrid;
 };

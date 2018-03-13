@@ -28,6 +28,7 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_dbgSelectedLight = 0;
 	_dbgShowPath = true;
 	_dbgHandleButtons = true;
+	_dbgSnapToGrid = true;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -59,9 +60,10 @@ ds::RenderSettings FlowFieldApp::getRenderSettings() {
 // ----------------------------------------------------
 bool FlowFieldApp::init() {
 	
-	_fpsCamera = new IsometricCamera(&_camera);
+	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-	
+	_fpsCamera->setPitch(30.0f / 360.0f * ds::TWO_PI);
+	_fpsCamera->setYaw(45.0f / 360.0f * ds::TWO_PI);
 	_material = new InstancedAmbientLightningMaterial;
 
 	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
@@ -258,8 +260,17 @@ void FlowFieldApp::tick(float dt) {
 	r.setOrigin(_camera.position);
 	ds::vec3 ip = _grid->plane.getIntersection(r);
 	ip.y = 0.1f;
-	_cursorItem->getTransform().position = ip;
-
+	if (_dbgSnapToGrid) {
+		p2i gp;
+		if (convert(ip.x, ip.z, -10.0f, -6.0f, &gp)) {
+			ds::vec3 np = ds::vec3(gp.x - 10, 0, gp.y - 6);
+			np.y = 0.1f;
+			_cursorItem->getTransform().position = np;
+		}
+	}
+	else {
+		_cursorItem->getTransform().position = ip;
+	}
 	//_towers.rotateTowers(ip);
 }
 
@@ -314,6 +325,7 @@ void FlowFieldApp::renderGUI() {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Checkbox("Move camera", &_dbgMoveCamera);
 		gui::Checkbox("Handle buttons", &_dbgHandleButtons);
+		gui::Checkbox("Snap2Grid", &_dbgSnapToGrid);
 		gui::StepInput("Light Index", &_dbgSelectedLight, 0, 2, 1);
 		gui::Slider("L-X", &_lightDir[_dbgSelectedLight].x, -1.0f, 1.0f);
 		gui::Slider("L-Y", &_lightDir[_dbgSelectedLight].y, -1.0f, 1.0f);

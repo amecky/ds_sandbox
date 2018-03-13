@@ -223,7 +223,7 @@
     <ClInclude Include="src\flow\FlowFieldContext.h">
       <Filter>flow</Filter>
     </ClInclude>
-    <ClInclude Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.h">
+    <ClInclude Include="src\flow\IsometricCamera.h">
       <Filter>flow</Filter>
     </ClInclude>
   </ItemGroup>
@@ -353,7 +353,7 @@
     <ClCompile Include="src\flow\Towers.cpp">
       <Filter>flow</Filter>
     </ClCompile>
-    <ClCompile Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.cpp">
+    <ClCompile Include="src\flow\IsometricCamera.cpp">
       <Filter>flow</Filter>
     </ClCompile>
   </ItemGroup>

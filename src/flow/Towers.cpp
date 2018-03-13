@@ -6,15 +6,18 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 		const Tower& t = _towers[i];
 		t.baseItem->getTransform().position = t.position;
 		t.baseItem->draw(renderPass, viewProjectionMatrix);
-		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.25f, 0.0f);
+		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.5f, 0.0f);
 		t.renderItem->getTransform().position = tp;
 		t.renderItem->getTransform().pitch = t.direction;
 		t.renderItem->draw(renderPass, viewProjectionMatrix);
 	}
 }
 
-void Towers::init(Material* material) {
-	_towerItem = new RenderItem("cannon", material);
+void Towers::init(Material* material) {	 
+	ds::matrix s = ds::matScale(ds::vec3(0.5f, 0.5f, 0.5f));
+	ds::matrix r = ds::matRotationY(ds::PI * 1.5f);
+	ds::matrix w = s * r;
+	_towerItem = new RenderItem("cannon", material, &w);
 	_towerItem->getTransform().position = ds::vec3(0.0f);
 
 	_baseItems[0] = new RenderItem("green_base", material);
@@ -61,6 +64,7 @@ void Towers::addTower(const p2i& gridPos) {
 	t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
 	t.level = 0;
 	t.radius = 2.0f;
+	t.direction = 0.0f;
 	_towers.push_back(t);
 }
 

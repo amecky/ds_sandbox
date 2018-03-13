@@ -1,7 +1,12 @@
 # Made using Asset Forge (www.assetforge.io) version 1.3 
 
-newmtl customMaterial4 (Instance)
+newmtl glass (Instance) (Instance)
 Ka 0.000000 0.000000 0.000000 
-Kd 0.7799909 0.7217804 0.1985426 
+Kd 0.298 0.314 0.365 
+Ks 0.330000 0.330000 0.330000 
+
+newmtl customMaterial6 (Instance)
+Ka 0.000000 0.000000 0.000000 
+Kd 0.679996 0.6264975 0.1442423 
 Ks 0.330000 0.330000 0.330000 
 
