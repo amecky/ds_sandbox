@@ -26,6 +26,7 @@ public:
 	}
 	void rotateTowers(ds::DataArray<Walker>* walkers);
 	void rotateTowers(const ds::vec3& target);
+	void showGUI(int selectedTower);
 private:
 	std::vector<Tower> _towers;
 	RenderItem* _towerItem;

@@ -117,3 +117,17 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 		}
 	}
 }
+
+void Towers::showGUI(int selectedTower) {
+	if (selectedTower != -1) {
+		gui::begin("Tower", 0);
+		const Tower& t = get(selectedTower);
+		gui::Value("Tower", selectedTower);
+		gui::Value("Level", t.level);
+		gui::Value("Target", t.target);
+		gui::Value("Direction", (t.direction*360.0f / ds::TWO_PI));
+		if (gui::Button("Upgrade")) {
+			upgradeTower(selectedTower);
+		}
+	}
+}

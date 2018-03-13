@@ -59,7 +59,7 @@ ds::RenderSettings FlowFieldApp::getRenderSettings() {
 // ----------------------------------------------------
 bool FlowFieldApp::init() {
 	
-	_fpsCamera = new FPSCamera(&_camera);
+	_fpsCamera = new IsometricCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 	
 	_material = new InstancedAmbientLightningMaterial;
@@ -172,9 +172,9 @@ void FlowFieldApp::moveWalkers(float dt) {
 				walker.pos += v * dt;
 				walker.pos.y = 0.2f;
 				walker.rotation = getAngle(ds::vec2(walker.pos.x, walker.pos.z), ds::vec2(nextPos.x, nextPos.z));
-				//transform& t = walker.renderItem->getTransform();
-				//t.position = walker.pos;
-				//t.pitch = getAngle(ds::vec2(walker.pos.x, walker.pos.z), ds::vec2(nextPos.x, nextPos.z));
+			}
+			else {
+				_walkers.remove(walker.id);
 			}
 		}
 	}
@@ -310,7 +310,7 @@ void FlowFieldApp::renderGUI() {
 	p2i sp = p2i(10, 710);
 	gui::start(&sp, 320);
 	gui::setAlphaLevel(0.5f);
-	if (gui::begin("Object", &state)) {
+	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Checkbox("Move camera", &_dbgMoveCamera);
 		gui::Checkbox("Handle buttons", &_dbgHandleButtons);
@@ -329,14 +329,10 @@ void FlowFieldApp::renderGUI() {
 				addTower(_dbgSelected);
 			}
 		}
-		if (_selectedTower != -1) {
-			const Tower& t = _towers.get(_selectedTower);
-			gui::Value("Tower", _selectedTower);
-			gui::Value("Level", t.level);
-			if (gui::Button("Upgrade")) {
-				_towers.upgradeTower(_selectedTower);
-			}
-		}
+		
+		_towers.showGUI(_selectedTower);
+		
+		gui::begin("Walker", 0);
 		gui::Checkbox("Move", &_dbgMove);
 		//gui::Value("Pos", _walker.renderItem->getTransform().position,"%2.2f %2.2f %2.2f");
 		//gui::Value("Grid Pos", _walker.gridPos);

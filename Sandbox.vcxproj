@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.h" />
     <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h" />
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_imgui.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="C:\work\NB\ds_sandbox\src\flow\IsometricCamera.cpp" />
     <ClCompile Include="src\AnimationTest.cpp" />
     <ClCompile Include="src\background\Doors.cpp" />
     <ClCompile Include="src\binary\BinaryClock.cpp" />
