@@ -266,6 +266,8 @@ void FlowFieldApp::tick(float dt) {
 
 	_towers.rotateTowers(&_walkers);
 
+	_towers.tick(dt);
+
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
 	ds::vec3 ip = _grid->plane.getIntersection(r);

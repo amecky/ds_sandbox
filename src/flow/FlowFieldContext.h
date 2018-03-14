@@ -5,8 +5,7 @@
 #include "..\utils\RenderItem.h"
 
 struct RotationAnimation {
-	float startAngle;
-	float endAngle;
+	float angle;
 	int direction;
 	float timer;
 	float ttl;
@@ -30,6 +29,7 @@ struct Tower {
 	RenderItem* renderItem;
 	RenderItem* baseItem;
 	RotationAnimation animation;
+	int animationState;
 };
 
 // ---------------------------------------------------

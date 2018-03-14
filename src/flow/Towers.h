@@ -24,6 +24,7 @@ public:
 		int idx = findTower(gridPos);
 		return _towers[idx];
 	}
+	void tick(float dt);
 	void rotateTowers(ds::DataArray<Walker>* walkers);
 	void rotateTowers(const ds::vec3& target);
 	void showGUI(int selectedTower);

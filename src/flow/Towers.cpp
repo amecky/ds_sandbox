@@ -1,6 +1,9 @@
 #include "Towers.h"
 #include "..\utils\common_math.h"
 
+// -------------------------------------------------------------
+// render
+// -------------------------------------------------------------
 void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		const Tower& t = _towers[i];
@@ -13,6 +16,9 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	}
 }
 
+// -------------------------------------------------------------
+// init
+// -------------------------------------------------------------
 void Towers::init(Material* material) {	 
 	ds::matrix s = ds::matScale(ds::vec3(0.5f, 0.5f, 0.5f));
 	ds::matrix r = ds::matRotationY(ds::PI * 1.5f);
@@ -65,6 +71,10 @@ void Towers::addTower(const p2i& gridPos) {
 	t.level = 0;
 	t.radius = 2.0f;
 	t.direction = 0.0f;
+	t.animationState = 1;
+	t.target = INVALID_ID;
+	t.animation.timer = 0.0f;
+	t.animation.ttl = ds::random(0.5f, 1.5f);
 	_towers.push_back(t);
 }
 
@@ -76,7 +86,34 @@ bool isClose(const Tower& tower, const Walker& walker) {
 	return (diff < tower.radius * tower.radius);
 }
 
+// -------------------------------------------------------------
+// tick
+// -------------------------------------------------------------
+void Towers::tick(float dt) {
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		Tower& t = _towers[i];
+		if (t.target == INVALID_ID) {
+			t.animation.timer += dt;
+			if (t.animationState == 0) {
+				t.direction += t.animation.angle * dt * static_cast<float>(t.animation.direction);
+				if (t.animation.timer >= t.animation.ttl) {
+					t.animationState = 1;
+					t.animation.timer = 0.0f;
+					t.animation.ttl = ds::random(0.5f, 1.5f);
+				}
+			}
+			else {
+				if (t.animation.timer >= t.animation.ttl) {
+					startAnimation(i);
+				}
+			}
+		}
+	}
+}
 
+// -------------------------------------------------------------
+// rotate towers towards walkers
+// -------------------------------------------------------------
 void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		Tower& t = _towers[i];
@@ -112,6 +149,9 @@ void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 	}
 }
 
+// -------------------------------------------------------------
+// rotate towers towards fixed position
+// -------------------------------------------------------------
 void Towers::rotateTowers(const ds::vec3& pos) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		Tower& t = _towers[i];
@@ -124,19 +164,28 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 	}
 }
 
+// -------------------------------------------------------------
+// start rotation animation
+// -------------------------------------------------------------
 void Towers::startAnimation(int index) {
 	Tower& t = _towers[index];
-	float angle = ds::random(ds::PI, ds::TWO_PI);
-	t.animation.startAngle = t.direction + angle;
-	t.animation.endAngle = angle + ds::PI;
-	t.animation.direction = ds::random(-1.0f, 1.0f);
-	if (t.animation.direction == 0) {
-		t.animation.direction = 1;
+	float min = ds::PI * 0.25f;
+	float angle = ds::random(min, min + ds::PI * 0.5f);
+	t.animation.angle = angle;
+	float dir = ds::random(-5.0f, 5.0f);
+	t.animation.direction = 1;
+	if (dir < 0.0f) {
+		t.animation.direction = -1;
 	}
 	t.animation.timer = 0.0f;
-	t.animation.ttl = 1.0f;
+	t.animation.ttl = angle / min * 2.0f;
+	t.animationState = 0;
+	//DBG_LOG("angle %3.2f ttl %2.4f direction %d", (angle*360.0f / ds::TWO_PI), t.animation.ttl,t.animation.direction);
 }
 
+// -------------------------------------------------------------
+// show GUI
+// -------------------------------------------------------------
 void Towers::showGUI(int selectedTower) {
 	if (selectedTower != -1) {
 		gui::begin("Tower", 0);
