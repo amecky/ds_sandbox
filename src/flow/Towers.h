@@ -28,6 +28,7 @@ public:
 	void rotateTowers(const ds::vec3& target);
 	void showGUI(int selectedTower);
 private:
+	void startAnimation(int index);
 	std::vector<Tower> _towers;
 	RenderItem* _towerItem;
 	RenderItem* _baseItems[3];

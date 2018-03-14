@@ -325,17 +325,13 @@ void Mesh::load(const char* fileName) {
 	if (fp) {
 		int nr = 0;
 		fread(&nr, sizeof(int), 1, fp);
-		ds::log(LogLevel::LL_DEBUG, "nr: %d", nr);
 		for (size_t i = 0; i < nr; ++i) {
 			uint32_t num = 0;
 			fread(&num, sizeof(uint32_t), 1, fp);
-			ds::log(LogLevel::LL_DEBUG, "%d num: %d", i, num);
 			int nc = 0;
 			fread(&nc, sizeof(int), 1, fp);
-			ds::log(LogLevel::LL_DEBUG, "%d nc: %d", i, nc);
 			AttributeType type;
 			fread(&type, sizeof(AttributeType), 1, fp);
-			ds::log(LogLevel::LL_DEBUG, "%d type: %d", i, type);
 			float* data = new float[num * nc];
 			fread(data, sizeof(float), num * nc, fp);
 			addStream(type, data, num, nc);
@@ -412,6 +408,7 @@ void getFileTime(const char* fileName, FILETIME& time) {
 }
 
 void Mesh::loadData(const char* fileName, ds::matrix* world) {
+	DBG_LOG("loading object: '%s'", fileName);
 	bool load_obj = false;
 	char objName[256];
 	sprintf_s(objName, "obj\\%s.obj",fileName);
@@ -434,11 +431,12 @@ void Mesh::loadData(const char* fileName, ds::matrix* world) {
 	if (load_obj) {
 		sprintf_s(objName, "%s.obj", fileName);
 		obj::load("obj", objName, this, world);
-		calculate();
+		calculate();		
 		align();
 		save("models", fileName);
 	}
 	else {
 		load(binName);
 	}
+	DBG_LOG("extent: %3.2f %3.2f %3.2f", _extent.x, _extent.y, _extent.z)
 }

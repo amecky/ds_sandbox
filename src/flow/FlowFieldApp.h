@@ -13,7 +13,7 @@
 #include "Towers.h"
 #include <vector>
 #include "FlowFieldContext.h"
-
+#include "IsometricCamera.h"
 
 
 class FlowFieldApp : public TestApp {
@@ -52,6 +52,8 @@ private:
 	RenderItem* _cursorItem;
 	
 	FPSCamera* _fpsCamera;
+	IsometricCamera* _isoCamera;
+
 	ds::vec3 _lightDir[3];
 	ID _ids[GRID_SIZE_X * GRID_SIZE_Y];
 	ID _overlay_ids[GRID_SIZE_X * GRID_SIZE_Y];
@@ -77,4 +79,5 @@ private:
 	bool _dbgShowPath;
 	bool _dbgHandleButtons;
 	bool _dbgSnapToGrid;
+	bool _dbgIsoCamera;
 };

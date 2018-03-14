@@ -69,38 +69,28 @@ void IsometricCamera::resetPitch(float angle) {
 }
 
 void IsometricCamera::update(float elapsedTime) {
-	/*
+	bool moved = false;
+	ds::vec3 v(0.0f);
 	if (ds::isKeyPressed('W')) {
-		move(5.0f*elapsedTime);
+		v.z = 5.0f;
+		moved = true;
 	}
 	if (ds::isKeyPressed('S')) {
-		move(-5.0f*elapsedTime);
+		v.z = -5.0f;
+		moved = true;
 	}
-	*/
 	if (ds::isKeyPressed('A')) {
-		strafe(-5.0f*elapsedTime);
+		v.x = -5.0f;
+		moved = true;
 	}
 	if (ds::isKeyPressed('D')) {
-		strafe(5.0f*elapsedTime);
+		v.x = 5.0f;
+		moved = true;
 	}
-	if (ds::isKeyPressed('W')) {
-		up(5.0f*elapsedTime);
+	if (moved) {
+		_camera->position += v * elapsedTime;
+		buildView();
 	}
-	if (ds::isKeyPressed('S')) {
-		up(-5.0f*elapsedTime);
-	}
-	/*
-	ds::vec2 mp = ds::getMousePosition();
-	if (ds::isMouseButtonPressed(0)) {
-		// Make each pixel correspond to a quarter of a degree.
-		float dx = DEGTORAD(0.25f*(mp.x - _lastMousePos.x));
-		float dy = DEGTORAD(0.25f*(mp.y - _lastMousePos.y));
-		setPitch(dy);
-		setYaw(dx);			
-	}
-	_lastMousePos.x = mp.x;
-	_lastMousePos.y = mp.y;
-	*/
 }
 
 void IsometricCamera::buildView() {

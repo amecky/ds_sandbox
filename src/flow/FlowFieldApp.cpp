@@ -29,6 +29,7 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_dbgShowPath = true;
 	_dbgHandleButtons = true;
 	_dbgSnapToGrid = true;
+	_dbgIsoCamera = true;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -62,8 +63,12 @@ bool FlowFieldApp::init() {
 	
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
-	_fpsCamera->setPitch(30.0f / 360.0f * ds::TWO_PI);
-	_fpsCamera->setYaw(45.0f / 360.0f * ds::TWO_PI);
+	//_fpsCamera->setPitch(30.0f / 360.0f * ds::TWO_PI);
+	//_fpsCamera->setYaw(45.0f / 360.0f * ds::TWO_PI);
+
+	_isoCamera = new IsometricCamera(&_camera);
+	_isoCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+
 	_material = new InstancedAmbientLightningMaterial;
 
 	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
@@ -250,7 +255,12 @@ void FlowFieldApp::addTower(const p2i& gridPos) {
 // ----------------------------------------------------
 void FlowFieldApp::tick(float dt) {
 	if (_dbgMoveCamera) {
-		_fpsCamera->update(dt);
+		if (_dbgIsoCamera) {
+			_isoCamera->update(dt);
+		}
+		else {
+			_fpsCamera->update(dt);
+		}
 	}
 	moveWalkers(dt);
 
@@ -324,6 +334,7 @@ void FlowFieldApp::renderGUI() {
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Checkbox("Move camera", &_dbgMoveCamera);
+		gui::Checkbox("ISO camera", &_dbgIsoCamera);
 		gui::Checkbox("Handle buttons", &_dbgHandleButtons);
 		gui::Checkbox("Snap2Grid", &_dbgSnapToGrid);
 		gui::StepInput("Light Index", &_dbgSelectedLight, 0, 2, 1);

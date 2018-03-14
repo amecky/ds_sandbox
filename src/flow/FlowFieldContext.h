@@ -4,6 +4,13 @@
 #include "..\lib\DataArray.h"
 #include "..\utils\RenderItem.h"
 
+struct RotationAnimation {
+	float startAngle;
+	float endAngle;
+	int direction;
+	float timer;
+	float ttl;
+};
 // ---------------------------------------------------
 // Tower
 // ---------------------------------------------------
@@ -22,6 +29,7 @@ struct Tower {
 	int level;
 	RenderItem* renderItem;
 	RenderItem* baseItem;
+	RotationAnimation animation;
 };
 
 // ---------------------------------------------------
