@@ -15,7 +15,7 @@ public:
 	void init(Material* material);
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 	void upgradeTower(int index);
-	void addTower(const p2i& gridPos);
+	void addTower(const p2i& gridPos,int type);
 	int findTower(const p2i& gridPos) const;
 	const Tower& get(int index) const {
 		return _towers[index];
@@ -31,7 +31,7 @@ public:
 private:
 	void startAnimation(int index);
 	std::vector<Tower> _towers;
-	RenderItem* _towerItem;
+	RenderItem* _towerItems[2];
 	RenderItem* _baseItems[3];
 };
 

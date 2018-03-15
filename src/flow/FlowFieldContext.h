@@ -30,6 +30,7 @@ struct Tower {
 	RenderItem* baseItem;
 	RotationAnimation animation;
 	int animationState;
+	float offset;
 };
 
 // ---------------------------------------------------

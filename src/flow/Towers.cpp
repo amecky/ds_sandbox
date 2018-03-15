@@ -9,7 +9,7 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 		const Tower& t = _towers[i];
 		t.baseItem->getTransform().position = t.position;
 		t.baseItem->draw(renderPass, viewProjectionMatrix);
-		ds::vec3 tp = t.position + ds::vec3(0.0f, 0.38f, 0.0f);
+		ds::vec3 tp = t.position + ds::vec3(0.0f, t.offset, 0.0f);
 		t.renderItem->getTransform().position = tp;
 		t.renderItem->getTransform().pitch = t.direction;
 		t.renderItem->draw(renderPass, viewProjectionMatrix);
@@ -23,8 +23,10 @@ void Towers::init(Material* material) {
 	ds::matrix s = ds::matScale(ds::vec3(0.5f, 0.5f, 0.5f));
 	ds::matrix r = ds::matRotationY(ds::PI * 1.5f);
 	ds::matrix w = s * r;
-	_towerItem = new RenderItem("cannon", material);// , &w);
-	_towerItem->getTransform().position = ds::vec3(0.0f);
+	_towerItems[0] = new RenderItem("cannon", material);
+	_towerItems[1] = new RenderItem("bomber", material);
+	_towerItems[0]->getTransform().position = ds::vec3(0.0f);
+	_towerItems[1]->getTransform().position = ds::vec3(0.0f);
 
 	_baseItems[0] = new RenderItem("green_base", material);
 	_baseItems[1] = new RenderItem("yellow_base", material);
@@ -61,13 +63,17 @@ void Towers::upgradeTower(int index) {
 // -------------------------------------------------------------
 // add tower
 // -------------------------------------------------------------
-void Towers::addTower(const p2i& gridPos) {
+void Towers::addTower(const p2i& gridPos, int type) {
 	Tower t;
-	t.renderItem = _towerItem;
+	t.renderItem = _towerItems[type];
+	t.offset = 0.26f;
+	if (type == 1) {
+		t.offset = 0.35f;
+	}
 	t.baseItem = _baseItems[0];
 	t.gx = gridPos.x;
 	t.gy = gridPos.y;
-	t.position = ds::vec3(-10.0f + gridPos.x, 0.24f, -6.0f + gridPos.y);
+	t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
 	t.level = 0;
 	t.radius = 2.0f;
 	t.direction = 0.0f;

@@ -80,4 +80,5 @@ private:
 	bool _dbgHandleButtons;
 	bool _dbgSnapToGrid;
 	bool _dbgIsoCamera;
+	int _dbgTowerType;
 };

@@ -30,6 +30,7 @@ FlowFieldApp::FlowFieldApp() : TestApp() {
 	_dbgHandleButtons = true;
 	_dbgSnapToGrid = true;
 	_dbgIsoCamera = true;
+	_dbgTowerType = 0;
 }
 
 FlowFieldApp::~FlowFieldApp() {
@@ -62,12 +63,12 @@ ds::RenderSettings FlowFieldApp::getRenderSettings() {
 bool FlowFieldApp::init() {
 	
 	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_fpsCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 	//_fpsCamera->setPitch(30.0f / 360.0f * ds::TWO_PI);
 	//_fpsCamera->setYaw(45.0f / 360.0f * ds::TWO_PI);
 
 	_isoCamera = new IsometricCamera(&_camera);
-	_isoCamera->setPosition(ds::vec3(0, 12, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_isoCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_material = new InstancedAmbientLightningMaterial;
 
@@ -246,7 +247,7 @@ void FlowFieldApp::addTower(const p2i& gridPos) {
 		_flowField->build(_endPoint);
 		updateOverlay();
 		buildPath();
-		_towers.addTower(gridPos);
+		_towers.addTower(gridPos, _dbgTowerType);
 	}
 }
 
@@ -344,6 +345,7 @@ void FlowFieldApp::renderGUI() {
 		gui::Slider("L-Y", &_lightDir[_dbgSelectedLight].y, -1.0f, 1.0f);
 		gui::Slider("L-Z", &_lightDir[_dbgSelectedLight].z, -1.0f, 1.0f);
 		gui::Checkbox("Overlay", &_dbgShowOverlay);
+		gui::StepInput("Tower Idx", &_dbgTowerType, 0, 1, 1);
 		gui::Value("Selected", _dbgSelected);
 		if (_dbgSelected.x != -1 && _dbgSelected.y != -1) {
 			int type = _grid->get(_dbgSelected);
