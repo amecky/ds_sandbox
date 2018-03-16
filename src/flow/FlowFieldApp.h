@@ -14,9 +14,9 @@
 #include <vector>
 #include "FlowFieldContext.h"
 #include "IsometricCamera.h"
+#include <ds_base_app.h>
 
-
-class FlowFieldApp : public TestApp {
+class FlowFieldApp : public ds::BaseScene {
 
 	enum ObjectState {
 		IDLE,MOVING,STEPPING,ROTATING,WALKING
@@ -24,14 +24,10 @@ class FlowFieldApp : public TestApp {
 public:
 	FlowFieldApp();
 	virtual ~FlowFieldApp();
-	ds::RenderSettings getRenderSettings();
-	bool usesGUI() {
-		return true;
-	}
-	bool init();
-	void tick(float dt);
+	void initialize();
+	void update(float dt);
 	void render();
-	void renderGUI();
+	void showGUI();
 	void OnButtonClicked(int index);
 private:
 	void moveWalkers(float dt);

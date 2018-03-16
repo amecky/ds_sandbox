@@ -159,9 +159,6 @@
     <ClInclude Include="src\warp\WarpingGridApp.h">
       <Filter>warp</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\EventStream.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\instancing\Border.h">
       <Filter>instancing</Filter>
     </ClInclude>
@@ -226,6 +223,10 @@
     <ClInclude Include="src\flow\IsometricCamera.h">
       <Filter>flow</Filter>
     </ClInclude>
+    <ClInclude Include="ext\ds_base_app.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SandboxApp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -304,9 +305,6 @@
     <ClCompile Include="src\warp\WarpingGridApp.cpp">
       <Filter>warp</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\EventStream.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\instancing\Border.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
@@ -356,6 +354,8 @@
     <ClCompile Include="src\flow\IsometricCamera.cpp">
       <Filter>flow</Filter>
     </ClCompile>
+    <ClCompile Include="src\SandboxApp.cpp" />
+    <ClCompile Include="src\PerfPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

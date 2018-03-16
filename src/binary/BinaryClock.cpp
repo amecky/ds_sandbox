@@ -6,11 +6,6 @@
 #include <Windows.h>
 #include "..\Mesh.h"
 
-void bbLogHandler(const LogLevel&, const char* message) {
-	OutputDebugString(message);
-	OutputDebugString("\n");
-}
-
 const ds::Color COLORS[] = {
 	ds::Color(1.0f,1.0f,1.0f,1.0f),
 	ds::Color(1.0f,0.0f,0.0f,1.0f),
@@ -78,25 +73,9 @@ BinaryClock::~BinaryClock() {
 }
 
 // ---------------------------------------------------------------
-// get rendersettings
-// ---------------------------------------------------------------
-ds::RenderSettings BinaryClock::getRenderSettings() {
-	ds::RenderSettings rs;
-	rs.width = 1024;
-	rs.height = 768;
-	rs.title = "Binary Clock";
-	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
-	rs.multisampling = 4;
-	rs.useGPUProfiling = false;
-	rs.supportDebug = false;
-	rs.logHandler = bbLogHandler;
-	return rs;
-}
-
-// ---------------------------------------------------------------
 // init
 // ---------------------------------------------------------------
-bool BinaryClock::init() {
+void BinaryClock::initialize() {
 	
 	ds::matrix viewMatrix = ds::matLookAtLH(ds::vec3(0.0f, 1.0f, -3.0f), ds::vec3(0, 0, 0), ds::vec3(0, 1, 0));
 	ds::matrix projectionMatrix = ds::matPerspectiveFovLH(ds::PI / 4.0f, ds::getScreenAspectRatio(), 0.01f, 100.0f);
@@ -112,12 +91,6 @@ bool BinaryClock::init() {
 		0.0f,
 		0.0f
 	};
-
-	ds::ViewportInfo vpInfo = { 1024, 768, 0.0f, 1.0f };
-	RID vp = ds::createViewport(vpInfo);
-
-	ds::RenderPassInfo rpInfo = { &_camera, vp, ds::DepthBufferState::ENABLED, 0, 0 };
-	_basicPass = ds::createRenderPass(rpInfo);
 
 	RID textureID = loadImageFromFile("content\\NormalBlock.png");
 
@@ -212,14 +185,12 @@ bool BinaryClock::init() {
 
 	_rotationDelay = 0.2f;
 
-	return true;
-
 }
 
 // ---------------------------------------------------------------
 // tick
 // ---------------------------------------------------------------
-void BinaryClock::tick(float dt) {
+void BinaryClock::update(float dt) {
 	_fpsCamera->update(dt);
 	if (_running) {
 		_timer += dt;
@@ -299,7 +270,7 @@ void BinaryClock::render() {
 // ---------------------------------------------------------------
 // renderGUI
 // ---------------------------------------------------------------
-void BinaryClock::renderGUI() {
+void BinaryClock::showGUI() {
 	int state = 1;
 	p2i sp = p2i(10, 760);
 	gui::start(&sp,300);	

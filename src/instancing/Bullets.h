@@ -2,7 +2,7 @@
 #include <diesel.h>
 #include "..\utils\fixed_array.h"
 #include "Billboards.h"
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 
 namespace bullets {
 

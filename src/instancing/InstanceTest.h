@@ -8,7 +8,7 @@
 #include "Player.h"
 #include "Billboards.h"
 #include "..\warp\WarpingGrid.h"
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 #include "Bullets.h"
 #include "..\Material.h"
 #include "..\gpuparticles\GPUParticlesystem.h"

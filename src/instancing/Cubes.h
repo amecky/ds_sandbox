@@ -2,7 +2,7 @@
 #include <diesel.h>
 #include "..\utils\DynamicPath.h"
 #include "..\utils\RenderItem.h"
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 #include "InstanceCommon.h"
 #include "Bullets.h"
 

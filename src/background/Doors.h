@@ -3,7 +3,7 @@
 #include "..\TestApp.h"
 #include "..\utils\RenderItem.h"
 #include "..\instancing\InstanceCommon.h"
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 #include "..\kenney\Camera.h"
 #include "..\utils\SimpleGrid.h"
 #include "..\Material.h"

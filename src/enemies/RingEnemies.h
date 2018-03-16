@@ -2,7 +2,7 @@
 #include <diesel.h>
 #include "..\utils\RenderItem.h"
 #include "..\instancing\InstanceCommon.h"
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 #include "..\instancing\Bullets.h"
 
 class Enemies {

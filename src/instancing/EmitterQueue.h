@@ -1,5 +1,5 @@
 #pragma once
-#include "..\utils\EventStream.h"
+#include <ds_base_app.h>
 
 struct QueueEntry {
 	int x;

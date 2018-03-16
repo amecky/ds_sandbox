@@ -1,5 +1,5 @@
 #pragma once
-#include "..\TestApp.h"
+#include <ds_base_app.h>
 #include "..\kenney\Camera.h"
 
 struct TimeCol {
@@ -38,24 +38,18 @@ struct BinaryClockConstantBuffer {
 	float more;
 };
 
-class BinaryClock : public TestApp {
+class BinaryClock : public ds::BaseScene {
 
 public:
 	BinaryClock();
 
 	virtual ~BinaryClock();
+	
+	void showGUI();
 
-	ds::RenderSettings getRenderSettings();
+	void initialize();
 
-	bool usesGUI() {
-		return true;
-	}
-
-	void renderGUI();
-
-	bool init();
-
-	void tick(float dt);
+	void update(float dt);
 
 	void render();
 
@@ -63,9 +57,7 @@ private:
 	float _timer;
 	Vertex _vertices[24];
 	RID _drawItem;
-	RID _basicPass;
 	BinaryClockConstantBuffer _constantBuffer;
-	ds::Camera _camera;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightPos;
 	bool _rotate;

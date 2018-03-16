@@ -7,7 +7,7 @@
 #include "..\..\shaders\RepeatingGrid_PS_MainXZ.h"
 #include "..\utils\common_math.h"
 
-FlowFieldApp::FlowFieldApp() : TestApp() {
+FlowFieldApp::FlowFieldApp() : ds::BaseScene() {
 	_grid = new Grid(GRID_SIZE_X, GRID_SIZE_Y);
 	_startPoint = p2i(0, 0);
 	_endPoint = p2i(0, 0);
@@ -42,25 +42,10 @@ FlowFieldApp::~FlowFieldApp() {
 	delete _material;
 }
 
-// -------------------------------------------------------------
-// get render settings
-// -------------------------------------------------------------
-ds::RenderSettings FlowFieldApp::getRenderSettings() {
-	ds::RenderSettings rs;
-	rs.width = 1280;
-	rs.height = 720;
-	rs.title = "FlowFieldApp";
-	rs.clearColor = ds::Color(0.01f, 0.01f, 0.01f, 1.0f);
-	rs.multisampling = 4;
-	rs.useGPUProfiling = false;
-	rs.supportDebug = false;
-	return rs;
-}
-
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
-bool FlowFieldApp::init() {
+void FlowFieldApp::initialize() {
 	
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
@@ -115,7 +100,6 @@ bool FlowFieldApp::init() {
 	_endItem = new RenderItem("end", _ambient_material);
 	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
 
-	return true;
 }
 
 void FlowFieldApp::startWalker() {
@@ -254,7 +238,7 @@ void FlowFieldApp::addTower(const p2i& gridPos) {
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
-void FlowFieldApp::tick(float dt) {
+void FlowFieldApp::update(float dt) {
 	if (_dbgMoveCamera) {
 		if (_dbgIsoCamera) {
 			_isoCamera->update(dt);
@@ -329,7 +313,7 @@ void FlowFieldApp::render() {
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void FlowFieldApp::renderGUI() {
+void FlowFieldApp::showGUI() {
 	int state = 1;
 	p2i sp = p2i(10, 710);
 	gui::start(&sp, 320);

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <stdint.h>
 //#define DS_PROFILER_IMPLEMENTATION
 
 namespace perf {
