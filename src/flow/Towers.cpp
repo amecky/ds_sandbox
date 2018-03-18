@@ -1,5 +1,6 @@
 #include "Towers.h"
 #include "..\utils\common_math.h"
+#include "..\utils\CSVFile.h"
 
 // -------------------------------------------------------------
 // render
@@ -20,17 +21,28 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 // init
 // -------------------------------------------------------------
 void Towers::init(Material* material) {	 
-	ds::matrix s = ds::matScale(ds::vec3(0.5f, 0.5f, 0.5f));
-	ds::matrix r = ds::matRotationY(ds::PI * 1.5f);
-	ds::matrix w = s * r;
 	_towerItems[0] = new RenderItem("cannon", material);
 	_towerItems[1] = new RenderItem("bomber", material);
-	_towerItems[0]->getTransform().position = ds::vec3(0.0f);
-	_towerItems[1]->getTransform().position = ds::vec3(0.0f);
-
+	_towerItems[2] = new RenderItem("rocket", material);
+	_towerItems[3] = new RenderItem("slow_down", material);
 	_baseItems[0] = new RenderItem("green_base", material);
 	_baseItems[1] = new RenderItem("yellow_base", material);
 	_baseItems[2] = new RenderItem("red_base", material);
+
+	CSVFile file;
+	if (file.load("tower_definitions.csv", "resources")) {
+		for (size_t i = 0; i < file.size(); ++i) {
+			const TextLine& line = file.get(i);
+			line.get(0,&_definitions[i].offset);
+		}
+	}
+	else {
+		DBG_LOG("Cannot load csv file");
+	}
+	addTower(p2i(12, 5), 0);
+	addTower(p2i(12, 4), 1);
+	addTower(p2i(12, 6), 2);
+	addTower(p2i(12, 7), 3);
 }
 
 // -------------------------------------------------------------
@@ -66,10 +78,7 @@ void Towers::upgradeTower(int index) {
 void Towers::addTower(const p2i& gridPos, int type) {
 	Tower t;
 	t.renderItem = _towerItems[type];
-	t.offset = 0.26f;
-	if (type == 1) {
-		t.offset = 0.35f;
-	}
+	t.offset = _definitions[type].offset;
 	t.baseItem = _baseItems[0];
 	t.gx = gridPos.x;
 	t.gy = gridPos.y;

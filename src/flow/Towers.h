@@ -7,6 +7,10 @@
 #include "..\lib\DataArray.h"
 #include "FlowFieldContext.h"
 
+struct TowerDefinition {
+	float offset;
+};
+
 class Towers {
 
 public:
@@ -31,7 +35,8 @@ public:
 private:
 	void startAnimation(int index);
 	std::vector<Tower> _towers;
-	RenderItem* _towerItems[2];
+	RenderItem* _towerItems[10];
 	RenderItem* _baseItems[3];
+	TowerDefinition _definitions[10];
 };
 

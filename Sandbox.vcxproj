@@ -40,6 +40,7 @@
     <ClInclude Include="src\flow\FlowFieldContext.h" />
     <ClInclude Include="src\flow\Grid.h" />
     <ClInclude Include="src\flow\IsometricCamera.h" />
+    <ClInclude Include="src\flow\ParticleManager.h" />
     <ClInclude Include="src\flow\Towers.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
@@ -73,6 +74,7 @@
     <ClInclude Include="src\TestSpriteApp.h" />
     <ClInclude Include="src\tweening\TweeningTest.h" />
     <ClInclude Include="src\utils\common_math.h" />
+    <ClInclude Include="src\utils\CSVFile.h" />
     <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\fixed_array.h" />
     <ClInclude Include="src\utils\obj.h" />
@@ -96,6 +98,7 @@
     <ClCompile Include="src\flow\FlowField.cpp" />
     <ClCompile Include="src\flow\FlowFieldApp.cpp" />
     <ClCompile Include="src\flow\IsometricCamera.cpp" />
+    <ClCompile Include="src\flow\ParticleManager.cpp" />
     <ClCompile Include="src\flow\Towers.cpp" />
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
@@ -126,6 +129,7 @@
     <ClCompile Include="src\TestSpriteApp.cpp" />
     <ClCompile Include="src\tweening\TweeningTest.cpp" />
     <ClCompile Include="src\utils\common_math.cpp" />
+    <ClCompile Include="src\utils\CSVFile.cpp" />
     <ClCompile Include="src\utils\obj.cpp" />
     <ClCompile Include="src\utils\RenderItem.cpp" />
     <ClCompile Include="src\utils\SimpleGrid.cpp" />

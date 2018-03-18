@@ -227,6 +227,12 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\SandboxApp.h" />
+    <ClInclude Include="src\utils\CSVFile.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flow\ParticleManager.h">
+      <Filter>flow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -356,6 +362,12 @@
     </ClCompile>
     <ClCompile Include="src\SandboxApp.cpp" />
     <ClCompile Include="src\PerfPanel.cpp" />
+    <ClCompile Include="src\utils\CSVFile.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\flow\ParticleManager.cpp">
+      <Filter>flow</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />

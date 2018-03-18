@@ -329,7 +329,7 @@ void FlowFieldApp::showGUI() {
 		gui::Slider("L-Y", &_lightDir[_dbgSelectedLight].y, -1.0f, 1.0f);
 		gui::Slider("L-Z", &_lightDir[_dbgSelectedLight].z, -1.0f, 1.0f);
 		gui::Checkbox("Overlay", &_dbgShowOverlay);
-		gui::StepInput("Tower Idx", &_dbgTowerType, 0, 1, 1);
+		gui::StepInput("Tower Idx", &_dbgTowerType, 0, 3, 1);
 		gui::Value("Selected", _dbgSelected);
 		if (_dbgSelected.x != -1 && _dbgSelected.y != -1) {
 			int type = _grid->get(_dbgSelected);
