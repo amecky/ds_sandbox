@@ -1,4 +1,5 @@
 #pragma once
+#include <ds_base_app.h>
 #include "..\TestApp.h"
 #include "..\instancing\InstanceCommon.h"
 #include "..\Mesh.h"
@@ -14,7 +15,25 @@
 #include <vector>
 #include "FlowFieldContext.h"
 #include "IsometricCamera.h"
-#include <ds_base_app.h>
+#include "ParticleManager.h"
+
+struct DebugContext {
+	int selectedLight;
+	bool moveCamera;
+	float length;
+	ds::vec3 nextPos;
+	p2i flowNext;
+	ds::vec3 diff;
+	bool move;
+	ds::vec3 V;
+	p2i selected;
+	bool showOverlay;
+	bool showPath;
+	bool handleButtons;
+	bool snapToGrid;
+	bool isoCamera;
+	int towerType;
+};
 
 class FlowFieldApp : public ds::BaseScene {
 
@@ -32,7 +51,7 @@ public:
 private:
 	void moveWalkers(float dt);
 	void updateOverlay();
-	void addTower(const p2i& gridPos);
+	void addTower(const p2i& gridPos, int type);
 	void buildPath();
 	void startWalker();
 	AmbientLightningMaterial* _ambient_material;
@@ -47,6 +66,8 @@ private:
 	RenderItem* _walkerItem;
 	RenderItem* _cursorItem;
 	
+	ParticleManager* _particles;
+	RID _particlePass;
 	FPSCamera* _fpsCamera;
 	IsometricCamera* _isoCamera;
 
@@ -62,19 +83,5 @@ private:
 	std::vector<PathItem> _path;
 	ds::DataArray<Walker> _walkers;
 
-	int _dbgSelectedLight;
-	bool _dbgMoveCamera;
-	float _dbgLength;
-	ds::vec3 _dbgNextPos;
-	p2i _dbgFlowNext;
-	ds::vec3 _dbgDiff;
-	bool _dbgMove;
-	ds::vec3 _dbgV;
-	p2i _dbgSelected;
-	bool _dbgShowOverlay;
-	bool _dbgShowPath;
-	bool _dbgHandleButtons;
-	bool _dbgSnapToGrid;
-	bool _dbgIsoCamera;
-	int _dbgTowerType;
+	DebugContext _dbgCtx;
 };

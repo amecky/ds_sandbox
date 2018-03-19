@@ -39,10 +39,7 @@ void Towers::init(Material* material) {
 	else {
 		DBG_LOG("Cannot load csv file");
 	}
-	addTower(p2i(12, 5), 0);
-	addTower(p2i(12, 4), 1);
-	addTower(p2i(12, 6), 2);
-	addTower(p2i(12, 7), 3);
+	
 }
 
 // -------------------------------------------------------------
