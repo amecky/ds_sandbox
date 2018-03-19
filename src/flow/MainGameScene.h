@@ -1,9 +1,8 @@
 #pragma once
-#include "..\TestApp.h"
 #include "..\instancing\InstanceCommon.h"
 #include "..\Mesh.h"
+#include "..\utils\Camera.h"
 #include "IsometricCamera.h"
-#include "..\utils\SimpleGrid.h"
 #include "..\Material.h"
 #include "..\utils\TransformComponent.h"
 #include "..\utils\RenderItem.h"
@@ -16,14 +15,16 @@
 #include "IsometricCamera.h"
 #include <ds_base_app.h>
 
-class FlowFieldApp : public ds::BaseScene {
+struct GameContext;
+
+class MainGameScene : public ds::BaseScene {
 
 	enum ObjectState {
 		IDLE,MOVING,STEPPING,ROTATING,WALKING
 	};
 public:
-	FlowFieldApp();
-	virtual ~FlowFieldApp();
+	MainGameScene(GameContext* gameContext);
+	virtual ~MainGameScene();
 	void initialize();
 	void update(float dt);
 	void render();
@@ -32,14 +33,15 @@ public:
 private:
 	void moveWalkers(float dt);
 	void updateOverlay();
-	void addTower(const p2i& gridPos);
+	void addTower(const p2i& gridPos, int type);
 	void buildPath();
 	void startWalker();
-	AmbientLightningMaterial* _ambient_material;
-	InstancedAmbientLightningMaterial* _material;
+
+	GameContext* _gameContext;
+	
 	InstancedRenderItem* _renderItem;
 	InstancedRenderItem* _overlayItem;
-	Towers _towers;
+	
 	
 	RenderItem* _startItem;
 	RenderItem* _endItem;

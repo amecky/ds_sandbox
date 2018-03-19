@@ -39,10 +39,7 @@ void Towers::init(Material* material) {
 	else {
 		DBG_LOG("Cannot load csv file");
 	}
-	addTower(p2i(12, 5), 0);
-	addTower(p2i(12, 4), 1);
-	addTower(p2i(12, 6), 2);
-	addTower(p2i(12, 7), 3);
+	
 }
 
 // -------------------------------------------------------------
@@ -82,7 +79,7 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.baseItem = _baseItems[0];
 	t.gx = gridPos.x;
 	t.gy = gridPos.y;
-	t.position = ds::vec3(-10.0f + gridPos.x, 0.15f, -6.0f + gridPos.y);
+	t.position = ds::vec3(_worldOffset.x + gridPos.x, 0.15f, _worldOffset.y + gridPos.y);
 	t.level = 0;
 	t.radius = 2.0f;
 	t.direction = 0.0f;

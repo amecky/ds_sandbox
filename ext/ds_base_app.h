@@ -54,6 +54,15 @@ namespace ds {
 		uint32_t _index;
 	};
 
+	class RenderContext {
+
+	public:
+		RenderContext() {}
+		~RenderContext() {}
+	private:
+
+	};
+
 	// ----------------------------------------------------
 	// Scene
 	// ----------------------------------------------------
@@ -187,6 +196,9 @@ namespace ds {
 			return _running;
 		}		
 		SpriteBatchBuffer* createSpriteBatchBuffer(RID textureID, int maxSprites);
+		RenderContext* getRenderContext() const {
+			return _renderContext;
+		}
 	protected:
 		void stopGame() {
 			_running = false;
@@ -204,6 +216,7 @@ namespace ds {
 		bool _guiKeyPressed;
 		bool _guiActive;
 		bool _running;
+		RenderContext* _renderContext;
 		ButtonState _buttonStates[2];
 	};
 

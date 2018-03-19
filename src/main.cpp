@@ -14,6 +14,8 @@
 #include <ds_imgui.h>
 #define BASE_APP_IMPLEMENTATION
 #include <ds_base_app.h>
+#define DS_TWEENING_IMPLEMENTATION
+#include <ds_tweening.h>
 
 extern ds::BaseApp* app;
 

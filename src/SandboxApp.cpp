@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <stb_image.h>
 #include <ds_imgui.h>
+#include "Material.h"
 
 ds::BaseApp *app = new SandboxApp();
 
@@ -13,11 +14,14 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 	_settings.useIMGUI = true;
 	_settings.clearColor = ds::Color(16, 16, 16, 255);
 	_settings.guiToggleKey = 'O';
+	_gameContext = new GameContext;
 }
 
 
 SandboxApp::~SandboxApp() {
-	delete _clock;
+	delete _gameContext->ambientMaterial;
+	delete _gameContext->instancedAmbientmaterial;
+	delete _gameContext;
 	delete _flowFieldScene;
 }
 
@@ -25,10 +29,13 @@ SandboxApp::~SandboxApp() {
 // initialize
 // ---------------------------------------------------------------
 void SandboxApp::initialize() {
-	_flowFieldScene = new FlowFieldApp;
-	_clock = new BinaryClock;
-	pushScene(_flowFieldScene);
-	//pushScene(_clock);
+	_gameContext->ambientMaterial = new AmbientLightningMaterial;
+	_gameContext->instancedAmbientmaterial = new InstancedAmbientLightningMaterial;
+	_gameContext->towers.init(_gameContext->ambientMaterial);
+	_flowFieldScene = new MainGameScene(_gameContext);
+	_towerTestScene = new TowerTestScene(_gameContext);
+	//pushScene(_flowFieldScene);
+	pushScene(_towerTestScene);
 }
 
 // ---------------------------------------------------------------

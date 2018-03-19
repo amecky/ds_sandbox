@@ -1,13 +1,13 @@
-#include "FlowFieldApp.h"
+#include "MainGameScene.h"
 #include <ds_imgui.h>
 #include "..\..\shaders\AmbientMultipleLightning_VS_Main.h"
 #include "..\..\shaders\AmbientMultipleLightning_PS_Main.h"
-#include "..\utils\tweening.h"
 #include "..\..\shaders\RepeatingGrid_VS_Main.h"
 #include "..\..\shaders\RepeatingGrid_PS_MainXZ.h"
 #include "..\utils\common_math.h"
+#include "..\GameContext.h"
 
-FlowFieldApp::FlowFieldApp() : ds::BaseScene() {
+MainGameScene::MainGameScene(GameContext* gameContext) : ds::BaseScene() , _gameContext(gameContext) {
 	_grid = new Grid(GRID_SIZE_X, GRID_SIZE_Y);
 	_startPoint = p2i(0, 0);
 	_endPoint = p2i(0, 0);
@@ -33,19 +33,18 @@ FlowFieldApp::FlowFieldApp() : ds::BaseScene() {
 	_dbgTowerType = 0;
 }
 
-FlowFieldApp::~FlowFieldApp() {
+MainGameScene::~MainGameScene() {
 	delete _overlayItem;
 	delete _flowField;
 	delete _grid;
 	delete _renderItem;
 	delete _fpsCamera;
-	delete _material;
 }
 
 // ----------------------------------------------------
 // init
 // ----------------------------------------------------
-void FlowFieldApp::initialize() {
+void MainGameScene::initialize() {
 	
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
@@ -55,14 +54,14 @@ void FlowFieldApp::initialize() {
 	_isoCamera = new IsometricCamera(&_camera);
 	_isoCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
-	_material = new InstancedAmbientLightningMaterial;
+	
 
 	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
 	_lightDir[2] = ds::vec3(-0.3f,0.7f,-0.2f);
 	
-	_renderItem = new InstancedRenderItem("basic_floor", _material, GRID_SIZE_X * GRID_SIZE_Y);
-	_overlayItem = new InstancedRenderItem("arrow", _material, GRID_SIZE_X * GRID_SIZE_Y);
+	_renderItem = new InstancedRenderItem("basic_floor", _gameContext->instancedAmbientmaterial, GRID_SIZE_X * GRID_SIZE_Y);
+	_overlayItem = new InstancedRenderItem("arrow", _gameContext->instancedAmbientmaterial, GRID_SIZE_X * GRID_SIZE_Y);
 
 	for (int y = 0; y < _grid->height; ++y) {
 		for (int x = 0; x < _grid->width; ++x) {			
@@ -85,24 +84,27 @@ void FlowFieldApp::initialize() {
 			}
 		}
 	}
-	_ambient_material = new AmbientLightningMaterial;
-	_walkerItem = new RenderItem("simple_walker", _ambient_material);
+	
+	_walkerItem = new RenderItem("simple_walker", _gameContext->ambientMaterial);
 	_selected = -1;
 
-	_pathItem = new RenderItem("arrow", _ambient_material);
-	_cursorItem = new RenderItem("cursor", _ambient_material);
+	_pathItem = new RenderItem("arrow", _gameContext->ambientMaterial);
+	_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
 	
-	_towers.init(_ambient_material);
-
-	_startItem = new RenderItem("start", _ambient_material);
+	_startItem = new RenderItem("start", _gameContext->ambientMaterial);
 	_startItem->getTransform().position = ds::vec3(-10.0f + _startPoint.x, 0.2f, -6.0f + _startPoint.y);
 
-	_endItem = new RenderItem("end", _ambient_material);
+	_endItem = new RenderItem("end", _gameContext->ambientMaterial);
 	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
+
+	addTower(p2i(12, 5), 0);
+	addTower(p2i(12, 4), 1);
+	addTower(p2i(12, 6), 2);
+	addTower(p2i(12, 7), 3);
 
 }
 
-void FlowFieldApp::startWalker() {
+void MainGameScene::startWalker() {
 	ID id = _walkers.add();
 	Walker& walker = _walkers.get(id);
 	walker.renderItem = _walkerItem;
@@ -124,7 +126,7 @@ float getAngle(const ds::vec2& u, const ds::vec2& v) {
 	return (float)ang;
 }
 
-void FlowFieldApp::buildPath() {
+void MainGameScene::buildPath() {
 	_path.clear();
 	p2i gp = _startPoint;
 	//_path.push_back(gp);
@@ -142,7 +144,7 @@ void FlowFieldApp::buildPath() {
 // ---------------------------------------------------------------
 // move walkers
 // ---------------------------------------------------------------
-void FlowFieldApp::moveWalkers(float dt) {
+void MainGameScene::moveWalkers(float dt) {
 	if (_dbgMove) {
 		for (uint32_t i = 0; i < _walkers.numObjects; ++i) {
 			Walker& walker = _walkers.objects[i];
@@ -177,7 +179,7 @@ void FlowFieldApp::moveWalkers(float dt) {
 // -------------------------------------------------------------
 // on button clicked
 // -------------------------------------------------------------
-void FlowFieldApp::OnButtonClicked(int index) {
+void MainGameScene::OnButtonClicked(int index) {
 	if (_dbgHandleButtons) {
 		if (index == 0) {
 			Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
@@ -190,10 +192,10 @@ void FlowFieldApp::OnButtonClicked(int index) {
 				int type = _grid->get(gridPos);
 				if (type == 0) {
 					DBG_LOG("Adding tower at %d %d", gridPos.x, gridPos.y);
-					addTower(gridPos);
+					addTower(gridPos, _selectedTower);
 				}
 				else {
-					_selectedTower = _towers.findTower(gridPos);
+					_selectedTower = _gameContext->towers.findTower(gridPos);
 				}
 			}
 			else {
@@ -206,7 +208,7 @@ void FlowFieldApp::OnButtonClicked(int index) {
 // -------------------------------------------------------------
 // update overlay
 // -------------------------------------------------------------
-void FlowFieldApp::updateOverlay() {
+void MainGameScene::updateOverlay() {
 	for (int y = 0; y < _grid->height; ++y) {
 		for (int x = 0; x < _grid->width; ++x) {
 			int type = _grid->get(x, y);
@@ -225,20 +227,20 @@ void FlowFieldApp::updateOverlay() {
 // -------------------------------------------------------------
 // add tower
 // -------------------------------------------------------------
-void FlowFieldApp::addTower(const p2i& gridPos) {
+void MainGameScene::addTower(const p2i& gridPos, int type) {
 	if (_grid->get(gridPos) == 0) {
 		_grid->set(gridPos.x, gridPos.y, 1);
 		_flowField->build(_endPoint);
 		updateOverlay();
 		buildPath();
-		_towers.addTower(gridPos, _dbgTowerType);
+		_gameContext->towers.addTower(gridPos, type);
 	}
 }
 
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
-void FlowFieldApp::update(float dt) {
+void MainGameScene::update(float dt) {
 	if (_dbgMoveCamera) {
 		if (_dbgIsoCamera) {
 			_isoCamera->update(dt);
@@ -249,9 +251,9 @@ void FlowFieldApp::update(float dt) {
 	}
 	moveWalkers(dt);
 
-	_towers.rotateTowers(&_walkers);
+	_gameContext->towers.rotateTowers(&_walkers);
 
-	_towers.tick(dt);
+	_gameContext->towers.tick(dt);
 
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
@@ -274,11 +276,11 @@ void FlowFieldApp::update(float dt) {
 // ----------------------------------------------------
 // render
 // ----------------------------------------------------
-void FlowFieldApp::render() {
+void MainGameScene::render() {
 	// update lights
 	for (int i = 0; i < 3; ++i) {
-		_material->setLightDirection(i, _lightDir[i]);
-		_ambient_material->setLightDirection(i, normalize(_lightDir[i]));
+		_gameContext->instancedAmbientmaterial->setLightDirection(i, _lightDir[i]);
+		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
 	_renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// overlay
@@ -307,13 +309,13 @@ void FlowFieldApp::render() {
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
-	_towers.render(_basicPass, _camera.viewProjectionMatrix);
+	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 }
 
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void FlowFieldApp::showGUI() {
+void MainGameScene::showGUI() {
 	int state = 1;
 	p2i sp = p2i(10, 710);
 	gui::start(&sp, 320);
@@ -337,11 +339,11 @@ void FlowFieldApp::showGUI() {
 			int d = _flowField->get(_dbgSelected.x, _dbgSelected.y);
 			gui::Value("Flowfield", d);
 			if (gui::Button("Add tower")) {
-				addTower(_dbgSelected);
+				addTower(_dbgSelected,_dbgTowerType);
 			}
 		}
 		
-		_towers.showGUI(_selectedTower);
+		_gameContext->towers.showGUI(_selectedTower);
 		
 		gui::begin("Walker", 0);
 		gui::Checkbox("Move", &_dbgMove);
