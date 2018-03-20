@@ -14,9 +14,12 @@ struct TowerDefinition {
 class Towers {
 
 public:
-	Towers() {}
+	Towers() : _worldOffset(-10.0f,-6.0f) {}
 	~Towers() {}
 	void init(Material* material);
+	void setWorldOffset(const ds::vec2& offset) {
+		_worldOffset = offset;
+	}
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 	void upgradeTower(int index);
 	void addTower(const p2i& gridPos,int type);
@@ -38,5 +41,6 @@ private:
 	RenderItem* _towerItems[10];
 	RenderItem* _baseItems[3];
 	TowerDefinition _definitions[10];
+	ds::vec2 _worldOffset;
 };
 

@@ -6,8 +6,9 @@
 #include <ds_profiler.h>
 #define DS_VM_IMPLEMENTATION
 #include <ds_vm.h>
-#include "flow\FlowFieldApp.h"
-#include "binary\BinaryClock.h"
+#include "flow\MainGameScene.h"
+#include "scenes\TowerTestScene.h"
+#include "GameContext.h"
 
 class SandboxApp: public ds::BaseApp {
 
@@ -18,6 +19,7 @@ public:
 	void handleEvents(ds::EventStream* events);
 	void update(float dt);
 private:
-	FlowFieldApp* _flowFieldScene;
-	BinaryClock* _clock;
+	MainGameScene* _flowFieldScene;
+	TowerTestScene* _towerTestScene;
+	GameContext* _gameContext;
 };

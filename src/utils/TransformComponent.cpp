@@ -1,5 +1,5 @@
 #include "TransformComponent.h"
-#include "tweening.h"
+#include <ds_tweening.h>
 
 void build_world_matrix(const transform_component& t, ds::matrix* w) {
 	if (w != 0) {

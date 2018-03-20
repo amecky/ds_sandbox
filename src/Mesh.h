@@ -2,7 +2,6 @@
 #include <diesel.h>
 #include <stdint.h>
 #include <vector>
-#include "utils\obj.h"
 
 enum AttributeType {
 	AT_VERTEX,

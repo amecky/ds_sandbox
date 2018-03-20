@@ -106,7 +106,9 @@ InstancedMaterial::InstancedMaterial() {
 }
 
 void InstancedMaterial::apply() {
+	_lightBuffer.lightDirection = normalize(_lightDirection);
 }
+
 
 void InstancedMaterial::transform(const ds::matrix & world, const ds::matrix & viewProjection) {
 	_constantBuffer.world = ds::matTranspose(world);

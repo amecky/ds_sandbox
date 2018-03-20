@@ -69,9 +69,13 @@ class InstancedMaterial : public Material {
 public:
 	InstancedMaterial();
 	virtual ~InstancedMaterial() {}
-	void apply();
 	void transform(const ds::matrix& world, const ds::matrix& viewProjection);
+	void apply();
+	void setLightDirection(const ds::vec3& dir) {
+		_lightDirection = normalize(dir);
+	}
 private:
+	ds::vec3 _lightDirection;
 	LightBuffer _lightBuffer;
 	VBConstantBuffer _constantBuffer;
 };

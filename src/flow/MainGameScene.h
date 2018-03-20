@@ -1,10 +1,13 @@
 #pragma once
+<<<<<<< HEAD:src/flow/FlowFieldApp.h
 #include <ds_base_app.h>
 #include "..\TestApp.h"
+=======
+>>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.h
 #include "..\instancing\InstanceCommon.h"
 #include "..\Mesh.h"
+#include "..\utils\Camera.h"
 #include "IsometricCamera.h"
-#include "..\utils\SimpleGrid.h"
 #include "..\Material.h"
 #include "..\utils\TransformComponent.h"
 #include "..\utils\RenderItem.h"
@@ -35,14 +38,16 @@ struct DebugContext {
 	int towerType;
 };
 
-class FlowFieldApp : public ds::BaseScene {
+struct GameContext;
+
+class MainGameScene : public ds::BaseScene {
 
 	enum ObjectState {
 		IDLE,MOVING,STEPPING,ROTATING,WALKING
 	};
 public:
-	FlowFieldApp();
-	virtual ~FlowFieldApp();
+	MainGameScene(GameContext* gameContext);
+	virtual ~MainGameScene();
 	void initialize();
 	void update(float dt);
 	void render();
@@ -54,11 +59,12 @@ private:
 	void addTower(const p2i& gridPos, int type);
 	void buildPath();
 	void startWalker();
-	AmbientLightningMaterial* _ambient_material;
-	InstancedAmbientLightningMaterial* _material;
+
+	GameContext* _gameContext;
+	
 	InstancedRenderItem* _renderItem;
 	InstancedRenderItem* _overlayItem;
-	Towers _towers;
+	
 	
 	RenderItem* _startItem;
 	RenderItem* _endItem;

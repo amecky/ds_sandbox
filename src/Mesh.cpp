@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <windows.h>
+#include "utils\obj.h"
 
 const ds::vec3 CUBE_VERTICES[8] = {
 	ds::vec3(-0.5f,-0.5f,-0.5f),

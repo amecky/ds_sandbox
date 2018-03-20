@@ -7,41 +7,11 @@
     <Filter Include="ext">
       <UniqueIdentifier>{97dbb5f0-ee1c-4b76-938b-3091ec6219ca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="plugins">
-      <UniqueIdentifier>{9debc145-20fc-474f-8ca1-5a53117bb371}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="kenney">
-      <UniqueIdentifier>{20c6f72e-45b2-4094-9245-45b7b6b83b3e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="tweening">
-      <UniqueIdentifier>{7cb8f9a9-4b2e-491b-8990-5574264c1334}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vm">
-      <UniqueIdentifier>{232dadb5-dac0-4999-86e4-83d756093e14}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="particles">
-      <UniqueIdentifier>{9bb78ac7-5b91-400d-bcba-912ab8f63820}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="binary">
-      <UniqueIdentifier>{506cebc5-4908-474f-943f-9a7ee30b7b40}</UniqueIdentifier>
-    </Filter>
     <Filter Include="instancing">
       <UniqueIdentifier>{9d75143a-df15-452a-a96d-cb8bc6397091}</UniqueIdentifier>
     </Filter>
-    <Filter Include="warp">
-      <UniqueIdentifier>{cfebba90-4762-407d-a537-8dca328c4503}</UniqueIdentifier>
-    </Filter>
     <Filter Include="gpuparticles">
       <UniqueIdentifier>{9cee980f-279f-45ea-95d6-b9fa051baa8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="viewer">
-      <UniqueIdentifier>{0486a09b-df5a-4d5c-92f0-dfa7f3a87c60}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="enemies">
-      <UniqueIdentifier>{24406ffb-b0b9-4555-a8e6-fc722bd599a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="background">
-      <UniqueIdentifier>{64b76c23-6cd7-45d5-871f-de1abefcf7d8}</UniqueIdentifier>
     </Filter>
     <Filter Include="flow">
       <UniqueIdentifier>{d366166a-050f-440d-8d9b-480565feaea1}</UniqueIdentifier>
@@ -49,15 +19,11 @@
     <Filter Include="lib">
       <UniqueIdentifier>{9e127dac-be36-41bf-a25c-4beefa2c14f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="scenes">
+      <UniqueIdentifier>{2c1c79ab-5adb-4f2c-bd2c-e05b5c14e9ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Constants.h" />
-    <ClInclude Include="src\utils\tweening.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\utils.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="ext\stb_image.h">
       <Filter>ext</Filter>
@@ -72,94 +38,18 @@
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\AABBox.h" />
-    <ClInclude Include="src\World.h" />
-    <ClInclude Include="src\AnimationTest.h" />
-    <ClInclude Include="src\utils\DynamicPath.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\KeyFrameAnimation.h" />
     <ClInclude Include="ext\ds_profiler.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\LogPanel.h" />
     <ClInclude Include="ext\ds_vm.h">
       <Filter>ext</Filter>
     </ClInclude>
     <ClInclude Include="src\PerfPanel.h" />
-    <ClInclude Include="src\plugins\PluginRegistry.h">
-      <Filter>plugins</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plugins\logger.h">
-      <Filter>plugins</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ParticlePluginTest.h" />
-    <ClInclude Include="src\kenney\AssetViewer.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\kenney\Camera.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\kenney\Grid.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\kenney\RTViewer.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\kenney\DepthMap.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\kenney\Scene.h">
-      <Filter>kenney</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TestApp.h" />
-    <ClInclude Include="src\tweening\TweeningTest.h">
-      <Filter>tweening</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TestSpriteApp.h" />
-    <ClInclude Include="src\vm\VMTest.h">
-      <Filter>vm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\particles\Particles.h">
-      <Filter>particles</Filter>
-    </ClInclude>
-    <ClInclude Include="src\particles\ParticleExpressionTest.h">
-      <Filter>particles</Filter>
-    </ClInclude>
-    <ClInclude Include="src\binary\BinaryClock.h">
-      <Filter>binary</Filter>
-    </ClInclude>
     <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\instancing\InstanceTest.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\hex.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
     <ClInclude Include="src\instancing\InstanceCommon.h">
       <Filter>instancing</Filter>
     </ClInclude>
-    <ClInclude Include="src\instancing\EmitterQueue.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\Cubes.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\TopDownCamera.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\Player.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
     <ClInclude Include="src\instancing\Billboards.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
-    <ClInclude Include="src\warp\WarpingGrid.h">
-      <Filter>warp</Filter>
-    </ClInclude>
-    <ClInclude Include="src\warp\WarpingGridApp.h">
-      <Filter>warp</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\Border.h">
       <Filter>instancing</Filter>
     </ClInclude>
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h">
@@ -168,15 +58,6 @@
     <ClInclude Include="ext\ds_tweakable.h">
       <Filter>ext</Filter>
     </ClInclude>
-    <ClInclude Include="src\viewer\ObjViewer.h">
-      <Filter>viewer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\SimpleGrid.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\obj.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\utils\TransformComponent.h">
       <Filter>utils</Filter>
@@ -184,26 +65,11 @@
     <ClInclude Include="src\utils\RenderItem.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\viewer\InstancedObjViewer.h">
-      <Filter>viewer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\enemies\RingEnemies.h">
-      <Filter>enemies</Filter>
-    </ClInclude>
-    <ClInclude Include="src\background\Doors.h">
-      <Filter>background</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instancing\Bullets.h">
-      <Filter>instancing</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\fixed_array.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\common_math.h">
       <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\flow\FlowFieldApp.h">
-      <Filter>flow</Filter>
     </ClInclude>
     <ClInclude Include="src\flow\Grid.h">
       <Filter>flow</Filter>
@@ -233,98 +99,31 @@
     <ClInclude Include="src\flow\ParticleManager.h">
       <Filter>flow</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\obj.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\ds_tweening.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Camera.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flow\MainGameScene.h">
+      <Filter>flow</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameContext.h" />
+    <ClInclude Include="src\scenes\TowerTestScene.h">
+      <Filter>scenes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\utils\tweening.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\utils.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World.cpp" />
-    <ClCompile Include="src\AnimationTest.cpp" />
-    <ClCompile Include="src\KeyFrameAnimation.cpp" />
-    <ClCompile Include="src\plugins\logger.cpp">
-      <Filter>plugins</Filter>
-    </ClCompile>
-    <ClCompile Include="src\plugins\PluginRegistry.cpp">
-      <Filter>plugins</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ParticlePluginTest.cpp" />
-    <ClCompile Include="src\kenney\AssetViewer.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\kenney\Camera.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\kenney\Grid.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\kenney\RTViewer.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\kenney\DepthMap.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\kenney\Scene.cpp">
-      <Filter>kenney</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tweening\TweeningTest.cpp">
-      <Filter>tweening</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TestSpriteApp.cpp" />
-    <ClCompile Include="src\vm\VMTest.cpp">
-      <Filter>vm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\particles\ParticleExpressionTest.cpp">
-      <Filter>particles</Filter>
-    </ClCompile>
-    <ClCompile Include="src\binary\BinaryClock.cpp">
-      <Filter>binary</Filter>
-    </ClCompile>
     <ClCompile Include="src\Mesh.cpp" />
-    <ClCompile Include="src\instancing\InstanceTest.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\hex.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\EmitterQueue.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\Cubes.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\TopDownCamera.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\Player.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
     <ClCompile Include="src\instancing\Billboards.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
-    <ClCompile Include="src\warp\WarpingGrid.cpp">
-      <Filter>warp</Filter>
-    </ClCompile>
-    <ClCompile Include="src\warp\WarpingGridApp.cpp">
-      <Filter>warp</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\Border.cpp">
       <Filter>instancing</Filter>
     </ClCompile>
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp">
       <Filter>gpuparticles</Filter>
-    </ClCompile>
-    <ClCompile Include="src\viewer\ObjViewer.cpp">
-      <Filter>viewer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\SimpleGrid.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\obj.cpp">
-      <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\utils\TransformComponent.cpp">
@@ -333,23 +132,8 @@
     <ClCompile Include="src\utils\RenderItem.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\viewer\InstancedObjViewer.cpp">
-      <Filter>viewer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\enemies\RingEnemies.cpp">
-      <Filter>enemies</Filter>
-    </ClCompile>
-    <ClCompile Include="src\background\Doors.cpp">
-      <Filter>background</Filter>
-    </ClCompile>
-    <ClCompile Include="src\instancing\Bullets.cpp">
-      <Filter>instancing</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\common_math.cpp">
       <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\flow\FlowFieldApp.cpp">
-      <Filter>flow</Filter>
     </ClCompile>
     <ClCompile Include="src\flow\FlowField.cpp">
       <Filter>flow</Filter>
@@ -367,6 +151,18 @@
     </ClCompile>
     <ClCompile Include="src\flow\ParticleManager.cpp">
       <Filter>flow</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\obj.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Camera.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\flow\MainGameScene.cpp">
+      <Filter>flow</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\TowerTestScene.cpp">
+      <Filter>scenes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
