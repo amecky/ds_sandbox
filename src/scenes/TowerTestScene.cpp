@@ -77,7 +77,7 @@ void TowerTestScene::update(float dt) {
 	_isoCamera->update(dt);
 	
 	if (_dbgAnimateTower) {
-		_gameContext->towers.tick(dt);
+		_gameContext->towers.tick(dt, _events);
 	}
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
@@ -88,6 +88,15 @@ void TowerTestScene::update(float dt) {
 	_gameContext->towers.rotateTowers(ip);
 
 	_gameContext->particles->tick(dt);
+
+	for (int i = 0; i < _events->num(); ++i) {
+		if (_events->getType(i) == 100) {
+			FireEvent event;
+			_events->get(i, &event);
+			_gameContext->particles->emittLine(event.pos, ip);
+		}
+	}
+
 }
 
 // ----------------------------------------------------

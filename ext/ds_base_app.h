@@ -235,8 +235,6 @@ extern ds::BaseApp* app;
 
 namespace ds {
 
-	const int EVENT_HEADER_SIZE = 12;
-
 	void debug(const LogLevel& level, const char* message) {
 #ifdef DEBUG
 		OutputDebugString(message);
@@ -536,10 +534,10 @@ namespace ds {
 	// -------------------------------------------------------
 	void EventStream::add(uint32_t type, void* p, size_t size) {
 		addHeader(type, size);
-		char* data = _data + _index + EVENT_HEADER_SIZE;
+		char* data = _data + _index + sizeof(EventHeader);
 		memcpy(data, p, size);
 		_mappings.push_back(_index);
-		_index += EVENT_HEADER_SIZE + size;
+		_index += sizeof(EventHeader) + size;
 	}
 
 	// -------------------------------------------------------
@@ -549,20 +547,20 @@ namespace ds {
 		addHeader(type, 0);
 		char* data = _data + _index;
 		_mappings.push_back(_index);
-		_index += EVENT_HEADER_SIZE;
+		_index += sizeof(EventHeader);
 	}
 
 	// -------------------------------------------------------
 	// add header
 	// -------------------------------------------------------
 	void EventStream::addHeader(uint32_t type, size_t size) {
-		//LOG << "creating event - type: " << type << " size: " << size;
+		//DBG_LOG("creating event - type: %d size: %d header: %d",type,size,sizeof(EventHeader));
 		EventHeader header;
-		header.id = _mappings.size();;
+		header.id = _mappings.size();
 		header.size = size;
 		header.type = type;
 		char* data = _data + _index;
-		memcpy(data, &header, EVENT_HEADER_SIZE);
+		memcpy(data, &header, sizeof(EventHeader));
 	}
 
 	// -------------------------------------------------------
@@ -573,7 +571,7 @@ namespace ds {
 		int lookup = _mappings[index];
 		char* data = _data + lookup;
 		EventHeader* header = (EventHeader*)data;
-		data += EVENT_HEADER_SIZE;
+		data += sizeof(EventHeader);
 		memcpy(p, data, header->size);
 		return true;
 	}

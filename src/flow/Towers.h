@@ -7,6 +7,9 @@
 #include "..\lib\DataArray.h"
 #include "FlowFieldContext.h"
 
+namespace  ds {
+	class EventStream;
+}
 struct TowerDefinition {
 	float offset;
 };
@@ -32,7 +35,7 @@ public:
 		int idx = findTower(gridPos);
 		return _towers[idx];
 	}
-	void tick(float dt);
+	void tick(float dt, ds::EventStream* events);
 	void rotateTowers(ds::DataArray<Walker>* walkers);
 	void rotateTowers(const ds::vec3& target);
 	void showGUI(int selectedTower);

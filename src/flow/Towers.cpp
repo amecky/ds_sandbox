@@ -1,6 +1,7 @@
 #include "Towers.h"
 #include "..\utils\common_math.h"
 #include "..\utils\CSVFile.h"
+#include <ds_base_app.h>
 
 // -------------------------------------------------------------
 // render
@@ -84,6 +85,8 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.radius = 2.0f;
 	t.direction = 0.0f;
 	t.animationState = 1;
+	t.bulletTTL = 0.1f;
+	t.timer = 0.0f;
 	t.target = INVALID_ID;
 	t.animation.timer = 0.0f;
 	t.animation.ttl = ds::random(0.5f, 1.5f);
@@ -113,7 +116,7 @@ bool isClose(const Tower& tower, const Walker& walker) {
 // -------------------------------------------------------------
 // tick
 // -------------------------------------------------------------
-void Towers::tick(float dt) {
+void Towers::tick(float dt, ds::EventStream* events) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		Tower& t = _towers[i];
 		if (t.target == INVALID_ID) {
@@ -130,6 +133,17 @@ void Towers::tick(float dt) {
 				if (t.animation.timer >= t.animation.ttl) {
 					startAnimation(i);
 				}
+			}
+		}
+		else {
+			t.timer += dt;
+			if (t.timer >= t.bulletTTL) {
+				FireEvent event;
+				event.pos = t.position;
+				event.target = t.target;
+				event.type = t.type;
+				events->add(100,&event, sizeof(FireEvent));
+				t.timer -= t.bulletTTL;
 			}
 		}
 	}
@@ -183,7 +197,10 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
 			t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
-			
+			t.target = 1;			
+		}
+		else {
+			t.target = INVALID_ID;
 		}
 	}
 }

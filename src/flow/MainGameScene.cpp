@@ -255,7 +255,7 @@ void MainGameScene::update(float dt) {
 
 	_gameContext->towers.rotateTowers(&_walkers);
 
-	_gameContext->towers.tick(dt);
+	_gameContext->towers.tick(dt, _events);
 
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);

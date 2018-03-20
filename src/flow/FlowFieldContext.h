@@ -33,6 +33,12 @@ struct Tower {
 	float offset;
 };
 
+struct FireEvent {
+	ds::vec3 pos;
+	ID target;
+	int type;
+};
+
 // ---------------------------------------------------
 // Walker
 // ---------------------------------------------------

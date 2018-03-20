@@ -1,5 +1,6 @@
 #include "ParticleManager.h"
 #include <ds_imgui.h>
+#include "..\utils\common_math.h"
 
 ParticleManager::ParticleManager(RID textureID) {
 	
@@ -9,10 +10,10 @@ ParticleManager::ParticleManager(RID textureID) {
 	//descriptor.startColor = ds::Color(255, 255, 255, 255);
 	//descriptor.endColor = ds::Color(128, 128, 128, 0);
 
-	float u1 = 200.0f / 1024.0f;
+	float u1 = 280.0f / 1024.0f;
 	float v1 = 0.0f / 1024.0f;
 	float u2 = u1 + 20.0f / 1024.0f;
-	float v2 = v1 + 20.0f / 1024.0f;
+	float v2 = v1 + 10.0f / 1024.0f;
 	descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
 
 	// load image using stb_image
@@ -79,11 +80,37 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		float sx = ds::random(scale.x - scaleVariance.x, scale.x + scaleVariance.x);
 		float sy = ds::random(scale.y - scaleVariance.y, scale.y + scaleVariance.y);
 		descriptor.minScale = ds::vec2(sx, sy);
-		descriptor.maxScale = ds::vec2(sx, sy) - growth;
+		descriptor.maxScale = ds::vec2(sx, sy) + growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
 		_particleSystem->add(ds::vec3(x, y, z), descriptor);
 	}
+}
+
+void ParticleManager::emittLine(const ds::vec3 & start, const ds::vec3 & end) {
+	ParticleDescriptor descriptor;
+	ds::vec3 diff = end - start;
+	float l = length(diff);
+	ds::vec3 center = (start + end) * 0.5f;
+	center.y = 0.4f;
+	float angle = math::get_rotation(ds::vec2(diff.x, diff.z)) + ds::PI;
+	//float angle = math::get_angle(ds::vec2(end.x, end.z), ds::vec2(start.x, start.z));
+	DBG_LOG("start %2.2f %2.2f %2.2f", start.x, start.y, start.z);
+	DBG_LOG("end %2.2f %2.2f %2.2f", end.x, end.y, end.z);
+	DBG_LOG("diff %2.2f %2.2f %2.2f", diff.x, diff.y, diff.z);
+	DBG_LOG("angle %3.2f", angle * 360.0f / ds::TWO_PI);
+	descriptor.rotation = angle;
+	descriptor.rotationSpeed = 0.0f;
+	descriptor.ttl = 0.1f;
+	descriptor.velocity = ds::vec3(0.0f);
+	descriptor.startColor = ds::Color(255, 0, 0, 255);
+	descriptor.endColor = ds::Color(128, 0, 0, 255);
+	float sx = l;
+	float sy = 0.08f;
+	descriptor.minScale = ds::vec2(sx, sy);
+	descriptor.maxScale = ds::vec2(0.0f);
+	descriptor.acceleration = ds::vec3(0.0f);
+	_particleSystem->add(center, descriptor);
 }
 
 void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int num, int descriptorIndex) {
@@ -107,7 +134,7 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		float sx = ds::random(emitterDescriptor.scale.x - emitterDescriptor.scaleVariance.x, emitterDescriptor.scale.x + emitterDescriptor.scaleVariance.x);
 		float sy = ds::random(emitterDescriptor.scale.y - emitterDescriptor.scaleVariance.y, emitterDescriptor.scale.y + emitterDescriptor.scaleVariance.y);
 		descriptor.minScale = ds::vec2(sx, sy);
-		descriptor.maxScale = ds::vec2(sx, sy) - emitterDescriptor.growth;
+		descriptor.maxScale = ds::vec2(sx, sy) + emitterDescriptor.growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
 		_particleSystem->add(ds::vec3(x, y, z), descriptor);
@@ -125,8 +152,7 @@ void ParticleManager::showGUI(int descriptorIndex) {
 			gui::Input("align", &emitterDescriptor.alignParticle);
 			gui::Input("Angle_Var", &emitterDescriptor.angleVariance);
 			gui::Input("Rot-Speed", &emitterDescriptor.rotationSpeed);
-			gui::Input("TTL", &emitterDescriptor.ttl.x);
-			gui::Input("TTL_Var", &emitterDescriptor.ttl.y);
+			gui::Input("TTL min/max", &emitterDescriptor.ttl);
 			gui::Input("Start", &emitterDescriptor.startColor);
 			gui::Input("End", &emitterDescriptor.endColor);
 			gui::Input("Scale", &emitterDescriptor.scale);
