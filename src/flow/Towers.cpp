@@ -22,7 +22,7 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 // init
 // -------------------------------------------------------------
 void Towers::init(Material* material) {	 
-	_towerItems[0] = new RenderItem("cannon", material);
+	_towerItems[0] = new RenderItem("gatlin", material);
 	_towerItems[1] = new RenderItem("bomber", material);
 	_towerItems[2] = new RenderItem("rocket", material);
 	_towerItems[3] = new RenderItem("slow_down", material);
