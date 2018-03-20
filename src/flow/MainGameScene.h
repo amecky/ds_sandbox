@@ -1,9 +1,5 @@
 #pragma once
-<<<<<<< HEAD:src/flow/FlowFieldApp.h
 #include <ds_base_app.h>
-#include "..\TestApp.h"
-=======
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.h
 #include "..\instancing\InstanceCommon.h"
 #include "..\Mesh.h"
 #include "..\utils\Camera.h"

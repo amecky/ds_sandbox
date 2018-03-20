@@ -97,7 +97,6 @@ void MainGameScene::initialize() {
 	_endItem = new RenderItem("end", _gameContext->ambientMaterial);
 	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
 
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
 	RID textureID = loadImageFromFile("content\\TextureArray.png");
 
 	ds::RenderPassInfo particleRPInfo = { &_camera, _viewPort, ds::DepthBufferState::ENABLED, 0, 0 };
@@ -105,16 +104,11 @@ void MainGameScene::initialize() {
 
 	_particles = new ParticleManager(textureID);
 
-=======
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 	addTower(p2i(12, 5), 0);
 	addTower(p2i(12, 4), 1);
 	addTower(p2i(12, 6), 2);
 	addTower(p2i(12, 7), 3);
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
 	addTower(p2i(10, 9), 0);
-=======
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 
 }
 
@@ -158,13 +152,8 @@ void MainGameScene::buildPath() {
 // ---------------------------------------------------------------
 // move walkers
 // ---------------------------------------------------------------
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-void FlowFieldApp::moveWalkers(float dt) {
-	if (_dbgCtx.move) {
-=======
 void MainGameScene::moveWalkers(float dt) {
-	if (_dbgMove) {
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
+	if (_dbgCtx.move) {
 		for (uint32_t i = 0; i < _walkers.numObjects; ++i) {
 			Walker& walker = _walkers.objects[i];
 			if (_flowField->hasNext(walker.gridPos)) {
@@ -198,13 +187,8 @@ void MainGameScene::moveWalkers(float dt) {
 // -------------------------------------------------------------
 // on button clicked
 // -------------------------------------------------------------
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-void FlowFieldApp::OnButtonClicked(int index) {
-	if (_dbgCtx.handleButtons) {
-=======
 void MainGameScene::OnButtonClicked(int index) {
-	if (_dbgHandleButtons) {
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
+	if (_dbgCtx.handleButtons) {
 		if (index == 0) {
 			Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 			r.setOrigin(_camera.position);
@@ -216,12 +200,8 @@ void MainGameScene::OnButtonClicked(int index) {
 				int type = _grid->get(gridPos);
 				if (type == 0) {
 					DBG_LOG("Adding tower at %d %d", gridPos.x, gridPos.y);
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
 					addTower(gridPos, _dbgCtx.towerType);
 					_grid->set(gridPos, 1);
-=======
-					addTower(gridPos, _selectedTower);
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 				}
 				else {
 					_selectedTower = _gameContext->towers.findTower(gridPos);
@@ -256,36 +236,22 @@ void MainGameScene::updateOverlay() {
 // -------------------------------------------------------------
 // add tower
 // -------------------------------------------------------------
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-void FlowFieldApp::addTower(const p2i& gridPos, int type) {
-=======
 void MainGameScene::addTower(const p2i& gridPos, int type) {
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 	if (_grid->get(gridPos) == 0) {
 		_grid->set(gridPos.x, gridPos.y, 1);
 		_flowField->build(_endPoint);
 		updateOverlay();
 		buildPath();
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-		_towers.addTower(gridPos, type);
-=======
 		_gameContext->towers.addTower(gridPos, type);
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 	}
 }
 
 // ----------------------------------------------------
 // tick
 // ----------------------------------------------------
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-void FlowFieldApp::update(float dt) {
+void MainGameScene::update(float dt) {
 	if (_dbgCtx.moveCamera) {
 		if (_dbgCtx.isoCamera) {
-=======
-void MainGameScene::update(float dt) {
-	if (_dbgMoveCamera) {
-		if (_dbgIsoCamera) {
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 			_isoCamera->update(dt);
 		}
 		else {
@@ -354,13 +320,8 @@ void MainGameScene::render() {
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
-	_towers.render(_basicPass, _camera.viewProjectionMatrix);
-
 	_particles->render(_particlePass, _camera.viewProjectionMatrix, _camera.position);
-=======
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 }
 
 // ----------------------------------------------------
@@ -390,11 +351,7 @@ void MainGameScene::showGUI() {
 			int d = _flowField->get(_dbgCtx.selected.x, _dbgCtx.selected.y);
 			gui::Value("Flowfield", d);
 			if (gui::Button("Add tower")) {
-<<<<<<< HEAD:src/flow/FlowFieldApp.cpp
 				addTower(_dbgCtx.selected, _dbgCtx.towerType);
-=======
-				addTower(_dbgSelected,_dbgTowerType);
->>>>>>> f3a71ddbb8ad5ea1b1b2f24f9a23061ae9606a08:src/flow/MainGameScene.cpp
 			}
 		}
 		
@@ -410,7 +367,7 @@ void MainGameScene::showGUI() {
 			startWalker();
 		}		
 		if (_selectedTower != -1) {
-			const Tower& t = _towers.get(_selectedTower);
+			const Tower& t = _gameContext->towers.get(_selectedTower);
 			if (gui::Button("Particles")) {
 				_particles->emittParticles(ds::vec3(t.position.x,0.4f, t.position.z), t.direction, 8);
 			}
