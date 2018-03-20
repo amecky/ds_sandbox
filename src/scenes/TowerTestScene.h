@@ -35,20 +35,5 @@ private:
 	int _selectedTower;
 	ID _ids[5 * 5];
 	InstancedRenderItem* _gridItem;
-
-	bool _dbgFollowCursor;
-
-	int _dbgSelectedLight;
-	float _dbgLength;
-	ds::vec3 _dbgNextPos;
-	p2i _dbgFlowNext;
-	ds::vec3 _dbgDiff;
-	bool _dbgMove;
-	ds::vec3 _dbgV;
-	p2i _dbgSelected;
-	bool _dbgShowOverlay;
-	bool _dbgShowPath;
-	bool _dbgHandleButtons;
-	bool _dbgSnapToGrid;
-	int _dbgTowerType;
+	bool _dbgAnimateTower;
 };

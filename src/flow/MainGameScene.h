@@ -68,8 +68,6 @@ private:
 	RenderItem* _walkerItem;
 	RenderItem* _cursorItem;
 	
-	ParticleManager* _particles;
-	RID _particlePass;
 	FPSCamera* _fpsCamera;
 	IsometricCamera* _isoCamera;
 

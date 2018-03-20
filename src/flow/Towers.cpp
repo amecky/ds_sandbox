@@ -90,6 +90,18 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	_towers.push_back(t);
 }
 
+void Towers::remove(const p2i & gridPos) {
+	std::vector<Tower>::iterator it = _towers.begin();
+	while (it != _towers.end()) {
+		if (gridPos.x == it->gx && gridPos.y == it->gy) {
+			it = _towers.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+}
+
 // ---------------------------------------------------------------
 // is close (walker still in reach of tower)
 // ---------------------------------------------------------------

@@ -203,6 +203,7 @@ namespace ds {
 		void stopGame() {
 			_running = false;
 		}
+		RID loadImageFromFile(const char* name);
 		RID loadImageFromResource(LPCTSTR name, LPCTSTR type);		
 		ApplicationSettings _settings;
 		ds::EventStream* _events;
@@ -264,6 +265,15 @@ namespace ds {
 		stbi_image_free(data);
 		UnlockResource(myResourceData);
 		FreeResource(myResourceData);
+		return textureID;
+	}
+
+	RID BaseApp::loadImageFromFile(const char* name) {
+		int x, y, n;
+		unsigned char *data = stbi_load(name, &x, &y, &n, 4);
+		ds::TextureInfo info = { x,y,n,data,ds::TextureFormat::R8G8B8A8_UNORM , ds::BindFlag::BF_SHADER_RESOURCE };
+		RID textureID = ds::createTexture(info, name);
+		stbi_image_free(data);
 		return textureID;
 	}
 

@@ -2,6 +2,7 @@
 #include <ds_imgui.h>
 #include "..\utils\common_math.h"
 #include "..\GameContext.h"
+#include "..\flow\ParticleManager.h"
 
 const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
 
@@ -13,20 +14,8 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 		}
 	}	
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
-	_dbgFollowCursor = true;
-
-
-	_dbgLength = 0.0f;
-	_dbgMove = true;
-	_dbgNextPos = ds::vec3(0);
-	_dbgSelected = p2i(-1, -1);
-	_dbgShowOverlay = false;
 	_selectedTower = 0;
-	_dbgSelectedLight = 0;
-	_dbgShowPath = true;
-	_dbgHandleButtons = true;
-	_dbgSnapToGrid = false;
-	_dbgTowerType = 0;
+	_dbgAnimateTower = false;
 }
 
 TowerTestScene::~TowerTestScene() {	
@@ -40,7 +29,7 @@ TowerTestScene::~TowerTestScene() {
 void TowerTestScene::initialize() {
 	
 	_isoCamera = new IsometricCamera(&_camera);
-	_isoCamera->setPosition(ds::vec3(0, 8, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_isoCamera->setPosition(ds::vec3(0, 6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
@@ -87,27 +76,18 @@ void TowerTestScene::update(float dt) {
 	
 	_isoCamera->update(dt);
 	
-	_gameContext->towers.tick(dt);
-
+	if (_dbgAnimateTower) {
+		_gameContext->towers.tick(dt);
+	}
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
 	ds::vec3 ip = _grid->plane.getIntersection(r);
 	ip.y = 0.1f;
-	if (_dbgSnapToGrid) {
-		p2i gp;
-		if (convert(ip.x, ip.z, CENTER.x, CENTER.y, &gp)) {
-			ds::vec3 np = ds::vec3(gp.x + CENTER.x, 0.0f, gp.y + CENTER.y);
-			np.y = 0.1f;
-			_cursorItem->getTransform().position = np;
-		}
-	}
-	else {
-		_cursorItem->getTransform().position = ip;
-	}
+	_cursorItem->getTransform().position = ip;
 
-	if (_dbgFollowCursor) {
-		_gameContext->towers.rotateTowers(ip);
-	}
+	_gameContext->towers.rotateTowers(ip);
+
+	_gameContext->particles->tick(dt);
 }
 
 // ----------------------------------------------------
@@ -125,6 +105,8 @@ void TowerTestScene::render() {
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
+
+	_gameContext->particles->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 // ----------------------------------------------------
@@ -137,7 +119,17 @@ void TowerTestScene::showGUI() {
 	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Checkbox("Follow cursor", &_dbgFollowCursor);
+		gui::Checkbox("Animate", &_dbgAnimateTower);
+		if (gui::StepInput("Tower", &_selectedTower, 0, 4, 1)) {
+			// change tower type
+			_gameContext->towers.remove(p2i(2, 2));
+			_gameContext->towers.addTower(p2i(2, 2), _selectedTower);
+		}
+		const Tower& t = _gameContext->towers.get(0);
+		if (gui::Button("Particles")) {
+			_gameContext->particles->emittParticles(ds::vec3(t.position.x, 0.4f, t.position.z), t.direction, 8, 0);
+		}
+		_gameContext->particles->showGUI(0);
 	}
 	gui::end();
 }

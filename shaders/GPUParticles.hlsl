@@ -39,31 +39,26 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
 	scaling = saturate(scaling * 0.5 * 0.5);	
 
 	float3 position;
-	//position.x = (vertexIndex % 2) ? 0.5 : -0.5;
-	//position.y = (vertexIndex & 2) ? -0.5 : 0.5;
-	position.x = (vertexIndex % 2) ? scaling.x : -scaling.x;
-	position.y = (vertexIndex & 2) ? -scaling.y : scaling.y;
-	position.z = 1.0;
-
-    float3 pos = ParticlesRO[particleIndex].position;
-
 	
-
-
+	position.x = (vertexIndex % 2) ? scaling.x : -scaling.x;
+	position.y = 1.0;
+	position.z = (vertexIndex & 2) ? -scaling.y : scaling.y;
+	
+    float3 pos = ParticlesRO[particleIndex].position;
 
 	float rot = ParticlesRO[particleIndex].rotation + ParticlesRO[particleIndex].rotationSpeed * elapsed;
 	float s = sin(rot);
 	float c = cos(rot);
 
 	float sx = position.x;// * scaling.x;
-	float sy = position.y;// * scaling.y;
+	float sz = position.z;// * scaling.y;
 
-	float xt = c * sx - s * sy;
-	float yt = s * sx + c * sy;
+	float xt = c * sx - s * sz;
+	float zt = s * sx + c * sz;
 
     pos += ParticlesRO[particleIndex].velocity * elapsed;
     pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
- 	vsOut.pos = mul(float4(xt + pos.x, yt + pos.y, pos.z, 1.0f), wvp);
+ 	vsOut.pos = mul(float4(xt + pos.x, pos.y, zt + pos.z, 1.0f), wvp);
 	float4 rect = textureRect; 
 	vsOut.tex.x = (vertexIndex % 2) ? rect.z : rect.x;
     vsOut.tex.y = (vertexIndex & 2) ? rect.w : rect.y;

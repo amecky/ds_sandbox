@@ -97,13 +97,6 @@ void MainGameScene::initialize() {
 	_endItem = new RenderItem("end", _gameContext->ambientMaterial);
 	_endItem->getTransform().position = ds::vec3(-10.0f + _endPoint.x, 0.2f, -6.0f + _endPoint.y);
 
-	RID textureID = loadImageFromFile("content\\TextureArray.png");
-
-	ds::RenderPassInfo particleRPInfo = { &_camera, _viewPort, ds::DepthBufferState::ENABLED, 0, 0 };
-	_particlePass = ds::createRenderPass(particleRPInfo);
-
-	_particles = new ParticleManager(textureID);
-
 	addTower(p2i(12, 5), 0);
 	addTower(p2i(12, 4), 1);
 	addTower(p2i(12, 6), 2);
@@ -281,7 +274,7 @@ void MainGameScene::update(float dt) {
 	}
 	//_towers.rotateTowers(ip);
 
-	_particles->tick(dt);
+	_gameContext->particles->tick(dt);
 }
 
 // ----------------------------------------------------
@@ -320,7 +313,7 @@ void MainGameScene::render() {
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
-	_particles->render(_particlePass, _camera.viewProjectionMatrix, _camera.position);
+	_gameContext->particles->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 }
 
@@ -369,7 +362,7 @@ void MainGameScene::showGUI() {
 		if (_selectedTower != -1) {
 			const Tower& t = _gameContext->towers.get(_selectedTower);
 			if (gui::Button("Particles")) {
-				_particles->emittParticles(ds::vec3(t.position.x,0.4f, t.position.z), t.direction, 8);
+				_gameContext->particles->emittParticles(ds::vec3(t.position.x,0.4f, t.position.z), t.direction, 8);
 			}
 		}
 	}

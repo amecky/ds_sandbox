@@ -146,7 +146,7 @@ namespace gui {
 
 	void Input(const char* label, ds::Color* v);
 
-	void StepInput(const char* label, int* v, int minValue, int maxValue, int steps);
+	bool StepInput(const char* label, int* v, int minValue, int maxValue, int steps);
 
 	bool Checkbox(const char* label, bool* state);
 
@@ -1900,7 +1900,8 @@ namespace gui {
 	// -------------------------------------------------------
 	// int input using steps
 	// -------------------------------------------------------
-	void StepInput(const char* label, int* v, int minValue, int maxValue, int steps) {
+	bool StepInput(const char* label, int* v, int minValue, int maxValue, int steps) {
+		int org = *v;
 		pushID(label);
 		p2i p = _guiCtx->currentPos;
 		pushID("-");
@@ -1941,6 +1942,7 @@ namespace gui {
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 30, 30));
 		popID();
+		return org != *v;
 	}
 
 	// -------------------------------------------------------

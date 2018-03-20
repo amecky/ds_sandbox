@@ -19,6 +19,7 @@ public:
 	void handleEvents(ds::EventStream* events);
 	void update(float dt);
 private:
+	
 	MainGameScene* _flowFieldScene;
 	TowerTestScene* _towerTestScene;
 	GameContext* _gameContext;

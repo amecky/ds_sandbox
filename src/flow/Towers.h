@@ -23,6 +23,7 @@ public:
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix);
 	void upgradeTower(int index);
 	void addTower(const p2i& gridPos,int type);
+	void remove(const p2i& gridPos);
 	int findTower(const p2i& gridPos) const;
 	const Tower& get(int index) const {
 		return _towers[index];

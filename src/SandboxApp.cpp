@@ -32,6 +32,8 @@ void SandboxApp::initialize() {
 	_gameContext->ambientMaterial = new AmbientLightningMaterial;
 	_gameContext->instancedAmbientmaterial = new InstancedAmbientLightningMaterial;
 	_gameContext->towers.init(_gameContext->ambientMaterial);
+	RID textureID = loadImageFromFile("content\\TextureArray.png");
+	_gameContext->particles = new ParticleManager(textureID);
 	_flowFieldScene = new MainGameScene(_gameContext);
 	_towerTestScene = new TowerTestScene(_gameContext);
 	//pushScene(_flowFieldScene);
