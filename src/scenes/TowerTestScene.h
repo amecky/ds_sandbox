@@ -30,6 +30,7 @@ private:
 	GameContext* _gameContext;
 	RenderItem* _cursorItem;
 	IsometricCamera* _isoCamera;
+	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	Grid* _grid;
 	int _selectedTower;

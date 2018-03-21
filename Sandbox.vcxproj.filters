@@ -22,6 +22,9 @@
     <Filter Include="scenes">
       <UniqueIdentifier>{2c1c79ab-5adb-4f2c-bd2c-e05b5c14e9ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="animation">
+      <UniqueIdentifier>{43fd843b-bab5-461e-8ea4-12eb26291993}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -115,6 +118,9 @@
     <ClInclude Include="src\scenes\TowerTestScene.h">
       <Filter>scenes</Filter>
     </ClInclude>
+    <ClInclude Include="src\animation\AnimationManager.h">
+      <Filter>animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -163,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="src\scenes\TowerTestScene.cpp">
       <Filter>scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\animation\AnimationManager.cpp">
+      <Filter>animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

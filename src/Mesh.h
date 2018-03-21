@@ -37,7 +37,7 @@ public:
 	uint32_t getCount() const;
 	void save(const char* dir, const char* fileName);
 	void load(const char* fileName);
-	void loadData(const char* fileName, ds::matrix* world = 0);
+	void loadData(const char* fileName, ds::matrix* world = 0, bool force = false);
 	void loadBin(const char* fileName, bool scale = true);
 	const ds::vec3& getExtent() const {
 		return _extent;

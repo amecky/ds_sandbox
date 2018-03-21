@@ -18,6 +18,9 @@ struct Tower {
 	int type;
 	int gx;
 	int gy;
+	transform baseTransform;
+	transform towerTransform;
+	transform gunTransform;
 	ds::vec3 position;
 	float radius;
 	int energy;
@@ -27,6 +30,7 @@ struct Tower {
 	ID target;
 	int level;
 	RenderItem* renderItem;
+	RenderItem* gunItem;
 	RenderItem* baseItem;
 	RotationAnimation animation;
 	int animationState;

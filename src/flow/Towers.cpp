@@ -4,28 +4,18 @@
 #include <ds_base_app.h>
 
 // -------------------------------------------------------------
-// render
-// -------------------------------------------------------------
-void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		const Tower& t = _towers[i];
-		t.baseItem->getTransform().position = t.position;
-		t.baseItem->draw(renderPass, viewProjectionMatrix);
-		ds::vec3 tp = t.position + ds::vec3(0.0f, t.offset, 0.0f);
-		t.renderItem->getTransform().position = tp;
-		t.renderItem->getTransform().pitch = t.direction;
-		t.renderItem->draw(renderPass, viewProjectionMatrix);
-	}
-}
-
-// -------------------------------------------------------------
 // init
 // -------------------------------------------------------------
 void Towers::init(Material* material) {	 
-	_towerItems[0] = new RenderItem("gatlin", material);
+	_towerItems[0] = new RenderItem("cannon", material);
 	_towerItems[1] = new RenderItem("bomber", material);
 	_towerItems[2] = new RenderItem("rocket", material);
 	_towerItems[3] = new RenderItem("slow_down", material);
+	ds::matrix tm = ds::matTranslate(ds::vec3(0.2f, 0.0f, 0.0f));
+	_gunItems[0] = new RenderItem("gatlin", material, &tm, true);
+	_gunItems[1] = new RenderItem("gatlin", material, &tm, true);
+	_gunItems[2] = new RenderItem("gatlin", material, &tm, true);
+	_gunItems[3] = new RenderItem("gatlin", material, &tm, true);
 	_baseItems[0] = new RenderItem("green_base", material);
 	_baseItems[1] = new RenderItem("yellow_base", material);
 	_baseItems[2] = new RenderItem("red_base", material);
@@ -76,6 +66,7 @@ void Towers::upgradeTower(int index) {
 void Towers::addTower(const p2i& gridPos, int type) {
 	Tower t;
 	t.renderItem = _towerItems[type];
+	t.gunItem = _gunItems[type];
 	t.offset = _definitions[type].offset;
 	t.baseItem = _baseItems[0];
 	t.gx = gridPos.x;
@@ -90,7 +81,14 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.target = INVALID_ID;
 	t.animation.timer = 0.0f;
 	t.animation.ttl = ds::random(0.5f, 1.5f);
+	ds::vec3 p = t.position;
+	initialize(&t.baseTransform, p, ds::vec3(1.0f), 0.0f,0.0f);
+	p.y += t.offset;
+	initialize(&t.towerTransform, p, ds::vec3(1.0f), 0.0f, 0.0f);
+	p.y += 0.2f;
+	initialize(&t.gunTransform, p, ds::vec3(1.0f), 0.0f, 0.0f);
 	_towers.push_back(t);
+	startAnimation(_towers.size() - 1);
 }
 
 void Towers::remove(const p2i & gridPos) {
@@ -114,11 +112,35 @@ bool isClose(const Tower& tower, const Walker& walker) {
 }
 
 // -------------------------------------------------------------
+// render
+// -------------------------------------------------------------
+void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
+	for (size_t i = 0; i < _towers.size(); ++i) {
+		const Tower& t = _towers[i];
+		// draw base
+		//t.baseItem->getTransform().position = t.position;
+		t.baseItem->setTransform(t.baseTransform);
+		t.baseItem->draw(renderPass, viewProjectionMatrix);
+		// draw tower
+		ds::vec3 tp = t.baseTransform.position + ds::vec3(0.0f, t.offset, 0.0f);
+		t.renderItem->getTransform().position = tp;
+		t.renderItem->getTransform().pitch = t.towerTransform.pitch;
+		t.renderItem->draw(renderPass, viewProjectionMatrix);
+		// draw gun
+		ds::matrix w = ds::matIdentity();
+		build_world_matrix(t.towerTransform, &w);
+		ds::matrix tm = ds::matTranslate(ds::vec3(0.0f, 0.3f, 0.0f));
+		t.gunItem->draw(renderPass, viewProjectionMatrix, w * tm);
+	}
+}
+
+// -------------------------------------------------------------
 // tick
 // -------------------------------------------------------------
 void Towers::tick(float dt, ds::EventStream* events) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		Tower& t = _towers[i];
+		/*
 		if (t.target == INVALID_ID) {
 			t.animation.timer += dt;
 			if (t.animationState == 0) {
@@ -146,6 +168,18 @@ void Towers::tick(float dt, ds::EventStream* events) {
 				t.timer -= t.bulletTTL;
 			}
 		}
+		*/
+	}
+
+	_animationManager.tick(dt, events);
+
+	if (events->containsType(1000)) {
+		Tower& t = _towers[0];
+		_animationManager.start(&t.towerTransform, idleAnimation, 0, 1.0f);
+		_animationManager.start(&t.gunTransform, idleAnimation, 0, 1.0f);
+	}
+	if (events->containsType(1001)) {
+		startAnimation(0);
 	}
 }
 
@@ -212,15 +246,27 @@ void Towers::startAnimation(int index) {
 	Tower& t = _towers[index];
 	float min = ds::PI * 0.25f;
 	float angle = ds::random(min, min + ds::PI * 0.5f);
-	t.animation.angle = angle;
+	//t.animation.angle = angle;
 	float dir = ds::random(-5.0f, 5.0f);
-	t.animation.direction = 1;
+	//t.animation.direction = 1;
+	//if (dir < 0.0f) {
+		//t.animation.direction = -1;
+	//}
+	float ttl = angle / min * 2.0f;
+	RotationYData* rd = new RotationYData;
+	rd->angle = angle / ttl;
 	if (dir < 0.0f) {
-		t.animation.direction = -1;
+		rd->direction = -1.0f;
 	}
-	t.animation.timer = 0.0f;
-	t.animation.ttl = angle / min * 2.0f;
-	t.animationState = 0;
+	else {
+		rd->direction = -1.0f;
+	}
+	_animationManager.start(&t.towerTransform, rotateY, rd, angle / min * 2.0f);
+	_animationManager.start(&t.gunTransform, rotateX, rd, angle / min * 2.0f);
+	
+	//t.animation.timer = 0.0f;
+	//t.animation.ttl = angle / min * 2.0f;
+	//t.animationState = 0;
 	//DBG_LOG("angle %3.2f ttl %2.4f direction %d", (angle*360.0f / ds::TWO_PI), t.animation.ttl,t.animation.direction);
 }
 

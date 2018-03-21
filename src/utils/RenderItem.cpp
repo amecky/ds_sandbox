@@ -2,9 +2,9 @@
 
 #define INDEX_MASK 0xffff
 
-RenderItem::RenderItem(const char* objName, Material* m, ds::matrix* world) {
+RenderItem::RenderItem(const char* objName, Material* m, ds::matrix* world, bool force) {
 	_mesh = new Mesh;
-	_mesh->loadData(objName, world);
+	_mesh->loadData(objName, world, force);
 	initialize(&_transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
 	_material = m;
 	RID hexCubeBuffer = _mesh->assemble();
@@ -24,6 +24,12 @@ RenderItem::RenderItem(const char* objName, Material* m, ds::matrix* world) {
 void RenderItem::draw(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	ds::matrix world;
 	build_world_matrix(_transform, &world);
+	_material->apply();
+	_material->transform(world, viewProjectionMatrix);
+	ds::submit(renderPass, _drawItem);
+}
+
+void RenderItem::draw(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::matrix& world) {
 	_material->apply();
 	_material->transform(world, viewProjectionMatrix);
 	ds::submit(renderPass, _drawItem);

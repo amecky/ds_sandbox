@@ -15,7 +15,7 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 	}	
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	_selectedTower = 0;
-	_dbgAnimateTower = false;
+	_dbgAnimateTower = true;
 }
 
 TowerTestScene::~TowerTestScene() {	
@@ -30,6 +30,9 @@ void TowerTestScene::initialize() {
 	
 	_isoCamera = new IsometricCamera(&_camera);
 	_isoCamera->setPosition(ds::vec3(0, 6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+
+	_fpsCamera = new FPSCamera(&_camera);
+	_fpsCamera->setPosition(ds::vec3(0, 6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
@@ -74,7 +77,8 @@ void TowerTestScene::addTower(const p2i& gridPos, int type) {
 // ----------------------------------------------------
 void TowerTestScene::update(float dt) {
 	
-	_isoCamera->update(dt);
+	//_isoCamera->update(dt);
+	_fpsCamera->update(dt);
 	
 	if (_dbgAnimateTower) {
 		_gameContext->towers.tick(dt, _events);
@@ -88,7 +92,7 @@ void TowerTestScene::update(float dt) {
 	_gameContext->towers.rotateTowers(ip);
 
 	_gameContext->particles->tick(dt);
-
+	/*
 	for (int i = 0; i < _events->num(); ++i) {
 		if (_events->getType(i) == 100) {
 			FireEvent event;
@@ -96,7 +100,7 @@ void TowerTestScene::update(float dt) {
 			_gameContext->particles->emittLine(event.pos, ip);
 		}
 	}
-
+	*/
 }
 
 // ----------------------------------------------------

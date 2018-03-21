@@ -6,6 +6,7 @@
 #include "..\Material.h"
 #include "..\lib\DataArray.h"
 #include "FlowFieldContext.h"
+#include "..\animation\AnimationManager.h"
 
 namespace  ds {
 	class EventStream;
@@ -43,8 +44,11 @@ private:
 	void startAnimation(int index);
 	std::vector<Tower> _towers;
 	RenderItem* _towerItems[10];
+	RenderItem* _gunItems[10];
 	RenderItem* _baseItems[3];
 	TowerDefinition _definitions[10];
 	ds::vec2 _worldOffset;
+
+	AnimationManager _animationManager;
 };
 

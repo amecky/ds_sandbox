@@ -408,7 +408,7 @@ void getFileTime(const char* fileName, FILETIME& time) {
 	}
 }
 
-void Mesh::loadData(const char* fileName, ds::matrix* world) {
+void Mesh::loadData(const char* fileName, ds::matrix* world, bool force) {
 	DBG_LOG("loading object: '%s'", fileName);
 	bool load_obj = false;
 	char objName[256];
@@ -429,11 +429,17 @@ void Mesh::loadData(const char* fileName, ds::matrix* world) {
 	else {
 		load_obj = true;
 	}
+	if (force) {
+		load_obj = true;
+	}
 	if (load_obj) {
 		sprintf_s(objName, "%s.obj", fileName);
+		DBG_LOG("loading obj file '%s'", objName);
 		obj::load("obj", objName, this, world);
-		calculate();		
-		align();
+		calculate();	
+		if (world == 0) {
+			align();
+		}
 		save("models", fileName);
 	}
 	else {

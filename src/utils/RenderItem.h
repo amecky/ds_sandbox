@@ -7,13 +7,17 @@
 class RenderItem {
 
 public:
-	RenderItem(const char* objName, Material* m, ds::matrix* world = 0);
+	RenderItem(const char* objName, Material* m, ds::matrix* world = 0, bool force = false);
 	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix);
+	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::matrix& world);
 	transform& getTransform() {
 		return _transform;
 	}
 	const transform& getTransform() const {
 		return _transform;
+	}
+	void setTransform(const transform& t) {
+		_transform = t;
 	}
 private:
 	Mesh* _mesh;
