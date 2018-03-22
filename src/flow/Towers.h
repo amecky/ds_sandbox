@@ -50,5 +50,7 @@ private:
 	ds::vec2 _worldOffset;
 
 	AnimationManager _animationManager;
+	bool _dbgTowerAnim;
+	bool _dbgGunAnim;
 };
 

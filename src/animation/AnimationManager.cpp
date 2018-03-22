@@ -1,25 +1,25 @@
 #include "AnimationManager.h"
 
-int rotateY(transform* t, AnimationData* data, float dt, ds::EventStream* events) {
+int rotateY(transform_component* t, AnimationData* data, float dt, ds::EventStream* events) {
 	data->timer += dt;
 	RotationYData* internal = (RotationYData*)data;
-	t->pitch += internal->angle / data->ttl * dt * internal->direction;
+	t->rotation.y += internal->angle / data->ttl * dt * internal->direction;
 	return 1000;
 }
 
-int rotateX(transform* t, AnimationData* data, float dt, ds::EventStream* events) {
+int rotateX(transform_component* t, AnimationData* data, float dt, ds::EventStream* events) {
 	data->timer += dt;
 	RotationYData* internal = (RotationYData*)data;
-	t->roll += internal->angle / data->ttl * dt * internal->direction;
+	t->rotation.x += internal->angle / data->ttl * dt * internal->direction;
 	return 1000;
 }
 
-int idleAnimation(transform* t, AnimationData* data, float dt, ds::EventStream* events) {
+int idleAnimation(transform_component* t, AnimationData* data, float dt, ds::EventStream* events) {
 	data->timer += dt;
 	return 1001;
 }
 
-ID AnimationManager::start(transform* t, AnimFunc func, void* data, float ttl) {
+ID AnimationManager::start(transform_component* t, AnimFunc func, void* data, float ttl) {
 	ID id = _animations.add();
 	DBG_LOG("starting animation %d -> %1.3f", id, ttl);
 	Animation& anim = _animations.get(id);
@@ -45,6 +45,7 @@ void AnimationManager::tick(float dt, ds::EventStream* events) {
 				DBG_LOG("animation stopped - %d - event %d", animData.id, ret);
 				events->add(ret);
 				if (animData.data.data != 0) {
+					DBG_LOG("deleting data");
 					delete animData.data.data;
 				}
 				_animations.remove(animData.id);

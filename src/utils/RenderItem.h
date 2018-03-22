@@ -19,6 +19,18 @@ public:
 	void setTransform(const transform& t) {
 		_transform = t;
 	}
+	const ds::vec3& getExtent() const {
+		return _mesh->getExtent();
+	}
+	const ds::vec3& getCenter() const {
+		return _mesh->getCenter();
+	}
+	const ds::vec3& getMin() const {
+		return _mesh->getMin();
+	}
+	const ds::vec3& getMax() const {
+		return _mesh->getMax();
+	}
 private:
 	Mesh* _mesh;
 	transform _transform;

@@ -31,6 +31,8 @@ void Towers::init(Material* material) {
 		DBG_LOG("Cannot load csv file");
 	}
 	
+	_dbgTowerAnim = true;
+	_dbgGunAnim = true;
 }
 
 // -------------------------------------------------------------
@@ -82,11 +84,16 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.animation.timer = 0.0f;
 	t.animation.ttl = ds::random(0.5f, 1.5f);
 	ds::vec3 p = t.position;
-	initialize(&t.baseTransform, p, ds::vec3(1.0f), 0.0f,0.0f);
+	ds::vec3 extent = t.baseItem->getExtent();
+	p.y += extent.y;
+	initialize(&t.baseTransform, p, ds::vec3(1.0f), ds::vec3(0.0f));
 	p.y += t.offset;
-	initialize(&t.towerTransform, p, ds::vec3(1.0f), 0.0f, 0.0f);
-	p.y += 0.2f;
-	initialize(&t.gunTransform, p, ds::vec3(1.0f), 0.0f, 0.0f);
+	initialize(&t.towerTransform, p, ds::vec3(1.0f), ds::vec3(0.0f));
+	//p.y += 0.2f;
+	p.y = 0.0f;
+	p.x += 0.5f;
+	p.z += 0.5f;
+	initialize(&t.gunTransform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
 	_towers.push_back(t);
 	startAnimation(_towers.size() - 1);
 }
@@ -118,19 +125,16 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		const Tower& t = _towers[i];
 		// draw base
-		//t.baseItem->getTransform().position = t.position;
-		t.baseItem->setTransform(t.baseTransform);
-		t.baseItem->draw(renderPass, viewProjectionMatrix);
-		// draw tower
-		ds::vec3 tp = t.baseTransform.position + ds::vec3(0.0f, t.offset, 0.0f);
-		t.renderItem->getTransform().position = tp;
-		t.renderItem->getTransform().pitch = t.towerTransform.pitch;
-		t.renderItem->draw(renderPass, viewProjectionMatrix);
-		// draw gun
 		ds::matrix w = ds::matIdentity();
+		build_world_matrix(t.baseTransform, &w);
+		t.baseItem->draw(renderPass, viewProjectionMatrix, w);
+		// draw tower
 		build_world_matrix(t.towerTransform, &w);
-		ds::matrix tm = ds::matTranslate(ds::vec3(0.0f, 0.3f, 0.0f));
-		t.gunItem->draw(renderPass, viewProjectionMatrix, w * tm);
+		t.renderItem->draw(renderPass, viewProjectionMatrix, w);
+		// draw gun
+		ds::matrix gw = ds::matIdentity();
+		build_world_matrix(t.gunTransform, &gw);
+		t.gunItem->draw(renderPass, viewProjectionMatrix, gw * w);
 	}
 }
 
@@ -172,11 +176,14 @@ void Towers::tick(float dt, ds::EventStream* events) {
 	}
 
 	_animationManager.tick(dt, events);
-
 	if (events->containsType(1000)) {
 		Tower& t = _towers[0];
-		_animationManager.start(&t.towerTransform, idleAnimation, 0, 1.0f);
-		_animationManager.start(&t.gunTransform, idleAnimation, 0, 1.0f);
+		if (_dbgTowerAnim) {
+			_animationManager.start(&t.towerTransform, idleAnimation, 0, 1.0f);
+		}
+		if (_dbgGunAnim) {
+			_animationManager.start(&t.gunTransform, idleAnimation, 0, 1.0f);
+		}
 	}
 	if (events->containsType(1001)) {
 		startAnimation(0);
@@ -227,10 +234,13 @@ void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 void Towers::rotateTowers(const ds::vec3& pos) {
 	for (size_t i = 0; i < _towers.size(); ++i) {
 		Tower& t = _towers[i];
-		ds::vec3 delta = pos - t.position;
+		ds::vec3 delta = pos - t.baseTransform.position;
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
-			t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
+			//t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
+			t.direction = math::get_angle(ds::vec2(1,0),ds::vec2(delta.x, delta.z));
+			t.towerTransform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
+			//t.gunTransform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
 			t.target = 1;			
 		}
 		else {
@@ -244,8 +254,8 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 // -------------------------------------------------------------
 void Towers::startAnimation(int index) {
 	Tower& t = _towers[index];
-	float min = ds::PI * 0.25f;
-	float angle = ds::random(min, min + ds::PI * 0.5f);
+	float min = ds::PI * 0.1f;
+	float angle = ds::random(min, min + ds::PI * 0.1f);
 	//t.animation.angle = angle;
 	float dir = ds::random(-5.0f, 5.0f);
 	//t.animation.direction = 1;
@@ -253,17 +263,30 @@ void Towers::startAnimation(int index) {
 		//t.animation.direction = -1;
 	//}
 	float ttl = angle / min * 2.0f;
-	RotationYData* rd = new RotationYData;
-	rd->angle = angle / ttl;
-	if (dir < 0.0f) {
-		rd->direction = -1.0f;
+	if (_dbgTowerAnim) {		
+		RotationYData* rd = new RotationYData;
+		rd->angle = angle / ttl;
+		if (dir < 0.0f) {
+			rd->direction = -1.0f;
+		}
+		else {
+			rd->direction = -1.0f;
+		}
+		_animationManager.start(&t.towerTransform, rotateY, rd, angle / min * 2.0f);
 	}
-	else {
-		rd->direction = -1.0f;
+
+	if (_dbgGunAnim) {
+		RotationYData* grd = new RotationYData;
+		grd->angle = angle / ttl;
+		if (dir < 0.0f) {
+			grd->direction = -1.0f;
+		}
+		else {
+			grd->direction = -1.0f;
+		}
+		_animationManager.start(&t.gunTransform, rotateX, grd, angle / min * 2.0f);
 	}
-	_animationManager.start(&t.towerTransform, rotateY, rd, angle / min * 2.0f);
-	_animationManager.start(&t.gunTransform, rotateX, rd, angle / min * 2.0f);
-	
+
 	//t.animation.timer = 0.0f;
 	//t.animation.ttl = angle / min * 2.0f;
 	//t.animationState = 0;

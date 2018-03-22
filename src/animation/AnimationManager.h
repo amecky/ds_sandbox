@@ -9,18 +9,20 @@ struct AnimationData {
 	void* data;
 };
 
-typedef int (*AnimFunc)(transform*, AnimationData*, float, ds::EventStream*);
+typedef int (*AnimFunc)(transform_component*, AnimationData*, float, ds::EventStream*);
 
 struct RotationYData {
 	float angle;
 	float direction;
 };
 
-int rotateY(transform* t, AnimationData* data, float dt, ds::EventStream* events);
+int rotateY(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
 
-int rotateX(transform* t, AnimationData* data, float dt, ds::EventStream* events);
+int rotateX(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
 
-int idleAnimation(transform* t, AnimationData* data, float dt, ds::EventStream* events);
+int rotateZ(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
+
+int idleAnimation(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
 
 struct AnimationEvent {
 
@@ -32,13 +34,13 @@ class AnimationManager {
 		ID id;
 		AnimationData data;
 		AnimFunc function;
-		transform* transform;
+		transform_component* transform;
 	};
 
 public:
 	AnimationManager() {}
 	~AnimationManager() {}
-	ID start(transform* t, AnimFunc func, void* data, float ttl);
+	ID start(transform_component* t, AnimFunc func, void* data, float ttl);
 	void stop(ID id);
 	void tick(float dt, ds::EventStream* events);
 private:

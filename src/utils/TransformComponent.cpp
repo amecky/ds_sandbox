@@ -8,7 +8,8 @@ void build_world_matrix(const transform_component& t, ds::matrix* w) {
 		ds::matrix rxMatrix = ds::matRotationX(t.rotation.x);
 		ds::matrix ryMatrix = ds::matRotationY(t.rotation.y);
 		ds::matrix rzMatrix = ds::matRotationZ(t.rotation.z);
-		*w = rzMatrix * rxMatrix * ryMatrix * scaleMatrix * translationMatrix;
+		//*w = rzMatrix * rxMatrix * ryMatrix * scaleMatrix * translationMatrix;
+		*w = scaleMatrix * rzMatrix * rxMatrix * ryMatrix * translationMatrix;
 	}
 }
 
@@ -19,6 +20,15 @@ void build_world_matrix(const transform& t, ds::matrix* w) {
 	ds::matrix rzm = ds::matRotationZ(t.roll);
 	ds::matrix sm = ds::matScale(t.scale);
 	*w = sm * rzm * m * ds::matTranslate(t.position);
+}
+
+void initialize(transform_component* t, const ds::vec3& pos, const ds::vec3& scale, const ds::vec3& rotation) {
+	t->position = pos;
+	t->scale = scale;
+	t->rotation = rotation;
+	for (int i = 0; i < 4; ++i) {
+		t->timer[i] = 0.0f;
+	}
 }
 
 bool move_to(transform_component & t, const ds::vec3 & start, const ds::vec3 & end, float dt, float ttl) {

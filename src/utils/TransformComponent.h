@@ -18,6 +18,8 @@ typedef struct transform_component_t {
 
 void build_world_matrix(const transform_component& t, ds::matrix* w);
 
+void initialize(transform_component* t, const ds::vec3& pos, const ds::vec3& scale, const ds::vec3& rotation);
+
 bool move_to(transform_component& t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);
 
 bool step_forward(transform_component& t, const ds::vec3& start, const ds::vec3& end, float dt, float ttl);

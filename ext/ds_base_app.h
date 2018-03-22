@@ -75,9 +75,10 @@ namespace ds {
 		virtual void render() {}
 		virtual void afterRendering() {}
 		virtual void update(float dt) {}
-		virtual void prepare(ds::EventStream* events) {
+		virtual void prepare(ds::EventStream* events, RenderContext* renderContext) {
 			if (!_initialized) {
 				_events = events;
+				_renderContext = renderContext;
 				_initialized = true;
 			}
 		}
@@ -103,6 +104,7 @@ namespace ds {
 		ds::EventStream* _events;
 		bool _active;
 		bool _initialized;
+		RenderContext* _renderContext;
 	};
 
 	// ----------------------------------------------------
@@ -127,9 +129,10 @@ namespace ds {
 	public:
 		BaseScene() : Scene() {}
 		virtual ~BaseScene() {}
-		virtual void prepare(ds::EventStream* events) {
+		virtual void prepare(ds::EventStream* events, RenderContext* renderContext) {
 			if (!_initialized) {
 				_events = events;
+				_renderContext = renderContext;
 				_initialized = true;
 				_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 3.0f, -6.0f));
 
@@ -176,7 +179,7 @@ namespace ds {
 		virtual void render() {}
 		virtual void update(float dt) {}
 		void pushScene(Scene* scene) {
-			scene->prepare(_events);
+			scene->prepare(_events, _renderContext);
 			scene->initialize();
 			scene->onActivation();
 			scene->setActive(true);
@@ -319,6 +322,7 @@ namespace ds {
 		_sprites = 0;
 		_buttonStates[0] = { false, false };
 		_buttonStates[1] = { false, false };
+		_renderContext = new RenderContext;
 	}
 
 	BaseApp::~BaseApp() {
@@ -331,6 +335,7 @@ namespace ds {
 		if (_sprites != 0) {
 			delete _sprites;
 		}
+		delete _renderContext;
 		delete _events;
 	}
 
