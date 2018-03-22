@@ -19,10 +19,12 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 
 
 SandboxApp::~SandboxApp() {
+	delete _flowFieldScene;
+	delete _towerTestScene;
+	delete _gameContext->particles;
 	delete _gameContext->ambientMaterial;
 	delete _gameContext->instancedAmbientmaterial;
 	delete _gameContext;
-	delete _flowFieldScene;
 }
 
 // ---------------------------------------------------------------

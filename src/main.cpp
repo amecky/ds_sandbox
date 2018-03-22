@@ -25,6 +25,8 @@ extern ds::BaseApp* app;
 // ---------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
 
+	//_CrtSetBreakAlloc(1198);
+
 	app->init();
 
 	while (ds::isRunning() && app->isRunning()) {
@@ -39,6 +41,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		ds::end();
 	}
+
 	ds::shutdown();
 
 	delete app;

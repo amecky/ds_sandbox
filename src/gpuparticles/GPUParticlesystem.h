@@ -131,6 +131,7 @@ class GPUParticlesystem {
 
 public:
 	GPUParticlesystem(const ParticlesystemDescriptor& descriptor);
+	~GPUParticlesystem();
 	void add(const ds::vec3& pos, ParticleDescriptor descriptor);
 	void tick(float dt);
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::vec3& eyePos);

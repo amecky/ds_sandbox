@@ -26,6 +26,7 @@ ParticleManager::ParticleManager(RID textureID) {
 }
 
 ParticleManager::~ParticleManager() {
+	delete _particleSystem;
 }
 
 

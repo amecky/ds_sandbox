@@ -8,6 +8,7 @@ class RenderItem {
 
 public:
 	RenderItem(const char* objName, Material* m, ds::matrix* world = 0, bool force = false);
+	~RenderItem();
 	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix);
 	void draw(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::matrix& world);
 	transform& getTransform() {
@@ -103,7 +104,7 @@ class InstancedRenderItem {
 
 public:
 	InstancedRenderItem(const char* objName, Material* m, int maxInstances);
-	~InstancedRenderItem() {}
+	~InstancedRenderItem();
 	bool contains(ID id);
 	instance_item& get(ID id);
 	ID add();
@@ -115,6 +116,7 @@ private:
 	RID _drawItem;
 	RID _instanceVertexBuffer;
 	RenderItemInstanceData* _instanceData;
+	int _maxInstances;
 	unsigned int _numObjects;
 	item_index* _indices;
 	instance_item* _objects;

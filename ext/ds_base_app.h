@@ -54,12 +54,10 @@ namespace ds {
 		uint32_t _index;
 	};
 
-	class RenderContext {
+	struct RenderContext {
 
-	public:
 		RenderContext() {}
 		~RenderContext() {}
-	private:
 
 	};
 
@@ -168,7 +166,7 @@ namespace ds {
 
 	public:
 		BaseApp();
-		~BaseApp();
+		virtual ~BaseApp();
 		const ApplicationSettings& getSettings() const {
 			return _settings;
 		}

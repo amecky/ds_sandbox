@@ -83,9 +83,6 @@
     <ClInclude Include="src\flow\Towers.h">
       <Filter>flow</Filter>
     </ClInclude>
-    <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h">
-      <Filter>lib</Filter>
-    </ClInclude>
     <ClInclude Include="src\flow\FlowFieldContext.h">
       <Filter>flow</Filter>
     </ClInclude>
@@ -120,6 +117,9 @@
     </ClInclude>
     <ClInclude Include="src\animation\AnimationManager.h">
       <Filter>animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\DataArray.h">
+      <Filter>lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

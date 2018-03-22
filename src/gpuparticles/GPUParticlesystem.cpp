@@ -53,6 +53,10 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	_drawItem = ds::compile(drawCmd, basicGroup);
 }
 
+GPUParticlesystem::~GPUParticlesystem() {
+	delete[] _vertices;
+}
+
 // -------------------------------------------------------
 // add particle based on ParticleDescriptor
 // -------------------------------------------------------

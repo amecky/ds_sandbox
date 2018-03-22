@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\work\NB\ds_sandbox\src\lib\DataArray.h" />
     <ClInclude Include="ext\diesel.h" />
     <ClInclude Include="ext\ds_base_app.h" />
     <ClInclude Include="ext\ds_imgui.h" />
@@ -43,6 +42,7 @@
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\InstanceCommon.h" />
+    <ClInclude Include="src\lib\DataArray.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\PerfPanel.h" />

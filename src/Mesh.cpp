@@ -35,9 +35,9 @@ Mesh::~Mesh() {
 }
 
 void Mesh::clear() {
-	//for (size_t i = 0; i < _streams.size(); ++i) {
-		//delete[] _streams[i].data;
-	//}
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		delete[] _streams[i].data;
+	}
 	_streams.clear();
 	_extent = ds::vec3(0.0f);
 	_min = ds::vec3(0.0f);
@@ -161,7 +161,9 @@ RID Mesh::assemble() {
 		offset += _streams[i].nComponents;
 	}
 	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, maxSize, totalComponents * sizeof(float), data };
-	return ds::createVertexBuffer(vbInfo);
+	RID rid = ds::createVertexBuffer(vbInfo);
+	delete[] data;
+	return rid;
 }
 
 void Mesh::calculate() {
@@ -273,7 +275,9 @@ RID Mesh::createInputLayout(RID vertexShaderId) {
 		};
 	}
 	ds::InputLayoutInfo layoutInfo = { decl, _streams.size(), vertexShaderId };
-	return ds::createInputLayout(layoutInfo);
+	RID rid = ds::createInputLayout(layoutInfo);
+	delete[] decl;
+	return rid;
 }
 
 uint32_t Mesh::getCount() const {

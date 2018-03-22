@@ -322,7 +322,7 @@ namespace obj {
 
 		ds::vec3* verts = new ds::vec3[total];
 		ds::vec3* ns = new ds::vec3[total];
-		ds::vec2* tuv = new ds::vec2[total];
+		//ds::vec2* tuv = new ds::vec2[total];
 		ds::Color* colors = new ds::Color[total];
 		int current = 0;
 		float dd = 7.0f;
@@ -338,7 +338,7 @@ namespace obj {
 					verts[current] = f.entries[sx_ar[j]].pos;
 					ns[current] = f.entries[sx_ar[j]].n;
 				}
-				tuv[current] = f.entries[sx_ar[j]].uvs;
+				//tuv[current] = f.entries[sx_ar[j]].uvs;
 				colors[current] = f.entries[sx_ar[j]].color;
 				++current;
 			}

@@ -21,6 +21,9 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 TowerTestScene::~TowerTestScene() {	
 	delete _grid;
 	delete _isoCamera;
+	delete _fpsCamera;
+	delete _gridItem;
+	delete _cursorItem;
 }
 
 // ----------------------------------------------------

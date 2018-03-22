@@ -21,6 +21,10 @@ RenderItem::RenderItem(const char* objName, Material* m, ds::matrix* world, bool
 	_drawItem = ds::compile(objDrawCmd, groups, 2);
 }
 
+RenderItem::~RenderItem() {
+	delete _mesh;
+}
+
 void RenderItem::draw(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 	ds::matrix world;
 	build_world_matrix(_transform, &world);
@@ -175,6 +179,7 @@ void remove_instance(instanced_render_item* item, ID id) {
 
 
 InstancedRenderItem::InstancedRenderItem(const char* objName, Material* m, int maxInstances) {
+	_maxInstances = maxInstances;
 	_mesh = new Mesh;
 	_mesh->loadData(objName);
 	//item->transforms = new transform[maxInstances];
@@ -232,7 +237,12 @@ InstancedRenderItem::InstancedRenderItem(const char* objName, Material* m, int m
 	_free_enqueue = maxInstances - 1;
 }
 
-
+InstancedRenderItem::~InstancedRenderItem() {
+	delete _mesh;
+	delete[] _instanceData;
+	delete[] _indices;
+	delete[] _objects;
+}
 
 void InstancedRenderItem::draw(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 

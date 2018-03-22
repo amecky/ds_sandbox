@@ -4,45 +4,87 @@
 #include "..\utils\TransformComponent.h"
 
 struct AnimationData {
+	ID id;
+	ID oid;
 	float timer;
 	float ttl;
 	void* data;
+	transform_component* transform;
 };
 
-typedef int (*AnimFunc)(transform_component*, AnimationData*, float, ds::EventStream*);
+struct AnimationTypes {
+	enum Enum {
+		IDLE,
+		ROTATE_X,
+		ROTATE_Y
+	};
+};
+struct AnimationEvent {
+	ID oid;
+	AnimationTypes::Enum type;
+};
 
-struct RotationYData {
+class Animation {
+
+public:
+	Animation() {}
+	virtual ~Animation() {}
+	virtual void tick(float dt, ds::EventStream* events) = 0;
+};
+
+struct RotationData : AnimationData {
+	
 	float angle;
 	float direction;
 };
 
-int rotateY(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
+class RotateYAnimation : public Animation {
 
-int rotateX(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
-
-int rotateZ(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
-
-int idleAnimation(transform_component* t, AnimationData* data, float dt, ds::EventStream* events);
-
-struct AnimationEvent {
-
+public:
+	RotateYAnimation() : Animation() {}
+	virtual ~RotateYAnimation() {}
+	ID start(ID oid, transform_component* t, float angle, float direction, float ttl);
+	virtual void tick(float dt, ds::EventStream* events);
+private:
+	ID alreadyRunning(transform_component* t);
+	ds::DataArray<RotationData> _data;
 };
+
+class RotateXAnimation : public Animation {
+
+public:
+	RotateXAnimation() : Animation() {}
+	virtual ~RotateXAnimation() {}
+	ID start(ID oid, transform_component* t, float angle, float direction, float ttl);
+	virtual void tick(float dt, ds::EventStream* events);
+private:
+	ID alreadyRunning(transform_component* t);
+	ds::DataArray<RotationData> _data;
+};
+
+class IdleAnimation : public Animation {
+
+public:
+	IdleAnimation() : Animation() {}
+	virtual ~IdleAnimation() {}
+	ID start(ID oid, transform_component* t, float ttl);
+	virtual void tick(float dt, ds::EventStream* events);
+private:
+	ID alreadyRunning(transform_component* t);
+	ds::DataArray<AnimationData> _data;
+};
+
 
 class AnimationManager {
 
-	struct Animation {
-		ID id;
-		AnimationData data;
-		AnimFunc function;
-		transform_component* transform;
-	};
-
 public:
-	AnimationManager() {}
-	~AnimationManager() {}
-	ID start(transform_component* t, AnimFunc func, void* data, float ttl);
+	AnimationManager();
+	~AnimationManager();
 	void stop(ID id);
 	void tick(float dt, ds::EventStream* events);
+	ID rotateY(ID oid, transform_component* t, float angle, float direction, float ttl);
+	ID rotateX(ID oid, transform_component* t, float angle, float direction, float ttl);
+	ID idle(ID oid, transform_component* t, float ttl);
 private:
-	ds::DataArray<Animation> _animations;
+	std::vector<Animation*> _animations;
 };

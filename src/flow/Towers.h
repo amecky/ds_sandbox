@@ -19,7 +19,7 @@ class Towers {
 
 public:
 	Towers() : _worldOffset(-10.0f,-6.0f) {}
-	~Towers() {}
+	~Towers();
 	void init(Material* material);
 	void setWorldOffset(const ds::vec2& offset) {
 		_worldOffset = offset;
@@ -30,11 +30,11 @@ public:
 	void remove(const p2i& gridPos);
 	int findTower(const p2i& gridPos) const;
 	const Tower& get(int index) const {
-		return _towers[index];
+		return _towers.objects[index];
 	}
 	const Tower& get(const p2i& gridPos) const {
 		int idx = findTower(gridPos);
-		return _towers[idx];
+		return _towers.objects[idx];
 	}
 	void tick(float dt, ds::EventStream* events);
 	void rotateTowers(ds::DataArray<Walker>* walkers);
@@ -42,7 +42,7 @@ public:
 	void showGUI(int selectedTower);
 private:
 	void startAnimation(int index);
-	std::vector<Tower> _towers;
+	ds::DataArray<Tower> _towers;
 	RenderItem* _towerItems[10];
 	RenderItem* _gunItems[10];
 	RenderItem* _baseItems[3];

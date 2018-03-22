@@ -3,6 +3,18 @@
 #include "..\utils\CSVFile.h"
 #include <ds_base_app.h>
 
+Towers::~Towers() {
+	for (int i = 0; i < 4; ++i) {
+		delete _towerItems[i];
+	}
+	for (int i = 0; i < 4; ++i) {
+		delete _gunItems[i];
+	}
+	for (int i = 0; i < 3; ++i) {
+		delete _baseItems[i];
+	}
+}
+
 // -------------------------------------------------------------
 // init
 // -------------------------------------------------------------
@@ -39,8 +51,8 @@ void Towers::init(Material* material) {
 // find tower by grid postion
 // -------------------------------------------------------------
 int Towers::findTower(const p2i& gridPos) const {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		const Tower& t = _towers[i];
+	for (size_t i = 0; i < _towers.numObjects; ++i) {
+		const Tower& t = _towers.objects[i];
 		if (t.gx == gridPos.x && t.gy == gridPos.y) {
 			return i;
 		}
@@ -53,7 +65,7 @@ int Towers::findTower(const p2i& gridPos) const {
 // -------------------------------------------------------------
 void Towers::upgradeTower(int index) {
 	if (index != -1) {
-		Tower& t = _towers[index];
+		Tower& t = _towers.objects[index];
 		++t.level;
 		if (t.level > 2) {
 			t.level = 2;
@@ -66,7 +78,8 @@ void Towers::upgradeTower(int index) {
 // add tower
 // -------------------------------------------------------------
 void Towers::addTower(const p2i& gridPos, int type) {
-	Tower t;
+	ID id = _towers.add();
+	Tower& t = _towers.get(id);
 	t.renderItem = _towerItems[type];
 	t.gunItem = _gunItems[type];
 	t.offset = _definitions[type].offset;
@@ -94,18 +107,17 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	p.x += 0.5f;
 	p.z += 0.5f;
 	initialize(&t.gunTransform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
-	_towers.push_back(t);
-	startAnimation(_towers.size() - 1);
+	startAnimation(_towers.numObjects - 1);
+	if (_dbgGunAnim) {
+		_animationManager.rotateX(t.id, &t.gunTransform, ds::PI, 1.0f, -1.0f);
+	}
 }
 
 void Towers::remove(const p2i & gridPos) {
-	std::vector<Tower>::iterator it = _towers.begin();
-	while (it != _towers.end()) {
-		if (gridPos.x == it->gx && gridPos.y == it->gy) {
-			it = _towers.erase(it);
-		}
-		else {
-			++it;
+	for (int i = 0; i < _towers.numObjects; ++i) {
+		const Tower& t = _towers.objects[i];
+		if (gridPos.x == t.gx && gridPos.y == t.gy) {
+			_towers.remove(t.id);
 		}
 	}
 }
@@ -122,8 +134,8 @@ bool isClose(const Tower& tower, const Walker& walker) {
 // render
 // -------------------------------------------------------------
 void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		const Tower& t = _towers[i];
+	for (size_t i = 0; i < _towers.numObjects; ++i) {
+		const Tower& t = _towers.objects[i];
 		// draw base
 		ds::matrix w = ds::matIdentity();
 		build_world_matrix(t.baseTransform, &w);
@@ -142,51 +154,21 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 // tick
 // -------------------------------------------------------------
 void Towers::tick(float dt, ds::EventStream* events) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		Tower& t = _towers[i];
-		/*
-		if (t.target == INVALID_ID) {
-			t.animation.timer += dt;
-			if (t.animationState == 0) {
-				t.direction += t.animation.angle * dt * static_cast<float>(t.animation.direction);
-				if (t.animation.timer >= t.animation.ttl) {
-					t.animationState = 1;
-					t.animation.timer = 0.0f;
-					t.animation.ttl = ds::random(0.5f, 1.5f);
-				}
-			}
-			else {
-				if (t.animation.timer >= t.animation.ttl) {
-					startAnimation(i);
-				}
-			}
-		}
-		else {
-			t.timer += dt;
-			if (t.timer >= t.bulletTTL) {
-				FireEvent event;
-				event.pos = t.position;
-				event.target = t.target;
-				event.type = t.type;
-				events->add(100,&event, sizeof(FireEvent));
-				t.timer -= t.bulletTTL;
-			}
-		}
-		*/
-	}
 
 	_animationManager.tick(dt, events);
-	if (events->containsType(1000)) {
-		Tower& t = _towers[0];
-		if (_dbgTowerAnim) {
-			_animationManager.start(&t.towerTransform, idleAnimation, 0, 1.0f);
+
+	if (events->containsType(100)) {
+		AnimationEvent evn;
+		for (int i = 0; i < events->num(); ++i) {
+			events->get(i, &evn);
+			Tower& t = _towers.get(evn.oid);
+			if (evn.type == AnimationTypes::ROTATE_Y) {				
+				_animationManager.idle(t.id, &t.towerTransform, ds::random(1.0f, 2.0f));
+			}
+			if (evn.type == AnimationTypes::IDLE) {
+				startAnimation(0);
+			}
 		}
-		if (_dbgGunAnim) {
-			_animationManager.start(&t.gunTransform, idleAnimation, 0, 1.0f);
-		}
-	}
-	if (events->containsType(1001)) {
-		startAnimation(0);
 	}
 }
 
@@ -194,8 +176,8 @@ void Towers::tick(float dt, ds::EventStream* events) {
 // rotate towers towards walkers
 // -------------------------------------------------------------
 void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		Tower& t = _towers[i];
+	for (size_t i = 0; i < _towers.numObjects; ++i) {
+		Tower& t = _towers.objects[i];
 		if (t.target != INVALID_ID) {
 			if (walkers->contains(t.target)) {
 				const Walker& w = walkers->get(t.target);
@@ -232,15 +214,13 @@ void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 // rotate towers towards fixed position
 // -------------------------------------------------------------
 void Towers::rotateTowers(const ds::vec3& pos) {
-	for (size_t i = 0; i < _towers.size(); ++i) {
-		Tower& t = _towers[i];
+	for (size_t i = 0; i < _towers.numObjects; ++i) {
+		Tower& t = _towers.objects[i];
 		ds::vec3 delta = pos - t.baseTransform.position;
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
-			//t.direction = math::get_rotation(ds::vec2(delta.x, delta.z));
 			t.direction = math::get_angle(ds::vec2(1,0),ds::vec2(delta.x, delta.z));
 			t.towerTransform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
-			//t.gunTransform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
 			t.target = 1;			
 		}
 		else {
@@ -253,44 +233,21 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 // start rotation animation
 // -------------------------------------------------------------
 void Towers::startAnimation(int index) {
-	Tower& t = _towers[index];
-	float min = ds::PI * 0.1f;
-	float angle = ds::random(min, min + ds::PI * 0.1f);
-	//t.animation.angle = angle;
+	Tower& t = _towers.objects[index];
+	float min = ds::PI * 0.5f;
+	float angle = ds::random(min, min + ds::PI * 0.5f);
 	float dir = ds::random(-5.0f, 5.0f);
-	//t.animation.direction = 1;
-	//if (dir < 0.0f) {
-		//t.animation.direction = -1;
-	//}
+	if (dir < 0.0f) {
+		dir = -1.0f;
+	}
+	else {
+		dir = 1.0f;
+	}
 	float ttl = angle / min * 2.0f;
 	if (_dbgTowerAnim) {		
-		RotationYData* rd = new RotationYData;
-		rd->angle = angle / ttl;
-		if (dir < 0.0f) {
-			rd->direction = -1.0f;
-		}
-		else {
-			rd->direction = -1.0f;
-		}
-		_animationManager.start(&t.towerTransform, rotateY, rd, angle / min * 2.0f);
+		_animationManager.rotateY(t.id,&t.towerTransform, angle, dir, angle / min * 2.0f);
 	}
-
-	if (_dbgGunAnim) {
-		RotationYData* grd = new RotationYData;
-		grd->angle = angle / ttl;
-		if (dir < 0.0f) {
-			grd->direction = -1.0f;
-		}
-		else {
-			grd->direction = -1.0f;
-		}
-		_animationManager.start(&t.gunTransform, rotateX, grd, angle / min * 2.0f);
-	}
-
-	//t.animation.timer = 0.0f;
-	//t.animation.ttl = angle / min * 2.0f;
-	//t.animationState = 0;
-	//DBG_LOG("angle %3.2f ttl %2.4f direction %d", (angle*360.0f / ds::TWO_PI), t.animation.ttl,t.animation.direction);
+	
 }
 
 // -------------------------------------------------------------
