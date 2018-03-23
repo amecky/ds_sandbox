@@ -9,7 +9,7 @@ typedef unsigned int ID;
 const unsigned int INVALID_ID = UINT_MAX;
 
 namespace ds {
-
+	/*
 	template <typename TYPE> void Construct(void* dest) {
 		new ((TYPE*)dest) TYPE;
 	}
@@ -17,7 +17,7 @@ namespace ds {
 	template <typename TYPE> void Destruct(void* dest) {
 		((TYPE*)dest)->~TYPE();
 	}
-
+	*/
 	struct Index {
 		ID id;
 		unsigned short index;
@@ -32,12 +32,12 @@ namespace ds {
 		U objects[MAX_FLOW_OBJECTS];
 		unsigned short free_enqueue;
 		unsigned short free_dequeue;
-		bool _constructor;
-		bool _destructor;
+		//bool _constructor;
+		//bool _destructor;
 
 		DataArray() {
-			_constructor = !__has_trivial_constructor(U);
-			_destructor = !__has_trivial_destructor(U);
+			//_constructor = !__has_trivial_constructor(U);
+			//_destructor = !__has_trivial_destructor(U);
 			clear();
 		}
 
@@ -46,6 +46,7 @@ namespace ds {
 		}
 
 		void clear() {
+			/*
 			if (_destructor) {
 				U* ptr = &objects[0];
 				for (unsigned int i = 0; i < numObjects; ++i) {
@@ -53,6 +54,7 @@ namespace ds {
 					++ptr;
 				}
 			}
+			*/
 			numObjects = 0;
 			for (unsigned short i = 0; i < MAX_FLOW_OBJECTS; ++i) {
 				indices[i].id = i;
@@ -87,9 +89,9 @@ namespace ds {
 			free_dequeue = in.next;
 			in.index = numObjects++;
 			U& o = objects[in.index];
-			if (_constructor) {
-				Construct<U>(&o);
-			}
+			//if (_constructor) {
+				//Construct<U>(&o);
+			//}
 			o.id = in.id;
 			return o.id;
 		}
@@ -99,9 +101,9 @@ namespace ds {
 			assert(in.index != USHRT_MAX);
 			int current = in.index;
 			U& o = objects[in.index];
-			if (_destructor) {
-				Destruct<U>(&o);
-			}
+			//if (_destructor) {
+				//Destruct<U>(&o);
+			//}
 			o = objects[--numObjects];
 			indices[o.id & INDEX_MASK].index = in.index;
 			in.index = USHRT_MAX;

@@ -15,6 +15,20 @@ struct TowerDefinition {
 	float offset;
 };
 
+struct TowerItemTypes {
+
+	enum Enum {
+		GREEN_BASE,
+		YELLOW_BASE,
+		RED_BASE,
+		GATLIN_CHASSIS,
+		GATLIN_WEAPON,
+		CANNON_CHASSIS,
+		CANNON_WEAPON,
+		EOL
+	};
+};
+
 class Towers {
 
 public:
@@ -42,10 +56,17 @@ public:
 	void showGUI(int selectedTower);
 private:
 	void startAnimation(int index);
+	void buildCannonTower(Tower* tower, const ds::vec3& pos);
+	void buildGatlinTower(Tower* tower, const ds::vec3& pos);
+	int buildTower(Tower* tower, const ds::vec3& pos, ds::vec3* offsets, int* items, int num, ID* ret);
+	ds::DataArray<TowerPart> _parts;
+
 	ds::DataArray<Tower> _towers;
-	RenderItem* _towerItems[10];
-	RenderItem* _gunItems[10];
-	RenderItem* _baseItems[3];
+	RenderItem* _renderItems[32];
+
+	//RenderItem* _towerItems[10];
+	//RenderItem* _gunItems[10];
+	//RenderItem* _baseItems[3];
 	TowerDefinition _definitions[10];
 	ds::vec2 _worldOffset;
 

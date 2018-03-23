@@ -61,7 +61,7 @@ void TowerTestScene::initialize() {
 
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
-	addTower(p2i(2, 2), 0);
+	addTower(p2i(2, 2), 1);
 
 }
 

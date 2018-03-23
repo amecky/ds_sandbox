@@ -4,14 +4,8 @@
 #include <ds_base_app.h>
 
 Towers::~Towers() {
-	for (int i = 0; i < 4; ++i) {
-		delete _towerItems[i];
-	}
-	for (int i = 0; i < 4; ++i) {
-		delete _gunItems[i];
-	}
-	for (int i = 0; i < 3; ++i) {
-		delete _baseItems[i];
+	for (int i = 0; i < TowerItemTypes::EOL; ++i) {
+		delete _renderItems[i];
 	}
 }
 
@@ -19,18 +13,19 @@ Towers::~Towers() {
 // init
 // -------------------------------------------------------------
 void Towers::init(Material* material) {	 
-	_towerItems[0] = new RenderItem("cannon", material);
-	_towerItems[1] = new RenderItem("bomber", material);
-	_towerItems[2] = new RenderItem("rocket", material);
-	_towerItems[3] = new RenderItem("slow_down", material);
+
+	_renderItems[TowerItemTypes::GREEN_BASE] = new RenderItem("green_base", material);
+	_renderItems[TowerItemTypes::YELLOW_BASE] = new RenderItem("yellow_base", material);
+	_renderItems[TowerItemTypes::RED_BASE] = new RenderItem("red_base", material);
+	_renderItems[TowerItemTypes::GATLIN_CHASSIS] = new RenderItem("cannon", material);
+	_renderItems[TowerItemTypes::GATLIN_WEAPON] = new RenderItem("gatlin", material);
+	_renderItems[TowerItemTypes::CANNON_CHASSIS] = new RenderItem("bomber", material);
+	_renderItems[TowerItemTypes::CANNON_WEAPON] = new RenderItem("boom_cannon", material);
+
+
+	//_towerItems[2] = new RenderItem("rocket", material);
+	//_towerItems[3] = new RenderItem("slow_down", material);
 	ds::matrix tm = ds::matTranslate(ds::vec3(0.2f, 0.0f, 0.0f));
-	_gunItems[0] = new RenderItem("gatlin", material, &tm, true);
-	_gunItems[1] = new RenderItem("gatlin", material, &tm, true);
-	_gunItems[2] = new RenderItem("gatlin", material, &tm, true);
-	_gunItems[3] = new RenderItem("gatlin", material, &tm, true);
-	_baseItems[0] = new RenderItem("green_base", material);
-	_baseItems[1] = new RenderItem("yellow_base", material);
-	_baseItems[2] = new RenderItem("red_base", material);
 
 	CSVFile file;
 	if (file.load("tower_definitions.csv", "resources")) {
@@ -70,20 +65,57 @@ void Towers::upgradeTower(int index) {
 		if (t.level > 2) {
 			t.level = 2;
 		}
-		t.baseItem = _baseItems[t.level];
+		//t.baseItem = _baseItems[t.level];
 	}
 }
 
+int Towers::buildTower(Tower* tower, const ds::vec3& pos, ds::vec3* offsets, int* items, int num, ID* ret) {
+	for (int i = 0; i < num; ++i) {
+		ds::vec3 p = pos;
+		ID baseID = _parts.add();
+		TowerPart& basePart = _parts.get(baseID);
+		basePart.parent = INVALID_ID;
+		basePart.renderItemIndex = items[i];
+		p = offsets[i];
+		initialize(&basePart.transform, p, ds::vec3(1.0f), ds::vec3(0.0f));
+		tower->parts[i] = baseID;
+		ret[i] = baseID;
+	}
+	return num;
+}
+
+void Towers::buildCannonTower(Tower* tower, const ds::vec3& pos) {
+	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::CANNON_CHASSIS ,TowerItemTypes::CANNON_WEAPON };
+	ds::vec3 offsets[] = { pos, pos + ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
+	ID ids[3];
+	buildTower(tower, pos, offsets, parts, 3, ids);
+	TowerPart& wp = _parts.get(ids[2]);
+	wp.parent = ids[1];
+	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
+		const TowerPart& tp = _parts.objects[i];
+		DBG_LOG("build %d id: %d parent: %d renderitem: %d", i, tp.id,tp.parent,tp.renderItemIndex);
+	}
+}
+
+void Towers::buildGatlinTower(Tower* tower, const ds::vec3& pos) {
+	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::GATLIN_CHASSIS ,TowerItemTypes::GATLIN_WEAPON };
+	ds::vec3 offsets[] = { ds::vec3(0.0f), ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
+	ID ids[3];
+	buildTower(tower, pos, offsets, parts, 3, ids);
+	TowerPart& wp = _parts.get(ids[2]);
+	wp.parent = ids[1];
+	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
+		const TowerPart& tp = _parts.objects[i];
+		DBG_LOG("build %d = %d", i, tp.renderItemIndex);
+	}
+}
 // -------------------------------------------------------------
 // add tower
 // -------------------------------------------------------------
 void Towers::addTower(const p2i& gridPos, int type) {
 	ID id = _towers.add();
 	Tower& t = _towers.get(id);
-	t.renderItem = _towerItems[type];
-	t.gunItem = _gunItems[type];
 	t.offset = _definitions[type].offset;
-	t.baseItem = _baseItems[0];
 	t.gx = gridPos.x;
 	t.gy = gridPos.y;
 	t.position = ds::vec3(_worldOffset.x + gridPos.x, 0.15f, _worldOffset.y + gridPos.y);
@@ -94,23 +126,19 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.bulletTTL = 0.1f;
 	t.timer = 0.0f;
 	t.target = INVALID_ID;
-	t.animation.timer = 0.0f;
-	t.animation.ttl = ds::random(0.5f, 1.5f);
 	ds::vec3 p = t.position;
-	ds::vec3 extent = t.baseItem->getExtent();
-	p.y += extent.y;
-	initialize(&t.baseTransform, p, ds::vec3(1.0f), ds::vec3(0.0f));
-	p.y += t.offset;
-	initialize(&t.towerTransform, p, ds::vec3(1.0f), ds::vec3(0.0f));
-	//p.y += 0.2f;
-	p.y = 0.0f;
-	p.x += 0.5f;
-	p.z += 0.5f;
-	initialize(&t.gunTransform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
-	startAnimation(_towers.numObjects - 1);
-	if (_dbgGunAnim) {
-		_animationManager.rotateX(t.id, &t.gunTransform, ds::PI, 1.0f, -1.0f);
+	
+	//if (_dbgGunAnim) {
+		//_animationManager.rotateX(t.id, &t.gunTransform, ds::PI, 1.0f, -1.0f);
+	//}
+	if (type == 0) {
+		buildGatlinTower(&t, t.position);
 	}
+	if (type == 1) {
+		buildCannonTower(&t, t.position);
+	}
+
+	startAnimation(_towers.numObjects - 1);
 }
 
 void Towers::remove(const p2i & gridPos) {
@@ -133,20 +161,20 @@ bool isClose(const Tower& tower, const Walker& walker) {
 // -------------------------------------------------------------
 // render
 // -------------------------------------------------------------
-void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
-	for (size_t i = 0; i < _towers.numObjects; ++i) {
-		const Tower& t = _towers.objects[i];
-		// draw base
-		ds::matrix w = ds::matIdentity();
-		build_world_matrix(t.baseTransform, &w);
-		t.baseItem->draw(renderPass, viewProjectionMatrix, w);
-		// draw tower
-		build_world_matrix(t.towerTransform, &w);
-		t.renderItem->draw(renderPass, viewProjectionMatrix, w);
-		// draw gun
-		ds::matrix gw = ds::matIdentity();
-		build_world_matrix(t.gunTransform, &gw);
-		t.gunItem->draw(renderPass, viewProjectionMatrix, gw * w);
+void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {	
+	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
+		const TowerPart& tp = _parts.objects[i];
+		ds::matrix worldMatrix = ds::matIdentity();
+		build_world_matrix(tp.transform, &worldMatrix);
+		if (tp.parent == INVALID_ID) {
+			_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, worldMatrix);
+		}
+		else {
+			const TowerPart& parent = _parts.get(tp.parent);
+			ds::matrix parentMatrix = ds::matIdentity();
+			build_world_matrix(parent.transform, &parentMatrix);
+			_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, worldMatrix * parentMatrix);
+		}
 	}
 }
 
@@ -163,7 +191,8 @@ void Towers::tick(float dt, ds::EventStream* events) {
 			events->get(i, &evn);
 			Tower& t = _towers.get(evn.oid);
 			if (evn.type == AnimationTypes::ROTATE_Y) {				
-				_animationManager.idle(t.id, &t.towerTransform, ds::random(1.0f, 2.0f));
+				TowerPart& part = _parts.get(t.parts[1]);
+				_animationManager.idle(t.id, &part.transform, ds::random(1.0f, 2.0f));
 			}
 			if (evn.type == AnimationTypes::IDLE) {
 				startAnimation(0);
@@ -216,11 +245,12 @@ void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 void Towers::rotateTowers(const ds::vec3& pos) {
 	for (size_t i = 0; i < _towers.numObjects; ++i) {
 		Tower& t = _towers.objects[i];
-		ds::vec3 delta = pos - t.baseTransform.position;
+		TowerPart& part = _parts.get(t.parts[1]);
+		ds::vec3 delta = pos - part.transform.position;
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
 			t.direction = math::get_angle(ds::vec2(1,0),ds::vec2(delta.x, delta.z));
-			t.towerTransform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
+			part.transform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
 			t.target = 1;			
 		}
 		else {
@@ -245,10 +275,13 @@ void Towers::startAnimation(int index) {
 	}
 	float ttl = angle / min * 2.0f;
 	if (_dbgTowerAnim) {		
-		_animationManager.rotateY(t.id,&t.towerTransform, angle, dir, angle / min * 2.0f);
+		TowerPart& part = _parts.get(t.parts[1]);
+		_animationManager.rotateY(t.id,&part.transform, angle, dir, angle / min * 2.0f);
 	}
 	
 }
+
+
 
 // -------------------------------------------------------------
 // show GUI
