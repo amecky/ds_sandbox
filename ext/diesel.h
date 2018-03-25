@@ -905,6 +905,7 @@ namespace ds {
 		return sm;
 	}
 
+	// roation is counter clock wise
 	// http://www.cprogramming.com/tutorial/3d/rotationMatrices.html
 	// -------------------------------------------------------
 	// Rotation X matrix
@@ -914,8 +915,8 @@ namespace ds {
 		float c = cosf(angle);
 		matrix sm(
 			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, c, s, 0.0f,
-			0.0f, -s, c, 0.0f,
+			0.0f, c, -s, 0.0f,
+			0.0f, s, c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
 		return sm;
@@ -928,9 +929,9 @@ namespace ds {
 		float s = sinf(angle);
 		float c = cosf(angle);
 		matrix sm(
-			c, 0.0f, -s, 0.0f,
+			c, 0.0f, s, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
-			s, 0.0f, c, 0.0f,
+			-s, 0.0f, c, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
 		return sm;
@@ -943,8 +944,8 @@ namespace ds {
 		float s = sinf(angle);
 		float c = cosf(angle);
 		matrix sm(
-			c, s, 0.0f, 0.0f,
-			-s, c, 0.0f, 0.0f,
+			c, -s, 0.0f, 0.0f,
+			s, c, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 			);
@@ -980,6 +981,18 @@ namespace ds {
 			}
 		}
 		return tmp;
+	}
+
+	inline vec3 matTransformCoord(const matrix& m, const vec3 v) {
+		vec3 r(0.0f);
+		float x = v.x*m._11 + v.y*m._21 + v.z*m._31 + m._41;
+		float y = v.x*m._12 + v.y*m._22 + v.z*m._32 + m._42;
+		float z = v.x*m._13 + v.y*m._23 + v.z*m._33 + m._43;
+		float w = v.x*m._14 + v.y*m._24 + v.z*m._34 + m._44;
+		r.x = x / w;
+		r.y = y / w;
+		r.z = z / w;
+		return r;
 	}
 
 	
@@ -1024,6 +1037,7 @@ namespace ds {
 	}
 
 	inline matrix matRotation(const vec3& v, float angle) {
+		// counter clock wise
 		float L = (v.x * v.x + v.y * v.y + v.z * v.z);
 		float u2 = v.x * v.x;
 		float vec2 = v.y * v.y;

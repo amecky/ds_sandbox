@@ -12,6 +12,10 @@ public:
 	void setSpeed(float spd) {
 		_speed = spd;
 	}
+	void setRotation(const ds::vec3& r) {
+		_rotation = r;
+		buildView();
+	}
 	// moving the camera
 	void move(float unit);
 	void strafe(float unit);
@@ -28,4 +32,6 @@ private:
 	ds::Camera* _camera;
 	float _speed;
 	ds::vec2 _lastMousePos;
+	ds::vec3 _position;
+	ds::vec3 _rotation;
 };

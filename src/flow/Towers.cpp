@@ -21,9 +21,10 @@ void Towers::init(Material* material) {
 	_renderItems[TowerItemTypes::GATLIN_WEAPON] = new RenderItem("gatlin", material);
 	_renderItems[TowerItemTypes::CANNON_CHASSIS] = new RenderItem("bomber", material);
 	_renderItems[TowerItemTypes::CANNON_WEAPON] = new RenderItem("boom_cannon", material);
+	_renderItems[TowerItemTypes::BOMBER_CHASSIS] = new RenderItem("rocket", material);
+	_renderItems[TowerItemTypes::BOMBER_WEAPON] = new RenderItem("boom_cannon", material);
 
 
-	//_towerItems[2] = new RenderItem("rocket", material);
 	//_towerItems[3] = new RenderItem("slow_down", material);
 	ds::matrix tm = ds::matTranslate(ds::vec3(0.2f, 0.0f, 0.0f));
 
@@ -55,6 +56,13 @@ int Towers::findTower(const p2i& gridPos) const {
 	return -1;
 }
 
+float Towers::getDirection(ID id) const {
+	if (_towers.contains(id)) {
+		const Tower& t = _towers.get(id);
+		return _parts.get(t.parts[1]).transform.rotation.y;
+	}
+	return 0.0f;
+}
 // -------------------------------------------------------------
 // upgrade tower
 // -------------------------------------------------------------
@@ -91,23 +99,24 @@ void Towers::buildCannonTower(Tower* tower, const ds::vec3& pos) {
 	buildTower(tower, pos, offsets, parts, 3, ids);
 	TowerPart& wp = _parts.get(ids[2]);
 	wp.parent = ids[1];
-	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
-		const TowerPart& tp = _parts.objects[i];
-		DBG_LOG("build %d id: %d parent: %d renderitem: %d", i, tp.id,tp.parent,tp.renderItemIndex);
-	}
 }
 
 void Towers::buildGatlinTower(Tower* tower, const ds::vec3& pos) {
 	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::GATLIN_CHASSIS ,TowerItemTypes::GATLIN_WEAPON };
-	ds::vec3 offsets[] = { ds::vec3(0.0f), ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
+	ds::vec3 offsets[] = {pos, pos + ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
 	ID ids[3];
 	buildTower(tower, pos, offsets, parts, 3, ids);
 	TowerPart& wp = _parts.get(ids[2]);
 	wp.parent = ids[1];
-	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
-		const TowerPart& tp = _parts.objects[i];
-		DBG_LOG("build %d = %d", i, tp.renderItemIndex);
-	}
+}
+
+void Towers::buildBomberTower(Tower* tower, const ds::vec3& pos) {
+	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::BOMBER_CHASSIS ,TowerItemTypes::BOMBER_WEAPON };
+	ds::vec3 offsets[] = { pos, pos + ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
+	ID ids[3];
+	buildTower(tower, pos, offsets, parts, 3, ids);
+	TowerPart& wp = _parts.get(ids[2]);
+	wp.parent = ids[1];
 }
 // -------------------------------------------------------------
 // add tower
@@ -137,6 +146,9 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	if (type == 1) {
 		buildCannonTower(&t, t.position);
 	}
+	if (type == 2) {
+		buildBomberTower(&t, t.position);
+	}
 
 	startAnimation(_towers.numObjects - 1);
 }
@@ -145,6 +157,10 @@ void Towers::remove(const p2i & gridPos) {
 	for (int i = 0; i < _towers.numObjects; ++i) {
 		const Tower& t = _towers.objects[i];
 		if (gridPos.x == t.gx && gridPos.y == t.gy) {
+			_animationManager.stopAll(t.id);
+			for (int j = 0; j < 3; ++j) {
+				_parts.remove(t.parts[j]);
+			}
 			_towers.remove(t.id);
 		}
 	}

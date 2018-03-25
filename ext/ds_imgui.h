@@ -162,7 +162,7 @@ namespace gui {
 
 	void Slider(const char* label, float* v, float minValue, float maxValue, int precision = 0, int width = 200);
 
-	void SliderAngle(const char* label, float* v, int width = 200);
+	bool SliderAngle(const char* label, float* v, int width = 200);
 
 	void Separator();
 
@@ -2031,10 +2031,12 @@ namespace gui {
 		popID();
 	}
 
-	void SliderAngle(const char* label, float* v, int width) {
+	bool SliderAngle(const char* label, float* v, int width) {
 		int d = static_cast<int>(*v / ds::TWO_PI * 360.0f);
+		float tmp = *v;
 		Slider(label, &d, 0, 360, width);
 		*v = d / 360.0f * ds::TWO_PI;
+		return tmp != *v;
 	}
 
 	// -------------------------------------------------------

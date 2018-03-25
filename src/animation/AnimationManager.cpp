@@ -24,6 +24,12 @@ void AnimationManager::tick(float dt, ds::EventStream* events) {
 	}
 }
 
+void AnimationManager::stopAll(ID oid) {
+	for (size_t i = 0; i < _animations.size(); ++i) {
+		_animations[i]->stop(oid);
+	}
+}
+
 ID AnimationManager::rotateY(ID oid, transform_component * t, float angle, float direction, float ttl) {
 	RotateYAnimation* rya = (RotateYAnimation*)_animations[AnimationTypes::ROTATE_Y];
 	return rya->start(oid, t, angle, direction, ttl);
@@ -84,6 +90,15 @@ void RotateYAnimation::tick(float dt, ds::EventStream * events) {
 	}
 }
 
+void RotateYAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
+		}
+	}
+}
+
 ID IdleAnimation::start(ID oid, transform_component* t, float ttl) {
 	DBG_LOG("=> starting IdleAnimation - oid %d ttl %2.3f", oid, ttl);
 	ID tmp = alreadyRunning(t);
@@ -111,6 +126,15 @@ void IdleAnimation::tick(float dt, ds::EventStream * events) {
 			event.type = AnimationTypes::IDLE;
 			DBG_LOG("#> stopping IdleAnimation - oid %d", rd.oid);
 			events->add(100, &event, sizeof(AnimationEvent));
+		}
+	}
+}
+
+void IdleAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
 		}
 	}
 }
@@ -165,6 +189,15 @@ void RotateXAnimation::tick(float dt, ds::EventStream * events) {
 			event.type = AnimationTypes::ROTATE_X;
 			DBG_LOG("#> stopping RotateXAnimation - oid %d", rd.oid);
 			events->add(100, &event, sizeof(AnimationEvent));
+		}
+	}
+}
+
+void RotateXAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
 		}
 	}
 }

@@ -29,6 +29,7 @@ private:
 
 	GameContext* _gameContext;
 	RenderItem* _cursorItem;
+	RenderItem* _wallItem;
 	IsometricCamera* _isoCamera;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
@@ -37,4 +38,5 @@ private:
 	ID _ids[5 * 5];
 	InstancedRenderItem* _gridItem;
 	bool _dbgAnimateTower;
+	ds::vec3 _dbgCameraRotation;
 };

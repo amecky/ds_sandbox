@@ -30,6 +30,7 @@ public:
 	Animation() {}
 	virtual ~Animation() {}
 	virtual void tick(float dt, ds::EventStream* events) = 0;
+	virtual void stop(ID oid) = 0;
 };
 
 struct RotationData : AnimationData {
@@ -45,6 +46,7 @@ public:
 	virtual ~RotateYAnimation() {}
 	ID start(ID oid, transform_component* t, float angle, float direction, float ttl);
 	virtual void tick(float dt, ds::EventStream* events);
+	virtual void stop(ID oid);
 private:
 	ID alreadyRunning(transform_component* t);
 	ds::DataArray<RotationData> _data;
@@ -57,6 +59,7 @@ public:
 	virtual ~RotateXAnimation() {}
 	ID start(ID oid, transform_component* t, float angle, float direction, float ttl);
 	virtual void tick(float dt, ds::EventStream* events);
+	virtual void stop(ID oid);
 private:
 	ID alreadyRunning(transform_component* t);
 	ds::DataArray<RotationData> _data;
@@ -69,6 +72,7 @@ public:
 	virtual ~IdleAnimation() {}
 	ID start(ID oid, transform_component* t, float ttl);
 	virtual void tick(float dt, ds::EventStream* events);
+	virtual void stop(ID oid);
 private:
 	ID alreadyRunning(transform_component* t);
 	ds::DataArray<AnimationData> _data;
@@ -85,6 +89,7 @@ public:
 	ID rotateY(ID oid, transform_component* t, float angle, float direction, float ttl);
 	ID rotateX(ID oid, transform_component* t, float angle, float direction, float ttl);
 	ID idle(ID oid, transform_component* t, float ttl);
+	void stopAll(ID oid);
 private:
 	std::vector<Animation*> _animations;
 };

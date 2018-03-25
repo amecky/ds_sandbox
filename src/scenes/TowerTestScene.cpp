@@ -16,6 +16,16 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	_selectedTower = 0;
 	_dbgAnimateTower = true;
+	_dbgCameraRotation = ds::vec3(0.0f);
+
+	ds::vec3 axis(0.0f, 0.0f, 1.0f);
+	ds::matrix m = ds::matRotation(axis, ds::PI * 0.5f);
+	ds::vec3 p(1.0f, 0.0f, 0.0f);
+	ds::vec3 r = ds::matTransformCoord(m, p);
+
+	ds::matrix rz = ds::matRotationZ(ds::PI * 0.5f);
+	ds::vec3 r2 = rz * p;
+
 }
 
 TowerTestScene::~TowerTestScene() {	
@@ -23,6 +33,7 @@ TowerTestScene::~TowerTestScene() {
 	delete _isoCamera;
 	delete _fpsCamera;
 	delete _gridItem;
+	delete _wallItem;
 	delete _cursorItem;
 }
 
@@ -59,6 +70,8 @@ void TowerTestScene::initialize() {
 	
 	_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
 
+	_wallItem = new RenderItem("wall", _gameContext->ambientMaterial);
+	_wallItem->getTransform().position = ds::vec3(-2.0f, 1.0f, 2.0f);
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
 	addTower(p2i(2, 2), 1);
@@ -80,8 +93,8 @@ void TowerTestScene::addTower(const p2i& gridPos, int type) {
 // ----------------------------------------------------
 void TowerTestScene::update(float dt) {
 	
-	//_isoCamera->update(dt);
-	_fpsCamera->update(dt);
+	_isoCamera->update(dt);
+	//_fpsCamera->update(dt);
 	
 	if (_dbgAnimateTower) {
 		_gameContext->towers.tick(dt, _events);
@@ -119,6 +132,8 @@ void TowerTestScene::render() {
 	_gridItem->draw(_basicPass, _camera.viewProjectionMatrix);
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
+
+	_wallItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 
@@ -141,9 +156,23 @@ void TowerTestScene::showGUI() {
 			_gameContext->towers.remove(p2i(2, 2));
 			_gameContext->towers.addTower(p2i(2, 2), _selectedTower);
 		}
+		bool changed = false;
+		if (gui::SliderAngle("Roll", &_dbgCameraRotation.x)) {
+			changed = true;
+		}
+		if (gui::SliderAngle("Pitch", &_dbgCameraRotation.y)) {
+			changed = true;
+		}
+		if (gui::SliderAngle("Yaw", &_dbgCameraRotation.z)) {
+			changed = true;
+		}
+		if (changed) {
+			_isoCamera->setRotation(_dbgCameraRotation);
+		}
 		const Tower& t = _gameContext->towers.get(0);
 		if (gui::Button("Particles")) {
-			_gameContext->particles->emittParticles(ds::vec3(t.position.x, 0.4f, t.position.z), t.direction, 8, 0);
+			float dir = _gameContext->towers.getDirection(t.id);
+			_gameContext->particles->emittParticles(ds::vec3(t.position.x, 0.4f, t.position.z), dir, 8, 0);
 		}
 		_gameContext->particles->showGUI(0);
 	}

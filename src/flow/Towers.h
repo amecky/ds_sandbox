@@ -25,6 +25,8 @@ struct TowerItemTypes {
 		GATLIN_WEAPON,
 		CANNON_CHASSIS,
 		CANNON_WEAPON,
+		BOMBER_CHASSIS,
+		BOMBER_WEAPON,
 		EOL
 	};
 };
@@ -54,10 +56,12 @@ public:
 	void rotateTowers(ds::DataArray<Walker>* walkers);
 	void rotateTowers(const ds::vec3& target);
 	void showGUI(int selectedTower);
+	float getDirection(ID id) const;
 private:
 	void startAnimation(int index);
 	void buildCannonTower(Tower* tower, const ds::vec3& pos);
 	void buildGatlinTower(Tower* tower, const ds::vec3& pos);
+	void buildBomberTower(Tower* tower, const ds::vec3& pos);
 	int buildTower(Tower* tower, const ds::vec3& pos, ds::vec3* offsets, int* items, int num, ID* ret);
 	ds::DataArray<TowerPart> _parts;
 
