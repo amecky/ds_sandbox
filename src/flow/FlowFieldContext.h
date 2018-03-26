@@ -17,7 +17,8 @@ struct TowerPart {
 	ID parent;	
 	int renderItemIndex;
 	transform_component transform;	
-	
+	ds::matrix world;
+
 	TowerPart() : id(INVALID_ID), parent(INVALID_ID), renderItemIndex(-1), transform() {}
 };
 // ---------------------------------------------------
@@ -38,7 +39,7 @@ struct Tower {
 	int level;
 	float offset;
 	ID animationID;
-	ID parts[3];
+	ID parts[4];
 };
 
 

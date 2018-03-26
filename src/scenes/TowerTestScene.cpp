@@ -90,8 +90,8 @@ void TowerTestScene::addTower(const p2i& gridPos, int type) {
 // ----------------------------------------------------
 void TowerTestScene::update(float dt) {
 	
-	_isoCamera->update(dt);
-	//_fpsCamera->update(dt);
+	//_isoCamera->update(dt);
+	_fpsCamera->update(dt);
 	
 	if (_dbgAnimateTower) {
 		_gameContext->towers.tick(dt, _events);

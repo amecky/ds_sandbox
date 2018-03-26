@@ -17,6 +17,7 @@ void Towers::init(Material* material) {
 	_renderItems[TowerItemTypes::GREEN_BASE] = new RenderItem("green_base", material);
 	_renderItems[TowerItemTypes::YELLOW_BASE] = new RenderItem("yellow_base", material);
 	_renderItems[TowerItemTypes::RED_BASE] = new RenderItem("red_base", material);
+	_renderItems[TowerItemTypes::BASE_TOWER] = new RenderItem("base_tower", material);
 	_renderItems[TowerItemTypes::GATLIN_CHASSIS] = new RenderItem("cannon", material);
 	_renderItems[TowerItemTypes::GATLIN_WEAPON] = new RenderItem("gatlin", material);
 	_renderItems[TowerItemTypes::CANNON_CHASSIS] = new RenderItem("bomber", material);
@@ -95,21 +96,25 @@ int Towers::buildTower(Tower* tower, const ds::vec3& pos, ds::vec3* offsets, int
 }
 
 void Towers::buildCannonTower(Tower* tower, const ds::vec3& pos) {
-	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::CANNON_CHASSIS ,TowerItemTypes::CANNON_WEAPON };
-	ds::vec3 offsets[] = { pos, pos + ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
-	ID ids[3];
-	buildTower(tower, pos, offsets, parts, 3, ids);
+	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::BASE_TOWER, TowerItemTypes::CANNON_CHASSIS ,TowerItemTypes::CANNON_WEAPON };
+	ds::vec3 offsets[] = { pos, pos + ds::vec3(0.0f,tower->offset,0.0f), ds::vec3(0.0f,0.25f,0.0f) , ds::vec3(0.25f,0.0f,0.0f) };
+	ID ids[4];
+	buildTower(tower, pos, offsets, parts, 4, ids);
 	TowerPart& wp = _parts.get(ids[2]);
 	wp.parent = ids[1];
+	TowerPart& nwp = _parts.get(ids[3]);
+	nwp.parent = ids[2];
 }
 
 void Towers::buildGatlinTower(Tower* tower, const ds::vec3& pos) {
-	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::GATLIN_CHASSIS ,TowerItemTypes::GATLIN_WEAPON };
-	ds::vec3 offsets[] = {pos, pos + ds::vec3(0.0f,tower->offset,0.0f),ds::vec3(0.25f,0.0f,0.0f) };
-	ID ids[3];
-	buildTower(tower, pos, offsets, parts, 3, ids);
+	int parts[] = { TowerItemTypes::GREEN_BASE, TowerItemTypes::BASE_TOWER, TowerItemTypes::GATLIN_CHASSIS, TowerItemTypes::GATLIN_WEAPON };
+	ds::vec3 offsets[] = {pos, pos + ds::vec3(0.0f,tower->offset,0.0f), ds::vec3(0.0f,0.25f,0.0f) , ds::vec3(0.25f,0.0f,0.0f) };
+	ID ids[4];
+	buildTower(tower, pos, offsets, parts, 4, ids);
 	TowerPart& wp = _parts.get(ids[2]);
 	wp.parent = ids[1];
+	TowerPart& nwp = _parts.get(ids[3]);
+	nwp.parent = ids[2];
 }
 
 void Towers::buildBomberTower(Tower* tower, const ds::vec3& pos) {
@@ -152,7 +157,7 @@ void Towers::addTower(const p2i& gridPos, int type) {
 		buildBomberTower(&t, t.position);
 	}
 
-	startAnimation(_towers.numObjects - 1);
+	startAnimation(id);
 }
 
 void Towers::remove(const p2i & gridPos) {
@@ -181,18 +186,13 @@ bool isClose(const Tower& tower, const Walker& walker) {
 // -------------------------------------------------------------
 void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {	
 	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
-		const TowerPart& tp = _parts.objects[i];
-		ds::matrix worldMatrix = ds::matIdentity();
-		build_world_matrix(tp.transform, &worldMatrix);
-		if (tp.parent == INVALID_ID) {
-			_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, worldMatrix);
-		}
-		else {
+		TowerPart& tp = _parts.objects[i];
+		build_world_matrix(tp.transform, &tp.world);
+		if (tp.parent != INVALID_ID) {
 			const TowerPart& parent = _parts.get(tp.parent);
-			ds::matrix parentMatrix = ds::matIdentity();
-			build_world_matrix(parent.transform, &parentMatrix);
-			_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, worldMatrix * parentMatrix);
+			tp.world = tp.world * parent.world;
 		}
+		_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, tp.world);
 	}
 }
 
@@ -301,7 +301,7 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 					RotationData rd;
 					rd.angle = ds::PI * 0.75f;
 					rd.direction = 1.0f;
-					t.animationID = _animationManager.start(t.id, &_parts.get(t.parts[2]).transform, AnimationTypes::ROTATE_X, &rd, 0.0f);
+					t.animationID = _animationManager.start(t.id, &_parts.get(t.parts[3]).transform, AnimationTypes::ROTATE_X, &rd, 0.0f);
 				}
 				/*
 				else if (t.type == 1) {
@@ -345,6 +345,11 @@ void Towers::startAnimation(ID id) {
 		rd.angle = angle;
 		rd.direction = dir;
 		_animationManager.start(t.id, &part.transform, AnimationTypes::ROTATE_Y, &rd, ttl);
+
+		TowerPart& wpart = _parts.get(t.parts[2]);
+		rd.angle = ds::random(0.0f, ds::PI * 0.1f);;
+		rd.direction = dir;
+		_animationManager.start(t.id, &wpart.transform, AnimationTypes::ROTATE_Z, &rd, ttl);
 		/*
 		MoveToData md;
 		md.start = part.transform.position;

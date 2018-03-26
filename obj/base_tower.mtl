@@ -1,10 +1,19 @@
-# Blender MTL File: 'gatlin.blend'
-# Material Count: 2
+# Blender MTL File: 'base_tower.blend'
+# Material Count: 3
 
 newmtl Material
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
 Kd 0.172688 0.216398 0.262222
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Material.002
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.515584 0.560882 0.608420
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000

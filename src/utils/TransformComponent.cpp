@@ -8,8 +8,8 @@ void build_world_matrix(const transform_component& t, ds::matrix* w) {
 		ds::matrix rxMatrix = ds::matRotationX(t.rotation.x);
 		ds::matrix ryMatrix = ds::matRotationY(t.rotation.y);
 		ds::matrix rzMatrix = ds::matRotationZ(t.rotation.z);
-		//*w = rzMatrix * rxMatrix * ryMatrix * scaleMatrix * translationMatrix;
-		*w = scaleMatrix * rzMatrix * rxMatrix * ryMatrix * translationMatrix;
+		*w = rzMatrix * ryMatrix * rxMatrix * scaleMatrix * translationMatrix;
+		//*w = scaleMatrix * rzMatrix * ryMatrix * rxMatrix * translationMatrix;
 	}
 }
 

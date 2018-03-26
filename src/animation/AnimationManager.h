@@ -24,6 +24,7 @@ struct AnimationTypes {
 		IDLE,
 		ROTATE_X,
 		ROTATE_Y,
+		ROTATE_Z,
 		MOVE_TO,
 		SCALE_TO
 	};
@@ -75,6 +76,22 @@ class RotateYAnimation : public Animation {
 public:
 	RotateYAnimation() : Animation() {}
 	virtual ~RotateYAnimation() {}
+	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
+	virtual void tick(float dt, ds::EventStream* events);
+	virtual void stop(ID oid);
+private:
+	ID alreadyRunning(transform_component* t);
+	ds::DataArray<RotationData> _data;
+};
+
+// ----------------------------------------------------
+// rotate z
+// ----------------------------------------------------
+class RotateZAnimation : public Animation {
+
+public:
+	RotateZAnimation() : Animation() {}
+	virtual ~RotateZAnimation() {}
 	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
 	virtual void tick(float dt, ds::EventStream* events);
 	virtual void stop(ID oid);

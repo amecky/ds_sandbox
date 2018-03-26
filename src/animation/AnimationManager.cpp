@@ -7,6 +7,7 @@ AnimationManager::AnimationManager() {
 	_animations.push_back(new IdleAnimation());	
 	_animations.push_back(new RotateXAnimation());
 	_animations.push_back(new RotateYAnimation());
+	_animations.push_back(new RotateZAnimation());
 	_animations.push_back(new MoveToAnimation());
 	_animations.push_back(new ScaleToAnimation());
 }
@@ -189,6 +190,60 @@ void RotateXAnimation::tick(float dt, ds::EventStream * events) {
 }
 
 void RotateXAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
+		}
+	}
+}
+
+// ----------------------------------------------------
+// Rotate Z animation
+// ----------------------------------------------------
+ID RotateZAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	RotationData* rotData = (RotationData*)data;
+	DBG_LOG("=> starting RotateZAnimation - oid %d angle %3.2f direction %1.0f ttl %2.3f", oid, rotData->angle * 360.0f / ds::TWO_PI, rotData->direction, ttl);
+	ID tmp = alreadyRunning(t);
+	if (tmp != INVALID_ID) {
+		DBG_LOG("=> RotateZAnimation - already running");
+		return tmp;
+	}
+	ID id = _data.add();
+	RotationData& rd = _data.get(id);
+	fillBasicData(&rd, oid, t, ttl, type);
+	rd.angle = rotData->angle;
+	rd.direction = rotData->direction;
+	return id;
+}
+
+ID RotateZAnimation::alreadyRunning(transform_component* t) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = (AnimationData)_data.objects[i];
+		if ((uintptr_t)rd.transform == (uintptr_t)t) {
+			return rd.id;
+		}
+	}
+	return INVALID_ID;
+}
+
+void RotateZAnimation::tick(float dt, ds::EventStream * events) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		RotationData& rd = _data.objects[i];
+		rd.transform->rotation.z += rd.angle * dt * rd.direction;
+		rd.timer += dt;
+		if (rd.timer > rd.ttl && rd.ttl > 0.0f) {
+			_data.remove(rd.id);
+			AnimationEvent event;
+			event.oid = rd.oid;
+			event.type = AnimationTypes::ROTATE_Z;
+			DBG_LOG("#> stopping RotateZAnimation - oid %d", rd.oid);
+			events->add(100, &event, sizeof(AnimationEvent));
+		}
+	}
+}
+
+void RotateZAnimation::stop(ID oid) {
 	for (unsigned int i = 0; i < _data.numObjects; ++i) {
 		AnimationData& rd = _data.objects[i];
 		if (rd.oid == oid) {
