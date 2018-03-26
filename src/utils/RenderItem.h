@@ -4,6 +4,14 @@
 #include "..\Mesh.h"
 #include "TransformComponent.h"
 
+class AbstractRenderItem {
+
+public:
+	virtual void draw(RID renderPass, const ds::matrix& viewProjectionMatrix) = 0;
+	virtual void draw(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::matrix& world) = 0;
+
+};
+
 class RenderItem {
 
 public:

@@ -33,7 +33,6 @@ TowerTestScene::~TowerTestScene() {
 	delete _isoCamera;
 	delete _fpsCamera;
 	delete _gridItem;
-	delete _wallItem;
 	delete _cursorItem;
 }
 
@@ -70,8 +69,6 @@ void TowerTestScene::initialize() {
 	
 	_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
 
-	_wallItem = new RenderItem("wall", _gameContext->ambientMaterial);
-	_wallItem->getTransform().position = ds::vec3(-2.0f, 1.0f, 2.0f);
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
 	addTower(p2i(2, 2), 1);
@@ -133,8 +130,6 @@ void TowerTestScene::render() {
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 
-	_wallItem->draw(_basicPass, _camera.viewProjectionMatrix);
-	// towers
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 
 	_gameContext->particles->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);

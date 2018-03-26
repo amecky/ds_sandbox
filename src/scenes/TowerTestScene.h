@@ -29,7 +29,6 @@ private:
 
 	GameContext* _gameContext;
 	RenderItem* _cursorItem;
-	RenderItem* _wallItem;
 	IsometricCamera* _isoCamera;
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];

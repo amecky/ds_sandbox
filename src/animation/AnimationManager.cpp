@@ -1,9 +1,14 @@
 #include "AnimationManager.h"
 
+// ----------------------------------------------------
+// AnimationManager
+// ----------------------------------------------------
 AnimationManager::AnimationManager() {
 	_animations.push_back(new IdleAnimation());	
 	_animations.push_back(new RotateXAnimation());
 	_animations.push_back(new RotateYAnimation());
+	_animations.push_back(new MoveToAnimation());
+	_animations.push_back(new ScaleToAnimation());
 }
 
 AnimationManager::~AnimationManager() {
@@ -12,10 +17,8 @@ AnimationManager::~AnimationManager() {
 	}
 }
 
-void AnimationManager::stop(ID id) {
-	for (size_t i = 0; i < _animations.size(); ++i) {
-		//_animations[i]->stop(id);
-	}
+void AnimationManager::stop(AnimationTypes::Enum animationType, ID id) {
+	_animations[animationType]->stop(id);
 }
 
 void AnimationManager::tick(float dt, ds::EventStream* events) {
@@ -30,24 +33,17 @@ void AnimationManager::stopAll(ID oid) {
 	}
 }
 
-ID AnimationManager::rotateY(ID oid, transform_component * t, float angle, float direction, float ttl) {
-	RotateYAnimation* rya = (RotateYAnimation*)_animations[AnimationTypes::ROTATE_Y];
-	return rya->start(oid, t, angle, direction, ttl);
+ID AnimationManager::start(ID oid, transform_component* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type) {
+	Animation* animation = _animations[animationType];
+	return animation->start(oid, t, data, ttl, type);
 }
 
-ID AnimationManager::rotateX(ID oid, transform_component * t, float angle, float direction, float ttl) {
-	RotateXAnimation* rxa = (RotateXAnimation*)_animations[AnimationTypes::ROTATE_X];
-	return rxa->start(oid, t, angle, direction, ttl);
-}
-
-
-ID AnimationManager::idle(ID oid, transform_component* t, float ttl) {
-	IdleAnimation* rya = (IdleAnimation*)_animations[AnimationTypes::IDLE];
-	return rya->start(oid, t, ttl);
-}
-
-ID RotateYAnimation::start(ID oid, transform_component* t, float angle, float direction, float ttl) {
-	DBG_LOG("=> starting RotateYAnimation - oid %d angle %3.2f direction %1.0f ttl %2.3f", oid, angle * 360.0f / ds::TWO_PI, direction, ttl);
+// ----------------------------------------------------
+// RotateYAnimation
+// ----------------------------------------------------
+ID RotateYAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	RotationData* rotData = (RotationData*)data;
+	DBG_LOG("=> starting RotateYAnimation - oid %d angle %3.2f direction %1.0f ttl %2.3f",oid, rotData->angle * 360.0f / ds::TWO_PI, rotData->direction, ttl);
 	ID tmp = alreadyRunning(t);
 	if (tmp != INVALID_ID) {
 		DBG_LOG("=> RotateYAnimation - already running");
@@ -55,12 +51,9 @@ ID RotateYAnimation::start(ID oid, transform_component* t, float angle, float di
 	}
 	ID id = _data.add();
 	RotationData& rd = _data.get(id);
-	rd.angle = angle;
-	rd.transform = t;
-	rd.direction = direction;
-	rd.oid = oid;
-	rd.timer = 0.0f;
-	rd.ttl = ttl;
+	fillBasicData(&rd, oid, t, ttl, type);
+	rd.angle = rotData->angle;
+	rd.direction = rotData->direction;
 	return id;
 }
 
@@ -99,7 +92,11 @@ void RotateYAnimation::stop(ID oid) {
 	}
 }
 
-ID IdleAnimation::start(ID oid, transform_component* t, float ttl) {
+// ----------------------------------------------------
+// Idle animation
+// ----------------------------------------------------
+ID IdleAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	AnimationData* rotData = (AnimationData*)data;
 	DBG_LOG("=> starting IdleAnimation - oid %d ttl %2.3f", oid, ttl);
 	ID tmp = alreadyRunning(t);
 	if (tmp != INVALID_ID) {
@@ -108,10 +105,7 @@ ID IdleAnimation::start(ID oid, transform_component* t, float ttl) {
 	}
 	ID id = _data.add();
 	AnimationData& rd = _data.get(id);
-	rd.transform = t;
-	rd.oid = oid;
-	rd.timer = 0.0f;
-	rd.ttl = ttl;
+	fillBasicData(&rd, oid, t, ttl, type);
 	return id;
 }
 
@@ -149,8 +143,12 @@ ID IdleAnimation::alreadyRunning(transform_component* t) {
 	return INVALID_ID;
 }
 
-ID RotateXAnimation::start(ID oid, transform_component* t, float angle, float direction, float ttl) {
-	DBG_LOG("=> starting RotateXAnimation - oid %d angle %3.2f direction %1.0f ttl %2.3f", oid, angle * 360.0f / ds::TWO_PI, direction, ttl);
+// ----------------------------------------------------
+// Rotate X animation
+// ----------------------------------------------------
+ID RotateXAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	RotationData* rotData = (RotationData*)data;
+	DBG_LOG("=> starting RotateXAnimation - oid %d angle %3.2f direction %1.0f ttl %2.3f", oid, rotData->angle * 360.0f / ds::TWO_PI, rotData->direction, ttl);
 	ID tmp = alreadyRunning(t);
 	if (tmp != INVALID_ID) {
 		DBG_LOG("=> RotateXAnimation - already running");
@@ -158,12 +156,9 @@ ID RotateXAnimation::start(ID oid, transform_component* t, float angle, float di
 	}
 	ID id = _data.add();
 	RotationData& rd = _data.get(id);
-	rd.angle = angle;
-	rd.transform = t;
-	rd.direction = direction;
-	rd.oid = oid;
-	rd.timer = 0.0f;
-	rd.ttl = ttl;
+	fillBasicData(&rd, oid, t, ttl, type);
+	rd.angle = rotData->angle;
+	rd.direction = rotData->direction;
 	return id;
 }
 
@@ -194,6 +189,116 @@ void RotateXAnimation::tick(float dt, ds::EventStream * events) {
 }
 
 void RotateXAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
+		}
+	}
+}
+
+// ----------------------------------------------------
+// move to animation
+// ----------------------------------------------------
+ID MoveToAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	MoveToData* rotData = (MoveToData*)data;
+	DBG_LOG("=> starting MoveToAnimation - oid %d ttl %2.3f", oid, ttl);
+	ID tmp = alreadyRunning(t);
+	if (tmp != INVALID_ID) {
+		DBG_LOG("=> MoveToAnimation - already running");
+		return tmp;
+	}
+	ID id = _data.add();
+	MoveToData& rd = _data.get(id);
+	fillBasicData(&rd, oid, t, ttl, type);
+	rd.start = rotData->start;
+	rd.end = rotData->end;
+	return id;
+}
+
+ID MoveToAnimation::alreadyRunning(transform_component* t) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = (AnimationData)_data.objects[i];
+		if ((uintptr_t)rd.transform == (uintptr_t)t) {
+			return rd.id;
+		}
+	}
+	return INVALID_ID;
+}
+
+void MoveToAnimation::tick(float dt, ds::EventStream * events) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		MoveToData& rd = _data.objects[i];
+		rd.transform->position = tweening::interpolate(rd.tweeningType, rd.start, rd.end, rd.timer, rd.ttl);
+		rd.timer += dt;
+		if (rd.timer >= rd.ttl && rd.ttl > 0.0f) {
+			rd.transform->position = tweening::interpolate(rd.tweeningType, rd.start, rd.end, 1.0f,1.0f);
+			_data.remove(rd.id);
+			AnimationEvent event;
+			event.oid = rd.oid;
+			event.type = AnimationTypes::MOVE_TO;
+			DBG_LOG("#> stopping MoveToAnimation - oid %d", rd.oid);
+			events->add(100, &event, sizeof(AnimationEvent));
+		}
+	}
+}
+
+void MoveToAnimation::stop(ID oid) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = _data.objects[i];
+		if (rd.oid == oid) {
+			_data.remove(rd.id);
+		}
+	}
+}
+
+// ----------------------------------------------------
+// scale to animation
+// ----------------------------------------------------
+ID ScaleToAnimation::start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type) {
+	ScaleToData* rotData = (ScaleToData*)data;
+	DBG_LOG("=> starting ScaleToAnimation - oid %d ttl %2.3f", oid, ttl);
+	ID tmp = alreadyRunning(t);
+	if (tmp != INVALID_ID) {
+		DBG_LOG("=> ScaleToAnimation - already running");
+		return tmp;
+	}
+	ID id = _data.add();
+	ScaleToData& rd = _data.get(id);
+	fillBasicData(&rd, oid, t, ttl, type);
+	rd.start = rotData->start;
+	rd.end = rotData->end;
+	return id;
+}
+
+ID ScaleToAnimation::alreadyRunning(transform_component* t) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		AnimationData& rd = (AnimationData)_data.objects[i];
+		if ((uintptr_t)rd.transform == (uintptr_t)t) {
+			return rd.id;
+		}
+	}
+	return INVALID_ID;
+}
+
+void ScaleToAnimation::tick(float dt, ds::EventStream * events) {
+	for (unsigned int i = 0; i < _data.numObjects; ++i) {
+		ScaleToData& rd = _data.objects[i];
+		rd.transform->scale = tweening::interpolate(rd.tweeningType, rd.start, rd.end, rd.timer, rd.ttl);
+		rd.timer += dt;
+		if (rd.timer >= rd.ttl && rd.ttl > 0.0f) {
+			rd.transform->scale = tweening::interpolate(rd.tweeningType, rd.start, rd.end, 1.0f, 1.0f);
+			_data.remove(rd.id);
+			AnimationEvent event;
+			event.oid = rd.oid;
+			event.type = AnimationTypes::SCALE_TO;
+			DBG_LOG("#> stopping ScaleToAnimation - oid %d", rd.oid);
+			events->add(100, &event, sizeof(AnimationEvent));
+		}
+	}
+}
+
+void ScaleToAnimation::stop(ID oid) {
 	for (unsigned int i = 0; i < _data.numObjects; ++i) {
 		AnimationData& rd = _data.objects[i];
 		if (rd.oid == oid) {

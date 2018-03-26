@@ -32,7 +32,9 @@ void Towers::init(Material* material) {
 	if (file.load("tower_definitions.csv", "resources")) {
 		for (size_t i = 0; i < file.size(); ++i) {
 			const TextLine& line = file.get(i);
-			line.get(0,&_definitions[i].offset);
+			line.get(0, &_definitions[i].offset);
+			line.get(1, &_definitions[i].radius);
+			line.get(2, &_definitions[i].bulletTTL);
 		}
 	}
 	else {
@@ -129,14 +131,14 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.gy = gridPos.y;
 	t.position = ds::vec3(_worldOffset.x + gridPos.x, 0.15f, _worldOffset.y + gridPos.y);
 	t.level = 0;
-	t.radius = 2.0f;
+	t.radius = _definitions[type].radius;
 	t.direction = 0.0f;
-	t.animationState = 1;
-	t.bulletTTL = 0.1f;
+	t.animationID = INVALID_ID;
+	t.bulletTTL = _definitions[type].bulletTTL;
 	t.timer = 0.0f;
 	t.target = INVALID_ID;
 	ds::vec3 p = t.position;
-	
+	t.type = type;
 	//if (_dbgGunAnim) {
 		//_animationManager.rotateX(t.id, &t.gunTransform, ds::PI, 1.0f, -1.0f);
 	//}
@@ -201,6 +203,32 @@ void Towers::tick(float dt, ds::EventStream* events) {
 
 	_animationManager.tick(dt, events);
 
+	for (size_t i = 0; i < _towers.numObjects; ++i) {
+		Tower& t = _towers.objects[i];
+		if (t.target != INVALID_ID) {
+			t.timer += dt;
+			if (t.timer >= t.bulletTTL) {
+				if (t.type == 1) {
+					TowerPart& weaponPart = _parts.get(t.parts[2]);
+					/*
+					MoveToData md;
+					md.start = weaponPart.transform.position;
+					md.end = weaponPart.transform.position + ds::vec3(0.05f, 0.0f, 0.0f);
+					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::MOVE_TO, &md, 0.1f, tweening::easeSinus);
+					*/
+					ScaleToData md;
+					md.start = ds::vec3(1.0f);
+					md.end = ds::vec3(1.5, 1.0f, 1.0f);
+					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::SCALE_TO, &md, 0.1f, tweening::easeSinus);
+				}
+				// FIXME: fire bullet
+				t.timer -= t.bulletTTL;
+				// send event
+				DBG_LOG("Firing bullet - tower: %d", t.id);
+			}
+		}
+	}
+
 	if (events->containsType(100)) {
 		AnimationEvent evn;
 		for (int i = 0; i < events->num(); ++i) {
@@ -208,10 +236,10 @@ void Towers::tick(float dt, ds::EventStream* events) {
 			Tower& t = _towers.get(evn.oid);
 			if (evn.type == AnimationTypes::ROTATE_Y) {				
 				TowerPart& part = _parts.get(t.parts[1]);
-				_animationManager.idle(t.id, &part.transform, ds::random(1.0f, 2.0f));
+				_animationManager.start(t.id, &part.transform, AnimationTypes::IDLE, 0, ds::random(1.0f, 2.0f));
 			}
 			if (evn.type == AnimationTypes::IDLE) {
-				startAnimation(0);
+				startAnimation(t.id);
 			}
 		}
 	}
@@ -237,7 +265,7 @@ void Towers::rotateTowers(ds::DataArray<Walker>* walkers) {
 			}
 			else {
 				t.target = INVALID_ID;
-				startAnimation(i);
+				startAnimation(t.id);
 			}
 		}
 		if (t.target == INVALID_ID) {
@@ -265,12 +293,33 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 		ds::vec3 delta = pos - part.transform.position;
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
-			t.direction = math::get_angle(ds::vec2(1,0),ds::vec2(delta.x, delta.z));
+			t.direction = math::get_angle(ds::vec2(delta.x, delta.z), ds::vec2(1, 0));
 			part.transform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
-			t.target = 1;			
+			t.target = 1;		
+			if (t.animationID == INVALID_ID) {
+				if (t.type == 0) {
+					RotationData rd;
+					rd.angle = ds::PI * 0.75f;
+					rd.direction = 1.0f;
+					t.animationID = _animationManager.start(t.id, &_parts.get(t.parts[2]).transform, AnimationTypes::ROTATE_X, &rd, 0.0f);
+				}
+				/*
+				else if (t.type == 1) {
+					TowerPart& weaponPart = _parts.get(t.parts[2]);
+					MoveToData md;
+					md.start = weaponPart.transform.position;
+					md.end = weaponPart.transform.position + ds::vec3(0.05f, 0.0f, 0.0f);
+					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::MOVE_TO, &md, 0.2f, tweening::easeSinus);
+				}
+				*/
+			}
 		}
 		else {
 			t.target = INVALID_ID;
+			if (t.animationID != INVALID_ID) {
+				_animationManager.stop(AnimationTypes::ROTATE_X, t.id);
+				t.animationID = INVALID_ID;
+			}
 		}
 	}
 }
@@ -278,8 +327,8 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 // -------------------------------------------------------------
 // start rotation animation
 // -------------------------------------------------------------
-void Towers::startAnimation(int index) {
-	Tower& t = _towers.objects[index];
+void Towers::startAnimation(ID id) {
+	Tower& t = _towers.get(id);
 	float min = ds::PI * 0.5f;
 	float angle = ds::random(min, min + ds::PI * 0.5f);
 	float dir = ds::random(-5.0f, 5.0f);
@@ -292,7 +341,16 @@ void Towers::startAnimation(int index) {
 	float ttl = angle / min * 2.0f;
 	if (_dbgTowerAnim) {		
 		TowerPart& part = _parts.get(t.parts[1]);
-		_animationManager.rotateY(t.id,&part.transform, angle, dir, angle / min * 2.0f);
+		RotationData rd;
+		rd.angle = angle;
+		rd.direction = dir;
+		_animationManager.start(t.id, &part.transform, AnimationTypes::ROTATE_Y, &rd, ttl);
+		/*
+		MoveToData md;
+		md.start = part.transform.position;
+		md.end = part.transform.position + ds::vec3(1.0f, 0.0f, 0.0f);
+		_animationManager.start(t.id, &part.transform, AnimationTypes::MOVE_TO, &md, 1.0f, tweening::easeSinus);
+		*/
 	}
 	
 }

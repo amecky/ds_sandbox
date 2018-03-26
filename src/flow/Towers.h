@@ -13,6 +13,8 @@ namespace  ds {
 }
 struct TowerDefinition {
 	float offset;
+	float radius;
+	float bulletTTL;
 };
 
 struct TowerItemTypes {
@@ -58,7 +60,7 @@ public:
 	void showGUI(int selectedTower);
 	float getDirection(ID id) const;
 private:
-	void startAnimation(int index);
+	void startAnimation(ID id);
 	void buildCannonTower(Tower* tower, const ds::vec3& pos);
 	void buildGatlinTower(Tower* tower, const ds::vec3& pos);
 	void buildBomberTower(Tower* tower, const ds::vec3& pos);
@@ -67,13 +69,8 @@ private:
 
 	ds::DataArray<Tower> _towers;
 	RenderItem* _renderItems[32];
-
-	//RenderItem* _towerItems[10];
-	//RenderItem* _gunItems[10];
-	//RenderItem* _baseItems[3];
 	TowerDefinition _definitions[10];
 	ds::vec2 _worldOffset;
-
 	AnimationManager _animationManager;
 	bool _dbgTowerAnim;
 	bool _dbgGunAnim;
