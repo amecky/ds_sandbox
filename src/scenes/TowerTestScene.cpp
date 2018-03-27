@@ -15,17 +15,7 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 	}	
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	_selectedTower = 0;
-	_dbgAnimateTower = true;
 	_dbgCameraRotation = ds::vec3(0.0f);
-
-	ds::vec3 axis(0.0f, 0.0f, 1.0f);
-	ds::matrix m = ds::matRotation(axis, ds::PI * 0.5f);
-	ds::vec3 p(1.0f, 0.0f, 0.0f);
-	ds::vec3 r = ds::matTransformCoord(m, p);
-
-	ds::matrix rz = ds::matRotationZ(ds::PI * 0.5f);
-	ds::vec3 r2 = rz * p;
-
 }
 
 TowerTestScene::~TowerTestScene() {	
@@ -71,7 +61,9 @@ void TowerTestScene::initialize() {
 
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
-	addTower(p2i(2, 2), 1);
+	addTower(p2i(2, 2), 0);
+	addTower(p2i(0, 2), 0);
+	addTower(p2i(4, 2), 0);
 
 }
 
@@ -93,9 +85,8 @@ void TowerTestScene::update(float dt) {
 	//_isoCamera->update(dt);
 	_fpsCamera->update(dt);
 	
-	if (_dbgAnimateTower) {
-		_gameContext->towers.tick(dt, _events);
-	}
+	_gameContext->towers.tick(dt, _events);
+
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
 	ds::vec3 ip = _grid->plane.getIntersection(r);
@@ -145,7 +136,6 @@ void TowerTestScene::showGUI() {
 	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Checkbox("Animate", &_dbgAnimateTower);
 		if (gui::StepInput("Tower", &_selectedTower, 0, 4, 1)) {
 			// change tower type
 			_gameContext->towers.remove(p2i(2, 2));
@@ -164,6 +154,7 @@ void TowerTestScene::showGUI() {
 		if (changed) {
 			_isoCamera->setRotation(_dbgCameraRotation);
 		}
+		_gameContext->towers.showGUI(0);
 		const Tower& t = _gameContext->towers.get(0);
 		if (gui::Button("Particles")) {
 			float dir = _gameContext->towers.getDirection(t.id);

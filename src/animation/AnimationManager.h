@@ -5,18 +5,6 @@
 #include "..\utils\TransformComponent.h"
 
 // ----------------------------------------------------
-// Animation data
-// ----------------------------------------------------
-struct AnimationData {
-	ID id;
-	ID oid;
-	float timer;
-	float ttl;
-	transform_component* transform;
-	tweening::TweeningType tweeningType;
-};
-
-// ----------------------------------------------------
 // Animation types
 // ----------------------------------------------------
 struct AnimationTypes {
@@ -26,8 +14,26 @@ struct AnimationTypes {
 		ROTATE_Y,
 		ROTATE_Z,
 		MOVE_TO,
-		SCALE_TO
+		SCALE_TO,
+		ROTATE_TO,
+		EOL
 	};
+	const static const char* NAMES[];
+};
+
+// ----------------------------------------------------
+// Animation data
+// ----------------------------------------------------
+struct AnimationData {
+	ID id;
+	ID oid;
+	float timer;
+	float ttl;
+	transform_component* transform;
+	tweening::TweeningType tweeningType;
+	ds::vec3 start;
+	ds::vec3 end;
+	AnimationTypes::Enum animationType;
 };
 
 // ----------------------------------------------------
@@ -35,152 +41,51 @@ struct AnimationTypes {
 // ----------------------------------------------------
 struct AnimationEvent {
 	ID oid;
+	ID animationID;
 	AnimationTypes::Enum type;
 };
 
 // ----------------------------------------------------
-// Animation
+// function pointer definitions
 // ----------------------------------------------------
-class Animation {
+typedef void(*PrepareAnimationFunction)(AnimationData*, void*);
 
-public:
-	Animation() {}
-	virtual ~Animation() {}
-	virtual void tick(float dt, ds::EventStream* events) = 0;
-	virtual ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear) = 0;
-	virtual void stop(ID oid) = 0;
-protected:
-	void fillBasicData(AnimationData* baseData, ID oid, transform_component* t, float ttl, tweening::TweeningType type = tweening::linear) {
-		baseData->oid = oid;
-		baseData->transform = t;
-		baseData->tweeningType = type;
-		baseData->ttl = ttl;
-		baseData->timer = 0.0f;
-	}
+typedef void(*RunAnimationFunction)(AnimationData*, float);
+
+// ----------------------------------------------------
+// Animation context
+// ----------------------------------------------------
+struct AnimationContext {
+
+	const static PrepareAnimationFunction prepareFunctions[];
+
+	const static RunAnimationFunction runFunctions[];
+
 };
 
 // ----------------------------------------------------
 // Rotation data
 // ----------------------------------------------------
-struct RotationData : AnimationData {
-	
+struct RotationData {
+
 	float angle;
 	float direction;
 };
 
 // ----------------------------------------------------
-// rotate Y
-// ----------------------------------------------------
-class RotateYAnimation : public Animation {
-
-public:
-	RotateYAnimation() : Animation() {}
-	virtual ~RotateYAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<RotationData> _data;
-};
-
-// ----------------------------------------------------
-// rotate z
-// ----------------------------------------------------
-class RotateZAnimation : public Animation {
-
-public:
-	RotateZAnimation() : Animation() {}
-	virtual ~RotateZAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<RotationData> _data;
-};
-
-// ----------------------------------------------------
-// rotate X
-// ----------------------------------------------------
-class RotateXAnimation : public Animation {
-
-public:
-	RotateXAnimation() : Animation() {}
-	virtual ~RotateXAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<RotationData> _data;
-};
-
-// ----------------------------------------------------
-// idle
-// ----------------------------------------------------
-class IdleAnimation : public Animation {
-
-public:
-	IdleAnimation() : Animation() {}
-	virtual ~IdleAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<AnimationData> _data;
-};
-
-// ----------------------------------------------------
 // move to data
 // ----------------------------------------------------
-struct MoveToData : AnimationData {
+struct MoveToData {
 	ds::vec3 start;
 	ds::vec3 end;
 };
-
-// ----------------------------------------------------
-// move to
-// ----------------------------------------------------
-class MoveToAnimation : public Animation {
-
-public:
-	MoveToAnimation() : Animation() {}
-	virtual ~MoveToAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<MoveToData> _data;
-};
-
 // ----------------------------------------------------
 // scale to data
 // ----------------------------------------------------
-struct ScaleToData : AnimationData {
+struct ScaleToData {
 	ds::vec3 start;
 	ds::vec3 end;
 };
-
-// ----------------------------------------------------
-// move to
-// ----------------------------------------------------
-class ScaleToAnimation : public Animation {
-
-public:
-	ScaleToAnimation() : Animation() {}
-	virtual ~ScaleToAnimation() {}
-	ID start(ID oid, transform_component* t, void* data, float ttl, tweening::TweeningType type = tweening::linear);
-	virtual void tick(float dt, ds::EventStream* events);
-	virtual void stop(ID oid);
-private:
-	ID alreadyRunning(transform_component* t);
-	ds::DataArray<ScaleToData> _data;
-};
-
-
 // ----------------------------------------------------
 // Animation manager
 // ----------------------------------------------------
@@ -194,5 +99,7 @@ public:
 	ID start(ID oid, transform_component* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type = tweening::linear);
 	void stopAll(ID oid);
 private:
-	std::vector<Animation*> _animations;
+	ID alreadyRunning(ID oid, transform_component* t);
+	AnimationContext _context;
+	ds::DataArray<AnimationData> _data;
 };

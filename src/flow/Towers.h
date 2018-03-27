@@ -75,5 +75,6 @@ private:
 	AnimationManager _animationManager;
 	bool _dbgTowerAnim;
 	bool _dbgGunAnim;
+	float _dbgRZ;
 };
 

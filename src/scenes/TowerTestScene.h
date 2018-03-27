@@ -36,6 +36,5 @@ private:
 	int _selectedTower;
 	ID _ids[5 * 5];
 	InstancedRenderItem* _gridItem;
-	bool _dbgAnimateTower;
 	ds::vec3 _dbgCameraRotation;
 };

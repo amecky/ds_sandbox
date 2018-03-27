@@ -108,7 +108,7 @@ void Towers::buildCannonTower(Tower* tower, const ds::vec3& pos) {
 
 void Towers::buildGatlinTower(Tower* tower, const ds::vec3& pos) {
 	int parts[] = { TowerItemTypes::GREEN_BASE, TowerItemTypes::BASE_TOWER, TowerItemTypes::GATLIN_CHASSIS, TowerItemTypes::GATLIN_WEAPON };
-	ds::vec3 offsets[] = {pos, pos + ds::vec3(0.0f,tower->offset,0.0f), ds::vec3(0.0f,0.25f,0.0f) , ds::vec3(0.25f,0.0f,0.0f) };
+	ds::vec3 offsets[] = {pos, pos + ds::vec3(0.0f,tower->offset,0.0f), ds::vec3(0.0f,0.25f,0.0f) , ds::vec3(0.20f,0.0f,0.0f) };
 	ID ids[4];
 	buildTower(tower, pos, offsets, parts, 4, ids);
 	TowerPart& wp = _parts.get(ids[2]);
@@ -144,9 +144,6 @@ void Towers::addTower(const p2i& gridPos, int type) {
 	t.target = INVALID_ID;
 	ds::vec3 p = t.position;
 	t.type = type;
-	//if (_dbgGunAnim) {
-		//_animationManager.rotateX(t.id, &t.gunTransform, ds::PI, 1.0f, -1.0f);
-	//}
 	if (type == 0) {
 		buildGatlinTower(&t, t.position);
 	}
@@ -165,7 +162,7 @@ void Towers::remove(const p2i & gridPos) {
 		const Tower& t = _towers.objects[i];
 		if (gridPos.x == t.gx && gridPos.y == t.gy) {
 			_animationManager.stopAll(t.id);
-			for (int j = 0; j < 3; ++j) {
+			for (int j = 0; j < 4; ++j) {
 				_parts.remove(t.parts[j]);
 			}
 			_towers.remove(t.id);
@@ -185,6 +182,7 @@ bool isClose(const Tower& tower, const Walker& walker) {
 // render
 // -------------------------------------------------------------
 void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {	
+	// update world matrix
 	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
 		TowerPart& tp = _parts.objects[i];
 		build_world_matrix(tp.transform, &tp.world);
@@ -192,6 +190,10 @@ void Towers::render(RID renderPass, const ds::matrix& viewProjectionMatrix) {
 			const TowerPart& parent = _parts.get(tp.parent);
 			tp.world = tp.world * parent.world;
 		}
+	}
+	// render items
+	for (unsigned int i = 0; i < _parts.numObjects; ++i) {
+		const TowerPart& tp = _parts.objects[i];
 		_renderItems[tp.renderItemIndex]->draw(renderPass, viewProjectionMatrix, tp.world);
 	}
 }
@@ -209,7 +211,7 @@ void Towers::tick(float dt, ds::EventStream* events) {
 			t.timer += dt;
 			if (t.timer >= t.bulletTTL) {
 				if (t.type == 1) {
-					TowerPart& weaponPart = _parts.get(t.parts[2]);
+					TowerPart& weaponPart = _parts.get(t.parts[3]);
 					/*
 					MoveToData md;
 					md.start = weaponPart.transform.position;
@@ -294,30 +296,27 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 		float diff = sqr_length(delta);
 		if (diff < t.radius * t.radius) {
 			t.direction = math::get_angle(ds::vec2(delta.x, delta.z), ds::vec2(1, 0));
+			float look = math::get_angle(ds::vec2(1, 0),ds::vec2(1.0f, delta.y));
 			part.transform.rotation = ds::vec3(0.0f, t.direction, 0.0f);
+			TowerPart& weaponPart = _parts.get(t.parts[2]);
+			weaponPart.transform.rotation.z = look;
 			t.target = 1;		
 			if (t.animationID == INVALID_ID) {
 				if (t.type == 0) {
 					RotationData rd;
-					rd.angle = ds::PI * 0.75f;
+					rd.angle = ds::PI * 2.5f;
 					rd.direction = 1.0f;
 					t.animationID = _animationManager.start(t.id, &_parts.get(t.parts[3]).transform, AnimationTypes::ROTATE_X, &rd, 0.0f);
-				}
-				/*
-				else if (t.type == 1) {
-					TowerPart& weaponPart = _parts.get(t.parts[2]);
-					MoveToData md;
-					md.start = weaponPart.transform.position;
-					md.end = weaponPart.transform.position + ds::vec3(0.05f, 0.0f, 0.0f);
-					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::MOVE_TO, &md, 0.2f, tweening::easeSinus);
-				}
-				*/
+				}				
 			}
 		}
 		else {
 			t.target = INVALID_ID;
 			if (t.animationID != INVALID_ID) {
+				DBG_LOG("stopping animations!!!!!");
 				_animationManager.stop(AnimationTypes::ROTATE_X, t.id);
+				_parts.get(t.parts[3]).transform.rotation = ds::vec3(0.0f);
+				_parts.get(t.parts[3]).transform.position = ds::vec3(0.2f, 0.0f, 0.0f);
 				t.animationID = INVALID_ID;
 			}
 		}
@@ -345,17 +344,20 @@ void Towers::startAnimation(ID id) {
 		rd.angle = angle;
 		rd.direction = dir;
 		_animationManager.start(t.id, &part.transform, AnimationTypes::ROTATE_Y, &rd, ttl);
-
+		
 		TowerPart& wpart = _parts.get(t.parts[2]);
-		rd.angle = ds::random(0.0f, ds::PI * 0.1f);;
-		rd.direction = dir;
-		_animationManager.start(t.id, &wpart.transform, AnimationTypes::ROTATE_Z, &rd, ttl);
-		/*
-		MoveToData md;
-		md.start = part.transform.position;
-		md.end = part.transform.position + ds::vec3(1.0f, 0.0f, 0.0f);
-		_animationManager.start(t.id, &part.transform, AnimationTypes::MOVE_TO, &md, 1.0f, tweening::easeSinus);
-		*/
+		float current = wpart.transform.rotation.z;
+		MoveToData moveData;
+		if (current >= 0.0f) {
+			moveData.start = ds::vec3(0.0f, 0.0f, current);
+			moveData.end = ds::vec3(0.0f, 0.0f, -30.0f * ds::TWO_PI / 360.0f);
+		}
+		else {
+			moveData.start = ds::vec3(0.0f, 0.0f, current);
+			moveData.end = ds::vec3(0.0f, 0.0f, 30.0f * ds::TWO_PI / 360.0f);
+		}
+		
+		_animationManager.start(t.id, &wpart.transform, AnimationTypes::ROTATE_TO, &moveData, ttl);
 	}
 	
 }
@@ -373,6 +375,7 @@ void Towers::showGUI(int selectedTower) {
 		gui::Value("Level", t.level);
 		gui::Value("Target", t.target);
 		gui::Value("Direction", (t.direction*360.0f / ds::TWO_PI));
+		gui::SliderAngle("RZ", &_parts.get(t.parts[2]).transform.rotation.z);
 		if (gui::Button("Upgrade")) {
 			upgradeTower(selectedTower);
 		}
