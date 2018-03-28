@@ -1,7 +1,7 @@
 #include "TransformComponent.h"
 #include <ds_tweening.h>
 
-void build_world_matrix(const transform_component& t, ds::matrix* w) {
+void build_world_matrix(const transform& t, ds::matrix* w) {
 	if (w != 0) {
 		ds::matrix scaleMatrix = ds::matScale(t.scale);
 		ds::matrix translationMatrix = ds::matTranslate(t.position);
@@ -13,24 +13,12 @@ void build_world_matrix(const transform_component& t, ds::matrix* w) {
 	}
 }
 
-void build_world_matrix(const transform& t, ds::matrix* w) {
-	float x = sin(-t.roll);
-	float y = cos(-t.roll);
-	ds::matrix m = ds::matRotation(ds::vec3(x, y, 0.0f), t.pitch);
-	ds::matrix rzm = ds::matRotationZ(t.roll);
-	ds::matrix sm = ds::matScale(t.scale);
-	*w = sm * rzm * m * ds::matTranslate(t.position);
-}
-
-void initialize(transform_component* t, const ds::vec3& pos, const ds::vec3& scale, const ds::vec3& rotation) {
+void initialize(transform* t, const ds::vec3& pos, const ds::vec3& scale, const ds::vec3& rotation) {
 	t->position = pos;
 	t->scale = scale;
 	t->rotation = rotation;
-	for (int i = 0; i < 4; ++i) {
-		t->timer[i] = 0.0f;
-	}
 }
-
+/*
 bool move_to(transform_component & t, const ds::vec3 & start, const ds::vec3 & end, float dt, float ttl) {
 	t.position = tweening::interpolate(tweening::easeOutBounce, start, end, t.timer[0], ttl);
 	t.timer[0] += dt;
@@ -186,3 +174,4 @@ namespace anim {
 
 }
 
+*/

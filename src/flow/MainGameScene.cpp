@@ -79,7 +79,7 @@ void MainGameScene::initialize() {
 					p.y = 0.05f;
 					instance_item& overitem = _overlayItem->get(_overlay_ids[idx]);
 					overitem.transform.position = p;
-					overitem.transform.pitch = static_cast<float>(d) * ds::PI * 0.25f;
+					overitem.transform.rotation.y = static_cast<float>(d) * ds::PI * 0.25f;
 				}
 			}
 		}
@@ -219,7 +219,7 @@ void MainGameScene::updateOverlay() {
 				int d = _flowField->get(x, y);
 				if (d >= 0 && d < 9) {
 					instance_item& overitem = _overlayItem->get(_overlay_ids[idx]);
-					overitem.transform.pitch = static_cast<float>(d) * ds::PI * 0.25f;
+					overitem.transform.rotation.y = static_cast<float>(d) * ds::PI * 0.25f;
 				}
 			}
 		}
@@ -295,7 +295,7 @@ void MainGameScene::render() {
 		for (size_t i = 0; i < _path.size(); ++i) {
 			const PathItem& item = _path[i];
 			_pathItem->getTransform().position = item.pos;
-			_pathItem->getTransform().pitch = item.direction;
+			_pathItem->getTransform().rotation.y = item.direction;
 			_pathItem->draw(_basicPass, _camera.viewProjectionMatrix);
 		}
 	}
@@ -307,7 +307,7 @@ void MainGameScene::render() {
 		const Walker& walker = _walkers.objects[i];
 		transform& t = _walkerItem->getTransform();
 		t.position = walker.pos;
-		t.pitch = walker.rotation;
+		t.rotation.y = walker.rotation;
 		_walkerItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	}
 

@@ -96,7 +96,7 @@ int Towers::buildTower(Tower* tower, const ds::vec3& pos, ds::vec3* offsets, int
 }
 
 void Towers::buildCannonTower(Tower* tower, const ds::vec3& pos) {
-	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::BASE_TOWER, TowerItemTypes::CANNON_CHASSIS ,TowerItemTypes::CANNON_WEAPON };
+	int parts[] = { TowerItemTypes::GREEN_BASE ,TowerItemTypes::BASE_TOWER, TowerItemTypes::GATLIN_CHASSIS ,TowerItemTypes::CANNON_WEAPON };
 	ds::vec3 offsets[] = { pos, pos + ds::vec3(0.0f,tower->offset,0.0f), ds::vec3(0.0f,0.25f,0.0f) , ds::vec3(0.25f,0.0f,0.0f) };
 	ID ids[4];
 	buildTower(tower, pos, offsets, parts, 4, ids);
@@ -212,21 +212,19 @@ void Towers::tick(float dt, ds::EventStream* events) {
 			if (t.timer >= t.bulletTTL) {
 				if (t.type == 1) {
 					TowerPart& weaponPart = _parts.get(t.parts[3]);
-					/*
-					MoveToData md;
-					md.start = weaponPart.transform.position;
-					md.end = weaponPart.transform.position + ds::vec3(0.05f, 0.0f, 0.0f);
-					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::MOVE_TO, &md, 0.1f, tweening::easeSinus);
-					*/
 					ScaleToData md;
 					md.start = ds::vec3(1.0f);
 					md.end = ds::vec3(1.5, 1.0f, 1.0f);
 					_animationManager.start(t.id, &weaponPart.transform, AnimationTypes::SCALE_TO, &md, 0.1f, tweening::easeSinus);
 				}
-				// FIXME: fire bullet
 				t.timer -= t.bulletTTL;
-				// send event
-				DBG_LOG("Firing bullet - tower: %d", t.id);
+				FireEvent event;
+				ds::vec3 p = ds::matTransformCoord(_parts.get(t.parts[3]).world, ds::vec3(0.0f));
+				event.pos = p;
+				event.target = t.target;
+				event.rotation = _parts.get(t.parts[3]).transform.rotation;
+				event.type = t.type;
+				events->add(200, &event, sizeof(FireEvent));
 			}
 		}
 	}
@@ -234,14 +232,20 @@ void Towers::tick(float dt, ds::EventStream* events) {
 	if (events->containsType(100)) {
 		AnimationEvent evn;
 		for (int i = 0; i < events->num(); ++i) {
-			events->get(i, &evn);
-			Tower& t = _towers.get(evn.oid);
-			if (evn.type == AnimationTypes::ROTATE_Y) {				
-				TowerPart& part = _parts.get(t.parts[1]);
-				_animationManager.start(t.id, &part.transform, AnimationTypes::IDLE, 0, ds::random(1.0f, 2.0f));
+			if (events->get(i, &evn, sizeof(AnimationEvent))) {
+				Tower& t = _towers.get(evn.oid);
+				if (t.target == INVALID_ID) {
+					if (evn.type == AnimationTypes::ROTATE_Y) {
+						TowerPart& part = _parts.get(t.parts[1]);
+						_animationManager.start(t.id, &part.transform, AnimationTypes::IDLE, 0, ds::random(1.0f, 2.0f));
+					}
+					if (evn.type == AnimationTypes::IDLE) {
+						startAnimation(t.id);
+					}
+				}
 			}
-			if (evn.type == AnimationTypes::IDLE) {
-				startAnimation(t.id);
+			else {
+				DBG_LOG("Received invalid event");
 			}
 		}
 	}
@@ -312,8 +316,7 @@ void Towers::rotateTowers(const ds::vec3& pos) {
 		}
 		else {
 			t.target = INVALID_ID;
-			if (t.animationID != INVALID_ID) {
-				DBG_LOG("stopping animations!!!!!");
+			if (t.animationID != INVALID_ID) {				
 				_animationManager.stop(AnimationTypes::ROTATE_X, t.id);
 				_parts.get(t.parts[3]).transform.rotation = ds::vec3(0.0f);
 				_parts.get(t.parts[3]).transform.position = ds::vec3(0.2f, 0.0f, 0.0f);

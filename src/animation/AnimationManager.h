@@ -29,7 +29,7 @@ struct AnimationData {
 	ID oid;
 	float timer;
 	float ttl;
-	transform_component* transform;
+	transform* transform;
 	tweening::TweeningType tweeningType;
 	ds::vec3 start;
 	ds::vec3 end;
@@ -96,10 +96,10 @@ public:
 	~AnimationManager();
 	void stop(AnimationTypes::Enum animationType, ID id);
 	void tick(float dt, ds::EventStream* events);
-	ID start(ID oid, transform_component* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type = tweening::linear);
+	ID start(ID oid, transform* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type = tweening::linear);
 	void stopAll(ID oid);
 private:
-	ID alreadyRunning(ID oid, transform_component* t);
+	ID alreadyRunning(ID oid, transform* t);
 	AnimationContext _context;
 	ds::DataArray<AnimationData> _data;
 };

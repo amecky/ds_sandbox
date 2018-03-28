@@ -5,7 +5,7 @@
 RenderItem::RenderItem(const char* objName, Material* m, ds::matrix* world, bool force) {
 	_mesh = new Mesh;
 	_mesh->loadData(objName, world, force);
-	initialize(&_transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
+	initialize(&_transform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
 	_material = m;
 	RID hexCubeBuffer = _mesh->assemble();
 	RID layout = _mesh->createInputLayout(m->getVertexShaderID());
@@ -42,7 +42,7 @@ void RenderItem::draw(RID renderPass, const ds::matrix& viewProjectionMatrix, co
 void create_render_item(render_item* item, const char* objName, Material* m, ds::matrix* world) {
 	item->mesh = new Mesh;
 	item->mesh->loadData(objName, world);
-	initialize(&item->transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
+	initialize(&item->transform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
 	item->material = m;
 	RID hexCubeBuffer = item->mesh->assemble();
 	RID layout = item->mesh->createInputLayout(m->getVertexShaderID());
@@ -118,7 +118,7 @@ void create_instanced_render_item(instanced_render_item* item, const char* objNa
 	for (unsigned short i = 0; i < maxInstances; ++i) {
 		item->indices[i].id = i;
 		item->indices[i].next = i + 1;
-		initialize(&item->objects[i].transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
+		initialize(&item->objects[i].transform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
 	}
 	item->free_dequeue = 0;
 	item->free_enqueue = maxInstances - 1;
@@ -231,7 +231,7 @@ InstancedRenderItem::InstancedRenderItem(const char* objName, Material* m, int m
 	for (unsigned short i = 0; i < maxInstances; ++i) {
 		_indices[i].id = i;
 		_indices[i].next = i + 1;
-		initialize(&_objects[i].transform, ds::vec3(0.0f), ds::vec3(1.0f), 0.0f, 0.0f);
+		initialize(&_objects[i].transform, ds::vec3(0.0f), ds::vec3(1.0f), ds::vec3(0.0f));
 	}
 	_free_dequeue = 0;
 	_free_enqueue = maxInstances - 1;

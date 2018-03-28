@@ -16,6 +16,18 @@ TowerTestScene::TowerTestScene(GameContext* gameContext) : ds::BaseScene() , _ga
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	_selectedTower = 0;
 	_dbgCameraRotation = ds::vec3(0.0f);
+
+	//ds::vec3 start(0.0f, 1.0f, 0.0f);
+	//ds::vec3 end(2.0f, 0.0f, 0.0f);
+
+	ds::vec3 start(0.50f, 0.7f, -0.68f);
+	ds::vec3 end(0.49f, 0.10f, -1.62f);
+
+	ds::vec3 diff = end - start;
+	float l = length(diff);
+	ds::vec3 center = (start + end) * 0.5f;
+	ds::vec3 dir = normalize(diff);
+	float angle = math::get_rotation(ds::vec2(diff.x, diff.z)) + ds::PI;
 }
 
 TowerTestScene::~TowerTestScene() {	
@@ -96,15 +108,21 @@ void TowerTestScene::update(float dt) {
 	_gameContext->towers.rotateTowers(ip);
 
 	_gameContext->particles->tick(dt);
-	/*
+	
 	for (int i = 0; i < _events->num(); ++i) {
-		if (_events->getType(i) == 100) {
+		if (_events->getType(i) == 200) {
 			FireEvent event;
-			_events->get(i, &event);
-			_gameContext->particles->emittLine(event.pos, ip);
+			if (_events->get(i, &event, sizeof(FireEvent))) {
+				//_gameContext->particles->emittLine(event.pos, ip);
+				ds::vec3 diff = normalize(ip - event.pos);
+				_gameContext->particles->emittParticles(event.pos, diff, 1);
+			}
+			else {
+				DBG_LOG("received invalid event");
+			}
 		}
 	}
-	*/
+	
 }
 
 // ----------------------------------------------------

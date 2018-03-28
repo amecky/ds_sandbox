@@ -7,7 +7,7 @@ const char* AnimationTypes::NAMES[] = {
 	"ROTATE_Z",
 	"MOVE_TO",
 	"SCALE_TO",
-	"ROTATE_TO"
+	"ROTATE_TO",
 	"EOL"
 };
 
@@ -179,7 +179,7 @@ void AnimationManager::stopAll(ID oid) {
 // ----------------------------------------------------
 // already running
 // ----------------------------------------------------
-ID AnimationManager::alreadyRunning(ID oid, transform_component* t) {
+ID AnimationManager::alreadyRunning(ID oid, transform* t) {
 	for (unsigned int i = 0; i < _data.numObjects; ++i) {
 		AnimationData& rd = (AnimationData)_data.objects[i];
 		if ((uintptr_t)rd.transform == (uintptr_t)t && oid == rd.id) {
@@ -192,7 +192,7 @@ ID AnimationManager::alreadyRunning(ID oid, transform_component* t) {
 // ----------------------------------------------------
 // start
 // ----------------------------------------------------
-ID AnimationManager::start(ID oid, transform_component* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type) {
+ID AnimationManager::start(ID oid, transform* t, AnimationTypes::Enum animationType, void* data, float ttl, tweening::TweeningType type) {
 	ID tmp = alreadyRunning(oid, t);
 	// FIXME: maybe we should reset the action or should be ignore the request?
 	if (tmp != INVALID_ID) {

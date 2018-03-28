@@ -10,9 +10,9 @@ ParticleManager::ParticleManager(RID textureID) {
 	//descriptor.startColor = ds::Color(255, 255, 255, 255);
 	//descriptor.endColor = ds::Color(128, 128, 128, 0);
 
-	float u1 = 280.0f / 1024.0f;
+	float u1 = 200.0f / 1024.0f;
 	float v1 = 0.0f / 1024.0f;
-	float u2 = u1 + 20.0f / 1024.0f;
+	float u2 = u1 + 10.0f / 1024.0f;
 	float v2 = v1 + 10.0f / 1024.0f;
 	descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
 
@@ -88,18 +88,54 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 	}
 }
 
+void ParticleManager::emittParticles(const ds::vec3& pos, const ds::vec3& direction, int num) {
+	ds::vec2 radius = ds::vec2(0.15f);
+	int alignParticle = 1;
+	ds::vec2 rotationSpeed = ds::vec2(0.0f);
+	ds::vec2 ttl = ds::vec2(1.0f, 1.01f);
+	ds::Color startColor(0, 255, 255, 255);
+	ds::Color endColor(0, 32, 32, 255);
+	ds::vec2 scale = ds::vec2(0.08f);
+	ds::vec2 scaleVariance = ds::vec2(0.01f);
+	ds::vec2 growth = ds::vec2(0.0f, 0.0f);
+	ParticleDescriptor descriptor;
+	for (int i = 0; i < num; ++i) {
+		float r = ds::random(radius.x, radius.y);
+		float angle = ds::random(-ds::PI * 0.25f, +ds::PI * 0.25f);
+		float x = cos(angle) * r + pos.x;
+		float y = pos.y;
+		float z = sin(angle) * r + pos.z;
+		if (alignParticle == 1) {
+			descriptor.rotation = math::get_rotation(ds::vec2(direction.x,direction.z));
+		}
+		descriptor.rotationSpeed = ds::random(rotationSpeed.x, rotationSpeed.y);
+		descriptor.ttl = ds::random(ttl.x, ttl.y);
+		float acc = ds::random(3.0f, 3.5f);
+		descriptor.velocity = direction * acc;
+		descriptor.startColor = startColor;
+		descriptor.endColor = endColor;
+		float sx = ds::random(scale.x - scaleVariance.x, scale.x + scaleVariance.x);
+		float sy = ds::random(scale.y - scaleVariance.y, scale.y + scaleVariance.y);
+		descriptor.minScale = ds::vec2(sx, sy);
+		descriptor.maxScale = ds::vec2(sx, sy) + growth;
+		descriptor.acceleration = ds::vec3(0.0f);
+		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+		_particleSystem->add(pos, descriptor);
+	}
+}
+
 void ParticleManager::emittLine(const ds::vec3 & start, const ds::vec3 & end) {
 	ParticleDescriptor descriptor;
 	ds::vec3 diff = end - start;
 	float l = length(diff);
 	ds::vec3 center = (start + end) * 0.5f;
-	center.y = 0.4f;
 	float angle = math::get_rotation(ds::vec2(diff.x, diff.z)) + ds::PI;
 	//float angle = math::get_angle(ds::vec2(end.x, end.z), ds::vec2(start.x, start.z));
 	DBG_LOG("start %2.2f %2.2f %2.2f", start.x, start.y, start.z);
 	DBG_LOG("end %2.2f %2.2f %2.2f", end.x, end.y, end.z);
 	DBG_LOG("diff %2.2f %2.2f %2.2f", diff.x, diff.y, diff.z);
-	DBG_LOG("angle %3.2f", angle * 360.0f / ds::TWO_PI);
+	DBG_LOG("center %2.2f %2.2f %2.2f", center.x, center.y, center.z);
+	DBG_LOG("angle %3.2f length: %3.2f", angle * 360.0f / ds::TWO_PI,l);
 	descriptor.rotation = angle;
 	descriptor.rotationSpeed = 0.0f;
 	descriptor.ttl = 0.1f;

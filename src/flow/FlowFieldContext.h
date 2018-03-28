@@ -16,7 +16,7 @@ struct TowerPart {
 	ID id;
 	ID parent;	
 	int renderItemIndex;
-	transform_component transform;	
+	transform transform;	
 	ds::matrix world;
 
 	TowerPart() : id(INVALID_ID), parent(INVALID_ID), renderItemIndex(-1), transform() {}
@@ -46,6 +46,7 @@ struct Tower {
 
 struct FireEvent {
 	ds::vec3 pos;
+	ds::vec3 rotation;
 	ID target;
 	int type;
 };

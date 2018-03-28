@@ -36,21 +36,23 @@ namespace ds {
 
 	public:
 		EventStream();
-		virtual ~EventStream();
+		~EventStream();
 		void reset();
 		void add(uint32_t type);
 		void add(uint32_t type, void* p, size_t size);
-		const bool get(uint32_t index, void* p) const;
-		const int getType(uint32_t index) const;
-		const bool containsType(uint32_t type) const;
+		bool get(uint32_t index, void* p, size_t size) const;
+		int getType(uint32_t index) const;
+		bool containsType(uint32_t type) const;
 		const uint32_t num() const {
-			return _mappings.size();
+			return _num;
 		}
 	private:
+		const static int MAX_ENTRIES = 1024;
 		void addHeader(uint32_t type, size_t size);
 		EventStream(const EventStream& orig) {}
 		char* _data;
-		std::vector<uint32_t> _mappings;
+		uint32_t _mappings[MAX_ENTRIES];
+		uint32_t _num;
 		uint32_t _index;
 	};
 
@@ -528,7 +530,7 @@ namespace ds {
 	// reset
 	// -------------------------------------------------------
 	void EventStream::reset() {
-		_mappings.clear();
+		_num = 0;
 		_index = 0;
 	}
 
@@ -536,21 +538,27 @@ namespace ds {
 	// add event
 	// -------------------------------------------------------
 	void EventStream::add(uint32_t type, void* p, size_t size) {
-		addHeader(type, size);
-		char* data = _data + _index + sizeof(EventHeader);
-		memcpy(data, p, size);
-		_mappings.push_back(_index);
-		_index += sizeof(EventHeader) + size;
+		int capacity = sizeof(EventHeader) + size;
+		if ((_index + capacity) < 4096 && (_num + 1) < MAX_ENTRIES) {
+			addHeader(type, size);
+			char* data = _data + _index + sizeof(EventHeader);
+			memcpy(data, p, size);						
+			_mappings[_num++] = _index;
+			_index += capacity;
+		}
 	}
 
 	// -------------------------------------------------------
 	// add event
 	// -------------------------------------------------------
 	void EventStream::add(uint32_t type) {
-		addHeader(type, 0);
-		char* data = _data + _index;
-		_mappings.push_back(_index);
-		_index += sizeof(EventHeader);
+		int capacity = sizeof(EventHeader) + sizeof(type);
+		if ((_index + capacity) < 4096 && (_num + 1) < MAX_ENTRIES) {
+			addHeader(type, 0);
+			char* data = _data + _index;			
+			_mappings[_num++] = _index;	
+			_index += capacity;
+		}
 	}
 
 	// -------------------------------------------------------
@@ -559,7 +567,7 @@ namespace ds {
 	void EventStream::addHeader(uint32_t type, size_t size) {
 		//DBG_LOG("creating event - type: %d size: %d header: %d",type,size,sizeof(EventHeader));
 		EventHeader header;
-		header.id = _mappings.size();
+		header.id = _num;
 		header.size = size;
 		header.type = type;
 		char* data = _data + _index;
@@ -569,20 +577,23 @@ namespace ds {
 	// -------------------------------------------------------
 	// get
 	// -------------------------------------------------------
-	const bool EventStream::get(uint32_t index, void* p) const {
+	bool EventStream::get(uint32_t index, void* p, size_t size) const {
 		//XASSERT(index < _mappings.size(), "Index out of range");
 		int lookup = _mappings[index];
 		char* data = _data + lookup;
 		EventHeader* header = (EventHeader*)data;
-		data += sizeof(EventHeader);
-		memcpy(p, data, header->size);
-		return true;
+		if (header->size == size) {
+			data += sizeof(EventHeader);
+			memcpy(p, data, header->size);
+			return true;
+		}
+		return false;
 	}
 
 	// -------------------------------------------------------
 	// get type
 	// -------------------------------------------------------
-	const int EventStream::getType(uint32_t index) const {
+	int EventStream::getType(uint32_t index) const {
 		//XASSERT(index < _mappings.size(), "Index out of range");
 		int lookup = _mappings[index];
 		char* data = _data + lookup;
@@ -593,8 +604,8 @@ namespace ds {
 	// -------------------------------------------------------
 	// contains type
 	// -------------------------------------------------------
-	const bool EventStream::containsType(uint32_t type) const {
-		for (int i = 0; i < _mappings.size(); ++i) {
+	bool EventStream::containsType(uint32_t type) const {
+		for (int i = 0; i < _num; ++i) {
 			if (getType(i) == type) {
 				return true;
 			}

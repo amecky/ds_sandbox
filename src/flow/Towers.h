@@ -11,6 +11,7 @@
 namespace  ds {
 	class EventStream;
 }
+
 struct TowerDefinition {
 	float offset;
 	float radius;
