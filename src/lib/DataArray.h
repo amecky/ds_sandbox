@@ -35,6 +35,9 @@ namespace ds {
 		//bool _constructor;
 		//bool _destructor;
 
+		typedef U type;
+		type dataType;
+
 		DataArray() {
 			//_constructor = !__has_trivial_constructor(U);
 			//_destructor = !__has_trivial_destructor(U);

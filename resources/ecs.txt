@@ -1,0 +1,87 @@
+Components
+------------------------
+
+Arrange data in streams
+
+|    0   |    1   |    2   | ......
+-----------------------------------
+| pos(0) | pos(1) | pos(2) | ......
+| vel(0) | vel(1) | vel(2) | ......
+| mat(0) | mat(1) | mat(2) | ......
+
+Systems
+----------------------------
+
+Query components that they are interested in 
+
+void OnCreateManager(int capacity) {
+    moveForwardGroup = GetGroup(typeid(MoveFoward),typeid(Rotation));
+}
+
+Declare data used (and probably permissions) R = read only rw = read and write
+
+TransformSystem (takes pos and rotation to build world matrix)
+   |    0   |    1   |    2   | ......
+--------------------------------------   
+R  | pos(0) | pos(1) | pos(2) | ......
+R  | rot(0) | rot(1) | rot(2) | ......
+RW | mat(0) | mat(1) | mat(2) | ......
+
+Execution kernel
+
+execute(N) {
+    mat[N] = build_transfporm(pos[n],rot[n]);
+}
+
+struct Transform {
+
+    ComponentDataArray<Position> positions;
+    ComponentDataArray<Rotation> rotations;
+    ComponentDataArray<WorldMatrix> matrix;
+
+    void execute(int i) {
+        matrix[i] = build_transform(positions[i],rotations[i]);
+    }
+};
+
+BasicEnemyArchetype = entityManager.CreateArchetype(
+                typeof(Enemy), typeof(Health), typeof(EnemyShootState),
+                typeof(Position2D), typeof(Heading2D),
+                typeof(TransformMatrix), typeof(MoveSpeed), typeof(MoveForward));
+        }
+
+Entity player = entityManager.CreateEntity(PlayerArchetype);
+
+ArcheType
+-----------------------
+Defines which components belong to entity
+
+Mapping:
+
+A1 | C1, C2
+A2 | C1, C3
+A3 | C1, C2, C3
+
+Mapping:
+
+Entity to Archetype
+E1 | A1
+E2 | A2
+E3 | A3
+E4 | A1
+
+Data:
+
+E1      | E2      | E3           | E4
+C1 | C2 | C1 | C3 | C1 | C2 | C3 | C1 | C2
+
+define system group -> find matching archetypes
+createGroup(TYPEOF(C1),TYPEOF(C2)) -> A1, A3 -> E1, E3, E4
+
+
+
+
+
+
+
+
