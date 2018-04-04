@@ -25,9 +25,15 @@ void EntityManager::debug() {
 			const EntityIndex& idx = _indices[i];
 			printf("id: %d num: %d index: %d archetype: %d\n", idx.id, idx.num, idx.index, idx.archeType);
 			for (int j = 0; j < idx.num; ++j) {
-				printf("  %d = %d\n", j, _mappings[idx.index + j]);
+				const ComponentMapping& mapping = _mappings[idx.index + j];
+				if (mapping.component_id != EMPTY_ID) {
+					printf("  %d  id: %d stream: %d channel: %d\n", j, mapping.component_id, mapping.stream_index, mapping.channel_index);
+				}
 			}
 		}
+	}
+	for (size_t i = 0; i < _streams.size(); ++i) {
+		printf("stream %d -> size %d\n", i, _streams[i]->size);
 	}
 }
 

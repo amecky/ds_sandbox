@@ -67,6 +67,13 @@ class EntityManager {
 		uint16_t archeType;
 	};
 
+	struct ComponentMapping {
+		ID id;
+		ID component_id;
+		int stream_index;
+		int channel_index;
+	};
+
 public:
 	EntityManager();
 	~EntityManager();
@@ -96,9 +103,26 @@ public:
 				ID id = _streams[sidx]->add();
 				_streams[sidx]->set<U>(id, cidx, data);
 				int offset = index.index + compIndex;
-				_mappings[offset] = id;
+				_mappings[offset] = { NO_ID, id, sidx, cidx };
 			}
 		}
+	}
+
+	void removeEntity(ID entity) {
+		EntityIndex& index = _indices[entity];
+		assert(index.index != EMPTY_ID);
+		const ArcheTypeDefinition& def = _archeTypes[index.archeType];
+		int offset = index.index;
+		int sidx = 0;
+		int cidx = 0;
+		for (int i = 0; i < index.num; ++i) {
+			ComponentMapping& mapping = _mappings[offset + i];
+			if (mapping.component_id != EMPTY_ID) {
+				_streams[mapping.stream_index]->remove(mapping.component_id);
+				mapping.component_id = EMPTY_ID;
+			}
+		}
+		index.index = EMPTY_ID;
 	}
 
 	ID createEntity(ID archeTypeID) {
@@ -111,7 +135,10 @@ public:
 			idx.num = def.num;
 			idx.archeType = archeTypeID;
 			for (int i = 0; i < def.num; ++i) {
-				_mappings[_offset + i] = EMPTY_ID;
+				ComponentMapping& mapping = _mappings[_offset + i];
+				if (findMatchingStream(def.infos[i], &mapping.stream_index, &mapping.channel_index)) {
+					mapping.component_id = EMPTY_ID;					
+				}
 			}
 			_offset += def.num;
 			return idx.id;
@@ -164,7 +191,7 @@ private:
 	std::vector<ArcheTypeDefinition> _archeTypes;
 	std::vector<ds::ChannelArray*> _streams;
 	EntityIndex _indices[4096];
-	ID _mappings[4096];
+	ComponentMapping _mappings[4096];
 	int _offset;
 	
 };
