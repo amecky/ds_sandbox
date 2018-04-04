@@ -46,8 +46,11 @@ namespace ds {
 
 		ID add();
 
+		void clear();
+
 		template<class T>
 		void set(ID id, uint16_t channel, const T& t) {
+			assert(channel < _num_blocks);
 			T* p = (T*)get_ptr(channel);
 			assert(id != UINT_MAX);
 			uint16_t index = _data_indices[id & INDEX_MASK].index;
@@ -55,15 +58,13 @@ namespace ds {
 			p[index] = t;
 		}
 
-		const bool contains(ID id) const {
-			const Index& in = _data_indices[id & INDEX_MASK];
-			return in.id == id && in.index != UINT16_MAX;
-		}
+		const bool contains(ID id) const;
 
 		void remove(ID id);
 
 		template<class T>
 		const T& get(ID id, uint16_t channel) const {
+			assert(channel < _num_blocks);
 			const T* p = get_ptr(channel);
 			assert(id != UINT_MAX);
 			uint16_t index = _data_indices[id & INDEX_MASK].index;
@@ -71,7 +72,8 @@ namespace ds {
 		}
 
 		template<class T>
-		T& get(ID id, int channel) {
+		T& get(ID id, uint16_t channel) {
+			assert(channel < _num_blocks);
 			T* p = (T*)get_ptr(channel);
 			assert(id != UINT_MAX);
 			uint16_t index = _data_indices[id & INDEX_MASK].index;
@@ -79,9 +81,14 @@ namespace ds {
 		}
 
 		template<class T>
-		T* get_ptr(uint16_t channel) {
+		T* get_ptr(uint16_t channel) const {
 			assert(typeid(T) == *_typeInfo[channel]);
 			return (T*)(data + _indices[channel]);
+		}
+
+		const std::type_info* getTypeInfo(uint16_t channel) const {
+			assert(channel < _num_blocks);
+			return _typeInfo[channel];
 		}
 
 		void* get_ptr(uint16_t channel);

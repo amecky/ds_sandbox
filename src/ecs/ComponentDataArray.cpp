@@ -1,6 +1,7 @@
 #include "ComponentDataArray.h"
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 namespace ds {
 
@@ -10,14 +11,10 @@ namespace ds {
 
 	ChannelArray::~ChannelArray() {
 		if (_data_indices != 0) {
-			//gDefaultMemory->deallocate(_data_indices);
-			//DEALLOC(_data_indices);
-			free(_data_indices);
+			delete[] _data_indices;
 		}
 		if (data != 0) {
-			//gDefaultMemory->deallocate(data);
-			free(data);
-			//delete[] data;
+			delete[] data;
 		}
 	}
 
@@ -40,6 +37,10 @@ namespace ds {
 		return in.id;
 	}
 
+	void ChannelArray::clear() {
+
+	}
+
 	bool ChannelArray::resize(uint16_t new_size) {
 		if (new_size > capacity) {
 			int total = 0;
@@ -47,9 +48,7 @@ namespace ds {
 				total += _sizes[i];
 			}
 			if (_data_indices == 0) {
-				//_data_indices = (Index*)gDefaultMemory->allocate(new_size * sizeof(Index));
-				_data_indices = (Index*)malloc(new_size * sizeof(Index));
-				//_data_indices = new Index[new_size];// *sizeof(Index));
+				_data_indices = new Index[new_size];
 				for (unsigned short i = 0; i < new_size; ++i) {
 					_data_indices[i].id = i;
 					_data_indices[i].next = i + 1;
@@ -58,24 +57,18 @@ namespace ds {
 				_free_enqueue = new_size - 1;
 			}
 			else {
-				//Index* tmp = (Index*)gDefaultMemory->allocate(new_size * sizeof(Index));
-				Index* tmp = (Index*)malloc(new_size * sizeof(Index));
-				//Index* tmp = new Index[new_size];// *)gDefaultMemory->allocate(new_size * sizeof(Index));
+				Index* tmp = new Index[new_size];
 				memcpy(tmp, _data_indices, size * sizeof(Index));
 				for (unsigned short i = size; i < new_size; ++i) {
 					tmp[i].id = i;
 					tmp[i].next = i + 1;
 				}
-				//gDefaultMemory->deallocate(_data_indices);
-				free(_data_indices);
-				//delete[] _data_indices;
+				delete[] _data_indices;
 				_data_indices = tmp;
 				_free_enqueue = new_size - 1;
 			}
 			int sz = new_size * total;
-			//char* t = (char*)gDefaultMemory->allocate(sz);
-			char* t = (char*)malloc(sz);
-			//char* t = new char[sz];
+			char* t = new char[sz];
 			if (data != 0) {
 				int offset = 0;
 				int old_offset = 0;
@@ -84,9 +77,7 @@ namespace ds {
 					offset += new_size * _sizes[i];
 					old_offset += capacity * _sizes[i];
 				}
-				//gDefaultMemory->deallocate(data);
-				free(data);
-				//delete[] data;
+				delete[] data;
 			}
 			capacity = new_size;
 			_indices[0] = 0;
@@ -100,19 +91,26 @@ namespace ds {
 	}
 
 	void* ChannelArray::get_ptr(uint16_t index) {
+		assert(index < _num_blocks);
 		return data + _indices[index];
+	}
+
+	const bool ChannelArray::contains(ID id) const {
+		const Index& in = _data_indices[id & INDEX_MASK];
+		return in.id == id && in.index != UINT16_MAX;
 	}
 
 	void ChannelArray::remove(ID id) {
 		Index &in = _data_indices[id & INDEX_MASK];
 		assert(in.index != USHRT_MAX);
 		int current = in.index;
-		int next = (size - 1);
+		int next = (size - 1);		
+		int src = next * _sizes[0];
+		int dest = current * _sizes[0];
 		for (int i = 0; i < _num_blocks; ++i) {
-
-			memcpy(data + current, data + next, _sizes[i]);
-			current += capacity * _sizes[i];
-			next += capacity * _sizes[i];
+			memcpy(data + dest, data + src, _sizes[i]);
+			src += capacity * _sizes[i];
+			dest += capacity * _sizes[i];
 		}
 		--size;
 		_data_indices[in.id & INDEX_MASK].index = in.index;
