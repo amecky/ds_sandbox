@@ -10,10 +10,10 @@ ParticleManager::ParticleManager(RID textureID) {
 	//descriptor.startColor = ds::Color(255, 255, 255, 255);
 	//descriptor.endColor = ds::Color(128, 128, 128, 0);
 
-	float u1 = 200.0f / 1024.0f;
-	float v1 = 0.0f / 1024.0f;
-	float u2 = u1 + 10.0f / 1024.0f;
-	float v2 = v1 + 10.0f / 1024.0f;
+	float u1 = 233.0f / 1024.0f;
+	float v1 = 7.0f / 1024.0f;
+	float u2 = u1 + 20.0f / 1024.0f;
+	float v2 = v1 + 20.0f / 1024.0f;
 	descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
 
 	// load image using stb_image
@@ -59,9 +59,9 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 	ds::vec2 ttl = ds::vec2(0.5f, 1.5f);
 	ds::Color startColor(0, 255, 255, 255);
 	ds::Color endColor(0, 32, 32, 255);
-	ds::vec2 scale = ds::vec2(0.35f);
+	ds::vec2 scale = ds::vec2(0.5f);
 	ds::vec2 scaleVariance = ds::vec2(0.02f);
-	ds::vec2 growth = ds::vec2(0.0f,0.2f);
+	ds::vec2 growth = ds::vec2(-0.1f,-0.1f);
 	ParticleDescriptor descriptor;
 	for (int i = 0; i < num; ++i) {
 		float r = ds::random(radius.x, radius.y);
@@ -91,13 +91,13 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 void ParticleManager::emittParticles(const ds::vec3& pos, const ds::vec3& direction, int num) {
 	ds::vec2 radius = ds::vec2(0.15f);
 	int alignParticle = 1;
-	ds::vec2 rotationSpeed = ds::vec2(0.0f);
+	ds::vec2 rotationSpeed = ds::vec2(0.0f,ds::TWO_PI);
 	ds::vec2 ttl = ds::vec2(1.0f, 1.01f);
 	ds::Color startColor(0, 255, 255, 255);
 	ds::Color endColor(0, 32, 32, 255);
 	ds::vec2 scale = ds::vec2(0.08f);
 	ds::vec2 scaleVariance = ds::vec2(0.01f);
-	ds::vec2 growth = ds::vec2(0.0f, 0.0f);
+	ds::vec2 growth = ds::vec2(0.0f);// -0.1f, -0.1f);
 	ParticleDescriptor descriptor;
 	for (int i = 0; i < num; ++i) {
 		float r = ds::random(radius.x, radius.y);
@@ -153,9 +153,10 @@ void ParticleManager::emittLine(const ds::vec3 & start, const ds::vec3 & end) {
 void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int num, int descriptorIndex) {
 	const ParticleEmitterDescriptor& emitterDescriptor = _descriptors[descriptorIndex];
 	ParticleDescriptor descriptor;
-	for (int i = 0; i < num; ++i) {
-		float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
-		float angle = ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
+	float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
+	float step = ds::TWO_PI / num;
+	for (int i = 0; i < num; ++i) {		
+		float angle = step * i;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
 		float x = cos(angle) * r + pos.x;
 		float y = pos.y;
 		float z = sin(angle) * r + pos.z;

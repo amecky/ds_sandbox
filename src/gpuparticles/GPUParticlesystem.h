@@ -9,10 +9,10 @@ struct GPUParticle {
 	ds::vec2 timer;
 	ds::vec2 scale;
 	ds::vec2 growth;
-	float rotation;
-	float rotationSpeed;
 	ds::Color startColor;
 	ds::Color endColor;
+	float rotation;
+	float rotationSpeed;
 };
 
 // ---------------------------------------------------------------

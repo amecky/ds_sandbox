@@ -38,8 +38,10 @@ void SandboxApp::initialize() {
 	_gameContext->particles = new ParticleManager(textureID);
 	_flowFieldScene = new MainGameScene(_gameContext);
 	_towerTestScene = new TowerTestScene(_gameContext);
+	_particlesTestScene = new ParticlesTestScene(_gameContext);
 	//pushScene(_flowFieldScene);
-	pushScene(_towerTestScene);
+	//pushScene(_towerTestScene);
+	pushScene(_particlesTestScene);
 }
 
 // ---------------------------------------------------------------

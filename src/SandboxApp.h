@@ -8,6 +8,7 @@
 #include <ds_vm.h>
 #include "flow\MainGameScene.h"
 #include "scenes\TowerTestScene.h"
+#include "scenes\ParticlesTestScene.h"
 #include "GameContext.h"
 
 class SandboxApp: public ds::BaseApp {
@@ -22,5 +23,6 @@ private:
 	
 	MainGameScene* _flowFieldScene;
 	TowerTestScene* _towerTestScene;
+	ParticlesTestScene* _particlesTestScene;
 	GameContext* _gameContext;
 };

@@ -13,10 +13,10 @@ struct Particle {
     float2 timer;
 	float2 scale;
 	float2 growth;
-	float rotation;
-	float rotationSpeed;
 	float4 startColor;
 	float4 endColor;
+	float rotation;
+	float rotationSpeed;
 };
 
 StructuredBuffer<Particle> ParticlesRO : register(t1);
@@ -32,36 +32,42 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
 	uint particleIndex = id / 4;
 	uint vertexIndex = id % 4;	
 	float elapsed = ParticlesRO[particleIndex].timer.x;
-    float norm = ParticlesRO[particleIndex].timer.y;
-
-	float2 scaling = ParticlesRO[particleIndex].scale;
-	scaling += ParticlesRO[particleIndex].growth * elapsed;
-	scaling = saturate(scaling * 0.5 * 0.5);	
-
-	float3 position;
-	
-	position.x = (vertexIndex % 2) ? scaling.x : -scaling.x;
-	position.y = 1.0;
-	position.z = (vertexIndex & 2) ? -scaling.y : scaling.y;
-	
+    float norm = ParticlesRO[particleIndex].timer.y;	
     float3 pos = ParticlesRO[particleIndex].position;
-
-	float rot = ParticlesRO[particleIndex].rotation + ParticlesRO[particleIndex].rotationSpeed * elapsed;
-	float s = sin(rot);
-	float c = cos(rot);
-
-	float sx = position.x;// * scaling.x;
-	float sz = position.z;// * scaling.y;
-
-	float xt = c * sx - s * sz;
-	float zt = s * sx + c * sz;
 
     pos += ParticlesRO[particleIndex].velocity * elapsed;
     pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
- 	vsOut.pos = mul(float4(xt + pos.x, pos.y, zt + pos.z, 1.0f), wvp);
-	float4 rect = textureRect; 
-	vsOut.tex.x = (vertexIndex % 2) ? rect.z : rect.x;
-    vsOut.tex.y = (vertexIndex & 2) ? rect.w : rect.y;
+
+    float3 look = normalize(eyePos - pos);
+	float3 right = normalize(cross(float3(0, 1, 0), look));
+	float3 up = normalize(cross(look, right));
+
+    float rot = ParticlesRO[particleIndex].rotation + ParticlesRO[particleIndex].rotationSpeed * elapsed;
+
+	float s, c;
+	sincos(rot, s, c); 
+	float3 rightNew = c * right - s * up;
+	float3 upNew = s * right + c * up;
+
+	float2 scaling = ParticlesRO[particleIndex].scale;
+	scaling += ParticlesRO[particleIndex].growth * elapsed;
+	scaling = saturate(scaling);
+    
+	float hw = (vertexIndex & 2) ? 0.5 : -0.5;
+	float hh = (vertexIndex % 2) ? 0.5 : -0.5;
+    hw *= scaling.x;
+    hh *= scaling.y;
+
+	float4 fp = float4(pos + hw * rightNew - hh * upNew, 1.0);
+
+    
+	vsOut.pos = mul(fp, wvp);
+	//vsOut.tex.x = (vertexIndex % 2) ? 1.0 : 0.0;
+    //vsOut.tex.y = (vertexIndex & 2) ? 1.0 : 0.0;
+
+	vsOut.tex.x = (vertexIndex % 2) ? textureRect.z : textureRect.x;
+    vsOut.tex.y = (vertexIndex & 2) ? textureRect.w : textureRect.y;
+
 	vsOut.color = lerp(ParticlesRO[particleIndex].startColor,ParticlesRO[particleIndex].endColor,norm);
 	return vsOut;
 }
@@ -71,4 +77,5 @@ SamplerState colorSampler : register(s0);
 
 float4 PS_Main(PS_Input frag) : SV_TARGET{
 	return colorMap.Sample(colorSampler, frag.tex) * frag.color;
+	//return frag.color;
 }

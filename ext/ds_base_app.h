@@ -21,6 +21,8 @@ namespace ds {
 		const char* windowTitle;
 		ds::Color clearColor;
 		char guiToggleKey;
+		char updateToggleKey;
+		char singleStepKey;
 	};
 
 	// ----------------------------------------------------
@@ -142,6 +144,9 @@ namespace ds {
 				ds::RenderPassInfo rpInfo = { &_camera, _viewPort, ds::DepthBufferState::ENABLED, 0, 0 };
 				_basicPass = ds::createRenderPass(rpInfo);
 
+				ds::RenderPassInfo noDepthInfo = { &_camera, _viewPort, ds::DepthBufferState::DISABLED, 0, 0 };
+				_noDepthPass = ds::createRenderPass(rpInfo);
+
 				ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 				_blendStateID = ds::createBlendState(blendInfo);
 			}
@@ -150,6 +155,7 @@ namespace ds {
 		RID _viewPort;
 		RID _blendStateID;
 		RID _basicPass;
+		RID _noDepthPass;
 		ds::Camera _camera;
 	};
 
@@ -220,6 +226,9 @@ namespace ds {
 		bool _guiKeyPressed;
 		bool _guiActive;
 		bool _running;
+		bool _updateActive;
+		bool _updateTogglePressed;
+		bool _singleStepPressed;
 		RenderContext* _renderContext;
 		ButtonState _buttonStates[2];
 	};
@@ -313,12 +322,17 @@ namespace ds {
 		_settings.windowTitle = "BaseApp";
 		_settings.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
 		_settings.guiToggleKey = 'D';
+		_settings.updateToggleKey = 'U';
+		_settings.singleStepKey = 'P';
 		_events = new ds::EventStream;
 		_loadTimer = 0.0f;
 		_useTweakables = false;
 		_guiKeyPressed = false;
+		_updateTogglePressed = false;
+		_singleStepPressed = false;
 		_guiActive = true;
 		_running = true;
+		_updateActive = true;
 		_sprites = 0;
 		_buttonStates[0] = { false, false };
 		_buttonStates[1] = { false, false };
@@ -386,6 +400,8 @@ namespace ds {
 		}
 
 		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to toggle GUI", _settings.guiToggleKey);
+		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to toggle UPDATE", _settings.updateToggleKey);
+		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to for single step", _settings.singleStepKey);
 		initialize();
 	}
 
@@ -431,7 +447,7 @@ namespace ds {
 	// tick
 	// -------------------------------------------------------
 	void BaseApp::tick(float dt) {
-
+		// reload tweakables if necessary
 		if (_useTweakables) {
 #ifdef DEBUG
 			_loadTimer += ds::getElapsedSeconds();
@@ -441,7 +457,7 @@ namespace ds {
 			}
 #endif
 		}
-
+		// toggle show gui
 		if (ds::isKeyPressed(_settings.guiToggleKey)) {
 			if (!_guiKeyPressed) {
 				_guiActive = !_guiActive;
@@ -451,9 +467,30 @@ namespace ds {
 		else {
 			_guiKeyPressed = false;
 		}
+		// toggle update loop
+		if (ds::isKeyPressed(_settings.updateToggleKey)) {
+			if (!_updateTogglePressed) {
+				_updateActive = !_updateActive;
+				_updateTogglePressed = true;
+			}
+		}
+		else {
+			_updateTogglePressed = false;
+		}
+		// handle single step key
+		if (!_updateActive) {
+			if (ds::isKeyPressed(_settings.singleStepKey)) {
+				if (!_singleStepPressed) {
+					_singleStepPressed = true;
+				}
+			}
+			else {
+				_singleStepPressed = false;
+			}
+		}
 
 		handleButtons();
-
+		// send button events to scenes
 		for (int i = 0; i < 2; ++i) {
 			if (_buttonStates[i].clicked) {
 				ScenesIterator it = _scenes.begin();
@@ -466,26 +503,40 @@ namespace ds {
 				_buttonStates[i].clicked = false;
 			}
 		}
-
-		_events->reset();
-
-		update(dt);
-
-		render();
-
-		ScenesIterator it = _scenes.begin();
-		while (it != _scenes.end()) {
-			(*it)->update(dt);
-			++it;
+		// check if we should update
+		bool doUpdate = true;
+		if (!_updateActive) {
+			if (_singleStepPressed) {
+				dt = 1.0f / 60.0f;
+			}
+			else {
+				doUpdate = false;
+			}
 		}
-		it = _scenes.begin();
+		// update app
+		if (doUpdate) {
+			_events->reset();
+			update(dt);
+		}
+		// render app
+		render();
+		// update scenes
+		if (doUpdate) {
+			ScenesIterator it = _scenes.begin();
+			while (it != _scenes.end()) {
+				(*it)->update(dt);
+				++it;
+			}
+		}
+		// render scenes
+		ScenesIterator it = _scenes.begin();
 		while (it != _scenes.end()) {
 			(*it)->beforeRendering();
 			(*it)->render();
 			(*it)->afterRendering();
 			++it;
 		}
-
+		// render GUI if active
 		if (_settings.useIMGUI && _guiActive) {
 			it = _scenes.begin();
 			while (it != _scenes.end()) {
@@ -493,8 +544,10 @@ namespace ds {
 				++it;
 			}
 		}
-		
-		handleEvents(_events);
+		// handle events if active
+		if (doUpdate) {
+			handleEvents(_events);
+		}
 	}
 
 	RID Scene::loadImageFromFile(const char* name) {

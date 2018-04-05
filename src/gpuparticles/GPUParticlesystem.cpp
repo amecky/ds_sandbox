@@ -8,9 +8,9 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	_array.initialize(descriptor.maxParticles);
 	_vertices = new GPUParticle[descriptor.maxParticles];
 
-	ds::BlendStateInfo blendStateInfo{ ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
+	//ds::BlendStateInfo blendStateInfo{ ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 	//ds::BlendStateInfo blendStateInfo = { ds::BlendStates::ONE, ds::BlendStates::ZERO, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::ZERO, true };
-	//ds::BlendStateInfo blendStateInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ZERO, true };
+	ds::BlendStateInfo blendStateInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ZERO, true };
 	RID blendState = ds::createBlendState(blendStateInfo);
 
 	ds::ShaderInfo vsInfo = { 0, GPUParticles_VS_Main, sizeof(GPUParticles_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
@@ -101,13 +101,14 @@ the pivot element at its correct position in sorted
 array, and places all smaller (smaller than pivot)
 to left of pivot and all greater elements to right
 of pivot */
-int partition(GPUParticle* arr, int low, int high) {
-	float pivot = arr[high].position.z;    // pivot
+int partition(GPUParticle* arr, int low, int high, const ds::vec3& eyePos) {
+	float pivot = sqr_length(eyePos - arr[high].position);// .z;    // pivot
 	int i = (low - 1);  // Index of smaller element
 	for (int j = low; j <= high - 1; j++) {
 		// If current element is smaller than or
 		// equal to pivot
-		if (arr[j].position.z <= pivot)
+		//if (arr[j].position.z > pivot)
+		if (sqr_length(eyePos - arr[j].position) > pivot)
 		{
 			i++;    // increment index of smaller element
 			swap(&arr[i], &arr[j]);
@@ -121,18 +122,18 @@ int partition(GPUParticle* arr, int low, int high) {
 arr[] --> Array to be sorted,
 low  --> Starting index,
 high  --> Ending index */
-void quickSort(GPUParticle* arr, int low, int high)
+void quickSort(GPUParticle* arr, int low, int high, const ds::vec3& eyePos)
 {
 	if (low < high)
 	{
 		/* pi is partitioning index, arr[p] is now
 		at right place */
-		int pi = partition(arr, low, high);
+		int pi = partition(arr, low, high, eyePos);
 
 		// Separately sort elements before
 		// partition and after partition
-		quickSort(arr, low, pi - 1);
-		quickSort(arr, pi + 1, high);
+		quickSort(arr, low, pi - 1, eyePos);
+		quickSort(arr, pi + 1, high, eyePos);
 	}
 }
 
@@ -144,8 +145,6 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 	// prepare constant buffers
 	ds::matrix w = ds::matIdentity();
 	_constantBuffer.wvp = ds::matTranspose(viewProjectionMatrix);
-	//_constantBuffer.startColor = _descriptor.startColor;
-	//_constantBuffer.endColor = _descriptor.endColor;
 	_constantBuffer.eyePos = eyePos;
 	_constantBuffer.padding = 0.0f;
 	_constantBuffer.world = ds::matTranspose(w);
@@ -158,13 +157,13 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 			ds::vec2(_array.timers[i].x, _array.timers[i].y),
 			ds::vec2(_array.sizes[i].x,_array.sizes[i].y),
 			ds::vec2(_array.sizes[i].z,_array.sizes[i].w),
-			_array.rotations[i],
-			_array.rotationSpeeds[i],
 			_array.startColors[i],
-			_array.endColors[i]
+			_array.endColors[i],
+			_array.rotations[i],
+			_array.rotationSpeeds[i]
 		};
 	}
-	//quickSort(_vertices, 0, _array.countAlive);
+	quickSort(_vertices, 0, _array.countAlive, eyePos);
 	ds::mapBufferData(_structuredBufferId, _vertices, _array.countAlive * sizeof(GPUParticle));
 	ds::submit(renderPass, _drawItem, _array.countAlive * 6);
 

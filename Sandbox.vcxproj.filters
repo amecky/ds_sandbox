@@ -121,6 +121,9 @@
     <ClInclude Include="src\lib\DataArray.h">
       <Filter>lib</Filter>
     </ClInclude>
+    <ClInclude Include="src\scenes\ParticlesTestScene.h">
+      <Filter>scenes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -172,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="src\animation\AnimationManager.cpp">
       <Filter>animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\ParticlesTestScene.cpp">
+      <Filter>scenes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
