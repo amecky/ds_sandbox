@@ -42,6 +42,23 @@ void SandboxApp::initialize() {
 	//pushScene(_flowFieldScene);
 	//pushScene(_towerTestScene);
 	pushScene(_particlesTestScene);
+
+	ds::vec3 eyePos(0.0f, 2.0f, -1.0f);
+	ds::vec3 pos(0.0f);
+
+	ds::vec3 look = normalize(eyePos - pos);
+	ds::vec3 right = normalize(cross(ds::vec3(0.0f, 1.0f, 0.0f), look));
+	ds::vec3 up = normalize(cross(look, right));
+
+	ds::vec3 fp[4];
+	for (int i = 0; i < 4; ++i) {
+		float hw = (i & 2) ? 0.5 : -0.5;
+		float hh = (i % 2) ? 0.5 : -0.5;
+
+		fp[i] = ds::vec3(pos + hw * right - hh * up);
+	}
+
+
 }
 
 // ---------------------------------------------------------------

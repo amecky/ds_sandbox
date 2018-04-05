@@ -10,8 +10,11 @@ ParticleManager::ParticleManager(RID textureID) {
 	//descriptor.startColor = ds::Color(255, 255, 255, 255);
 	//descriptor.endColor = ds::Color(128, 128, 128, 0);
 
-	float u1 = 233.0f / 1024.0f;
-	float v1 = 7.0f / 1024.0f;
+	//float u1 = 233.0f / 1024.0f;
+	//float v1 = 7.0f / 1024.0f;
+	// plain quad
+	float u1 = 200.0f / 1024.0f;
+	float v1 = 0.0f / 1024.0f;
 	float u2 = u1 + 20.0f / 1024.0f;
 	float v2 = v1 + 20.0f / 1024.0f;
 	descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
@@ -172,7 +175,7 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		float sx = ds::random(emitterDescriptor.scale.x - emitterDescriptor.scaleVariance.x, emitterDescriptor.scale.x + emitterDescriptor.scaleVariance.x);
 		float sy = ds::random(emitterDescriptor.scale.y - emitterDescriptor.scaleVariance.y, emitterDescriptor.scale.y + emitterDescriptor.scaleVariance.y);
 		descriptor.minScale = ds::vec2(sx, sy);
-		descriptor.maxScale = ds::vec2(sx, sy) + emitterDescriptor.growth;
+		descriptor.maxScale = emitterDescriptor.growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
 		_particleSystem->add(ds::vec3(x, y, z), descriptor);
