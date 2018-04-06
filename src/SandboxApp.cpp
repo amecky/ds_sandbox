@@ -27,6 +27,15 @@ SandboxApp::~SandboxApp() {
 	delete _gameContext;
 }
 
+ds::vec3 ComputePosition(const ds::vec3& eyePos, ds::vec3 pos, float size, ds::vec2 vPos) {
+	// Create billboard (quad always facing the camera)
+	ds::vec3 toEye = normalize(eyePos - pos);
+	ds::vec3 up = ds::vec3(0.0f, 1.0f, 0.0f);
+	ds::vec3 right = cross(toEye, up);
+	up = cross(toEye, right);
+	pos += (right * size * vPos.x) - (up * size * vPos.y);
+	return pos;
+}
 // ---------------------------------------------------------------
 // initialize
 // ---------------------------------------------------------------
@@ -43,19 +52,38 @@ void SandboxApp::initialize() {
 	//pushScene(_towerTestScene);
 	pushScene(_particlesTestScene);
 
+	static const ds::vec4 vertexUVPos[4] =
+	{
+		ds::vec4( 0.0f, 1.0f, -1.0f, -1.0f ),
+		ds::vec4( 0.0f, 0.0f, -1.0f, +1.0f ),
+		ds::vec4( 1.0f, 1.0f, +1.0f, -1.0f ),
+		ds::vec4( 1.0f, 0.0f, +1.0f, +1.0f ),
+	};
+
+	float size = 0.5f;
+
 	ds::vec3 eyePos(0.0f, 2.0f, -1.0f);
 	ds::vec3 pos(0.0f);
 
 	ds::vec3 look = normalize(eyePos - pos);
-	ds::vec3 right = normalize(cross(ds::vec3(0.0f, 1.0f, 0.0f), look));
+	ds::vec3 right = normalize(cross(look, ds::vec3(0.0f, 1.0f, 0.0f)));
 	ds::vec3 up = normalize(cross(look, right));
 
 	ds::vec3 fp[4];
+	ds::vec3 np[4];
+	ds::vec3 tp[4];
+
 	for (int i = 0; i < 4; ++i) {
-		float hw = (i & 2) ? 0.5 : -0.5;
-		float hh = (i % 2) ? 0.5 : -0.5;
+		float hw = (i & 2) ? size : -size;
+		float hh = (i % 2) ? size : -size;
 
 		fp[i] = ds::vec3(pos + hw * right - hh * up);
+		np[i] = ComputePosition(eyePos, pos , size, ds::vec2(vertexUVPos[i].z, vertexUVPos[i].w));
+
+		float nw = (i & 2) ? 1.0f : -1.0f;
+		float nh = (i % 2) ? 1.0f : -1.0f;
+
+		tp[i] = ComputePosition(eyePos, pos, size, ds::vec2(nw,nh));
 	}
 
 

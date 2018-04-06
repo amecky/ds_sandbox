@@ -27,6 +27,19 @@ struct PS_Input {
 	float4 color : COLOR0;
 };
 
+float4 ComputePosition(float3 pos, float size, float rot, float2 vPos) {
+	float3 toEye = normalize(eyePos - pos);
+	float3 up = float3(0.0, 1.0, 0.0);
+	float3 right = cross(toEye, up);
+	up = cross(toEye, right);
+	float s, c;
+	sincos(rot, s, c); 
+	float3 rightNew = c * right - s * up;
+	float3 upNew = s * right + c * up;
+	pos += (rightNew * size * vPos.x) - (upNew * size * vPos.y);
+	return float4(pos,1.0);
+}
+
 PS_Input VS_Main(uint id:SV_VERTEXID) {
 	PS_Input vsOut = (PS_Input)0;
 	uint particleIndex = id / 4;
@@ -43,12 +56,6 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
 	float3 up = normalize(cross(look, right));
 
     float rot = ParticlesRO[particleIndex].rotation + ParticlesRO[particleIndex].rotationSpeed * elapsed;
-
-	float s, c;
-	sincos(rot, s, c); 
-	float3 rightNew = c * right - s * up;
-	float3 upNew = s * right + c * up;
-
 	float2 scaling = ParticlesRO[particleIndex].scale;
 	scaling += ParticlesRO[particleIndex].growth * elapsed;
 	scaling = saturate(scaling);
@@ -58,16 +65,10 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
     hw *= scaling.x;
     hh *= scaling.y;
 
-	float4 fp = float4(pos + hw * rightNew - hh * upNew, 1.0);
-
-    
+	float4 fp = ComputePosition(pos, 0.5, rot, float2(hw, hh));
 	vsOut.pos = mul(fp, wvp);
-	//vsOut.tex.x = (vertexIndex % 2) ? 1.0 : 0.0;
-    //vsOut.tex.y = (vertexIndex & 2) ? 1.0 : 0.0;
-
 	vsOut.tex.x = (vertexIndex % 2) ? textureRect.z : textureRect.x;
     vsOut.tex.y = (vertexIndex & 2) ? textureRect.w : textureRect.y;
-
 	vsOut.color = lerp(ParticlesRO[particleIndex].startColor,ParticlesRO[particleIndex].endColor,norm);
 	return vsOut;
 }
@@ -77,5 +78,4 @@ SamplerState colorSampler : register(s0);
 
 float4 PS_Main(PS_Input frag) : SV_TARGET{
 	return colorMap.Sample(colorSampler, frag.tex) * frag.color;
-	//return frag.color;
 }
