@@ -33,4 +33,5 @@ private:
 	Grid* _grid;
 	InstancedRenderItem* _gridItem;
 	ds::vec3 _dbgCameraRotation;
+	int _dbgNumParticles;
 };

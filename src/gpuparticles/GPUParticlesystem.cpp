@@ -149,6 +149,7 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 	_constantBuffer.padding = 0.0f;
 	_constantBuffer.world = ds::matTranspose(w);
 	_constantBuffer.textureRect = _descriptor.textureRect;
+	ds::matrix rx = ds::matRotationX(ds::PI * 0.25f);
 	for (int i = 0; i < _array.countAlive; ++i) {
 		_vertices[i] = {
 			_array.positions[i],
@@ -160,7 +161,8 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 			_array.startColors[i],
 			_array.endColors[i],
 			_array.rotations[i],
-			_array.rotationSpeeds[i]
+			_array.rotationSpeeds[i],
+			rx
 		};
 	}
 	quickSort(_vertices, 0, _array.countAlive, eyePos);

@@ -13,6 +13,7 @@ struct GPUParticle {
 	ds::Color endColor;
 	float rotation;
 	float rotationSpeed;
+	ds::matrix world;
 };
 
 // ---------------------------------------------------------------
@@ -122,6 +123,7 @@ struct ParticleDescriptor {
 	float rotationSpeed;
 	ds::Color startColor;
 	ds::Color endColor;
+	ds::matrix worldWatrix;
 };
 
 // -------------------------------------------------------

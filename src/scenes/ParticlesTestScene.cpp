@@ -16,7 +16,7 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	
 	_dbgCameraRotation = ds::vec3(0.0f);
-	
+	_dbgNumParticles = 32;
 }
 
 ParticlesTestScene::~ParticlesTestScene() {
@@ -107,7 +107,8 @@ void ParticlesTestScene::showGUI() {
 	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");
+		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");	
+		/*
 		bool changed = false;
 		if (gui::SliderAngle("Roll", &_dbgCameraRotation.x)) {
 			changed = true;
@@ -121,8 +122,10 @@ void ParticlesTestScene::showGUI() {
 		if (changed) {
 			_isoCamera->setRotation(_dbgCameraRotation);
 		}
+		*/
+		gui::Input("Num", &_dbgNumParticles);
 		if (gui::Button("Particles")) {
-			_gameContext->particles->emittParticles(ds::vec3(-0.5f,0.5f,-0.5f), 0.0f, 32, 0);
+			_gameContext->particles->emittParticles(ds::vec3(-0.5f,1.1f,-0.5f), 0.0f, _dbgNumParticles, 0);
 		}
 		_gameContext->particles->showGUI(0);
 	}

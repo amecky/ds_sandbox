@@ -26,9 +26,15 @@ ParticleManager::ParticleManager(RID textureID) {
 	buildEmitterDescriptors();
 
 	loadDescriptors("content\\particle_descriptors.bin");
+
+	_emitters.push_back(new RingEmitter(&_ringEmitterSettings));
+	_emitters.push_back(new SphereEmitter(&_ringEmitterSettings));
 }
 
 ParticleManager::~ParticleManager() {
+	for (size_t i = 0; i < _emitters.size(); ++i) {
+		delete _emitters[i];
+	}
 	delete _particleSystem;
 }
 
@@ -158,13 +164,21 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 	ParticleDescriptor descriptor;
 	float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
 	float step = ds::TWO_PI / num;
-	for (int i = 0; i < num; ++i) {		
+
+
+	_ringEmitterSettings.radius = r;
+
+	for (int i = 0; i < num; ++i) {
+		ds::vec3 p = _emitters[1]->getPosition(i, num) + pos;
 		float angle = step * i;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
-		float x = cos(angle) * r + pos.x;
-		float y = pos.y;
-		float z = sin(angle) * r + pos.z;
+		//float x = cos(angle) * r + pos.x;
+		//float y = pos.y;
+		//float z = sin(angle) * r + pos.z;
 		if (emitterDescriptor.alignParticle == 1) {
 			descriptor.rotation = angle;
+		}
+		else {
+			descriptor.rotation = 0.0f;
 		}
 		descriptor.rotationSpeed = ds::random(emitterDescriptor.rotationSpeed.x, emitterDescriptor.rotationSpeed.y);
 		descriptor.ttl = ds::random(emitterDescriptor.ttl.x, emitterDescriptor.ttl.y);
@@ -178,7 +192,9 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		descriptor.maxScale = emitterDescriptor.growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
-		_particleSystem->add(ds::vec3(x, y, z), descriptor);
+		descriptor.worldWatrix = ds::matIdentity();
+		descriptor.acceleration = ds::vec3(0.0f,0.0f,0.0f);
+		_particleSystem->add(p, descriptor);
 	}
 }
 
@@ -229,4 +245,26 @@ void ParticleManager::loadDescriptors(const char * fileName) {
 		}
 		fclose(fp);
 	}
+}
+
+ds::vec3 RingEmitter::getPosition(int index, int total) {
+	float step = ds::TWO_PI / total;
+	float angle = step * index;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
+	float x = cos(angle) * _settings->radius;
+	float y = 0.0f;
+	float z = sin(angle) * _settings->radius;
+	return ds::vec3(x,y,z);
+}
+
+ds::vec3 SphereEmitter::getPosition(int index, int total) {
+	int rings = 8;
+	int sectors = total / rings;
+	float s = ds::PI / rings;
+	float t = ds::TWO_PI / sectors;
+	int ring = index % sectors;
+	int sector = index / sectors;
+	float x = cos(ring * t) * sin(sector * s) * _settings->radius;
+	float z = sin(ring * t) * sin(sector * s) * _settings->radius;
+	float y = cos(sector * s) * _settings->radius;
+	return ds::vec3(x, y, z);
 }

@@ -17,6 +17,7 @@ struct Particle {
 	float4 endColor;
 	float rotation;
 	float rotationSpeed;
+	matrix world;
 };
 
 StructuredBuffer<Particle> ParticlesRO : register(t1);
@@ -65,7 +66,10 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
     hw *= scaling.x;
     hh *= scaling.y;
 
-	float4 fp = ComputePosition(pos, 0.5, rot, float2(hw, hh));
+	float4 tp = mul(float4(hw,hh,0.0,1.0), ParticlesRO[particleIndex].world);
+	float4 fp = ComputePosition(pos, 0.5, rot, tp.xy);
+	//float4 fp = ComputePosition(pos, 0.5, rot, float2(hw,hh));
+
 	vsOut.pos = mul(fp, wvp);
 	vsOut.tex.x = (vertexIndex % 2) ? textureRect.z : textureRect.x;
     vsOut.tex.y = (vertexIndex & 2) ? textureRect.w : textureRect.y;

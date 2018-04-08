@@ -1,5 +1,6 @@
 #pragma once
 #include "..\gpuparticles\GPUParticlesystem.h"
+#include <vector>
 
 struct ParticleEmitterDescriptor {
 	ds::vec2 radius;
@@ -13,6 +14,36 @@ struct ParticleEmitterDescriptor {
 	ds::vec2 scale;
 	ds::vec2 scaleVariance;
 	ds::vec2 growth;
+};
+
+class ParticleEmitter {
+
+public:
+	ParticleEmitter() {}
+	virtual ~ParticleEmitter() {}
+	virtual ds::vec3 getPosition(int index, int total) = 0;
+};
+
+struct RingEmitterSettings {
+	float radius;
+};
+
+class RingEmitter : public ParticleEmitter {
+
+public:
+	RingEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
+	virtual ds::vec3 getPosition(int index, int total);
+private:
+	const RingEmitterSettings* _settings;
+};
+
+class SphereEmitter : public ParticleEmitter {
+
+public:
+	SphereEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
+	virtual ds::vec3 getPosition(int index, int total);
+private:
+	const RingEmitterSettings* _settings;
 };
 
 class ParticleManager {
@@ -33,5 +64,7 @@ private:
 	void buildEmitterDescriptors();
 	GPUParticlesystem* _particleSystem;
 	ParticleEmitterDescriptor _descriptors[32];
+	std::vector<ParticleEmitter*> _emitters;
+	RingEmitterSettings _ringEmitterSettings;
 };
 
