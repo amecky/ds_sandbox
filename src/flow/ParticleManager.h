@@ -1,20 +1,8 @@
 #pragma once
 #include "..\gpuparticles\GPUParticlesystem.h"
 #include <vector>
+#include "..\gpuparticles\ParticleEffect.h"
 
-struct ParticleEmitterDescriptor {
-	ds::vec2 radius;
-	int alignParticle;
-	float angleVariance;
-	ds::vec2 rotationSpeed;
-	ds::vec2 velocity;
-	ds::vec2 ttl;
-	ds::Color startColor;
-	ds::Color endColor;
-	ds::vec2 scale;
-	ds::vec2 scaleVariance;
-	ds::vec2 growth;
-};
 
 class ParticleEmitter {
 

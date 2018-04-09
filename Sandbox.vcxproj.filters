@@ -124,6 +124,9 @@
     <ClInclude Include="src\scenes\ParticlesTestScene.h">
       <Filter>scenes</Filter>
     </ClInclude>
+    <ClInclude Include="src\gpuparticles\ParticleEffect.h">
+      <Filter>gpuparticles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -178,6 +181,9 @@
     </ClCompile>
     <ClCompile Include="src\scenes\ParticlesTestScene.cpp">
       <Filter>scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gpuparticles\ParticleEffect.cpp">
+      <Filter>gpuparticles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
