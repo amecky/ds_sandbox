@@ -1,6 +1,7 @@
 #pragma once
 #include <diesel.h>
 #include <string.h>
+#include "ParticleEmitter.h"
 
 struct EmitterType {
 
@@ -12,8 +13,6 @@ struct EmitterType {
 	};
 	const static char* Names[];
 };
-
-
 
 struct ParticleEmitterDescriptor {
 	ds::vec2 radius;
@@ -37,7 +36,8 @@ struct ParticleEffect {
 	int _indices[16];
 	char _data[1024];
 	int _size;
-	
+	bool oneShot;
+
 	ParticleEffect() : _size(0) , _numTypes(0) {}
 
 	int addEmitter(EmitterType::Enum type, void* data, size_t size) {

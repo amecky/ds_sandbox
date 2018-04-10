@@ -14,7 +14,7 @@
 #include <vector>
 #include "FlowFieldContext.h"
 #include "IsometricCamera.h"
-#include "ParticleManager.h"
+#include "..\gpuparticles\ParticleManager.h"
 
 struct DebugContext {
 	int selectedLight;

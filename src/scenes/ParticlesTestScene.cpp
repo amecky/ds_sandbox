@@ -2,7 +2,7 @@
 #include <ds_imgui.h>
 #include "..\utils\common_math.h"
 #include "..\GameContext.h"
-#include "..\flow\ParticleManager.h"
+#include "..\gpuparticles\ParticleManager.h"
 
 const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
 

@@ -96,9 +96,6 @@
     <ClInclude Include="src\utils\CSVFile.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\flow\ParticleManager.h">
-      <Filter>flow</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\obj.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -125,6 +122,12 @@
       <Filter>scenes</Filter>
     </ClInclude>
     <ClInclude Include="src\gpuparticles\ParticleEffect.h">
+      <Filter>gpuparticles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gpuparticles\ParticleEmitter.h">
+      <Filter>gpuparticles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gpuparticles\ParticleManager.h">
       <Filter>gpuparticles</Filter>
     </ClInclude>
   </ItemGroup>
@@ -161,9 +164,6 @@
     <ClCompile Include="src\utils\CSVFile.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\flow\ParticleManager.cpp">
-      <Filter>flow</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\obj.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -183,6 +183,12 @@
       <Filter>scenes</Filter>
     </ClCompile>
     <ClCompile Include="src\gpuparticles\ParticleEffect.cpp">
+      <Filter>gpuparticles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gpuparticles\ParticleEmitter.cpp">
+      <Filter>gpuparticles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gpuparticles\ParticleManager.cpp">
       <Filter>gpuparticles</Filter>
     </ClCompile>
   </ItemGroup>

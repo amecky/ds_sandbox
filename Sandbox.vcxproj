@@ -36,11 +36,12 @@
     <ClInclude Include="src\flow\FlowFieldContext.h" />
     <ClInclude Include="src\flow\Grid.h" />
     <ClInclude Include="src\flow\IsometricCamera.h" />
-    <ClInclude Include="src\flow\ParticleManager.h" />
     <ClInclude Include="src\flow\Towers.h" />
     <ClInclude Include="src\GameContext.h" />
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\gpuparticles\ParticleEffect.h" />
+    <ClInclude Include="src\gpuparticles\ParticleEmitter.h" />
+    <ClInclude Include="src\gpuparticles\ParticleManager.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\InstanceCommon.h" />
     <ClInclude Include="src\lib\DataArray.h" />
@@ -63,10 +64,11 @@
     <ClCompile Include="src\flow\FlowField.cpp" />
     <ClCompile Include="src\flow\MainGameScene.cpp" />
     <ClCompile Include="src\flow\IsometricCamera.cpp" />
-    <ClCompile Include="src\flow\ParticleManager.cpp" />
     <ClCompile Include="src\flow\Towers.cpp" />
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\gpuparticles\ParticleEffect.cpp" />
+    <ClCompile Include="src\gpuparticles\ParticleEmitter.cpp" />
+    <ClCompile Include="src\gpuparticles\ParticleManager.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Material.cpp" />

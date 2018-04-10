@@ -1,7 +1,7 @@
 #pragma once
 #include "flow\FlowFieldContext.h"
 #include "flow\Towers.h"
-#include "flow\ParticleManager.h"
+#include "gpuparticles\ParticleManager.h"
 
 class AmbientLightningMaterial;
 class InstancedAmbientLightningMaterial;

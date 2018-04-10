@@ -1,38 +1,10 @@
 #pragma once
-#include "..\gpuparticles\GPUParticlesystem.h"
+#include "GPUParticlesystem.h"
+#include "ParticleEffect.h"
 #include <vector>
-#include "..\gpuparticles\ParticleEffect.h"
 
 
-class ParticleEmitter {
 
-public:
-	ParticleEmitter() {}
-	virtual ~ParticleEmitter() {}
-	virtual ds::vec3 getPosition(int index, int total) = 0;
-};
-
-struct RingEmitterSettings {
-	float radius;
-};
-
-class RingEmitter : public ParticleEmitter {
-
-public:
-	RingEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
-	virtual ds::vec3 getPosition(int index, int total);
-private:
-	const RingEmitterSettings* _settings;
-};
-
-class SphereEmitter : public ParticleEmitter {
-
-public:
-	SphereEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
-	virtual ds::vec3 getPosition(int index, int total);
-private:
-	const RingEmitterSettings* _settings;
-};
 
 class ParticleManager {
 
@@ -54,5 +26,7 @@ private:
 	ParticleEmitterDescriptor _descriptors[32];
 	std::vector<ParticleEmitter*> _emitters;
 	RingEmitterSettings _ringEmitterSettings;
+	ConeEmitterSettings _coneEmitterSettings;
+	std::vector<ParticleEffect*> _effects;
 };
 
