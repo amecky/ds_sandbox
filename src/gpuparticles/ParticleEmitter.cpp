@@ -2,24 +2,28 @@
 
 const char* EmitterType::Names[] = { "Sphere", "Ring", "Box", "Cone", "Line" };
 
-ds::vec3 RingEmitter::getPosition(int index, int total) {
+ds::vec3 emittRing(ds::MemoryBuffer* buffer, ID id, int index, int total) {
+	RingEmitterSettings settings;
+	buffer->get(id, &settings, sizeof(RingEmitterSettings));
 	float step = ds::TWO_PI / total;
 	float angle = step * index;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
-	float x = cos(angle) * _settings->radius;
+	float x = cos(angle) * settings.radius;
 	float y = 0.0f;
-	float z = sin(angle) * _settings->radius;
+	float z = sin(angle) * settings.radius;
 	return ds::vec3(x, y, z);
 }
 
-ds::vec3 SphereEmitter::getPosition(int index, int total) {
+ds::vec3 emittSphere(ds::MemoryBuffer* buffer, ID id, int index, int total) {
+	RingEmitterSettings settings;
+	buffer->get(id, &settings, sizeof(RingEmitterSettings));
 	int rings = 8;
 	int sectors = total / rings;
 	float s = ds::PI / rings;
 	float t = ds::TWO_PI / sectors;
 	int ring = index % sectors;
 	int sector = index / sectors;
-	float x = cos(ring * t) * sin(sector * s) * _settings->radius;
-	float z = sin(ring * t) * sin(sector * s) * _settings->radius;
-	float y = cos(sector * s) * _settings->radius;
+	float x = cos(ring * t) * sin(sector * s) * settings.radius;
+	float z = sin(ring * t) * sin(sector * s) * settings.radius;
+	float y = cos(sector * s) * settings.radius;
 	return ds::vec3(x, y, z);
 }

@@ -41,10 +41,12 @@
     <ClInclude Include="src\gpuparticles\GPUParticlesystem.h" />
     <ClInclude Include="src\gpuparticles\ParticleEffect.h" />
     <ClInclude Include="src\gpuparticles\ParticleEmitter.h" />
+    <ClInclude Include="src\gpuparticles\ParticleGUI.h" />
     <ClInclude Include="src\gpuparticles\ParticleManager.h" />
     <ClInclude Include="src\instancing\Billboards.h" />
     <ClInclude Include="src\instancing\InstanceCommon.h" />
     <ClInclude Include="src\lib\DataArray.h" />
+    <ClInclude Include="src\lib\MemoryBuffer.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\PerfPanel.h" />
@@ -68,8 +70,10 @@
     <ClCompile Include="src\gpuparticles\GPUParticlesystem.cpp" />
     <ClCompile Include="src\gpuparticles\ParticleEffect.cpp" />
     <ClCompile Include="src\gpuparticles\ParticleEmitter.cpp" />
+    <ClCompile Include="src\gpuparticles\ParticleGUI.cpp" />
     <ClCompile Include="src\gpuparticles\ParticleManager.cpp" />
     <ClCompile Include="src\instancing\Billboards.cpp" />
+    <ClCompile Include="src\lib\MemoryBuffer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />

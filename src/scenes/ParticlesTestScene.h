@@ -12,6 +12,7 @@
 #include <vector>
 #include "..\flow\FlowFieldContext.h"
 #include <ds_base_app.h>
+#include "..\gpuparticles\ParticleEmitter.h"
 
 struct GameContext;
 
@@ -34,4 +35,6 @@ private:
 	InstancedRenderItem* _gridItem;
 	ds::vec3 _dbgCameraRotation;
 	int _dbgNumParticles;
+	ID particleEffect;
+	RingEmitterSettings ringSettings;
 };

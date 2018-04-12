@@ -17,6 +17,13 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	
 	_dbgCameraRotation = ds::vec3(0.0f);
 	_dbgNumParticles = 32;
+	ringSettings.radius = 1.0f;
+	particleEffect = _gameContext->particles->createEffect();
+	ID emitter = _gameContext->particles->createEmitter(EmitterType::RING, &ringSettings, sizeof(RingEmitterSettings));
+	_gameContext->particles->attachEmitter(particleEffect, emitter, 0);
+	ringSettings.radius = 0.4f;
+	ID emitter2 = _gameContext->particles->createEmitter(EmitterType::SPHERE, &ringSettings, sizeof(RingEmitterSettings));
+	_gameContext->particles->attachEmitter(particleEffect, emitter2, 0);
 }
 
 ParticlesTestScene::~ParticlesTestScene() {
@@ -125,7 +132,8 @@ void ParticlesTestScene::showGUI() {
 		*/
 		gui::Input("Num", &_dbgNumParticles);
 		if (gui::Button("Particles")) {
-			_gameContext->particles->emittParticles(ds::vec3(-0.5f,1.1f,-0.5f), 0.0f, _dbgNumParticles, 0);
+			//_gameContext->particles->emittParticles(ds::vec3(-0.5f,1.1f,-0.5f), 0.0f, _dbgNumParticles, 0);
+			_gameContext->particles->emittParticles(particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
 		}
 		_gameContext->particles->showGUI(0);
 	}

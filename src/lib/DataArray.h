@@ -34,7 +34,7 @@ namespace ds {
 		unsigned short free_dequeue;
 		//bool _constructor;
 		//bool _destructor;
-
+		unsigned short maxSize = MAX_FLOW_OBJECTS;
 		typedef U type;
 		type dataType;
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <diesel.h>
+#include "..\lib\MemoryBuffer.h"
 
 struct EmitterType {
 
@@ -13,34 +14,14 @@ struct EmitterType {
 	const static char* Names[];
 };
 
-class ParticleEmitter {
+typedef ds::vec3(*ParticleEmitterFunc)(ds::MemoryBuffer*, ID, int, int);
 
-public:
-	ParticleEmitter() {}
-	virtual ~ParticleEmitter() {}
-	virtual ds::vec3 getPosition(int index, int total) = 0;
-};
+ds::vec3 emittRing(ds::MemoryBuffer* buffer, ID id, int index, int total);
+
+ds::vec3 emittSphere(ds::MemoryBuffer* buffer, ID id, int index, int total);
 
 struct RingEmitterSettings {
 	float radius;
-};
-
-class RingEmitter : public ParticleEmitter {
-
-public:
-	RingEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
-	virtual ds::vec3 getPosition(int index, int total);
-private:
-	const RingEmitterSettings* _settings;
-};
-
-class SphereEmitter : public ParticleEmitter {
-
-public:
-	SphereEmitter(const RingEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
-	virtual ds::vec3 getPosition(int index, int total);
-private:
-	const RingEmitterSettings* _settings;
 };
 
 struct ConeEmitterSettings {
@@ -49,11 +30,3 @@ struct ConeEmitterSettings {
 	float angle;
 };
 
-class ConeEmitter : public ParticleEmitter {
-
-public:
-	ConeEmitter(const ConeEmitterSettings* settings) : ParticleEmitter(), _settings(settings) {}
-	virtual ds::vec3 getPosition(int index, int total);
-private:
-	const ConeEmitterSettings* _settings;
-};

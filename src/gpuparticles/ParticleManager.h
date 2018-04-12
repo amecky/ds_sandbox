@@ -2,8 +2,14 @@
 #include "GPUParticlesystem.h"
 #include "ParticleEffect.h"
 #include <vector>
+#include "..\lib\DataArray.h"
+#include "..\lib\MemoryBuffer.h"
 
-
+struct ParticleEmitterDefinition {
+	ID id;
+	EmitterType::Enum type;
+	ID emitterID;
+};
 
 
 class ParticleManager {
@@ -20,13 +26,30 @@ public:
 	void showGUI(int descriptorIndex);
 	void saveDescriptors(const char* fileName);
 	void loadDescriptors(const char* fileName);
+
+	
+	ID createEffect();
+	ID createEmitter(EmitterType::Enum type);
+	ID createEmitter(EmitterType::Enum type, void* data, size_t size);
+	void attachEmitter(ID effectID, ID emitterID, int descriptorIndex);
+
+	void emittParticles(ID effectID, const ds::vec3& pos, int num);
+
+	bool containsDefinition(ID id) const {
+		return _emitterDefinitions.contains(id);
+	}
+	const ParticleEmitterDefinition& getDefinition(ID id) const {
+		return _emitterDefinitions.get(id);
+	}
+	bool getEmitterSettings(ID id, void* data, size_t size);
+	void setEmitterSettings(ID id, void* data, size_t size);
 private:
 	void buildEmitterDescriptors();
 	GPUParticlesystem* _particleSystem;
 	ParticleEmitterDescriptor _descriptors[32];
-	std::vector<ParticleEmitter*> _emitters;
-	RingEmitterSettings _ringEmitterSettings;
-	ConeEmitterSettings _coneEmitterSettings;
-	std::vector<ParticleEffect*> _effects;
+	ds::DataArray<ParticleEffect> _effects;
+	ParticleEmitterFunc _emitterFunctions[10];
+	ds::MemoryBuffer _emitterData;
+	ds::DataArray<ParticleEmitterDefinition> _emitterDefinitions;
 };
 
