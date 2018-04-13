@@ -274,7 +274,7 @@ void MainGameScene::update(float dt) {
 	}
 	//_towers.rotateTowers(ip);
 
-	_gameContext->particles->tick(dt);
+	particles::tick(_gameContext->particleContext, dt);
 }
 
 // ----------------------------------------------------
@@ -313,7 +313,7 @@ void MainGameScene::render() {
 
 	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 	// towers
-	_gameContext->particles->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
+	particles::render(_gameContext->particleContext, _basicPass, _camera.viewProjectionMatrix, _camera.position);
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 }
 
@@ -362,7 +362,7 @@ void MainGameScene::showGUI() {
 		if (_selectedTower != -1) {
 			const Tower& t = _gameContext->towers.get(_selectedTower);
 			if (gui::Button("Particles")) {
-				_gameContext->particles->emittParticles(ds::vec3(t.position.x,0.4f, t.position.z), t.direction, 8);
+				//_gameContext->particles->emittParticles(ds::vec3(t.position.x,0.4f, t.position.z), t.direction, 8);
 			}
 		}
 	}

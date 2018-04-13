@@ -7,11 +7,9 @@ class AmbientLightningMaterial;
 class InstancedAmbientLightningMaterial;
 
 struct GameContext {
-
 	Towers towers;
 	AmbientLightningMaterial* ambientMaterial;
 	InstancedAmbientLightningMaterial* instancedAmbientmaterial;
-	ParticleManager* particles;
+	ParticleSystemContext* particleContext;
 	RID particlePass;
-	ParticleEmitterDescriptor emitterDescriptors[32];
 };

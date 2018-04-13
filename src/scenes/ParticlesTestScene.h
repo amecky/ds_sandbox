@@ -37,4 +37,5 @@ private:
 	int _dbgNumParticles;
 	ID particleEffect;
 	RingEmitterSettings ringSettings;
+	ID _selectedEmitterDescriptor;
 };

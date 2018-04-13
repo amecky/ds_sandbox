@@ -16,7 +16,8 @@
 #include <ds_base_app.h>
 #define DS_TWEENING_IMPLEMENTATION
 #include <ds_tweening.h>
-
+#define DS_STRING_IMPLEMENTATION
+#include <ds_string.h>
 extern ds::BaseApp* app;
 
 

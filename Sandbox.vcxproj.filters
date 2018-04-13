@@ -136,6 +136,9 @@
     <ClInclude Include="src\gpuparticles\ParticleGUI.h">
       <Filter>gpuparticles</Filter>
     </ClInclude>
+    <ClInclude Include="ext\ds_string.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />

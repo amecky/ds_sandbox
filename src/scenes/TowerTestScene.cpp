@@ -107,7 +107,7 @@ void TowerTestScene::update(float dt) {
 
 	_gameContext->towers.rotateTowers(ip);
 
-	_gameContext->particles->tick(dt);
+	particles::tick(_gameContext->particleContext, dt);
 	
 	for (int i = 0; i < _events->num(); ++i) {
 		if (_events->getType(i) == 200) {
@@ -115,7 +115,7 @@ void TowerTestScene::update(float dt) {
 			if (_events->get(i, &event, sizeof(FireEvent))) {
 				//_gameContext->particles->emittLine(event.pos, ip);
 				ds::vec3 diff = normalize(ip - event.pos);
-				_gameContext->particles->emittParticles(event.pos, diff, 1);
+				//_gameContext->particles->emittParticles(event.pos, diff, 1);
 			}
 			else {
 				DBG_LOG("received invalid event");
@@ -141,7 +141,7 @@ void TowerTestScene::render() {
 
 	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
 
-	_gameContext->particles->render(_basicPass, _camera.viewProjectionMatrix, _camera.position);
+	particles::render(_gameContext->particleContext, _basicPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 // ----------------------------------------------------
@@ -176,9 +176,9 @@ void TowerTestScene::showGUI() {
 		const Tower& t = _gameContext->towers.get(0);
 		if (gui::Button("Particles")) {
 			float dir = _gameContext->towers.getDirection(t.id);
-			_gameContext->particles->emittParticles(ds::vec3(t.position.x, 0.4f, t.position.z), dir, 8, 0);
+			//_gameContext->particles->emittParticles(ds::vec3(t.position.x, 0.4f, t.position.z), dir, 8, 0);
 		}
-		_gameContext->particles->showGUI(0);
+		//_gameContext->particles->showGUI(0);
 	}
 	gui::end();
 }

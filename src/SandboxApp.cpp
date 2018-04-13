@@ -21,7 +21,8 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 SandboxApp::~SandboxApp() {
 	delete _flowFieldScene;
 	delete _towerTestScene;
-	delete _gameContext->particles;
+	delete _gameContext->particleContext->particleSystem;
+	delete _gameContext->particleContext;
 	delete _gameContext->ambientMaterial;
 	delete _gameContext->instancedAmbientmaterial;
 	delete _gameContext;
@@ -44,7 +45,7 @@ void SandboxApp::initialize() {
 	_gameContext->instancedAmbientmaterial = new InstancedAmbientLightningMaterial;
 	_gameContext->towers.init(_gameContext->ambientMaterial);
 	RID textureID = loadImageFromFile("content\\TextureArray.png");
-	_gameContext->particles = new ParticleManager(textureID);
+	_gameContext->particleContext = particles::create_context(textureID);
 	_flowFieldScene = new MainGameScene(_gameContext);
 	_towerTestScene = new TowerTestScene(_gameContext);
 	_particlesTestScene = new ParticlesTestScene(_gameContext);

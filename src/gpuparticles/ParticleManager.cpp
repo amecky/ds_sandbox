@@ -2,8 +2,119 @@
 #include <ds_imgui.h>
 #include "..\utils\common_math.h"
 
+namespace particles {
+
+	ParticleSystemContext* create_context(RID textureID) {
+		ParticleSystemContext* context = new ParticleSystemContext;
+		context->emitterFunctions[0] = emittSphere;
+		context->emitterFunctions[1] = emittRing;
+		context->emitterFunctions[2] = emittRing; // BOX
+		context->emitterFunctions[3] = emittRing; // CONE
+		context->emitterFunctions[4] = emittRing; // LINE
+
+		ParticlesystemDescriptor descriptor;
+		descriptor.maxParticles = 16384;
+		descriptor.particleDimension = ds::vec2(20, 20);
+		//float u1 = 233.0f / 1024.0f;
+		//float v1 = 7.0f / 1024.0f;
+		// plain quad
+		float u1 = 200.0f / 1024.0f;
+		float v1 = 0.0f / 1024.0f;
+		float u2 = u1 + 20.0f / 1024.0f;
+		float v2 = v1 + 20.0f / 1024.0f;
+		descriptor.textureRect = ds::vec4(u1, v1, u2, v2);
+		// load image using stb_image
+		descriptor.texture = textureID;
+		context->particleSystem = new GPUParticlesystem(descriptor);
+		return context;
+	}
+
+	void tick(ParticleSystemContext* context, float dt) {
+		context->particleSystem->tick(dt);
+	}
+
+	void render(ParticleSystemContext* context, RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::vec3& eyePos) {
+		context->particleSystem->render(renderPass, viewProjectionMatrix, eyePos);
+	}
+
+	ID createEffect(ParticleSystemContext* context, const char* name) {
+		ID id = context->effects.add();
+		ParticleEffect& effect = context->effects.get(id);
+		effect.name.append(name);
+		return id;
+	}
+
+	ID createEmitter(ParticleSystemContext* context, EmitterType::Enum type, void* data, size_t size) {
+		ID id = context->emitterDefinitions.add();
+		ParticleEmitterDefinition& def = context->emitterDefinitions.get(id);
+		def.emitterID = context->emitterData.add(data, size);
+		def.type = type;
+		return id;
+	}
+
+	void attachEmitter(ParticleSystemContext* context, ID effectID, ID emitterID, ID descriptorId) {
+		ParticleEffect& effect = context->effects.get(effectID);
+		effect.descriptionIDs[effect.numEmitters] = descriptorId;
+		effect.emitterIDs[effect.numEmitters++] = emitterID;
+	}
+
+	void emitt(ParticleSystemContext* context, ID effectID, const ds::vec3& pos, int num) {
+		const ParticleEffect& effect = context->effects.get(effectID);
+		for (int n = 0; n < effect.numEmitters; ++n) {
+			const ParticleEmitterDescriptor& emitterDescriptor = context->descriptors.get(effect.descriptionIDs[n]);
+			const ParticleEmitterDefinition& def = context->emitterDefinitions.get(effect.emitterIDs[n]);
+			ParticleDescriptor descriptor;
+			float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
+			float step = ds::TWO_PI / num;
+			for (int i = 0; i < num; ++i) {
+				ds::vec3 p = (context->emitterFunctions[def.type])(&context->emitterData, def.emitterID, i, num) + pos;// _emitters[1]->getPosition(i, num) + pos;
+				float angle = step * i;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
+									   //float x = cos(angle) * r + pos.x;
+									   //float y = pos.y;
+									   //float z = sin(angle) * r + pos.z;
+				if (emitterDescriptor.alignParticle == 1) {
+					descriptor.rotation = angle;
+				}
+				else {
+					descriptor.rotation = 0.0f;
+				}
+				descriptor.rotationSpeed = ds::random(emitterDescriptor.rotationSpeed.x, emitterDescriptor.rotationSpeed.y);
+				descriptor.ttl = ds::random(emitterDescriptor.ttl.x, emitterDescriptor.ttl.y);
+				float vel = ds::random(emitterDescriptor.velocity.x, emitterDescriptor.velocity.y);
+				descriptor.velocity = ds::vec3(cos(angle) * vel, 0.0f, sin(angle) * vel);
+				descriptor.startColor = emitterDescriptor.startColor;
+				descriptor.endColor = emitterDescriptor.endColor;
+				float sx = ds::random(emitterDescriptor.scale.x - emitterDescriptor.scaleVariance.x, emitterDescriptor.scale.x + emitterDescriptor.scaleVariance.x);
+				float sy = ds::random(emitterDescriptor.scale.y - emitterDescriptor.scaleVariance.y, emitterDescriptor.scale.y + emitterDescriptor.scaleVariance.y);
+				descriptor.minScale = ds::vec2(sx, sy);
+				descriptor.maxScale = emitterDescriptor.growth;
+				descriptor.acceleration = ds::vec3(0.0f);
+				//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
+				descriptor.worldWatrix = ds::matIdentity();
+				descriptor.acceleration = ds::vec3(0.0f, 0.0f, 0.0f);
+				context->particleSystem->add(p, descriptor);
+			}
+		}
+	}
+
+}
+
 ParticleManager::ParticleManager(RID textureID) {
 	
+	_context = new ParticleSystemContext;
+	/*
+	SPHERE,
+	RING,
+	BOX,
+	CONE,
+	LINE
+	*/
+	_context->emitterFunctions[0] = emittSphere;
+	_context->emitterFunctions[1] = emittRing;
+	_context->emitterFunctions[2] = emittRing;
+	_context->emitterFunctions[3] = emittRing;
+	_context->emitterFunctions[4] = emittRing;
+
 	ParticlesystemDescriptor descriptor;
 	descriptor.maxParticles = 16384;
 	descriptor.particleDimension = ds::vec2(20, 20);
@@ -21,59 +132,44 @@ ParticleManager::ParticleManager(RID textureID) {
 
 	// load image using stb_image
 	descriptor.texture = textureID;
-	_particleSystem = new GPUParticlesystem(descriptor);
+	_context->particleSystem = new GPUParticlesystem(descriptor);
 
 	buildEmitterDescriptors();
 
 	loadDescriptors("content\\particle_descriptors.bin");
-	/*
-	SPHERE,
-		RING,
-		BOX,
-		CONE,
-		LINE
-	*/
-	_emitterFunctions[0] = emittSphere;
-	_emitterFunctions[1] = emittRing;
-	_emitterFunctions[2] = emittRing;
-	_emitterFunctions[3] = emittRing;
-	_emitterFunctions[4] = emittRing;
-
-	//_emitters.push_back(new RingEmitter(&_emitterData));
-	//_emitters.push_back(new SphereEmitter(&_emitterData));
-	//_emitters.push_back(new ConeEmitter(&_emitterData));
+	
 }
 
 ParticleManager::~ParticleManager() {
-	//for (size_t i = 0; i < _emitters.size(); ++i) {
-		//delete _emitters[i];
-	//}
-	delete _particleSystem;
+	delete _context->particleSystem;
+	delete _context;
 }
 
 
 void ParticleManager::tick(float dt) {
-	_particleSystem->tick(dt);
+	_context->particleSystem->tick(dt);
 }
 
 void ParticleManager::render(RID renderPass, const ds::matrix & viewProjectionMatrix, const ds::vec3 & eyePos) {
-	_particleSystem->render(renderPass, viewProjectionMatrix, eyePos);
+	_context->particleSystem->render(renderPass, viewProjectionMatrix, eyePos);
 }
 
 void ParticleManager::buildEmitterDescriptors() {
-	_descriptors[0].radius = ds::vec2(0.15f);
-	_descriptors[0].alignParticle = 1;
-	_descriptors[0].rotationSpeed = ds::vec2(0.0f);
-	_descriptors[0].ttl = ds::vec2(0.5f, 0.6f);
-	_descriptors[0].startColor = ds::Color(255, 255, 255, 255);
-	_descriptors[0].endColor = ds::Color(255, 255, 0, 192);
-	_descriptors[0].scale = ds::vec2(0.35f);
-	_descriptors[0].scaleVariance = ds::vec2(0.02f);
-	_descriptors[0].growth = ds::vec2(0.0f, 0.8f);
-	_descriptors[0].angleVariance = ds::PI * 0.1f;
-	_descriptors[0].velocity = ds::vec2(2.0f, 4.0f);
+	/*
+	_context->descriptors[0].radius = ds::vec2(0.15f);
+	_context->descriptors[0].alignParticle = 1;
+	_context->descriptors[0].rotationSpeed = ds::vec2(0.0f);
+	_context->descriptors[0].ttl = ds::vec2(0.5f, 0.6f);
+	_context->descriptors[0].startColor = ds::Color(255, 255, 255, 255);
+	_context->descriptors[0].endColor = ds::Color(255, 255, 0, 192);
+	_context->descriptors[0].scale = ds::vec2(0.35f);
+	_context->descriptors[0].scaleVariance = ds::vec2(0.02f);
+	_context->descriptors[0].growth = ds::vec2(0.0f, 0.8f);
+	_context->descriptors[0].angleVariance = ds::PI * 0.1f;
+	_context->descriptors[0].velocity = ds::vec2(2.0f, 4.0f);
+	*/
 }
-
+/*
 void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int num) {
 	ds::vec2 radius = ds::vec2(0.15f);
 	int alignParticle = 1;
@@ -106,7 +202,7 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		descriptor.maxScale = ds::vec2(sx, sy) + growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
-		_particleSystem->add(ds::vec3(x, y, z), descriptor);
+		_context->particleSystem->add(ds::vec3(x, y, z), descriptor);
 	}
 }
 
@@ -142,7 +238,7 @@ void ParticleManager::emittParticles(const ds::vec3& pos, const ds::vec3& direct
 		descriptor.maxScale = ds::vec2(sx, sy) + growth;
 		descriptor.acceleration = ds::vec3(0.0f);
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
-		_particleSystem->add(pos, descriptor);
+		_context->particleSystem->add(pos, descriptor);
 	}
 }
 
@@ -169,11 +265,11 @@ void ParticleManager::emittLine(const ds::vec3 & start, const ds::vec3 & end) {
 	descriptor.minScale = ds::vec2(sx, sy);
 	descriptor.maxScale = ds::vec2(0.0f);
 	descriptor.acceleration = ds::vec3(0.0f);
-	_particleSystem->add(center, descriptor);
+	_context->particleSystem->add(center, descriptor);
 }
 
 void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int num, int descriptorIndex) {
-	const ParticleEmitterDescriptor& emitterDescriptor = _descriptors[descriptorIndex];
+	const ParticleEmitterDescriptor& emitterDescriptor = _context->descriptors[descriptorIndex];
 	ParticleDescriptor descriptor;
 	float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
 	float step = ds::TWO_PI / num;
@@ -183,7 +279,7 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 	ringEmitterSettings.radius = r;
 
 	for (int i = 0; i < num; ++i) {
-		ds::vec3 p = (_emitterFunctions[0])(&_emitterData, 0, i, num) + pos;// _emitters[1]->getPosition(i, num) + pos;
+		ds::vec3 p = (_context->emitterFunctions[0])(&_context->emitterData, 0, i, num) + pos;// _emitters[1]->getPosition(i, num) + pos;
 		float angle = step * i;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
 		//float x = cos(angle) * r + pos.x;
 		//float y = pos.y;
@@ -208,20 +304,20 @@ void ParticleManager::emittParticles(const ds::vec3& pos, float direction, int n
 		//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
 		descriptor.worldWatrix = ds::matIdentity();
 		descriptor.acceleration = ds::vec3(0.0f,0.0f,0.0f);
-		_particleSystem->add(p, descriptor);
+		_context->particleSystem->add(p, descriptor);
 	}
 }
-
+*/
 void ParticleManager::emittParticles(ID effectID, const ds::vec3& pos, int num) {
-	const ParticleEffect& effect = _effects.get(effectID);
+	const ParticleEffect& effect = _context->effects.get(effectID);
 	for (int n = 0; n < effect.numEmitters; ++n) {
-		const ParticleEmitterDescriptor& emitterDescriptor = _descriptors[effect.descriptionIDs[n]];
-		const ParticleEmitterDefinition& def = _emitterDefinitions.get(effect.emitterIDs[n]);
+		const ParticleEmitterDescriptor& emitterDescriptor = _context->descriptors.get(effect.descriptionIDs[n]);
+		const ParticleEmitterDefinition& def = _context->emitterDefinitions.get(effect.emitterIDs[n]);
 		ParticleDescriptor descriptor;
 		float r = ds::random(emitterDescriptor.radius.x, emitterDescriptor.radius.y);
 		float step = ds::TWO_PI / num;
 		for (int i = 0; i < num; ++i) {
-			ds::vec3 p = (_emitterFunctions[def.type])(&_emitterData, def.emitterID, i, num) + pos;// _emitters[1]->getPosition(i, num) + pos;
+			ds::vec3 p = (_context->emitterFunctions[def.type])(&_context->emitterData, def.emitterID, i, num) + pos;// _emitters[1]->getPosition(i, num) + pos;
 			float angle = step * i;// ds::random(direction - emitterDescriptor.angleVariance, direction + emitterDescriptor.angleVariance);
 								   //float x = cos(angle) * r + pos.x;
 								   //float y = pos.y;
@@ -246,26 +342,29 @@ void ParticleManager::emittParticles(ID effectID, const ds::vec3& pos, int num) 
 			//_particleDescriptor.acceleration = ds::vec3(cos(angle) * acc, sin(angle) * acc, 0.0f);
 			descriptor.worldWatrix = ds::matIdentity();
 			descriptor.acceleration = ds::vec3(0.0f, 0.0f, 0.0f);
-			_particleSystem->add(p, descriptor);
+			_context->particleSystem->add(p, descriptor);
 		}
 	}
 }
 
-ID ParticleManager::createEffect() {
-	return _effects.add();
+ID ParticleManager::createEffect(const char* name) {
+	ID id = _context->effects.add();
+	ParticleEffect& effect = _context->effects.get(id);
+	effect.name.append(name);
+	return id;
 }
 
 ID ParticleManager::createEmitter(EmitterType::Enum type, void* data, size_t size) {
-	ID id = _emitterDefinitions.add();
-	ParticleEmitterDefinition& def = _emitterDefinitions.get(id);
-	def.emitterID = _emitterData.add(data, size);
+	ID id = _context->emitterDefinitions.add();
+	ParticleEmitterDefinition& def = _context->emitterDefinitions.get(id);
+	def.emitterID = _context->emitterData.add(data, size);
 	def.type = type;
 	return id;
 }
 
-void ParticleManager::attachEmitter(ID effectID, ID emitterID, int descriptorIndex) {
-	ParticleEffect& effect = _effects.get(effectID);
-	effect.descriptionIDs[effect.numEmitters] = descriptorIndex;
+void ParticleManager::attachEmitter(ID effectID, ID emitterID, ID descriptorId) {
+	ParticleEffect& effect = _context->effects.get(effectID);
+	effect.descriptionIDs[effect.numEmitters] = descriptorId;
 	effect.emitterIDs[effect.numEmitters++] = emitterID;
 }
 
@@ -274,42 +373,43 @@ ID ParticleManager::createEmitter(EmitterType::Enum type) {
 	if (type == EmitterType::RING || type == EmitterType::SPHERE) {
 		RingEmitterSettings settings;
 		settings.radius = 1.0f;
-		settingsId = _emitterData.add(&settings, sizeof(RingEmitterSettings));
+		settingsId = _context->emitterData.add(&settings, sizeof(RingEmitterSettings));
 	}
 	else if (type == EmitterType::CONE) {
 		ConeEmitterSettings settings;
 		settings.radius = 1.0f;
 		settings.angle = ds::TWO_PI;
 		settings.arc = ds::PI;
-		settingsId = _emitterData.add(&settings, sizeof(ConeEmitterSettings));
+		settingsId = _context->emitterData.add(&settings, sizeof(ConeEmitterSettings));
 	}
-	ID id = _emitterDefinitions.add();
-	ParticleEmitterDefinition& def = _emitterDefinitions.get(id);
+	ID id = _context->emitterDefinitions.add();
+	ParticleEmitterDefinition& def = _context->emitterDefinitions.get(id);
 	def.type = type;
 	return id;
 }
 
 bool ParticleManager::getEmitterSettings(ID id, void* data, size_t size) {
-	if (_emitterDefinitions.contains(id)) {
-		ParticleEmitterDefinition& def = _emitterDefinitions.get(id);
-		return _emitterData.get(0, data, size);
+	if (_context->emitterDefinitions.contains(id)) {
+		ParticleEmitterDefinition& def = _context->emitterDefinitions.get(id);
+		return _context->emitterData.get(0, data, size);
 	}
 	return false;
 }
 
 void ParticleManager::setEmitterSettings(ID id, void* data, size_t size) {
-	if (_emitterDefinitions.contains(id)) {
-		ParticleEmitterDefinition& def = _emitterDefinitions.get(id);
-		_emitterData.set(0, data, size);
+	if (_context->emitterDefinitions.contains(id)) {
+		ParticleEmitterDefinition& def = _context->emitterDefinitions.get(id);
+		_context->emitterData.set(0, data, size);
 	}
 }
 
 void ParticleManager::showGUI(int descriptorIndex) {
 	int state = 1;
 	if (gui::begin("Debug", &state)) {
-		gui::Value("Particles", _particleSystem->countAlive());
+		gui::Value("Particles", _context->particleSystem->countAlive());
+		/*
 		if (descriptorIndex != -1) {
-			ParticleEmitterDescriptor& emitterDescriptor = _descriptors[descriptorIndex];
+			ParticleEmitterDescriptor& emitterDescriptor = _context->descriptors[descriptorIndex];
 			gui::Input("Radius min/max",&emitterDescriptor.radius);
 			gui::Input("Vel min/max", &emitterDescriptor.velocity);
 			gui::Input("align", &emitterDescriptor.alignParticle);
@@ -330,6 +430,7 @@ void ParticleManager::showGUI(int descriptorIndex) {
 			saveDescriptors("content\\particle_descriptors.bin");
 		}
 		gui::endGroup();
+		*/
 	}
 }
 
@@ -337,7 +438,7 @@ void ParticleManager::saveDescriptors(const char * fileName) {
 	FILE* fp = fopen(fileName, "wb");
 	if (fp) {
 		for (int i = 0; i < 32; ++i) {
-			fwrite(&_descriptors[i], sizeof(ParticleEmitterDescriptor), 1, fp);
+			//fwrite(&_context->descriptors[i], sizeof(ParticleEmitterDescriptor), 1, fp);
 		}
 		fclose(fp);
 	}
@@ -347,7 +448,7 @@ void ParticleManager::loadDescriptors(const char * fileName) {
 	FILE* fp = fopen(fileName, "rb");
 	if (fp) {
 		for (int i = 0; i < 32; ++i) {
-			fread(&_descriptors[i], sizeof(ParticleEmitterDescriptor), 1, fp);
+			//fread(&_context->descriptors[i], sizeof(ParticleEmitterDescriptor), 1, fp);
 		}
 		fclose(fp);
 	}

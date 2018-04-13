@@ -3,6 +3,7 @@
 #include "..\utils\common_math.h"
 #include "..\GameContext.h"
 #include "..\gpuparticles\ParticleManager.h"
+#include "..\gpuparticles\ParticleGUI.h"
 
 const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
 
@@ -18,12 +19,30 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	_dbgCameraRotation = ds::vec3(0.0f);
 	_dbgNumParticles = 32;
 	ringSettings.radius = 1.0f;
-	particleEffect = _gameContext->particles->createEffect();
-	ID emitter = _gameContext->particles->createEmitter(EmitterType::RING, &ringSettings, sizeof(RingEmitterSettings));
-	_gameContext->particles->attachEmitter(particleEffect, emitter, 0);
+
+	ID descID = _gameContext->particleContext->descriptors.add();
+	ParticleEmitterDescriptor& descriptor = _gameContext->particleContext->descriptors.get(descID);
+	descriptor.radius = ds::vec2(0.15f);
+	descriptor.alignParticle = 1;
+	descriptor.rotationSpeed = ds::vec2(0.0f);
+	descriptor.ttl = ds::vec2(0.5f, 0.6f);
+	descriptor.startColor = ds::Color(255, 255, 255, 255);
+	descriptor.endColor = ds::Color(255, 255, 0, 192);
+	descriptor.scale = ds::vec2(0.35f);
+	descriptor.scaleVariance = ds::vec2(0.02f);
+	descriptor.growth = ds::vec2(0.0f, 0.8f);
+	descriptor.angleVariance = ds::PI * 0.1f;
+	descriptor.velocity = ds::vec2(2.0f, 4.0f);
+
+
+	particleEffect = particles::createEffect(_gameContext->particleContext, "Test");
+	ID emitter = particles::createEmitter(_gameContext->particleContext,EmitterType::RING, &ringSettings, sizeof(RingEmitterSettings));
+	particles::attachEmitter(_gameContext->particleContext,particleEffect, emitter, descID);
 	ringSettings.radius = 0.4f;
-	ID emitter2 = _gameContext->particles->createEmitter(EmitterType::SPHERE, &ringSettings, sizeof(RingEmitterSettings));
-	_gameContext->particles->attachEmitter(particleEffect, emitter2, 0);
+	ID emitter2 = particles::createEmitter(_gameContext->particleContext, EmitterType::SPHERE, &ringSettings, sizeof(RingEmitterSettings));
+	particles::attachEmitter(_gameContext->particleContext, particleEffect, emitter2, descID);
+
+	_selectedEmitterDescriptor = descID;
 }
 
 ParticlesTestScene::~ParticlesTestScene() {
@@ -83,7 +102,7 @@ void ParticlesTestScene::update(float dt) {
 	r.setOrigin(_camera.position);
 	_cursorPos = _grid->plane.getIntersection(r);
 
-	_gameContext->particles->tick(dt);
+	particles::tick(_gameContext->particleContext, dt);
 	
 }
 
@@ -101,7 +120,7 @@ void ParticlesTestScene::render() {
 
 	//_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 
-	_gameContext->particles->render(_noDepthPass, _camera.viewProjectionMatrix, _camera.position);
+	particles::render(_gameContext->particleContext, _noDepthPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 // ----------------------------------------------------
@@ -115,6 +134,8 @@ void ParticlesTestScene::showGUI() {
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");	
+
+		particles::editParticleEmitterDescription(_gameContext->particleContext, _selectedEmitterDescriptor);
 		/*
 		bool changed = false;
 		if (gui::SliderAngle("Roll", &_dbgCameraRotation.x)) {
@@ -133,9 +154,9 @@ void ParticlesTestScene::showGUI() {
 		gui::Input("Num", &_dbgNumParticles);
 		if (gui::Button("Particles")) {
 			//_gameContext->particles->emittParticles(ds::vec3(-0.5f,1.1f,-0.5f), 0.0f, _dbgNumParticles, 0);
-			_gameContext->particles->emittParticles(particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
+			particles::emitt(_gameContext->particleContext, particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
 		}
-		_gameContext->particles->showGUI(0);
+		//_gameContext->particles->showGUI(0);
 	}
 	gui::end();
 }

@@ -23,6 +23,7 @@
     <ClInclude Include="ext\ds_base_app.h" />
     <ClInclude Include="ext\ds_imgui.h" />
     <ClInclude Include="ext\ds_profiler.h" />
+    <ClInclude Include="ext\ds_string.h" />
     <ClInclude Include="ext\ds_tweakable.h" />
     <ClInclude Include="ext\ds_tweening.h" />
     <ClInclude Include="ext\ds_vm.h" />

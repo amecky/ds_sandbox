@@ -2,10 +2,10 @@
 #include <diesel.h>
 #include <string.h>
 #include "ParticleEmitter.h"
-
-
+#include <ds_string.h>
 
 struct ParticleEmitterDescriptor {
+	ID id;
 	ds::vec2 radius;
 	int alignParticle;
 	float angleVariance;
@@ -21,6 +21,7 @@ struct ParticleEmitterDescriptor {
 
 struct ParticleEffect {
 
+	ds::string name;
 	ID id;
 	ID emitterIDs[16];
 	ID descriptionIDs[16];
