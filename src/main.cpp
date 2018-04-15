@@ -6,10 +6,10 @@
 #include <SpriteBatchBuffer.h>
 #define GAMESETTINGS_IMPLEMENTATION
 #include <ds_tweakable.h>
+#define DS_PROFILER
+#include <ds_profiler.h>
 //#define DS_GAME_UI_IMPLEMENTATION
 //#include <ds_game_ui.h>
-//#define DS_TWEENING_IMPLEMENTATION
-//#include <ds_tweening.h>
 #define DS_IMGUI_IMPLEMENTATION
 #include <ds_imgui.h>
 #define BASE_APP_IMPLEMENTATION
@@ -18,6 +18,8 @@
 #include <ds_tweening.h>
 #define DS_STRING_IMPLEMENTATION
 #include <ds_string.h>
+
+
 extern ds::BaseApp* app;
 
 
@@ -30,7 +32,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	app->init();
 
+	perf::init();
+
 	while (ds::isRunning() && app->isRunning()) {
+
+		perf::reset();
 
 		ds::begin();
 
@@ -41,6 +47,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		ds::dbgPrint(0, 34, "FPS: %d", ds::getFramesPerSecond());
 
 		ds::end();
+
+		perf::finalize();
 	}
 
 	ds::shutdown();

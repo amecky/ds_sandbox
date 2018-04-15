@@ -1,6 +1,10 @@
 #include "ParticleEmitter.h"
 
-const char* EmitterType::Names[] = { "Sphere", "Ring", "Box", "Cone", "Line" };
+const char* EmitterTypeNames[] = { "Sphere", "Ring", "Box", "Cone", "Line" };
+
+const char* get_emitter_name(EmitterType::Enum type) {
+	return EmitterTypeNames[type];
+}
 
 ds::vec3 emittRing(ds::MemoryBuffer* buffer, ID id, int index, int total) {
 	RingEmitterSettings settings;

@@ -71,15 +71,15 @@ namespace perfpanel {
 				for (size_t i = 0; i < perf::num_events(); ++i) {
 					gui::Value(perf::get_name(i), perf::avg(i), 4, 8);
 				}
-				gui::Value("Total", perf::avg_total(), 4, 8);
+				//gui::Value("Total", perf::get_current_total_time(), 4, 8);
 				if (gui::Button("save")) {
 					FILE* fp = fopen("perf.txt", "w");
 					if (fp) {
 						for (size_t i = 0; i < perf::num_events(); ++i) {
-							fprintf(fp, "%s %2.5f %d\n", perf::get_name(i), perf::avg(i), perf::num_calls(i));
+							fprintf(fp, "%s %2.5f %d\n", perf::get_name(i), perf::avg(i), perf::avg(i));
 							//LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
 						}
-						fprintf(fp, "Total %2.5f\n", perf::avg_total());
+						//fprintf(fp, "Total %2.5f\n", perf::avg_total());
 						//LOG_DEBUG("Total %2.5f", perf::avg_total());
 						fclose(fp);
 					}
@@ -107,7 +107,7 @@ namespace perfpanel {
 				}
 				_perfHistory.index = 31;
 			}
-			float current = perf::avg_total();
+			float current = 0.0f;// perf::get_current_total_time();
 			_perfHistory.values[_perfHistory.index++] = current;
 			if (current > _perfHistory.maxValue) {
 				_perfHistory.maxValue = current;

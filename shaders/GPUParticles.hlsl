@@ -49,8 +49,8 @@ PS_Input VS_Main(uint id:SV_VERTEXID) {
     float norm = ParticlesRO[particleIndex].timer.y;	
     float3 pos = ParticlesRO[particleIndex].position;
 
-    pos += ParticlesRO[particleIndex].velocity * elapsed;
-    pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
+    //pos += ParticlesRO[particleIndex].velocity * elapsed;
+    //pos += ParticlesRO[particleIndex].acceleration * elapsed * elapsed;
 
     float3 look = normalize(eyePos - pos);
 	float3 right = normalize(cross(float3(0, 1, 0), look));

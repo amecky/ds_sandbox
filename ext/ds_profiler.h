@@ -1,40 +1,32 @@
 #pragma once
-#include <stdint.h>
-//#define DS_PROFILER_IMPLEMENTATION
+
+//#define DS_PROFILER
 
 namespace perf {
-
+	
 	void init();
 
 	void reset();
 
 	void finalize();
 
-	uint16_t start(const char* name);
+	int start(const char* name);
 
-	void end(uint16_t index);
+	void end(int index);
 
 	void shutdown();
 
-	void debug();
-
-	//void save(const ds::ReportWriter& writer);
-
 	void tickFPS(float dt);
 
-	void incFrame();
+	float get_current_total_time();
 
-	uint16_t num_events();
+	int num_events();
 
-	double dt(uint16_t i);
+	float dt(int idx);
 
-	double avg(uint16_t i);
+	float avg(int idx);
 
-	const char* get_name(uint16_t i);
-
-	double avg_total();
-
-	int num_calls(uint16_t idx);
+	const char* get_name(int idx);
 
 	class ZoneTracker {
 
@@ -50,98 +42,87 @@ namespace perf {
 	};
 }
 
-#ifdef DS_PROFILER_IMPLEMENTATION
-
+#ifdef DS_PROFILER
 #include <Windows.h>
 #include <stdint.h>
-#include <intrin.h>
+#include <vector>
 
 namespace perf {
 
-	struct CharBuffer {
+	class NameHashBuffer {
 
-		char* data;
-		int size;
-		int capacity;
-		int num;
-
-		CharBuffer();
-		~CharBuffer();
-
-		void* alloc(int sz);
-		void resize(int newCap);
+	public:
+		NameHashBuffer();
+		~NameHashBuffer();				
 		int append(const char* s, int len);
 		int append(const char* s);
-		int append(char s);
 		const char* get(int index) const;
+		void debug();
+		bool contains(const char* name) const;
+		int find(const char* name) const;
+		int num() const {
+			return _num_hashes;
+		}
+	private:
+		int find(uint32_t hash) const;
+		void* alloc(int sz);
+		void resize(int newCap);
+		void resize_hashes(int newCap);
+		char* _data;
+		int _size;
+		int _capacity;
+		int _num;
+		uint32_t* _hashes;
+		uint32_t* _indices;
+		int _hash_capacity;
+		int _num_hashes;
 
 	};
 
 	const uint32_t FNV_Prime = 0x01000193; //   16777619
 	const uint32_t FNV_Seed = 0x811C9DC5; // 2166136261
 
-	static inline uint32_t fnv1a(const char* text, uint32_t hash = FNV_Seed) {
+	inline uint32_t fnv1a(const char* text, uint32_t hash = FNV_Seed) {
 		const unsigned char* ptr = (const unsigned char*)text;
 		while (*ptr) {
 			hash = (*ptr++ ^ hash) * FNV_Prime;
 		}
 		return hash;
 	}
-
-	// -----------------------------------------------------------
-	// zone tracker event
-	// -----------------------------------------------------------
-	struct ZoneTrackerEvent {
-		uint32_t hash;
-		int parent;
-		int name_index;
-		uint64_t startTicks;
-	};
-
-	const static uint16_t MAX_ENTRIES = 256;
+	
+	const static uint16_t MAX_ENTRIES = 1024;
 	// -----------------------------------------------------------
 	// Zone tracker context
 	// -----------------------------------------------------------
-	// https://github.com/GarageGames/Torque2D/blob/master/engine/source/debug/profiler.cc
 	struct ZoneTrackerContext {
-
-		ZoneTrackerEvent trackerEvents[MAX_ENTRIES];
-		double current[MAX_ENTRIES];
-		double accu[MAX_ENTRIES];
-		double average[MAX_ENTRIES];
-		int calls[MAX_ENTRIES];
-		uint64_t ticks[MAX_ENTRIES];
-		double totalAverage;
-		uint16_t frameCount;
-		double beginAverage;
-		uint16_t num_entries;
-		DWORD cpuTicks;
 		LARGE_INTEGER frequency;
-		CharBuffer names;
+		NameHashBuffer names;
 		int current_parent;
 		int root_event;
-		int ident;
+		LARGE_INTEGER started[MAX_ENTRIES];
+		double average[MAX_ENTRIES];
+		double accu[MAX_ENTRIES];
+		double current[MAX_ENTRIES];
+		float beginAverage;
 		int frames;
 		float fpsTimer;
 		int fps;
-		LARGE_INTEGER lastTime;
+		LONGLONG overhead;
 		uint64_t totalTicks;
+		LARGE_INTEGER lastTime;
+		uint16_t frameCount;
 	};
 
 	static ZoneTrackerContext* zoneTrackerCtx = 0;
 
-	static double LIToSecs(LARGE_INTEGER & L) {
-		return (L.QuadPart) * 1000000.0 / zoneTrackerCtx->frequency.QuadPart;
+	double LIToSecs(LARGE_INTEGER & L) {
+		return (L.QuadPart - zoneTrackerCtx->overhead) * 1000.0 / zoneTrackerCtx->frequency.QuadPart;
 	}
 
-	static const uint64_t TicksPerSecond = 1000000;
+	static const uint64_t TicksPerSecond = 10000000;
 
 	static double TicksToSeconds(uint64_t ticks) {
 		return static_cast<double>(ticks) / TicksPerSecond;
-	}
-
-	static uint64_t rdtsc() {
-		return __rdtsc();
 	}
 
 	// -----------------------------------------------------------
@@ -151,46 +132,52 @@ namespace perf {
 		if (zoneTrackerCtx == 0) {
 			zoneTrackerCtx = new ZoneTrackerContext;
 			QueryPerformanceFrequency(&zoneTrackerCtx->frequency);
-			zoneTrackerCtx->cpuTicks = zoneTrackerCtx->frequency.LowPart;
+			LARGE_INTEGER start;
+			LARGE_INTEGER stop;
+			QueryPerformanceCounter(&start);
+			QueryPerformanceCounter(&stop);
+			zoneTrackerCtx->overhead = stop.QuadPart - start.QuadPart;
 		}
 		zoneTrackerCtx->frames = 0;
 		zoneTrackerCtx->fpsTimer = 0.0f;
 		zoneTrackerCtx->fps = 0;
-		zoneTrackerCtx->num_entries = 0;
+		zoneTrackerCtx->totalTicks = 0;
+		zoneTrackerCtx->beginAverage = 0.0f;
+		zoneTrackerCtx->frameCount = 0;
 		for (int i = 0; i < MAX_ENTRIES; ++i) {
-			zoneTrackerCtx->current[i] = 0.0f;
 			zoneTrackerCtx->accu[i] = 0.0f;
+			zoneTrackerCtx->current[i] = 0.0f;
 			zoneTrackerCtx->average[i] = 0.0f;
 		}
-		zoneTrackerCtx->totalTicks = 0;
-		zoneTrackerCtx->beginAverage = TicksToSeconds(zoneTrackerCtx->totalTicks);
-		zoneTrackerCtx->frameCount = 0;
-		zoneTrackerCtx->totalAverage = 0.0;
 	}
 
 	static void tick_timers() {
 		LARGE_INTEGER currentTime;
 		QueryPerformanceCounter(&currentTime);
+
 		uint64_t timeDelta = currentTime.QuadPart - zoneTrackerCtx->lastTime.QuadPart;
+
 		zoneTrackerCtx->lastTime = currentTime;
+		// Convert QPC units into a canonical tick format. This cannot overflow due to the previous clamp. 
 		timeDelta *= TicksPerSecond;
 		timeDelta /= zoneTrackerCtx->frequency.QuadPart;
+
+		++zoneTrackerCtx->frameCount;
+
+		// Variable timestep update logic. 
 		zoneTrackerCtx->totalTicks += timeDelta;
+
 	}
 
 	static double get_total_seconds() {
 		return TicksToSeconds(zoneTrackerCtx->totalTicks);
 	}
-
+	
 	// -----------------------------------------------------------
 	// reset
 	// -----------------------------------------------------------
 	void reset() {
 		tick_timers();
-		for (int i = 0; i < MAX_ENTRIES; ++i) {
-			zoneTrackerCtx->calls[i] = 0;
-		}
-		zoneTrackerCtx->ident = 0;
 		// create root event
 		zoneTrackerCtx->current_parent = -1;
 		zoneTrackerCtx->root_event = start("ROOT");
@@ -202,82 +189,17 @@ namespace perf {
 	// -----------------------------------------------------------
 	void finalize() {
 		end(zoneTrackerCtx->root_event);
-		++zoneTrackerCtx->frameCount;		
-		if (get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5) {
-			zoneTrackerCtx->totalAverage = 0.0;
-			for (int i = 0; i < zoneTrackerCtx->num_entries; ++i) {
-				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);				
-				zoneTrackerCtx->accu[i] = 0.0;
-				if (i > 0) {
-					zoneTrackerCtx->totalAverage += zoneTrackerCtx->average[i];
-				}
+		++zoneTrackerCtx->frames;
+		if ((get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5f)) {
+			for (int i = 0; i < MAX_ENTRIES; ++i) {
+				zoneTrackerCtx->average[i] = zoneTrackerCtx->accu[i] / static_cast<float>(zoneTrackerCtx->frameCount);
+				zoneTrackerCtx->accu[i] = 0.0f;
 			}
 			zoneTrackerCtx->beginAverage = get_total_seconds();
 			zoneTrackerCtx->frameCount = 0;
 		}
 	}
-
-	double avg_total() {
-		return zoneTrackerCtx->totalAverage;
-	}
-
-	double avg(uint16_t idx) {
-		return zoneTrackerCtx->average[idx];
-	}
-
-	double avg_total(uint16_t idx) {
-		return zoneTrackerCtx->average[0];
-	}
-
-	uint16_t num_events() {
-		return zoneTrackerCtx->num_entries;
-	}
-
-	const ZoneTrackerEvent& get_event(uint16_t i) {
-		return zoneTrackerCtx->trackerEvents[i];
-	}
-
-	int num_calls(uint16_t idx) {
-		return zoneTrackerCtx->calls[idx];
-	}
-
-	const char* get_name(uint16_t i) {
-		return zoneTrackerCtx->names.data + zoneTrackerCtx->trackerEvents[i].name_index;
-	}
-
-	double dt(uint16_t i) {
-		return zoneTrackerCtx->current[i];
-	}
-	// -----------------------------------------------------------
-	// debug
-	// -----------------------------------------------------------
-	void debug() {
-		/*
-		LOG << "------------------------------------------------------------";
-		LOG << " Percent | Accu       | Name";
-		LOG << "------------------------------------------------------------";
-		float norm = zoneTrackerCtx->events[0].duration;
-		char buffer[256];
-		char p[10];
-		std::string line;
-		for (uint32_t i = 0; i < zoneTrackerCtx->events.size(); ++i) {
-		const ZoneTrackerEvent& event = zoneTrackerCtx->events[i];
-		int ident = event.ident * 2;
-		float per = event.duration / norm * 100.0f;
-		ds::string::formatPercentage(per, p);
-		sprintf(buffer, "%s  | %3.8f | ", p, event.duration);
-		line = buffer;
-		for (int j = 0; j < ident; ++j) {
-		line += " ";
-		}
-		const char* n = zoneTrackerCtx->names.data + zoneTrackerCtx->events[i].name_index;
-		LOG << line << " " << n;
-		}
-		LOG << "------------------------------------------------------------";
-		*/
-	}
-
-
+	
 	// -----------------------------------------------------------
 	// tick FPS
 	// -----------------------------------------------------------
@@ -291,66 +213,58 @@ namespace perf {
 	}
 
 	// -----------------------------------------------------------
-	// increment frame
-	// -----------------------------------------------------------
-	void incFrame() {
-		++zoneTrackerCtx->frames;
-	}
-
-	// -----------------------------------------------------------
-	// find by hash
-	// -----------------------------------------------------------
-	int findHash(const uint32_t& hash) {
-		for (uint32_t i = 0; i < zoneTrackerCtx->num_entries; ++i) {
-			if (zoneTrackerCtx->trackerEvents[i].hash == hash) {
-				return i;
-			}
-		}
-		return -1;
-	}
-
-	// -----------------------------------------------------------
 	// start zone tracking
 	// -----------------------------------------------------------
-	uint16_t start(const char* name) {
-		uint32_t hash = fnv1a(name);
-		int idx = findHash(hash);
+	int start(const char* name) {
+		int idx = zoneTrackerCtx->names.find(name);				
 		if (idx == -1) {
-			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->num_entries++];
-			event.startTicks = rdtsc();
-			event.hash = fnv1a(name);
-			event.name_index = zoneTrackerCtx->names.size;
-			int l = strlen(name);
-			if (zoneTrackerCtx->names.size + l > zoneTrackerCtx->names.capacity) {
-				zoneTrackerCtx->names.resize(zoneTrackerCtx->names.capacity + MAX_ENTRIES);
-			}
-			zoneTrackerCtx->names.append(name, l);
-			event.parent = zoneTrackerCtx->current_parent;
-			idx = zoneTrackerCtx->num_entries - 1;
+			idx = zoneTrackerCtx->names.append(name);
+			QueryPerformanceCounter(&zoneTrackerCtx->started[idx]);
 		}
 		else {
-			ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[idx];
-			event.startTicks = rdtsc();
-			event.parent = zoneTrackerCtx->current_parent;
-			zoneTrackerCtx->current_parent = idx;
+			QueryPerformanceCounter(&zoneTrackerCtx->started[idx]);
 		}
-		++zoneTrackerCtx->calls[idx];
+		zoneTrackerCtx->current_parent = idx;
 		return idx;
 	}
 
 	// -----------------------------------------------------------
 	// end zone tracking
 	// -----------------------------------------------------------
-	void end(uint16_t index) {
-		ZoneTrackerEvent& event = zoneTrackerCtx->trackerEvents[index];
-		zoneTrackerCtx->ticks[index] = rdtsc() - event.startTicks;		
-		double d = static_cast<double>(zoneTrackerCtx->ticks[index]) / static_cast<double>(zoneTrackerCtx->cpuTicks);
-		zoneTrackerCtx->current[index] = d;
-		zoneTrackerCtx->accu[index] += zoneTrackerCtx->current[index];
-		if (zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent != -1) {
-			zoneTrackerCtx->current_parent = zoneTrackerCtx->trackerEvents[zoneTrackerCtx->current_parent].parent;
-		}
-		--zoneTrackerCtx->ident;
+	void end(int index) {
+
+		LARGE_INTEGER started = zoneTrackerCtx->started[index];
+		LARGE_INTEGER EndingTime;
+		QueryPerformanceCounter(&EndingTime);
+		uint64_t timeDelta = EndingTime.QuadPart - started.QuadPart;
+		timeDelta *= TicksPerSecond;
+		timeDelta /= zoneTrackerCtx->frequency.QuadPart;
+		zoneTrackerCtx->current[index] = timeDelta;
+		zoneTrackerCtx->accu[index] += zoneTrackerCtx->current[index] / 10000;
+	}
+
+	// -----------------------------------------------------------
+	// number of events
+	// -----------------------------------------------------------
+	int num_events() {
+		return zoneTrackerCtx->names.num();
+	}
+
+	// -----------------------------------------------------------
+	// duration at index
+	// -----------------------------------------------------------
+	float dt(int idx) {
+		return zoneTrackerCtx->current[idx];
+	}
+
+	float avg(int idx) {
+		return zoneTrackerCtx->average[idx];
+	}
+	// -----------------------------------------------------------
+	// name at index
+	// -----------------------------------------------------------
+	const char* get_name(int idx) {
+		return zoneTrackerCtx->names.get(idx);
 	}
 
 	// -----------------------------------------------------------
@@ -359,77 +273,150 @@ namespace perf {
 	void shutdown() {
 		delete zoneTrackerCtx;
 	}
+	
 
-	CharBuffer::CharBuffer() : data(nullptr), size(0), capacity(0), num(0) {}
-
-	CharBuffer::~CharBuffer() {
-		if (data != nullptr) {
-			delete[] data;
+	NameHashBuffer::NameHashBuffer() 
+		: _data(0), _hashes(0), _indices(0), _size(0), _capacity(0), _num(0), _num_hashes(0) , _hash_capacity(0) {}
+	/*
+	CharBuffer& CharBuffer::operator =(const CharBuffer& b) {
+		int sz = b.size;
+		resize(sz);
+		memcpy(data, b.data, sz);
+		return *this;
+	}
+	*/
+	NameHashBuffer::~NameHashBuffer() {
+		if (_data != 0) {
+			delete[] _data;
+		}
+		if (_hashes != 0) {
+			delete[] _hashes;
+		}
+		if (_indices != 0) {
+			delete[] _indices;
 		}
 	}
 
-	void* CharBuffer::alloc(int sz) {
-		if (size + sz > capacity) {
-			int d = capacity * 2 + 8;
+	void* NameHashBuffer::alloc(int sz) {
+		if (_size + sz > _capacity) {
+			int d = _capacity * 2 + 8;
 			if (d < sz) {
 				d = sz * 2 + 8;
 			}
 			resize(d);
 		}
-		auto res = data + size;
-		size += sz;
+		auto res = _data + _size;
+		_size += sz;
 		int d = sz / 4;
 		if (d == 0) {
 			d = 1;
 		}
-		num += d;
+		_num += d;
 		return res;
 	}
 
-	void CharBuffer::resize(int newCap) {
-		if (newCap > capacity) {
+	void NameHashBuffer::resize(int newCap) {
+		if (newCap > _capacity) {
 			char* tmp = new char[newCap];
-			if (data != nullptr) {
-				memcpy(tmp, data, size);
-				delete[] data;
+			if (_data != nullptr) {
+				memcpy(tmp, _data, _size);
+				delete[] _data;
 			}
-			capacity = newCap;
-			data = tmp;
+			_capacity = newCap;
+			_data = tmp;
 		}
 	}
 
-	const char* CharBuffer::get(int index) const {
-		return data + index;
+	void NameHashBuffer::resize_hashes(int newCap) {
+		if (newCap > _hash_capacity) {
+			uint32_t* tmp = new uint32_t[newCap];
+			if (_hashes != nullptr) {
+				memcpy(tmp, _hashes, _size);
+				delete[] _hashes;
+			}
+			_hash_capacity = newCap;
+			_hashes = tmp;
+			tmp = new uint32_t[newCap];
+			if (_indices != nullptr) {
+				memcpy(tmp, _indices, _size);
+				delete[] _indices;
+			}
+			_indices = tmp;
+		}
 	}
 
-	int CharBuffer::append(const char* s, int len) {
-		if (size + len + 1 > capacity) {
-			resize(capacity + len + 1 + 8);
+	int NameHashBuffer::find(uint32_t hash) const {
+		if (_hashes != 0) {
+			for (int i = 0; i < _num_hashes; ++i) {
+				if (_hashes[i] == hash) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+
+	const char* NameHashBuffer::get(int index) const {
+		return _data + _indices[index];
+	}
+
+	bool NameHashBuffer::contains(const char* name) const {
+		uint32_t hash = fnv1a(name);
+		int idx = find(hash);
+		return idx != -1;
+	}
+
+	int NameHashBuffer::find(const char* name) const {
+		uint32_t hash = fnv1a(name);
+		return find(hash);
+	}
+
+	int NameHashBuffer::append(const char* s, int len) {
+		uint32_t hash = fnv1a(s);
+		int idx = find(hash);
+		if (idx != -1) {
+			return idx;
+		}
+		if (_size + len + 1 > _capacity) {
+			resize(_capacity + len + 1 + 8);
+		}
+		if (_num_hashes + 1 > _hash_capacity) {
+			resize_hashes(_hash_capacity * 2 + 8);
 		}
 		const char* t = s;
-		int ret = size;
+		int ret = _size;
 		for (int i = 0; i < len; ++i) {
-			data[size++] = *t;
+			_data[_size++] = *t;
 			++t;
 		}
-		data[size++] = '\0';
-		return ret;
+		_data[_size++] = '\0';
+		_indices[_num_hashes] = ret;
+		_hashes[_num_hashes] = hash;
+		++_num_hashes;
+		return _num_hashes - 1;
 	}
 
-	int CharBuffer::append(const char* s) {
+	void NameHashBuffer::debug() {
+		printf("entries: %d\n", _num_hashes);
+		for (int i = 0; i < _num_hashes; ++i) {
+			printf("%d : %s (%d) - %d\n", i, _data + _indices[i], _indices[i], _hashes[i]);
+		}
+	}
+
+	int NameHashBuffer::append(const char* s) {
 		int len = strlen(s);
 		return append(s, len);
 	}
-
-	int CharBuffer::append(char s) {
-		if (size + 1 > capacity) {
-			resize(capacity + 9);
+	/*
+	int NameHashBuffer::append(char s) {
+		if (_size + 1 > _capacity) {
+			resize(_capacity + 9);
 		}
-		int ret = size;
-		data[size++] = s;
-		data[size++] = '\0';
+		int ret = _size;
+		_data[_size++] = s;
+		_data[_size++] = '\0';
 		return ret;
 	}
+	*/
 }
-
 #endif

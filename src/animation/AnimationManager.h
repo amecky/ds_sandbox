@@ -18,8 +18,11 @@ struct AnimationTypes {
 		ROTATE_TO,
 		EOL
 	};
-	const static const char* NAMES[];
+	
 };
+
+
+
 
 // ----------------------------------------------------
 // Animation data

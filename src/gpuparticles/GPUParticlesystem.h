@@ -140,6 +140,9 @@ public:
 	int countAlive() const {
 		return _array.countAlive;
 	}
+	void setDebug(bool debug) {
+		_debug = debug;
+	}
 private:
 	ParticlesystemDescriptor _descriptor;
 	ParticleConstantBuffer _constantBuffer;
@@ -147,4 +150,5 @@ private:
 	GPUParticle* _vertices;
 	RID _drawItem;
 	RID _structuredBufferId;
+	bool _debug;
 };

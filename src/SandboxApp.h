@@ -2,7 +2,6 @@
 #include <ds_base_app.h>
 #define DS_PERF_PANEL
 #include "PerfPanel.h"
-#define DS_PROFILER_IMPLEMENTATION
 #include <ds_profiler.h>
 #define DS_VM_IMPLEMENTATION
 #include <ds_vm.h>

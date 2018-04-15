@@ -1,6 +1,6 @@
 #include "AnimationManager.h"
 
-const char* AnimationTypes::NAMES[] = {
+const char* AnimationTypeNames[] = {
 	"IDLE",
 	"ROTATE_X",
 	"ROTATE_Y",
@@ -10,8 +10,6 @@ const char* AnimationTypes::NAMES[] = {
 	"ROTATE_TO",
 	"EOL"
 };
-
-
 
 void PrepareIdleAnimation(AnimationData* animationData, void* data) {
 }
@@ -157,7 +155,7 @@ void AnimationManager::tick(float dt, ds::EventStream* events) {
 			// FIXME: is it clever to send an ID that will be invalid right away?
 			event.animationID = animationData.id;
 			events->add(100, &event, sizeof(AnimationEvent));
-			DBG_LOG("#> stopping %s - id: %d oid: %d", AnimationTypes::NAMES[animationData.animationType], animationData.id, animationData.oid);
+			DBG_LOG("#> stopping %s - id: %d oid: %d", AnimationTypeNames[animationData.animationType], animationData.id, animationData.oid);
 			_data.remove(animationData.id);
 		}		
 	}
@@ -196,7 +194,7 @@ ID AnimationManager::start(ID oid, transform* t, AnimationTypes::Enum animationT
 	ID tmp = alreadyRunning(oid, t);
 	// FIXME: maybe we should reset the action or should be ignore the request?
 	if (tmp != INVALID_ID) {
-		DBG_LOG("=> starting %s - ALREADY RUNNING id: %d oid: %d", AnimationTypes::NAMES[animationType], tmp, oid);
+		DBG_LOG("=> starting %s - ALREADY RUNNING id: %d oid: %d", AnimationTypeNames[animationType], tmp, oid);
 		return tmp;
 	}
 	PrepareAnimationFunction func = _context.prepareFunctions[animationType];
@@ -209,6 +207,6 @@ ID AnimationManager::start(ID oid, transform* t, AnimationTypes::Enum animationT
 	animData.timer = 0.0f;
 	animData.animationType = animationType;
 	(func)(&animData, data);
-	DBG_LOG("=> starting %s - id: %d oid: %d ttl: %3.2f", AnimationTypes::NAMES[animationType],id, oid, ttl);
+	DBG_LOG("=> starting %s - id: %d oid: %d ttl: %3.2f", AnimationTypeNames[animationType],id, oid, ttl);
 	return id;
 }

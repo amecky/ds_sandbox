@@ -4,6 +4,8 @@
 #include "..\GameContext.h"
 #include "..\gpuparticles\ParticleManager.h"
 #include "..\gpuparticles\ParticleGUI.h"
+#include <ds_profiler.h>
+#include "..\PerfPanel.h"
 
 const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
 
@@ -17,7 +19,7 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	
 	_dbgCameraRotation = ds::vec3(0.0f);
-	_dbgNumParticles = 32;
+	_dbgNumParticles = 2048;
 	ringSettings.radius = 1.0f;
 
 	ID descID = _gameContext->particleContext->descriptors.add();
@@ -32,7 +34,7 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	descriptor.scaleVariance = ds::vec2(0.02f);
 	descriptor.growth = ds::vec2(0.0f, 0.8f);
 	descriptor.angleVariance = ds::PI * 0.1f;
-	descriptor.velocity = ds::vec2(2.0f, 4.0f);
+	descriptor.velocity = ds::vec2(0.2f,0.4f);
 
 
 	particleEffect = particles::createEffect(_gameContext->particleContext, "Test");
@@ -83,6 +85,12 @@ void ParticlesTestScene::initialize() {
 			}
 		}
 	}
+
+	ds::RenderTargetInfo rtInfo = { 1280, 720, ds::Color(0, 0, 0, 1) };
+	RID rtID = ds::createRenderTarget(rtInfo);
+	RID rts[] = { rtID };
+	ds::RenderPassInfo rpInfo = { &_camera, _viewPort, ds::DepthBufferState::DISABLED, rts, 1 };
+	_particleRenderPass = ds::createRenderPass(rpInfo);
 	
 	//_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
 
@@ -94,7 +102,7 @@ void ParticlesTestScene::initialize() {
 // tick
 // ----------------------------------------------------
 void ParticlesTestScene::update(float dt) {
-	
+	perf::ZoneTracker("Scene::update");
 	//_isoCamera->update(dt);
 	_fpsCamera->update(dt);
 	
@@ -110,6 +118,7 @@ void ParticlesTestScene::update(float dt) {
 // render
 // ----------------------------------------------------
 void ParticlesTestScene::render() {
+	perf::ZoneTracker("Scene::rener");
 	// update lights
 	for (int i = 0; i < 3; ++i) {
 		_gameContext->instancedAmbientmaterial->setLightDirection(i, _lightDir[i]);
@@ -134,7 +143,7 @@ void ParticlesTestScene::showGUI() {
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");	
-
+		gui::Value("Particles", _gameContext->particleContext->particleSystem->countAlive());
 		particles::editParticleEmitterDescription(_gameContext->particleContext, _selectedEmitterDescriptor);
 		/*
 		bool changed = false;
@@ -157,6 +166,7 @@ void ParticlesTestScene::showGUI() {
 			particles::emitt(_gameContext->particleContext, particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
 		}
 		//_gameContext->particles->showGUI(0);
+		perfpanel::show_profiler();
 	}
 	gui::end();
 }
