@@ -48,7 +48,8 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	//
 	// alpha blending
 	//
-	ds::BlendStateInfo blendStateInfo{ ds::BlendStates::SRC_ALPHA, ds::BlendStates::ONE, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::ONE, true };
+	//ds::BlendStateInfo blendStateInfo{ ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
+	ds::BlendStateInfo blendStateInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ZERO, true };
 	//ds::BlendStateInfo blendStateInfo = { ds::BlendStates::ONE, ds::BlendStates::ZERO, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::ZERO, true };
 	
 	
@@ -61,7 +62,7 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	//
 	// additive blending
 	//
-	//ds::BlendStateInfo blendStateInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ONE, true };
+	//ds::BlendStateInfo blendStateInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::ZERO, ds::BlendStates::ONE, ds::BlendStates::ZERO, true };
 
 
 	RID blendState = ds::createBlendState(blendStateInfo);
@@ -114,6 +115,7 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	
 
 	_debug = false;
+	_timerNum = 0;
 }
 
 GPUParticlesystem::~GPUParticlesystem() {
@@ -172,7 +174,7 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 		_constantBuffer.padding = 0.0f;
 		_constantBuffer.world = ds::matTranspose(w);
 		_constantBuffer.textureRect = _descriptor.textureRect;
-		ds::matrix rx = ds::matRotationX(ds::PI * 0.25f);
+		ds::matrix rx = ds::matIdentity();// ds::matRotationX(ds::PI * 0.25f);
 		for (int i = 0; i < _array.countAlive; ++i) {
 			_vertices[i] = {
 				_array.positions[i],
@@ -190,8 +192,17 @@ void GPUParticlesystem::render(RID renderPass, const ds::matrix& viewProjectionM
 		}
 		/*
 		{
-			perf::ZoneTracker("GP::sort");
+			perf::ZoneTracker zt("GP::sort");
 			quickSort(_vertices, 0, _array.countAlive - 1, eyePos);
+			_timers[_timerNum++] = zt.elapsed();
+			if (_timerNum >= 32) {
+				_timerNum = 0;
+				FILE* fp = fopen("timing.txt", "w");
+				for (int i = 0; i < 32; ++i) {
+					fprintf(fp, "%d = %0.8f\n", i, _timers[i]);
+				}
+				fclose(fp);
+			}
 		}
 		*/
 		ds::mapBufferData(_structuredBufferId, _vertices, _array.countAlive * sizeof(GPUParticle));
