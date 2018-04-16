@@ -152,8 +152,8 @@ void GPUParticlesystem::tick(float dt) {
 		if (t.y >= 1.0f) {
 			_array.kill(i);
 		}
-		_array.velocities[i] += _array.accelerations[i] * dt;
-		_array.positions[i] += _array.velocities[i] * dt;
+		//_array.velocities[i] += _array.accelerations[i] * dt;
+		//_array.positions[i] += _array.velocities[i] * dt;
 	}
 }
 

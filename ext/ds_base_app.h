@@ -145,7 +145,7 @@ namespace ds {
 				_basicPass = ds::createRenderPass(rpInfo);
 
 				ds::RenderPassInfo noDepthInfo = { &_camera, _viewPort, ds::DepthBufferState::DISABLED, 0, 0 };
-				_noDepthPass = ds::createRenderPass(rpInfo);
+				_noDepthPass = ds::createRenderPass(noDepthInfo);
 
 				ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 				_blendStateID = ds::createBlendState(blendInfo);
