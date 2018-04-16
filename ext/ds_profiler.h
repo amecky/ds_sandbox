@@ -32,10 +32,14 @@ namespace perf {
 
 	public:
 		ZoneTracker(const char* name) {
-			_index = perf::start(name);
+			_index = start(name);
 		}
 		~ZoneTracker() {
-			perf::end(_index);
+			end(_index);
+		}
+		float elapsed() {
+			end(_index);
+			return dt(_index);
 		}
 	private:
 		int _index;

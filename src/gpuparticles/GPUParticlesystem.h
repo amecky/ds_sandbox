@@ -151,4 +151,7 @@ private:
 	RID _drawItem;
 	RID _structuredBufferId;
 	bool _debug;
+
+	float _timers[32];
+	int _timerNum;
 };
