@@ -22,7 +22,7 @@ public:
 	// Z axis
 	void resetYaw(float angle);
 	void setYaw(float angle);
-	void update(float elapsedTime);
+	void update(float elapsedTime, RID viewPortId = INVALID_RID);
 	void buildView();
 private:
 	ds::Camera* _camera;

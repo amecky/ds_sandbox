@@ -18,6 +18,7 @@ public:
 	void initialize();
 	void handleEvents(ds::EventStream* events);
 	void update(float dt);
+	void showMenu();
 private:
 	
 	MainGameScene* _flowFieldScene;

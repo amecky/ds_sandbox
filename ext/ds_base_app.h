@@ -209,6 +209,7 @@ namespace ds {
 		RenderContext* getRenderContext() const {
 			return _renderContext;
 		}
+		virtual void showMenu() {}
 	protected:
 		void stopGame() {
 			_running = false;
@@ -217,6 +218,10 @@ namespace ds {
 		RID loadImageFromResource(LPCTSTR name, LPCTSTR type);		
 		ApplicationSettings _settings;
 		ds::EventStream* _events;
+		bool _updateActive;
+		void doSingleStep() {
+			_singleStep = true;
+		}
 	private:
 		void handleButtons();
 		SpriteBatchBuffer* _sprites;
@@ -226,10 +231,10 @@ namespace ds {
 		bool _useTweakables;
 		bool _guiKeyPressed;
 		bool _guiActive;
-		bool _running;
-		bool _updateActive;
+		bool _running;		
 		bool _updateTogglePressed;
 		bool _singleStepPressed;
+		bool _singleStep;
 		RenderContext* _renderContext;
 		ButtonState _buttonStates[2];
 	};
@@ -338,6 +343,7 @@ namespace ds {
 		_buttonStates[0] = { false, false };
 		_buttonStates[1] = { false, false };
 		_renderContext = new RenderContext;
+		_singleStep = false;
 	}
 
 	BaseApp::~BaseApp() {
@@ -507,7 +513,7 @@ namespace ds {
 		// check if we should update
 		bool doUpdate = true;
 		if (!_updateActive) {
-			if (_singleStepPressed) {
+			if (_singleStepPressed || _singleStep) {
 				dt = 1.0f / 60.0f;
 			}
 			else {
@@ -518,6 +524,9 @@ namespace ds {
 		if (doUpdate) {
 			_events->reset();
 			update(dt);
+		}
+		if (_singleStep) {
+			_singleStep = false;
 		}
 		// render app
 		render();
@@ -539,12 +548,29 @@ namespace ds {
 		}
 		// render GUI if active
 		if (_settings.useIMGUI && _guiActive) {
+			p2i sp = p2i(10, ds::getScreenHeight() - 10);
+			gui::start(&sp, ds::getScreenWidth());
+			if (gui::begin("Menu", 0)) {
+				gui::beginGroup();
+				showMenu();
+				it = _scenes.begin();
+				while (it != _scenes.end()) {
+					(*it)->showMenu();
+					++it;
+				}
+				gui::endGroup();
+			}
+			gui::end();
+			sp = p2i(10, ds::getScreenHeight() - 65);
+			gui::start(&sp, 400);
+
 			it = _scenes.begin();
 			while (it != _scenes.end()) {
 				
 				(*it)->showGUI();
 				++it;
 			}
+			gui::end();
 		}
 		// handle events if active
 		if (doUpdate) {

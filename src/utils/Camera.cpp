@@ -68,7 +68,7 @@ void FPSCamera::resetPitch(float angle) {
 	buildView();
 }
 
-void FPSCamera::update(float elapsedTime) {
+void FPSCamera::update(float elapsedTime, RID viewPortId) {
 	if (ds::isKeyPressed('W')) {
 		move(5.0f*elapsedTime);
 	}
@@ -87,7 +87,7 @@ void FPSCamera::update(float elapsedTime) {
 	if (ds::isKeyPressed('E')) {
 		up(-5.0f*elapsedTime);
 	}
-	ds::vec2 mp = ds::getMousePosition();
+	ds::vec2 mp = ds::getMousePosition(viewPortId);
 	if (ds::isMouseButtonPressed(0)) {
 		// Make each pixel correspond to a quarter of a degree.
 		float dx = DEGTORAD(0.25f*(_lastMousePos.x - mp.x));

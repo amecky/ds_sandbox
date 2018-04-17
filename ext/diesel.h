@@ -341,6 +341,7 @@ namespace ds {
 	// ----------------------------------------------------
 	// p2i
 	// ----------------------------------------------------
+	/*
 	struct p2i {
 
 		union {
@@ -359,7 +360,7 @@ namespace ds {
 		}
 
 	};
-
+	*/
 	inline bool operator == (const vec2& u, const vec2& v) {
 		return u.x == v.x && u.y == v.y;
 	}
@@ -1747,7 +1748,7 @@ namespace ds {
 
 	bool isKeyPressed(uint8_t key);
 
-	vec2 getMousePosition();
+	vec2 getMousePosition(RID viewPortId = INVALID_RID);
 
 	bool isMouseButtonClicked(int button);
 
@@ -3334,13 +3335,24 @@ namespace ds {
 	// ------------------------------------------------------
 	// get mouse position
 	// ------------------------------------------------------
-	vec2 getMousePosition() {
+	vec2 getMousePosition(RID viewPortId) {
 		vec2 mp(-1.0f,-1.0f);
 		tagPOINT p;
 		if (GetCursorPos(&p)) {
 			if (ScreenToClient(ds::_ctx->hwnd, &p)) {
-				mp.x = static_cast<float>(p.x);
-				mp.y = static_cast<float>(ds::_ctx->screenHeight - p.y);
+				if (viewPortId != INVALID_RID) {
+					uint16_t vpidx = getResourceIndex(viewPortId, RT_VIEWPORT);
+					ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
+					D3D11_VIEWPORT* vp = vpRes->get();
+					if (p.x > vp->TopLeftX && p.y >= vp->TopLeftY) {
+						mp.x = static_cast<float>(p.x- vp->TopLeftX);
+						mp.y = static_cast<float>(ds::_ctx->screenHeight - p.y - vp->TopLeftY);
+					}
+				}
+				else {
+					mp.x = static_cast<float>(p.x);
+					mp.y = static_cast<float>(ds::_ctx->screenHeight - p.y);
+				}
 			}
 		}
 		return mp;

@@ -24,6 +24,8 @@ struct Tweakable {
 
 typedef void(*twkErrorHandler)(const char* errorMessage);
 
+void twk_init(twkErrorHandler = 0);
+
 void twk_init(const char* fileName, twkErrorHandler = 0);
 
 void twk_add(const char* category, const char* name, int* value);
@@ -105,7 +107,7 @@ struct InternalCharBuffer {
 	char* data;
 	size_t capacity;
 	size_t size;
-	int count;
+	size_t count;
 	size_t* indices;
 	size_t* sizes;
 	uint32_t* hashes;
@@ -121,6 +123,7 @@ struct TWKContext {
 	std::vector<InternalTweakable> items;
 	std::vector<TWKCategory> categories;
 	bool loaded;
+	bool reloadable;
 	InternalCharBuffer charBuffer;
 	twkErrorHandler errorHandler;
 };
@@ -130,10 +133,7 @@ static TWKContext* _twkCtx = 0;
 // -------------------------------------------------------
 // init
 // -------------------------------------------------------
-void twk_init(const char* fileName, twkErrorHandler errorHandler) {
-	_twkCtx = new TWKContext;
-	_twkCtx->fileName = fileName;
-	_twkCtx->loaded = false;
+static void twk__common_init(twkErrorHandler errorHandler) {
 	_twkCtx->charBuffer.data = 0;
 	_twkCtx->charBuffer.capacity = 0;
 	_twkCtx->charBuffer.count = 0;
@@ -144,6 +144,24 @@ void twk_init(const char* fileName, twkErrorHandler errorHandler) {
 	_twkCtx->charBuffer.hashes = 0;
 	_twkCtx->errorHandler = errorHandler;
 }
+
+void twk_init(const char* fileName, twkErrorHandler errorHandler) {
+	_twkCtx = new TWKContext;
+	_twkCtx->fileName = fileName;
+	_twkCtx->loaded = false;
+	_twkCtx->reloadable = true;
+	twk__common_init(errorHandler);
+}
+
+void twk_init(twkErrorHandler errorHandler) {
+	_twkCtx = new TWKContext;
+	_twkCtx->fileName = '\0';
+	_twkCtx->loaded = true;
+	_twkCtx->reloadable = false;
+	twk__common_init(errorHandler);
+}
+
+
 
 // -------------------------------------------------------
 // shutdown
@@ -228,7 +246,7 @@ static void twk__reallocate_indices(InternalCharBuffer* buffer, size_t additiona
 }
 
 static int twk__find_string(uint32_t hash) {
-	for (int i = 0; i < _twkCtx->charBuffer.count; ++i) {
+	for (size_t i = 0; i < _twkCtx->charBuffer.count; ++i) {
 		if (_twkCtx->charBuffer.hashes[i] == hash) {
 			return i;
 		}
@@ -714,6 +732,9 @@ static void twk__set_value(int categoryIndex, const char* name, int nameIndex, i
 // internal check if the file should be (re)loaded
 // -------------------------------------------------------
 static bool twk__requires_loading() {
+	if (!_twkCtx->reloadable) {
+		return false;
+	}
 	if (!_twkCtx->loaded) {
 		return true;
 	}
@@ -783,7 +804,7 @@ void twk_parse(const char* text) {
 			++p;
 		}
 	}
-	int idx = 0;
+	size_t idx = 0;
 	TWKToken& t = tokens[idx];
 	char name[128];
 	float values[128];

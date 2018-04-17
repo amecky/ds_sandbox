@@ -107,7 +107,7 @@ void ParticlesTestScene::initialize() {
 void ParticlesTestScene::update(float dt) {
 	perf::ZoneTracker("Scene::update");
 	//_isoCamera->update(dt);
-	_fpsCamera->update(dt);
+	_fpsCamera->update(dt, _gameViewPort);
 	
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
 	r.setOrigin(_camera.position);
@@ -139,29 +139,8 @@ void ParticlesTestScene::render() {
 // renderGUI
 // ----------------------------------------------------
 void ParticlesTestScene::showGUI() {
-	int state = 1;
-
-	p2i sp = p2i(10, 770);
-	gui::start(&sp, 1730);
-	if (gui::begin("Menu",0)) {
-		gui::beginGroup();
-		if (gui::Button("Test")) {
-
-		}
-		if (gui::Button("Test2")) {
-
-		}
-		if (gui::Button("Test3")) {
-
-		}
-		gui::endGroup();
-	}
-	gui::end();
-
-	sp = p2i(10, 715);
-	gui::start(&sp, 430);
 	//gui::setAlphaLevel(0.5f);
-	if (gui::begin("Debug", &state)) {
+	if (gui::begin("Debug",0)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");	
 		gui::Value("Particles", _gameContext->particleContext->particleSystem->countAlive());
@@ -189,6 +168,5 @@ void ParticlesTestScene::showGUI() {
 		//_gameContext->particles->showGUI(0);
 		//perfpanel::show_profiler();
 	}
-	gui::end();
 }
 

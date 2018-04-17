@@ -8,7 +8,7 @@
 ds::BaseApp *app = new SandboxApp();
 
 SandboxApp::SandboxApp() : ds::BaseApp() {
-	_settings.screenWidth = 1730;
+	_settings.screenWidth = 1680;
 	_settings.screenHeight = 780;
 	_settings.windowTitle = "Flow";
 	_settings.useIMGUI = true;
@@ -45,6 +45,19 @@ void SandboxApp::initialize() {
 	pushScene(_particlesTestScene);
 }
 
+// ---------------------------------------------------------------
+// showMenu
+// ---------------------------------------------------------------
+void SandboxApp::showMenu() {
+	if (gui::Button("Toggle Update")) {
+		_updateActive = !_updateActive;
+	}
+	if (!_updateActive) {
+		if (gui::Button("Single step")) {
+			doSingleStep();
+		}
+	}
+}
 // ---------------------------------------------------------------
 // handle events
 // ---------------------------------------------------------------
