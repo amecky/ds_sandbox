@@ -59,6 +59,15 @@ ParticlesTestScene::~ParticlesTestScene() {
 // init
 // ----------------------------------------------------
 void ParticlesTestScene::initialize() {
+
+	ds::ViewportInfo vpInfo = { 450, 100, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+	_gameViewPort = ds::createViewport(vpInfo);
+
+	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
+	_gameRenderPass = ds::createRenderPass(rpInfo);
+
+	ds::RenderPassInfo noDepthInfo = { &_camera, _gameViewPort, ds::DepthBufferState::DISABLED, 0, 0 };
+	_particleRenderPass = ds::createRenderPass(noDepthInfo);
 	
 	_isoCamera = new IsometricCamera(&_camera);
 	_isoCamera->setPosition(ds::vec3(0, 6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
@@ -85,12 +94,6 @@ void ParticlesTestScene::initialize() {
 			}
 		}
 	}
-
-	ds::RenderTargetInfo rtInfo = { 1280, 720, ds::Color(0, 0, 0, 1) };
-	RID rtID = ds::createRenderTarget(rtInfo);
-	RID rts[] = { rtID };
-	ds::RenderPassInfo rpInfo = { &_camera, _viewPort, ds::DepthBufferState::DISABLED, rts, 1 };
-	_particleRenderPass = ds::createRenderPass(rpInfo);
 	
 	//_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
 
@@ -125,11 +128,11 @@ void ParticlesTestScene::render() {
 		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
 
-	_gridItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_gridItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 
 	//_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
 
-	particles::render(_gameContext->particleContext, _noDepthPass, _camera.viewProjectionMatrix, _camera.position);
+	particles::render(_gameContext->particleContext, _particleRenderPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 // ----------------------------------------------------
@@ -137,9 +140,27 @@ void ParticlesTestScene::render() {
 // ----------------------------------------------------
 void ParticlesTestScene::showGUI() {
 	int state = 1;
-	p2i sp = p2i(10, 710);
-	gui::start(&sp, 320);
-	gui::setAlphaLevel(0.5f);
+
+	p2i sp = p2i(10, 770);
+	gui::start(&sp, 1730);
+	if (gui::begin("Menu",0)) {
+		gui::beginGroup();
+		if (gui::Button("Test")) {
+
+		}
+		if (gui::Button("Test2")) {
+
+		}
+		if (gui::Button("Test3")) {
+
+		}
+		gui::endGroup();
+	}
+	gui::end();
+
+	sp = p2i(10, 715);
+	gui::start(&sp, 430);
+	//gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Cursor", _cursorPos,"%2.3f %2.3f %2.3f");	
@@ -166,7 +187,7 @@ void ParticlesTestScene::showGUI() {
 			particles::emitt(_gameContext->particleContext, particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
 		}
 		//_gameContext->particles->showGUI(0);
-		perfpanel::show_profiler();
+		//perfpanel::show_profiler();
 	}
 	gui::end();
 }

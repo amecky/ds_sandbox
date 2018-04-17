@@ -1531,6 +1531,8 @@ namespace ds {
 	};
 
 	struct ViewportInfo {
+		int left;
+		int top;
 		int width;
 		int height;
 		float minDepth;
@@ -5372,8 +5374,8 @@ namespace ds {
 		vp->Width = static_cast<float>(info.width);
 		vp->MaxDepth = info.maxDepth;
 		vp->MinDepth = info.minDepth;
-		vp->TopLeftX = 0.0f;
-		vp->TopLeftY = 0.0f;
+		vp->TopLeftX = info.left;
+		vp->TopLeftY = info.top;
 		ViewportResource* res = new ViewportResource(vp);
 		return addResource(res, RT_VIEWPORT, name);
 	}

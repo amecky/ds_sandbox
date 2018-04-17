@@ -32,11 +32,13 @@ private:
 	FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	Grid* _grid;
-	RID _particleRenderPass;
 	InstancedRenderItem* _gridItem;
 	ds::vec3 _dbgCameraRotation;
 	int _dbgNumParticles;
 	ID particleEffect;
 	RingEmitterSettings ringSettings;
 	ID _selectedEmitterDescriptor;
+	RID _gameViewPort;
+	RID _gameRenderPass;
+	RID _particleRenderPass;
 };

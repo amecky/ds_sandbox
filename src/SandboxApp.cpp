@@ -8,8 +8,8 @@
 ds::BaseApp *app = new SandboxApp();
 
 SandboxApp::SandboxApp() : ds::BaseApp() {
-	_settings.screenWidth = 1280;
-	_settings.screenHeight = 720;
+	_settings.screenWidth = 1730;
+	_settings.screenHeight = 780;
 	_settings.windowTitle = "Flow";
 	_settings.useIMGUI = true;
 	_settings.clearColor = ds::Color(16, 16, 16, 255);

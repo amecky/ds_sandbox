@@ -97,6 +97,7 @@ namespace ds {
 		virtual void onActivation() {}
 		virtual void onDeactivation() {}
 		virtual void showGUI() {}
+		virtual void showMenu() {}
 		bool isActive() const {
 			return _active;
 		}
@@ -138,7 +139,7 @@ namespace ds {
 				_initialized = true;
 				_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 3.0f, -6.0f));
 
-				ds::ViewportInfo vpInfo = { ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+				ds::ViewportInfo vpInfo = { 0, 0, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
 				_viewPort = ds::createViewport(vpInfo);
 
 				ds::RenderPassInfo rpInfo = { &_camera, _viewPort, ds::DepthBufferState::ENABLED, 0, 0 };
@@ -540,6 +541,7 @@ namespace ds {
 		if (_settings.useIMGUI && _guiActive) {
 			it = _scenes.begin();
 			while (it != _scenes.end()) {
+				
 				(*it)->showGUI();
 				++it;
 			}

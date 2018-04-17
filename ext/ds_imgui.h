@@ -563,7 +563,7 @@ namespace gui {
 				0.0f
 			};
 
-			ds::ViewportInfo vpInfo = { ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+			ds::ViewportInfo vpInfo = { 0, 0, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
 			RID vp = ds::createViewport(vpInfo);
 
 			ds::RenderPassInfo rpInfo = { &camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
