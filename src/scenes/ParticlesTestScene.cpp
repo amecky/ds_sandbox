@@ -6,6 +6,7 @@
 #include "..\gpuparticles\ParticleGUI.h"
 #include <ds_profiler.h>
 #include "..\PerfPanel.h"
+#include <ds_logpanel.h>
 
 const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
 
@@ -60,7 +61,7 @@ ParticlesTestScene::~ParticlesTestScene() {
 // ----------------------------------------------------
 void ParticlesTestScene::initialize() {
 
-	ds::ViewportInfo vpInfo = { 450, 100, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
+	ds::ViewportInfo vpInfo = { 450, 40, 1280, 720, 0.0f, 1.0f };
 	_gameViewPort = ds::createViewport(vpInfo);
 
 	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
@@ -168,5 +169,7 @@ void ParticlesTestScene::showGUI() {
 		//_gameContext->particles->showGUI(0);
 		//perfpanel::show_profiler();
 	}
+
+	
 }
 

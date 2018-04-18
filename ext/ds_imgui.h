@@ -673,13 +673,13 @@ namespace gui {
 		}
 
 		static void draw_buffer(UIContext* ctx, UIBuffer* buffer, const p2i& startPos, const p2i& size) {
-			float h = size.y - 20.0f;
+			float h = size.y + 10.0f;// -20.0f;
 			float sy = h / 128.0f;
 			float w = size.x + 10.0f;
 			float sx = w / 128.0f;
 
 			float bpx = startPos.x + w * 0.5f - 10.0f;
-			float bpy = startPos.y - h * 0.5f - 10.0f;
+			float bpy = startPos.y - h * 0.5f + 10.0f;
 			int num = buffer->num;
 			for (uint16_t i = 0; i < num; ++i) {
 				ds::vec2 p = buffer->positions[i];
@@ -1400,7 +1400,7 @@ namespace gui {
 	// --------------------------------------------------------
 	void endGroup() {
 		_guiCtx->grouping = false;
-		moveForward(p2i(10, 30));
+		moveForward(p2i(10, 20));
 	}
 
 	// --------------------------------------------------------
@@ -1510,7 +1510,7 @@ namespace gui {
 		p2i labelPos = _guiCtx->currentPos;
 		labelPos.x += 160;
 		p2i size = renderer::add_text(_guiCtx->uiContext, labelPos, label);
-		moveForward(p2i(size.x, 22));
+		moveForward(p2i(labelPos.x + size.x + 10, 22));
 		popID();
 	}
 

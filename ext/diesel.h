@@ -1856,6 +1856,8 @@ namespace ds {
 
 	void log(const LogLevel& level, char* format, ...);
 
+	void setLogHandler(const dsLogHandler& logHandler);
+
 }
 
 #ifndef SID
@@ -3010,6 +3012,9 @@ namespace ds {
 		}
 	}
 
+	void setLogHandler(const dsLogHandler& logHandler) {
+		_ctx->logHandler = logHandler;
+	}
 	// ------------------------------------------------------
 	// assert functions
 	// ------------------------------------------------------

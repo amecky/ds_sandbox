@@ -210,6 +210,7 @@ namespace ds {
 			return _renderContext;
 		}
 		virtual void showMenu() {}
+		virtual void showBottomPanel() {}
 	protected:
 		void stopGame() {
 			_running = false;
@@ -550,7 +551,8 @@ namespace ds {
 		if (_settings.useIMGUI && _guiActive) {
 			p2i sp = p2i(10, ds::getScreenHeight() - 10);
 			gui::start(&sp, ds::getScreenWidth());
-			if (gui::begin("Menu", 0)) {
+			gui::moveForward(p2i(0, 10));
+			//if (gui::begin("Menu", 0)) {
 				gui::beginGroup();
 				showMenu();
 				it = _scenes.begin();
@@ -559,9 +561,9 @@ namespace ds {
 					++it;
 				}
 				gui::endGroup();
-			}
+			//}
 			gui::end();
-			sp = p2i(10, ds::getScreenHeight() - 65);
+			sp = p2i(10, ds::getScreenHeight() - 50);
 			gui::start(&sp, 400);
 
 			it = _scenes.begin();
@@ -571,6 +573,8 @@ namespace ds {
 				++it;
 			}
 			gui::end();
+
+			showBottomPanel();
 		}
 		// handle events if active
 		if (doUpdate) {

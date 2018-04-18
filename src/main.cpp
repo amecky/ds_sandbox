@@ -18,7 +18,8 @@
 #include <ds_tweening.h>
 #define DS_STRING_IMPLEMENTATION
 #include <ds_string.h>
-
+#define DS_LOG_PANEL
+#include <ds_logpanel.h>
 
 extern ds::BaseApp* app;
 

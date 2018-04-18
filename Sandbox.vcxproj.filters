@@ -139,6 +139,9 @@
     <ClInclude Include="ext\ds_string.h">
       <Filter>ext</Filter>
     </ClInclude>
+    <ClInclude Include="ext\ds_logpanel.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />

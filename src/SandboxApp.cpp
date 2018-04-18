@@ -4,17 +4,25 @@
 #include <stb_image.h>
 #include <ds_imgui.h>
 #include "Material.h"
+#include <ds_logpanel.h>
 
 ds::BaseApp *app = new SandboxApp();
 
+void my_debug(const LogLevel& level, const char* message) {
+	OutputDebugString(message);
+	OutputDebugString("\n");
+	logpanel::add_line(message);
+}
+
 SandboxApp::SandboxApp() : ds::BaseApp() {
 	_settings.screenWidth = 1680;
-	_settings.screenHeight = 780;
+	_settings.screenHeight = 920;
 	_settings.windowTitle = "Flow";
 	_settings.useIMGUI = true;
 	_settings.clearColor = ds::Color(16, 16, 16, 255);
 	_settings.guiToggleKey = 'O';
 	_gameContext = new GameContext;
+	logpanel::init(32);
 }
 
 
@@ -32,6 +40,7 @@ SandboxApp::~SandboxApp() {
 // initialize
 // ---------------------------------------------------------------
 void SandboxApp::initialize() {
+	ds::setLogHandler(my_debug);
 	_gameContext->ambientMaterial = new AmbientLightningMaterial;
 	_gameContext->instancedAmbientmaterial = new InstancedAmbientLightningMaterial;
 	_gameContext->towers.init(_gameContext->ambientMaterial);
@@ -49,6 +58,7 @@ void SandboxApp::initialize() {
 // showMenu
 // ---------------------------------------------------------------
 void SandboxApp::showMenu() {
+	gui::Value("FPS", ds::getFramesPerSecond());
 	if (gui::Button("Toggle Update")) {
 		_updateActive = !_updateActive;
 	}
@@ -57,6 +67,10 @@ void SandboxApp::showMenu() {
 			doSingleStep();
 		}
 	}
+}
+
+void SandboxApp::showBottomPanel() {
+	logpanel::draw_gui(8);
 }
 // ---------------------------------------------------------------
 // handle events
