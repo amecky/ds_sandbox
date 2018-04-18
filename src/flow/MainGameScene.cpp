@@ -84,6 +84,15 @@ void MainGameScene::initialize() {
 			}
 		}
 	}
+
+	ds::ViewportInfo vpInfo = { 450, 40, 1280, 720, 0.0f, 1.0f };
+	_gameViewPort = ds::createViewport(vpInfo);
+
+	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
+	_gameRenderPass = ds::createRenderPass(rpInfo);
+
+	ds::RenderPassInfo noDepthInfo = { &_camera, _gameViewPort, ds::DepthBufferState::DISABLED, 0, 0 };
+	_particleRenderPass = ds::createRenderPass(noDepthInfo);
 	
 	_walkerItem = new RenderItem("simple_walker", _gameContext->ambientMaterial);
 	_selected = -1;
@@ -286,45 +295,42 @@ void MainGameScene::render() {
 		_gameContext->instancedAmbientmaterial->setLightDirection(i, _lightDir[i]);
 		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
-	_renderItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_renderItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 	// overlay
 	if (_dbgCtx.showOverlay) {
-		_overlayItem->draw(_basicPass, _camera.viewProjectionMatrix);
+		_overlayItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 	}
 	if (_dbgCtx.showPath) {
 		for (size_t i = 0; i < _path.size(); ++i) {
 			const PathItem& item = _path[i];
 			_pathItem->getTransform().position = item.pos;
 			_pathItem->getTransform().rotation.y = item.direction;
-			_pathItem->draw(_basicPass, _camera.viewProjectionMatrix);
+			_pathItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 		}
 	}
 	// start and end
-	_startItem->draw(_basicPass, _camera.viewProjectionMatrix);
-	_endItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_startItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
+	_endItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 	// walkers
 	for (uint32_t i = 0; i < _walkers.numObjects; ++i) {
 		const Walker& walker = _walkers.objects[i];
 		transform& t = _walkerItem->getTransform();
 		t.position = walker.pos;
 		t.rotation.y = walker.rotation;
-		_walkerItem->draw(_basicPass, _camera.viewProjectionMatrix);
+		_walkerItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 	}
 
-	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_cursorItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 	// towers
-	particles::render(_gameContext->particleContext, _basicPass, _camera.viewProjectionMatrix, _camera.position);
-	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
+	particles::render(_gameContext->particleContext, _particleRenderPass, _camera.viewProjectionMatrix, _camera.position);
+	_gameContext->towers.render(_gameRenderPass, _camera.viewProjectionMatrix);
 }
 
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void MainGameScene::showGUI() {
+void MainGameScene::drawLeftPanel() {
 	int state = 1;
-	p2i sp = p2i(10, 710);
-	gui::start(&sp, 320);
-	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Checkbox("Move camera", &_dbgCtx.moveCamera);
@@ -366,6 +372,5 @@ void MainGameScene::showGUI() {
 			}
 		}
 	}
-	gui::end();
 }
 

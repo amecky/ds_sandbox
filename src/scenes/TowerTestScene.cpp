@@ -77,6 +77,15 @@ void TowerTestScene::initialize() {
 	addTower(p2i(0, 2), 0);
 	addTower(p2i(4, 2), 0);
 
+	ds::ViewportInfo vpInfo = { 450, 40, 1280, 720, 0.0f, 1.0f };
+	_gameViewPort = ds::createViewport(vpInfo);
+
+	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
+	_gameRenderPass = ds::createRenderPass(rpInfo);
+
+	ds::RenderPassInfo noDepthInfo = { &_camera, _gameViewPort, ds::DepthBufferState::DISABLED, 0, 0 };
+	_particleRenderPass = ds::createRenderPass(noDepthInfo);
+
 }
 
 // -------------------------------------------------------------
@@ -99,7 +108,7 @@ void TowerTestScene::update(float dt) {
 	
 	_gameContext->towers.tick(dt, _events);
 
-	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix);
+	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix, _gameViewPort);
 	r.setOrigin(_camera.position);
 	ds::vec3 ip = _grid->plane.getIntersection(r);
 	ip.y = 0.1f;
@@ -135,23 +144,20 @@ void TowerTestScene::render() {
 		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
 
-	_gridItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_gridItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 
-	_cursorItem->draw(_basicPass, _camera.viewProjectionMatrix);
+	_cursorItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 
-	_gameContext->towers.render(_basicPass, _camera.viewProjectionMatrix);
+	_gameContext->towers.render(_gameRenderPass, _camera.viewProjectionMatrix);
 
-	particles::render(_gameContext->particleContext, _basicPass, _camera.viewProjectionMatrix, _camera.position);
+	particles::render(_gameContext->particleContext, _particleRenderPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void TowerTestScene::showGUI() {
+void TowerTestScene::drawLeftPanel() {
 	int state = 1;
-	p2i sp = p2i(10, 710);
-	gui::start(&sp, 320);
-	gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		if (gui::StepInput("Tower", &_selectedTower, 0, 4, 1)) {
@@ -180,6 +186,5 @@ void TowerTestScene::showGUI() {
 		}
 		//_gameContext->particles->showGUI(0);
 	}
-	gui::end();
 }
 

@@ -23,7 +23,7 @@ public:
 	void initialize();
 	void update(float dt);
 	void render();
-	void showGUI();
+	void drawLeftPanel();
 private:
 	void addTower(const p2i& gridPos, int type);
 
@@ -37,4 +37,7 @@ private:
 	ID _ids[5 * 5];
 	InstancedRenderItem* _gridItem;
 	ds::vec3 _dbgCameraRotation;
+	RID _gameViewPort;
+	RID _gameRenderPass;
+	RID _particleRenderPass;
 };

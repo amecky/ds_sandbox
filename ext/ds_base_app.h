@@ -96,12 +96,16 @@ namespace ds {
 		}
 		virtual void onActivation() {}
 		virtual void onDeactivation() {}
-		virtual void showGUI() {}
-		virtual void showMenu() {}
+		virtual void drawTopPanel() {}
+		virtual void drawLeftPanel() {}
+		virtual void drawBottomPanel() {}
 		bool isActive() const {
 			return _active;
 		}
 		virtual void OnButtonClicked(int index) {}
+		bool isInitialized() const {
+			return _initialized;
+		}
 	protected:
 		RID loadImageFromFile(const char* name);
 		ds::EventStream* _events;
@@ -186,8 +190,10 @@ namespace ds {
 		virtual void render() {}
 		virtual void update(float dt) {}
 		void pushScene(Scene* scene) {
-			scene->prepare(_events, _renderContext);
-			scene->initialize();
+			if (!scene->isInitialized()) {
+				scene->prepare(_events, _renderContext);
+				scene->initialize();
+			}
 			scene->onActivation();
 			scene->setActive(true);
 			_scenes.push_back(scene);
@@ -197,8 +203,8 @@ namespace ds {
 				Scene* scene = _scenes[_scenes.size() - 1];
 				scene->onDeactivation();
 				scene->setActive(false);
-			}
-			_scenes.pop_back();
+				_scenes.pop_back();
+			}			
 		}
 		void initializeSettings(const char* settingsFileName);
 		void loadSettings();
@@ -209,8 +215,9 @@ namespace ds {
 		RenderContext* getRenderContext() const {
 			return _renderContext;
 		}
-		virtual void showMenu() {}
-		virtual void showBottomPanel() {}
+		virtual void drawTopPanel() {}
+		virtual void drawLeftPanel() {}
+		virtual void drawBottomPanel() {}
 	protected:
 		void stopGame() {
 			_running = false;
@@ -549,32 +556,41 @@ namespace ds {
 		}
 		// render GUI if active
 		if (_settings.useIMGUI && _guiActive) {
+			//
+			// top panel
+			//
 			p2i sp = p2i(10, ds::getScreenHeight() - 10);
 			gui::start(&sp, ds::getScreenWidth());
 			gui::moveForward(p2i(0, 10));
-			//if (gui::begin("Menu", 0)) {
-				gui::beginGroup();
-				showMenu();
-				it = _scenes.begin();
-				while (it != _scenes.end()) {
-					(*it)->showMenu();
-					++it;
-				}
-				gui::endGroup();
-			//}
+			gui::beginGroup();
+			drawTopPanel();
+			it = _scenes.begin();
+			while (it != _scenes.end()) {
+				(*it)->drawTopPanel();
+				++it;
+			}
+			gui::endGroup();
 			gui::end();
+			//
+			// left panel
+			//
 			sp = p2i(10, ds::getScreenHeight() - 50);
 			gui::start(&sp, 400);
-
+			drawLeftPanel();
 			it = _scenes.begin();
 			while (it != _scenes.end()) {
 				
-				(*it)->showGUI();
+				(*it)->drawLeftPanel();
 				++it;
 			}
 			gui::end();
-
-			showBottomPanel();
+			//
+			// bottom panel
+			//
+			sp = p2i(0, ds::getScreenHeight() - 160);
+			gui::start(&sp, ds::getScreenWidth());
+			drawBottomPanel();
+			gui::end();
 		}
 		// handle events if active
 		if (doUpdate) {

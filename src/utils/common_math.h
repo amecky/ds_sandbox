@@ -35,7 +35,7 @@ private:
 	ds::vec3 _n;
 };
 
-Ray get_picking_ray(const ds::matrix& projection, const ds::matrix& view);
+Ray get_picking_ray(const ds::matrix& projection, const ds::matrix& view, RID viewPortId = INVALID_RID);
 
 namespace math {
 

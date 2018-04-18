@@ -47,7 +47,7 @@ public:
 	void initialize();
 	void update(float dt);
 	void render();
-	void showGUI();
+	void drawLeftPanel();
 	void OnButtonClicked(int index);
 private:
 	void moveWalkers(float dt);
@@ -84,4 +84,8 @@ private:
 	ds::DataArray<Walker> _walkers;
 
 	DebugContext _dbgCtx;
+
+	RID _gameViewPort;
+	RID _gameRenderPass;
+	RID _particleRenderPass;
 };

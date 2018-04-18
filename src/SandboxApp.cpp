@@ -23,6 +23,7 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 	_settings.guiToggleKey = 'O';
 	_gameContext = new GameContext;
 	logpanel::init(32);
+	_showScenes = false;
 }
 
 
@@ -47,8 +48,11 @@ void SandboxApp::initialize() {
 	RID textureID = loadImageFromFile("content\\particles.png");
 	_gameContext->particleContext = particles::create_context(textureID);
 	_flowFieldScene = new MainGameScene(_gameContext);
+	_sceneListModel.add("Flowfield", _flowFieldScene);
 	_towerTestScene = new TowerTestScene(_gameContext);
+	_sceneListModel.add("TowerTest", _towerTestScene);
 	_particlesTestScene = new ParticlesTestScene(_gameContext);
+	_sceneListModel.add("Particle Test", _particlesTestScene);
 	//pushScene(_flowFieldScene);
 	//pushScene(_towerTestScene);
 	pushScene(_particlesTestScene);
@@ -57,7 +61,7 @@ void SandboxApp::initialize() {
 // ---------------------------------------------------------------
 // showMenu
 // ---------------------------------------------------------------
-void SandboxApp::showMenu() {
+void SandboxApp::drawTopPanel() {
 	gui::Value("FPS", ds::getFramesPerSecond());
 	if (gui::Button("Toggle Update")) {
 		_updateActive = !_updateActive;
@@ -67,9 +71,31 @@ void SandboxApp::showMenu() {
 			doSingleStep();
 		}
 	}
+	if (gui::Button("Toggle Scenes")) {
+		_showScenes = !_showScenes;
+	}
 }
 
-void SandboxApp::showBottomPanel() {
+void SandboxApp::drawLeftPanel() {
+	if (_showScenes) {
+		gui::ListBox("Scenes", _sceneListModel, 4);
+		gui::beginGroup();
+		if (gui::Button("Push")) {
+			if (_sceneListModel.hasSelection()) {
+				const SceneDescriptor& desc = _sceneListModel.get(_sceneListModel.getSelection());
+				DBG_LOG("selected: %s", desc.name);
+				popScene();
+				pushScene(desc.scene);
+			}
+		}
+		if (gui::Button("Pop")) {
+			popScene();
+		}
+		gui::endGroup();
+	}
+}
+
+void SandboxApp::drawBottomPanel() {
 	logpanel::draw_gui(8);
 }
 // ---------------------------------------------------------------

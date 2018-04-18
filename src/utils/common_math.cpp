@@ -25,8 +25,8 @@ ds::vec3 normalizePoint(float x, float y) {
 	return ret;
 }
 
-Ray get_picking_ray(const ds::matrix& projection, const ds::matrix& view) {
-	ds::vec2 mp = ds::getMousePosition();
+Ray get_picking_ray(const ds::matrix& projection, const ds::matrix& view, RID viewPortId) {
+	ds::vec2 mp = ds::getMousePosition(viewPortId);
 	ds::vec3 org = normalizePoint(mp.x, mp.y);
 	org.x /= projection._11;
 	org.y /= projection._22;

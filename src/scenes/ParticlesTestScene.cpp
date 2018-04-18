@@ -139,7 +139,7 @@ void ParticlesTestScene::render() {
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------
-void ParticlesTestScene::showGUI() {
+void ParticlesTestScene::drawLeftPanel() {
 	//gui::setAlphaLevel(0.5f);
 	if (gui::begin("Debug",0)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
