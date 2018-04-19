@@ -78,6 +78,7 @@ void SandboxApp::drawTopPanel() {
 
 void SandboxApp::drawLeftPanel() {
 	if (_showScenes) {
+		gui::begin("Scenes", 0);
 		gui::ListBox("Scenes", _sceneListModel, 4);
 		gui::beginGroup();
 		if (gui::Button("Push")) {
