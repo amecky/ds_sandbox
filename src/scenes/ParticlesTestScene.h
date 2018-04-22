@@ -25,6 +25,7 @@ public:
 	void update(float dt);
 	void render();
 	void drawLeftPanel();
+	void drawTopPanel();
 private:
 	GameContext* _gameContext;
 	ds::vec3 _cursorPos;

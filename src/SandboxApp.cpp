@@ -74,6 +74,7 @@ void SandboxApp::drawTopPanel() {
 	if (gui::Button("Toggle Scenes")) {
 		_showScenes = !_showScenes;
 	}
+	
 }
 
 void SandboxApp::drawLeftPanel() {

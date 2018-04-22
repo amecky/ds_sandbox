@@ -31,18 +31,22 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	descriptor.ttl = ds::vec2(0.5f, 0.6f);
 	descriptor.startColor = ds::Color(255, 255, 255, 255);
 	descriptor.endColor = ds::Color(255, 255, 0, 192);
-	descriptor.scale = ds::vec2(0.35f);
+	descriptor.scale = ds::vec2(0.1f);
 	descriptor.scaleVariance = ds::vec2(0.02f);
-	descriptor.growth = ds::vec2(0.0f, 0.8f);
+	descriptor.growth = ds::vec2(0.0f, 0.0f);
 	descriptor.angleVariance = ds::PI * 0.1f;
 	descriptor.velocity = ds::vec2(0.2f,0.4f);
 
 
 	particleEffect = particles::createEffect(_gameContext->particleContext, "Test");
+	ringSettings.radius = 0.2f;
 	ID emitter = particles::createEmitter(_gameContext->particleContext,EmitterType::RING, &ringSettings, sizeof(RingEmitterSettings));
 	particles::attachEmitter(_gameContext->particleContext,particleEffect, emitter, descID);
-	ringSettings.radius = 0.4f;
-	ID emitter2 = particles::createEmitter(_gameContext->particleContext, EmitterType::SPHERE, &ringSettings, sizeof(RingEmitterSettings));
+	ConeEmitterSettings coneEmitterSettings;
+	coneEmitterSettings.radius = 1.4f;
+	coneEmitterSettings.arc = DEGTORAD(135.0f);
+	coneEmitterSettings.angle = 0.0f;
+	ID emitter2 = particles::createEmitter(_gameContext->particleContext, EmitterType::CONE, &coneEmitterSettings, sizeof(ConeEmitterSettings));
 	particles::attachEmitter(_gameContext->particleContext, particleEffect, emitter2, descID);
 
 	_selectedEmitterDescriptor = descID;
@@ -122,7 +126,7 @@ void ParticlesTestScene::update(float dt) {
 // render
 // ----------------------------------------------------
 void ParticlesTestScene::render() {
-	perf::ZoneTracker("Scene::rener");
+	perf::ZoneTracker("Scene::render");
 	// update lights
 	for (int i = 0; i < 3; ++i) {
 		_gameContext->instancedAmbientmaterial->setLightDirection(i, _lightDir[i]);
@@ -136,6 +140,11 @@ void ParticlesTestScene::render() {
 	particles::render(_gameContext->particleContext, _particleRenderPass, _camera.viewProjectionMatrix, _camera.position);
 }
 
+void ParticlesTestScene::drawTopPanel() {
+	if (gui::Input("Camera", &_camera.position)) {
+		ds::rebuildCamera(&_camera);
+	}
+}
 // ----------------------------------------------------
 // renderGUI
 // ----------------------------------------------------

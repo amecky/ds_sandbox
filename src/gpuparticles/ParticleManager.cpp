@@ -9,7 +9,7 @@ namespace particles {
 		context->emitterFunctions[0] = emittSphere;
 		context->emitterFunctions[1] = emittRing;
 		context->emitterFunctions[2] = emittRing; // BOX
-		context->emitterFunctions[3] = emittRing; // CONE
+		context->emitterFunctions[3] = emittCone; // CONE
 		context->emitterFunctions[4] = emittRing; // LINE
 
 		ParticlesystemDescriptor descriptor;

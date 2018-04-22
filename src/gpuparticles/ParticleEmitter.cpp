@@ -31,3 +31,19 @@ ds::vec3 emittSphere(ds::MemoryBuffer* buffer, ID id, int index, int total) {
 	float y = cos(sector * s) * settings.radius;
 	return ds::vec3(x, y, z);
 }
+
+ds::vec3 emittCone(ds::MemoryBuffer* buffer, ID id, int index, int total) {
+	ConeEmitterSettings settings;
+	buffer->get(id, &settings, sizeof(ConeEmitterSettings));
+	//int rings = 1;
+	//int sectors = total / rings;
+	float s = ds::random(0.0f, settings.angle);// ds::PI / rings;
+	float t = ds::random(0.0f, ds::TWO_PI);// ds::TWO_PI / sectors;
+	int ring = 1;// index % sectors;
+	int sector = 1;// index / sectors;
+	float x = cos(ring * t) * sin(sector * s) * settings.radius;
+	float z = sin(ring * t) * sin(sector * s) * settings.radius;
+	float y = cos(sector * s) * settings.radius;
+	return ds::vec3(x, y, z);
+
+}
