@@ -1,31 +1,37 @@
 #pragma once
 #include <stdint.h>
 #include <diesel.h>
+#include "..\lib\MemoryBuffer.h"
 
-struct GPUParticle {
-	ds::vec3 position;
-	ds::vec3 velocity;
-	ds::vec3 acceleration;
-	ds::vec2 timer;
-	ds::vec2 scale;
-	ds::vec2 growth;
-	ds::Color startColor;
-	ds::Color endColor;
-	float rotation;
-	float rotationSpeed;
-	ds::matrix world;
+// collection of particle systems
+struct PEffect {
+	ID id;
+	ID systems[8];
+	int num_systems;
+	const char* name;
 };
 
-// ---------------------------------------------------------------
-// the sprite constant buffer
-// ---------------------------------------------------------------
-struct ParticleConstantBuffer {	
-	ds::matrix wvp;
-	ds::matrix world;
-	ds::vec3 eyePos;
-	float padding;
-	ds::vec4 textureRect;
+// collection of particle functions and the IDs of the settings in memory buffer
+struct PSystem {
+	ID id;
+	const char* name;
+	int num_per_seconds;
+	float ttl;
+	bool one_shot;
+	int functions[16];
+	ID settings_ids[16];
+	int num_functions;
 };
+
+// running instance of a particle system
+struct PEffectInstance {
+	ID id;
+	float elapsed;
+	int current;
+	ID effect_id;
+};
+
+
 
 // -------------------------------------------------------
 // Particle array
@@ -126,6 +132,33 @@ struct ParticleDescriptor {
 	ds::matrix worldWatrix;
 };
 
+enum ParticleFunctions {
+	PF_PREPARE,
+	PF_GROW_OVER_TIME
+};
+
+typedef void(*ParticleFunc)(ParticleArray*, ds::MemoryBuffer*, ID, int, int);
+
+struct GrowSettings {
+	ds::vec2 startScale;
+	ds::vec2 growth;
+};
+
+void prepareFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end);
+void growFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end);
+
+// ---------------------------------------------------------------
+// the sprite constant buffer
+// ---------------------------------------------------------------
+struct ParticleConstantBuffer {
+	ds::matrix wvp;
+	ds::matrix world;
+	ds::vec3 eyePos;
+	float padding;
+	ds::vec4 textureRect;
+};
+
+struct GPUParticle;
 // -------------------------------------------------------
 // Particlesystem
 // -------------------------------------------------------
@@ -135,6 +168,7 @@ public:
 	GPUParticlesystem(const ParticlesystemDescriptor& descriptor);
 	~GPUParticlesystem();
 	void add(const ds::vec3& pos, ParticleDescriptor descriptor);
+	void prepare(int num, int* start, int* end);
 	void tick(float dt);
 	void render(RID renderPass, const ds::matrix& viewProjectionMatrix, const ds::vec3& eyePos);
 	int countAlive() const {
@@ -151,7 +185,7 @@ private:
 	RID _drawItem;
 	RID _structuredBufferId;
 	bool _debug;
-
+	ParticleFunc _functions[10];
 	float _timers[32];
 	int _timerNum;
 };

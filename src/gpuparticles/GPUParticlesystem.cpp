@@ -3,6 +3,22 @@
 #include "..\..\shaders\GPUParticles_PS_Main.h"
 #include <ds_profiler.h>
 
+struct GPUParticle {
+	ds::vec3 position;
+	ds::vec3 velocity;
+	ds::vec3 acceleration;
+	ds::vec2 timer;
+	ds::vec2 scale;
+	ds::vec2 growth;
+	ds::Color startColor;
+	ds::Color endColor;
+	float rotation;
+	float rotationSpeed;
+	ds::matrix world;
+};
+
+
+
 void swap(GPUParticle* a, GPUParticle* b) {
 	GPUParticle t = *a;
 	*a = *b;
@@ -27,6 +43,33 @@ void quickSort(GPUParticle* arr, int low, int high, const ds::vec3& eyePos) {
 		int pi = partition(arr, low, high, eyePos);
 		quickSort(arr, low, pi - 1, eyePos);
 		quickSort(arr, pi + 1, high, eyePos);
+	}
+}
+
+// -------------------------------------------------------
+// particle functions
+// -------------------------------------------------------
+void prepareFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end) {
+	int d = end - start;
+	for (int i = 0; i < d; ++i) {
+		array->timers[start + i] = ds::vec3(0.0f, 0.0f, 1.0f);
+		array->velocities[start + i] = ds::vec3(0.0f);
+		array->positions[start + i] = ds::vec3(0.0f);
+		array->sizes[start + i] = ds::vec4(1.0f);
+		array->accelerations[start + i] = ds::vec3(0.0f);
+		array->rotations[start + i] = 0.0f;
+		array->rotationSpeeds[start + i] = 0.0f;
+		array->startColors[start + i] = ds::Color(255,255,255,255);
+		array->endColors[start + i] = ds::Color(0,0,0,0);
+	}
+}
+
+void growFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end) {
+	GrowSettings settings;
+	buffer->get(id, &settings, sizeof(GrowSettings));
+	int d = end - start;
+	for (int i = 0; i < d; ++i) {
+		array->sizes[start + i] = ds::vec4(settings.startScale.x, settings.startScale.y, settings.startScale.x + settings.growth.x, settings.startScale.y + settings.growth.y);
 	}
 }
 
@@ -116,6 +159,9 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 
 	_debug = false;
 	_timerNum = 0;
+
+	_functions[PF_PREPARE] = prepareFunction;
+	_functions[PF_GROW_OVER_TIME] = growFunction;
 }
 
 GPUParticlesystem::~GPUParticlesystem() {

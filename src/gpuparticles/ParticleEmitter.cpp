@@ -1,4 +1,5 @@
 #include "ParticleEmitter.h"
+#include "GPUParticlesystem.h"
 
 const char* EmitterTypeNames[] = { "Sphere", "Ring", "Box", "Cone", "Line" };
 
@@ -45,5 +46,9 @@ ds::vec3 emittCone(ds::MemoryBuffer* buffer, ID id, int index, int total) {
 	float z = sin(ring * t) * sin(sector * s) * settings.radius;
 	float y = cos(sector * s) * settings.radius;
 	return ds::vec3(x, y, z);
+
+}
+
+void grow(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end) {
 
 }
