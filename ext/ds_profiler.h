@@ -18,7 +18,7 @@ namespace perf {
 
 	void tickFPS(float dt);
 
-	float get_current_total_time();
+	double get_total_seconds();
 
 	int num_events();
 
@@ -119,9 +119,9 @@ namespace perf {
 
 	static ZoneTrackerContext* zoneTrackerCtx = 0;
 
-	double LIToSecs(LARGE_INTEGER & L) {
-		return (L.QuadPart - zoneTrackerCtx->overhead) * 1000.0 / zoneTrackerCtx->frequency.QuadPart;
-	}
+	//double LIToSecs(LARGE_INTEGER & L) {
+		//return (L.QuadPart - zoneTrackerCtx->overhead) * 1000.0 / zoneTrackerCtx->frequency.QuadPart;
+	//}
 
 	static const uint64_t TicksPerSecond = 10000000;
 
@@ -173,7 +173,7 @@ namespace perf {
 
 	}
 
-	static double get_total_seconds() {
+	double get_total_seconds() {
 		return TicksToSeconds(zoneTrackerCtx->totalTicks);
 	}
 	

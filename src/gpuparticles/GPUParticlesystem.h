@@ -2,8 +2,9 @@
 #include <stdint.h>
 #include <diesel.h>
 #include "..\lib\MemoryBuffer.h"
-
+//
 // collection of particle systems
+//
 struct PEffect {
 	ID id;
 	ID systems[8];
@@ -30,6 +31,24 @@ struct PEffectInstance {
 	int current;
 	ID effect_id;
 };
+
+namespace particles {
+
+	struct ParticleSystemContext {
+		ds::DataArray<PEffect> effects;
+		ds::DataArray<PSystem> systems;
+	};
+
+	void initialize();
+
+	void shutdown();
+
+	ID createEffect(const char* name);
+
+	ID createSystem();
+
+	void assignSystem(ID effectID, ID systemID);
+}
 
 
 

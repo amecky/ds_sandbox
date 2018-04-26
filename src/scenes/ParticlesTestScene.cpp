@@ -176,7 +176,7 @@ void ParticlesTestScene::drawLeftPanel() {
 			particles::emitt(_gameContext->particleContext, particleEffect, ds::vec3(-0.5f, 1.1f, -0.5f), _dbgNumParticles);
 		}
 		//_gameContext->particles->showGUI(0);
-		//perfpanel::show_profiler();
+		perfpanel::show_inline_profiler();
 	}
 
 	

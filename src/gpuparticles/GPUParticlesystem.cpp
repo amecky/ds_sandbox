@@ -17,6 +17,35 @@ struct GPUParticle {
 	ds::matrix world;
 };
 
+namespace particles {
+
+	static ParticleSystemContext* _particleCtx = 0;
+
+	void initialize() {
+		_particleCtx = new ParticleSystemContext;
+	}
+
+	void shutdown() {
+		if (_particleCtx != 0) {
+			delete _particleCtx;
+		}
+	}
+
+	ID createEffect(const char* name) {
+		ID id = _particleCtx->effects.add();
+		PEffect& effect = _particleCtx->effects.get(id);
+		effect.name = name;
+		effect.num_systems = 0;
+		return id;
+	}
+
+	void assignSystem(ID effectID, ID systemID) {
+		PEffect& effect = _particleCtx->effects.get(effectID);
+		if (effect.num_systems < 8) {
+			effect.systems[effect.num_systems++] = systemID;
+		}
+	}
+}
 
 
 void swap(GPUParticle* a, GPUParticle* b) {

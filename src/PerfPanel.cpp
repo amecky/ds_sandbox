@@ -97,6 +97,36 @@ namespace perfpanel {
 		gui::end();
 	}
 
+	void show_inline_profiler() {
+		gui::begin("Profiler", &_perfHistory.state);
+		if (_perfHistory.state == 1) {
+			gui::Checkbox("Profiler", &_perfHistory.showProfiler);
+			if (perf::num_events() > 0 && _perfHistory.showProfiler) {
+				for (size_t i = 0; i < perf::num_events(); ++i) {
+					gui::Value(perf::get_name(i), perf::avg(i), 5, 8);
+				}
+				if (gui::Button("save")) {
+					FILE* fp = fopen("perf.txt", "w");
+					if (fp) {
+						for (size_t i = 0; i < perf::num_events(); ++i) {
+							fprintf(fp, "%s %2.5f\n", perf::get_name(i), perf::avg(i));
+							//LOG_DEBUG("%s %2.5f %d", perf::get_name(i), perf::avg(i), perf::num_calls(i));
+						}
+						fclose(fp);
+					}
+				}
+			}
+			gui::Checkbox("Histogram", &_perfHistory.showHistogram);
+			if (_perfHistory.maxValue > 0.0f && _perfHistory.showHistogram) {
+				double niceMin = 0.0;
+				double niceMax = 0.0;
+				double tickSpacing = 0.0;
+				get_nice_scaling(0.0, _perfHistory.maxValue, 5, true, &niceMin, &niceMax, &tickSpacing);
+				gui::Histogram(_perfHistory.values, _perfHistory.index, 0.0f, niceMax, tickSpacing);
+			}
+		}
+	}
+
 	void tick_histogram(float dt) {
 		_perfHistory.timer += dt;
 		if (_perfHistory.timer > 0.25f) {
