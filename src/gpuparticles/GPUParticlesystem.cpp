@@ -19,10 +19,10 @@ struct GPUParticle {
 
 namespace particles {
 
-	static ParticleSystemContext* _particleCtx = 0;
+	static PSystemContext* _particleCtx = 0;
 
 	void initialize() {
-		_particleCtx = new ParticleSystemContext;
+		_particleCtx = new PSystemContext;
 	}
 
 	void shutdown() {
@@ -39,11 +39,39 @@ namespace particles {
 		return id;
 	}
 
+	ID createSystem(const char* name, const PSystemSettings& settings) {
+		ID id = _particleCtx->systems.add();
+		PSystem& system = _particleCtx->systems.get(id);
+		system.one_shot = settings.one_shot;
+		system.frequency = (float)settings.num_per_seconds / 60.0f;
+		system.ttl = settings.ttl;
+		system.num_functions = 0;
+		system.name = name;
+		return id;
+	}
+
 	void assignSystem(ID effectID, ID systemID) {
 		PEffect& effect = _particleCtx->effects.get(effectID);
 		if (effect.num_systems < 8) {
 			effect.systems[effect.num_systems++] = systemID;
 		}
+	}
+
+	void tick(float dt) {
+		for (int i = 0; i < _particleCtx->instances.numObjects; ++i) {
+			PEffectInstance& instance = _particleCtx->instances.objects[i];
+			instance.elapsed += dt;
+		}
+	}
+
+	ID start(ID effectID, const ds::vec3& pos) {
+		const PEffect& effect = _particleCtx->effects.get(effectID);
+		ID id = _particleCtx->instances.add(); 
+		PEffectInstance& instance = _particleCtx->instances.get(id);
+		instance.current = 0;
+		instance.effect_id = effectID;
+		instance.elapsed = 0.0f;	
+		return id;
 	}
 }
 
@@ -75,15 +103,13 @@ void quickSort(GPUParticle* arr, int low, int high, const ds::vec3& eyePos) {
 	}
 }
 
-// -------------------------------------------------------
-// particle functions
-// -------------------------------------------------------
-void prepareFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end) {
+
+static void prepareFunction(ParticleArray* array, const ds::vec3& pos, int start, int end) {
 	int d = end - start;
 	for (int i = 0; i < d; ++i) {
 		array->timers[start + i] = ds::vec3(0.0f, 0.0f, 1.0f);
 		array->velocities[start + i] = ds::vec3(0.0f);
-		array->positions[start + i] = ds::vec3(0.0f);
+		array->positions[start + i] = pos;
 		array->sizes[start + i] = ds::vec4(1.0f);
 		array->accelerations[start + i] = ds::vec3(0.0f);
 		array->rotations[start + i] = 0.0f;
@@ -93,6 +119,9 @@ void prepareFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int 
 	}
 }
 
+// -------------------------------------------------------
+// particle functions
+// -------------------------------------------------------
 void growFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end) {
 	GrowSettings settings;
 	buffer->get(id, &settings, sizeof(GrowSettings));
@@ -189,7 +218,6 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	_debug = false;
 	_timerNum = 0;
 
-	_functions[PF_PREPARE] = prepareFunction;
 	_functions[PF_GROW_OVER_TIME] = growFunction;
 }
 

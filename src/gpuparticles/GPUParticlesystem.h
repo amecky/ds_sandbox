@@ -12,11 +12,17 @@ struct PEffect {
 	const char* name;
 };
 
+struct PSystemSettings {
+	int num_per_seconds;
+	float ttl;
+	bool one_shot;
+};
+
 // collection of particle functions and the IDs of the settings in memory buffer
 struct PSystem {
 	ID id;
 	const char* name;
-	int num_per_seconds;
+	float frequency;
 	float ttl;
 	bool one_shot;
 	int functions[16];
@@ -34,9 +40,10 @@ struct PEffectInstance {
 
 namespace particles {
 
-	struct ParticleSystemContext {
+	struct PSystemContext {
 		ds::DataArray<PEffect> effects;
 		ds::DataArray<PSystem> systems;
+		ds::DataArray<PEffectInstance> instances;
 	};
 
 	void initialize();
@@ -45,9 +52,13 @@ namespace particles {
 
 	ID createEffect(const char* name);
 
-	ID createSystem();
+	ID createSystem(const char* name, const PSystemSettings& settings);
 
 	void assignSystem(ID effectID, ID systemID);
+
+	void emitt(ID effectID);
+
+	void tick(float dt);
 }
 
 
@@ -152,7 +163,6 @@ struct ParticleDescriptor {
 };
 
 enum ParticleFunctions {
-	PF_PREPARE,
 	PF_GROW_OVER_TIME
 };
 
@@ -163,7 +173,6 @@ struct GrowSettings {
 	ds::vec2 growth;
 };
 
-void prepareFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end);
 void growFunction(ParticleArray* array, ds::MemoryBuffer* buffer, ID id, int start, int end);
 
 // ---------------------------------------------------------------

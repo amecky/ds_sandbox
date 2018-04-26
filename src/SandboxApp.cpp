@@ -5,6 +5,7 @@
 #include <ds_imgui.h>
 #include "Material.h"
 #include <ds_logpanel.h>
+#include "gpuparticles\GPUParticlesystem.h"
 
 ds::BaseApp *app = new SandboxApp();
 
@@ -15,12 +16,14 @@ void my_debug(const LogLevel& level, const char* message) {
 }
 
 SandboxApp::SandboxApp() : ds::BaseApp() {
+	particles::initialize();
 	_settings.screenWidth = 1680;
 	_settings.screenHeight = 920;
 	_settings.windowTitle = "Flow";
 	_settings.useIMGUI = true;
 	_settings.clearColor = ds::Color(16, 16, 16, 255);
 	_settings.guiToggleKey = 'O';
+	_settings.synchedFrame = true;
 	_gameContext = new GameContext;
 	logpanel::init(32);
 	_showScenes = false;
@@ -28,6 +31,7 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 
 
 SandboxApp::~SandboxApp() {
+	particles::shutdown();
 	delete _flowFieldScene;
 	delete _towerTestScene;
 	delete _gameContext->particleContext->particleSystem;

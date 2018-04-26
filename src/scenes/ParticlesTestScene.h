@@ -42,4 +42,7 @@ private:
 	RID _gameViewPort;
 	RID _gameRenderPass;
 	RID _particleRenderPass;
+
+	ID _effect;
+	ID _system;
 };

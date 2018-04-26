@@ -23,6 +23,7 @@ namespace ds {
 		char guiToggleKey;
 		char updateToggleKey;
 		char singleStepKey;
+		bool synchedFrame;
 	};
 
 	// ----------------------------------------------------
@@ -245,6 +246,11 @@ namespace ds {
 		bool _singleStep;
 		RenderContext* _renderContext;
 		ButtonState _buttonStates[2];
+		bool _fixedTimeStep;
+		float _timeStep;
+		float _gameTimer;
+		float _currentTime;
+		float _accu;
 	};
 
 
@@ -338,6 +344,7 @@ namespace ds {
 		_settings.guiToggleKey = 'D';
 		_settings.updateToggleKey = 'U';
 		_settings.singleStepKey = 'P';
+		_settings.synchedFrame = false;
 		_events = new ds::EventStream;
 		_loadTimer = 0.0f;
 		_useTweakables = false;
@@ -352,6 +359,10 @@ namespace ds {
 		_buttonStates[1] = { false, false };
 		_renderContext = new RenderContext;
 		_singleStep = false;
+		_timeStep = 1.0f / 60.0f;
+		_gameTimer = 0.0f;
+		_currentTime = 0.0f;
+		_accu = 0.0f;
 	}
 
 	BaseApp::~BaseApp() {
@@ -413,7 +424,7 @@ namespace ds {
 			ds::log(LogLevel::LL_DEBUG, "=> IMGUI is enabled");
 			gui::init();
 		}
-
+		_fixedTimeStep = _settings.synchedFrame;
 		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to toggle GUI", _settings.guiToggleKey);
 		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to toggle UPDATE", _settings.updateToggleKey);
 		ds::log(LogLevel::LL_DEBUG, "=> Press '%c' to for single step", _settings.singleStepKey);
@@ -528,17 +539,52 @@ namespace ds {
 				doUpdate = false;
 			}
 		}
-		// update app
+
+		_events->reset();
 		if (doUpdate) {
-			_events->reset();
+			if (_fixedTimeStep) {
+				_gameTimer += dt;
+				_accu += dt;
+				if (_accu > 0.25f) {
+					_accu = 0.25f;
+				}
+				int cnt = 0;
+				while (_accu >= _timeStep) {
+					update(_timeStep);
+					ScenesIterator it = _scenes.begin();
+					while (it != _scenes.end()) {
+						(*it)->update(_timeStep);
+						++it;
+					}
+					_accu -= _timeStep;
+					++cnt;
+				}
+			}
+			else {
+				update(dt);
+				ScenesIterator it = _scenes.begin();
+				while (it != _scenes.end()) {
+					(*it)->update(dt);
+					++it;
+				}
+			}
+		}
+
+
+		// update app
+		/*
+		if (doUpdate) {
+			
 			update(dt);
 		}
+		*/
 		if (_singleStep) {
 			_singleStep = false;
 		}
 		// render app
 		render();
 		// update scenes
+		/*
 		if (doUpdate) {
 			ScenesIterator it = _scenes.begin();
 			while (it != _scenes.end()) {
@@ -546,6 +592,7 @@ namespace ds {
 				++it;
 			}
 		}
+		*/
 		// render scenes
 		ScenesIterator it = _scenes.begin();
 		while (it != _scenes.end()) {

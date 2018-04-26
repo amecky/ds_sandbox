@@ -38,7 +38,11 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	descriptor.velocity = ds::vec2(0.2f,0.4f);
 
 
-	particleEffect = particles::createEffect(_gameContext->particleContext, "Test");
+	_effect = particles::createEffect("Test");
+	PSystemSettings systemSettings = { 300,0.0f,false };
+	_system = particles::createSystem("Sparks", systemSettings);
+	particleEffect = particles::createEffect("Test");
+	/*
 	ringSettings.radius = 0.2f;
 	ID emitter = particles::createEmitter(_gameContext->particleContext,EmitterType::RING, &ringSettings, sizeof(RingEmitterSettings));
 	particles::attachEmitter(_gameContext->particleContext,particleEffect, emitter, descID);
@@ -48,7 +52,7 @@ ParticlesTestScene::ParticlesTestScene(GameContext* gameContext) : ds::BaseScene
 	coneEmitterSettings.angle = 0.0f;
 	ID emitter2 = particles::createEmitter(_gameContext->particleContext, EmitterType::CONE, &coneEmitterSettings, sizeof(ConeEmitterSettings));
 	particles::attachEmitter(_gameContext->particleContext, particleEffect, emitter2, descID);
-
+	*/
 	_selectedEmitterDescriptor = descID;
 }
 
@@ -119,6 +123,8 @@ void ParticlesTestScene::update(float dt) {
 	_cursorPos = _grid->plane.getIntersection(r);
 
 	particles::tick(_gameContext->particleContext, dt);
+
+	particles::tick(dt);
 	
 }
 
