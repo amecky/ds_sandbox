@@ -60,7 +60,11 @@ namespace particles {
 	void tick(float dt) {
 		for (int i = 0; i < _particleCtx->instances.numObjects; ++i) {
 			PEffectInstance& instance = _particleCtx->instances.objects[i];
+			const PEffect& effect = _particleCtx->effects.get(instance.id);
 			instance.elapsed += dt;
+			for (int j = 0; j < effect.num_systems; ++j) {
+				const PSystem& system = _particleCtx->systems.get(effect.systems[j]);
+			}
 		}
 	}
 
