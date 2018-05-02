@@ -1,6 +1,6 @@
 #pragma once
 #include <diesel.h>
-#include "tweening.h"
+#include <ds_tweening.h>
 
 namespace ds {
 

@@ -56,7 +56,7 @@ namespace particles {
 
 	void assignSystem(ID effectID, ID systemID);
 
-	void start(ID effectID, const ds::vec3& pos);
+	ID start_me(ID effectID, const ds::vec3& pos);
 
 	void tick(float dt);
 }

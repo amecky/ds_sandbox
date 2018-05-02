@@ -68,7 +68,7 @@ namespace particles {
 		}
 	}
 
-	ID start(ID effectID, const ds::vec3& pos) {
+	ID start_me(ID effectID, const ds::vec3& pos) {
 		const PEffect& effect = _particleCtx->effects.get(effectID);
 		ID id = _particleCtx->instances.add(); 
 		PEffectInstance& instance = _particleCtx->instances.get(id);

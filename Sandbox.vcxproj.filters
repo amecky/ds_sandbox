@@ -142,6 +142,12 @@
     <ClInclude Include="ext\ds_logpanel.h">
       <Filter>ext</Filter>
     </ClInclude>
+    <ClInclude Include="src\scenes\AsteroidsScene.h">
+      <Filter>scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DynamicPath.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -208,6 +214,9 @@
     </ClCompile>
     <ClCompile Include="src\gpuparticles\ParticleGUI.cpp">
       <Filter>gpuparticles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\AsteroidsScene.cpp">
+      <Filter>scenes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -53,11 +53,13 @@
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\PerfPanel.h" />
     <ClInclude Include="src\SandboxApp.h" />
+    <ClInclude Include="src\scenes\AsteroidsScene.h" />
     <ClInclude Include="src\scenes\ParticlesTestScene.h" />
     <ClInclude Include="src\scenes\TowerTestScene.h" />
     <ClInclude Include="src\utils\Camera.h" />
     <ClInclude Include="src\utils\common_math.h" />
     <ClInclude Include="src\utils\CSVFile.h" />
+    <ClInclude Include="src\utils\DynamicPath.h" />
     <ClInclude Include="src\utils\fixed_array.h" />
     <ClInclude Include="src\utils\obj.h" />
     <ClInclude Include="src\utils\RenderItem.h" />
@@ -81,6 +83,7 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\PerfPanel.cpp" />
     <ClCompile Include="src\SandboxApp.cpp" />
+    <ClCompile Include="src\scenes\AsteroidsScene.cpp" />
     <ClCompile Include="src\scenes\ParticlesTestScene.cpp" />
     <ClCompile Include="src\scenes\TowerTestScene.cpp" />
     <ClCompile Include="src\utils\Camera.cpp" />
