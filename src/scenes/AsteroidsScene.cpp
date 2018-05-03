@@ -54,7 +54,7 @@ void AsteroidsScene::initialize() {
 	_fpsCamera = new FPSCamera(&_camera);
 	_fpsCamera->setPosition(ds::vec3(0, 0, -16), ds::vec3(0.0f, 0.0f, 0.0f));
 
-	_lightDir[0] = ds::vec3(1.0f,-0.31f,1.0f);
+	_lightDir[0] = ds::vec3(0.0f,0.0f,1.0f);
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
 	_lightDir[2] = ds::vec3(-0.3f,0.7f,-0.2f);
 
@@ -103,7 +103,7 @@ void AsteroidsScene::addEnemy() {
 
 	e.instance_id = _enemiesItem->add();
 	instance_item& item = _enemiesItem->get(e.instance_id);
-	item.transform.position = ds::vec3(0.0f, 0.0f, 0.0f);
+	item.transform.position = ds::vec3(ds::random(-8.0f,8.0f), ds::random(-4.0f,4.0f), 0.0f);
 	item.transform.rotation = ds::vec3(cos(angle), sin(angle), 0.0f);
 	e.velocity = ds::vec3(cos(angle), sin(angle), 0.0f);
 	e.timer = 0.0f;
@@ -160,8 +160,8 @@ void AsteroidsScene::update(float dt) {
 	//
 	// separate enemies
 	//
-	const float minDistance = 0.25f;
-	const float relaxation = 1.0f;
+	const float minDistance = 0.5f;
+	const float relaxation = 2.0f;
 
 	for (int i = 0; i < _enemies.numObjects; ++i) {
 		Enemy& e = _enemies.objects[i];
@@ -170,11 +170,12 @@ void AsteroidsScene::update(float dt) {
 			ds::vec3 currentPos = item.transform.position;
 			float sqrDist = minDistance * minDistance;
 			for (int j = 0; j < _enemies.numObjects; ++j) {
-				if ( i != j ) {		
+				if (i != j) {
 					Enemy& ne = _enemies.objects[j];
 					instance_item& nextItem = _enemiesItem->get(ne.instance_id);
 					ds::vec3 dist = nextItem.transform.position - currentPos;
 					if (sqr_length(dist) < sqrDist) {
+						//DBG_LOG("hit between %d and %d", e.id, ne.id);
 						ds::vec3 separationForce = dist;
 						separationForce = normalize(separationForce);
 						separationForce = separationForce * relaxation;
@@ -184,17 +185,17 @@ void AsteroidsScene::update(float dt) {
 				}
 			}
 		}
+	}
 
-		for (int i = 0; i < _enemies.numObjects; ++i) {
-			Enemy& e = _enemies.objects[i];
-			instance_item& item = _enemiesItem->get(e.instance_id);
-			item.transform.position += e.force;
-			if (item.transform.position.x > 10.0f || item.transform.position.x < -10.0f) {
-				e.velocity.x *= -1.0f;
-			}
-			if (item.transform.position.y > 5.8f || item.transform.position.y < -5.8f) {
-				e.velocity.y *= -1.0f;
-			}
+	for (int i = 0; i < _enemies.numObjects; ++i) {
+		Enemy& e = _enemies.objects[i];
+		instance_item& item = _enemiesItem->get(e.instance_id);
+		item.transform.position += e.force;
+		if (item.transform.position.x > 10.0f || item.transform.position.x < -10.0f) {
+			e.velocity.x *= -1.0f;
+		}
+		if (item.transform.position.y > 5.8f || item.transform.position.y < -5.8f) {
+			e.velocity.y *= -1.0f;
 		}
 	}
 
