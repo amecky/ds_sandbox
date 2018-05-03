@@ -4,30 +4,18 @@
 #include "..\GameContext.h"
 #include "..\gpuparticles\ParticleManager.h"
 
-const ds::vec2 CENTER = ds::vec2(-2.5f, -2.5f);
+const ds::vec2 CENTER = ds::vec2(-11.5f, -6.5f);
 
 AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _gameContext(gameContext) {
-	_grid = new Grid(5, 5);
-	for (int i = 0; i < 5; ++i) {
-		for (int j = 0; j < 5; ++j) {
+	_grid = new Grid(24, 14);
+	for (int i = 0; i < 24; ++i) {
+		for (int j = 0; j < 15; ++j) {
 			_grid->set(i, j, 0);
 		}
 	}	
-	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 0.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
+	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 1.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
 	_selectedTower = 0;
 	_dbgCameraRotation = ds::vec3(0.0f);
-
-	//ds::vec3 start(0.0f, 1.0f, 0.0f);
-	//ds::vec3 end(2.0f, 0.0f, 0.0f);
-
-	ds::vec3 start(0.50f, 0.7f, -0.68f);
-	ds::vec3 end(0.49f, 0.10f, -1.62f);
-
-	ds::vec3 diff = end - start;
-	float l = length(diff);
-	ds::vec3 center = (start + end) * 0.5f;
-	ds::vec3 dir = normalize(diff);
-	float angle = math::get_rotation(ds::vec2(diff.x, diff.z)) + ds::PI;
 
 	_scalePath.add(0.0f, 0.2f);
 	_scalePath.add(0.5f, 1.5f);
@@ -58,7 +46,7 @@ void AsteroidsScene::initialize() {
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
 	_lightDir[2] = ds::vec3(-0.3f,0.7f,-0.2f);
 
-	_gridItem = new InstancedRenderItem("basic_floor", _gameContext->instancedAmbientmaterial, 5 * 5);
+	_gridItem = new InstancedRenderItem("basic_floor", _gameContext->instancedAmbientmaterial, 24 * 14);
 
 	_enemiesItem = new InstancedRenderItem("square_border", _gameContext->instancedAmbientmaterial, 100);
 
@@ -67,7 +55,7 @@ void AsteroidsScene::initialize() {
 			int type = _grid->get(x,y);
 			int idx = x + y * _grid->width;
 			if (type == 0) {
-				ds::vec3 p = ds::vec3(CENTER.x + x, CENTER.y + y, 0.0f);
+				ds::vec3 p = ds::vec3(CENTER.x + x, CENTER.y + y, 1.0f);
 				_ids[idx] = _gridItem->add();
 				instance_item& item = _gridItem->get(_ids[idx]);
 				item.transform.position = p;
@@ -78,11 +66,11 @@ void AsteroidsScene::initialize() {
 
 	addEnemy();
 
-	_cursorItem = new RenderItem("cursor", _gameContext->ambientMaterial);
+	_cursorItem = new RenderItem("player", _gameContext->ambientMaterial);
 
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
-	ds::ViewportInfo vpInfo = { 450, 40, 1280, 720, 0.0f, 1.0f };
+	ds::ViewportInfo vpInfo = { 400, 40, 1280, 720, 0.0f, 1.0f };
 	_gameViewPort = ds::createViewport(vpInfo);
 
 	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
@@ -97,17 +85,19 @@ void AsteroidsScene::initialize() {
 // add tower
 // -------------------------------------------------------------
 void AsteroidsScene::addEnemy() {
-	ID id = _enemies.add();
-	Enemy& e = _enemies.get(id);
-	float angle = ds::random(0.0f, ds::TWO_PI);
+	if (_enemies.numObjects < 100) {
+		ID id = _enemies.add();
+		Enemy& e = _enemies.get(id);
+		float angle = ds::random(0.0f, ds::TWO_PI);
 
-	e.instance_id = _enemiesItem->add();
-	instance_item& item = _enemiesItem->get(e.instance_id);
-	item.transform.position = ds::vec3(ds::random(-8.0f,8.0f), ds::random(-4.0f,4.0f), 0.0f);
-	item.transform.rotation = ds::vec3(cos(angle), sin(angle), 0.0f);
-	e.velocity = ds::vec3(cos(angle), sin(angle), 0.0f);
-	e.timer = 0.0f;
-	e.animationFlags = 7;
+		e.instance_id = _enemiesItem->add();
+		instance_item& item = _enemiesItem->get(e.instance_id);
+		item.transform.position = ds::vec3(ds::random(-8.0f, 8.0f), ds::random(-4.0f, 4.0f), 0.0f);
+		item.transform.rotation = ds::vec3(cos(angle), sin(angle), 0.0f);
+		e.velocity = ds::vec3(cos(angle), sin(angle), 0.0f);
+		e.timer = 0.0f;
+		e.animationFlags = 7;
+	}
 }
 
 // ----------------------------------------------------
@@ -117,7 +107,7 @@ void AsteroidsScene::update(float dt) {
 	
 	//_isoCamera->update(dt);
 	_fpsCamera->update(dt);
-	
+	/*
 	_gameContext->towers.tick(dt, _events);
 
 	Ray r = get_picking_ray(_camera.projectionMatrix, _camera.viewMatrix, _gameViewPort);
@@ -127,7 +117,7 @@ void AsteroidsScene::update(float dt) {
 	_cursorItem->getTransform().position = ip;
 
 	_gameContext->towers.rotateTowers(ip);
-
+	*/
 	for (int i = 0; i < _enemies.numObjects; ++i) {
 		Enemy& e = _enemies.objects[i];
 		e.force = ds::vec3(0.0f);
@@ -174,6 +164,7 @@ void AsteroidsScene::update(float dt) {
 					Enemy& ne = _enemies.objects[j];
 					instance_item& nextItem = _enemiesItem->get(ne.instance_id);
 					ds::vec3 dist = nextItem.transform.position - currentPos;
+					dist.z = 0.0f;
 					if (sqr_length(dist) < sqrDist) {
 						//DBG_LOG("hit between %d and %d", e.id, ne.id);
 						ds::vec3 separationForce = dist;
@@ -181,6 +172,8 @@ void AsteroidsScene::update(float dt) {
 						separationForce = separationForce * relaxation;
 						separationForce.z = 0.0f;
 						e.force -= separationForce * dt;
+						e.velocity = -1.0f * normalize(dist);
+						ne.velocity = normalize(dist);
 					}
 				}
 			}
@@ -206,7 +199,7 @@ void AsteroidsScene::update(float dt) {
 			FireEvent event;
 			if (_events->get(i, &event, sizeof(FireEvent))) {
 				//_gameContext->particles->emittLine(event.pos, ip);
-				ds::vec3 diff = normalize(ip - event.pos);
+				//ds::vec3 diff = normalize(ip - event.pos);
 				//_gameContext->particles->emittParticles(event.pos, diff, 1);
 			}
 			else {
@@ -249,26 +242,7 @@ void AsteroidsScene::drawLeftPanel() {
 	int state = 1;
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
-		if (gui::StepInput("Tower", &_selectedTower, 0, 4, 1)) {
-			// change tower type
-			_gameContext->towers.remove(p2i(2, 2));
-			_gameContext->towers.addTower(p2i(2, 2), _selectedTower);
-		}
-		bool changed = false;
-		if (gui::SliderAngle("Roll", &_dbgCameraRotation.x)) {
-			changed = true;
-		}
-		if (gui::SliderAngle("Pitch", &_dbgCameraRotation.y)) {
-			changed = true;
-		}
-		if (gui::SliderAngle("Yaw", &_dbgCameraRotation.z)) {
-			changed = true;
-		}
-		if (changed) {
-			_isoCamera->setRotation(_dbgCameraRotation);
-		}
-		_gameContext->towers.showGUI(0);
-		const Tower& t = _gameContext->towers.get(0);
+		gui::Value("Enemies", _enemies.numObjects);
 		if (gui::Button("Add Enemy")) {
 			addEnemy();
 		}
@@ -293,7 +267,6 @@ void AsteroidsScene::drawLeftPanel() {
 				e.animationFlags |= 1 << 2;
 			}
 		}
-		//_gameContext->particles->showGUI(0);
 	}
 }
 

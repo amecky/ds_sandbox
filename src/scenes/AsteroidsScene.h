@@ -45,7 +45,7 @@ private:
 	ds::vec3 _lightDir[3];
 	Grid* _grid;
 	int _selectedTower;
-	ID _ids[5 * 5];
+	ID _ids[24 * 14];
 	InstancedRenderItem* _gridItem;
 	InstancedRenderItem* _enemiesItem;
 	ds::DataArray<Enemy> _enemies;
