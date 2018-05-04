@@ -16,6 +16,12 @@
 
 struct GameContext;
 
+struct Player {
+	RenderItem* _renderItem;
+	ds::vec3 position;
+	float angle;
+};
+
 struct Enemy {
 	ID id;
 	ID instance_id;
@@ -40,8 +46,8 @@ private:
 
 	GameContext* _gameContext;
 	RenderItem* _cursorItem;
-	IsometricCamera* _isoCamera;
-	FPSCamera* _fpsCamera;
+	TopDownCamera* _topDownCamera;
+	//FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	Grid* _grid;
 	int _selectedTower;

@@ -25,8 +25,8 @@ AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _ga
 
 AsteroidsScene::~AsteroidsScene() {
 	delete _grid;
-	delete _isoCamera;
-	delete _fpsCamera;
+	delete _topDownCamera;
+	//delete _fpsCamera;
 	delete _gridItem;
 	delete _cursorItem;
 }
@@ -36,11 +36,13 @@ AsteroidsScene::~AsteroidsScene() {
 // ----------------------------------------------------
 void AsteroidsScene::initialize() {
 	
-	_isoCamera = new IsometricCamera(&_camera);
-	_isoCamera->setPosition(ds::vec3(0, 6, -6), ds::vec3(0.0f, 0.0f, 0.0f));
+	_camera.position = ds::vec3(0.0f, 0.0f, -16.0f);
+	ds::rebuildCamera(&_camera);
+	_topDownCamera = new TopDownCamera(&_camera);
 
-	_fpsCamera = new FPSCamera(&_camera);
-	_fpsCamera->setPosition(ds::vec3(0, 0, -16), ds::vec3(0.0f, 0.0f, 0.0f));
+
+	//_fpsCamera = new FPSCamera(&_camera);
+	//_fpsCamera->setPosition(ds::vec3(0, 0, -16), ds::vec3(0.0f, 0.0f, 0.0f));
 
 	_lightDir[0] = ds::vec3(0.0f,0.0f,1.0f);
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
@@ -106,7 +108,10 @@ void AsteroidsScene::addEnemy() {
 void AsteroidsScene::update(float dt) {
 	
 	//_isoCamera->update(dt);
-	_fpsCamera->update(dt);
+	_topDownCamera->update(dt);
+
+	_cursorItem->getTransform().position = _camera.position;
+	_cursorItem->getTransform().position.z = 0.0f;
 	/*
 	_gameContext->towers.tick(dt, _events);
 

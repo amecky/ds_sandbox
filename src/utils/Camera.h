@@ -2,6 +2,16 @@
 #include <diesel.h>
 #include <cmath>
 
+class TopDownCamera {
+
+public:
+	TopDownCamera(ds::Camera* camera);
+	virtual ~TopDownCamera();
+	void update(float dt, RID viewPortId = INVALID_RID);
+private:
+	ds::Camera* _camera;
+};
+
 class FPSCamera {
 
 public:

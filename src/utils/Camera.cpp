@@ -1,5 +1,37 @@
 #include "Camera.h"
 
+TopDownCamera::TopDownCamera(ds::Camera* camera) : _camera(camera) {
+}
+
+TopDownCamera::~TopDownCamera() {
+
+}
+
+void TopDownCamera::update(float dt, RID viewPortId) {
+	bool moved = false;
+	ds::vec3 vel(0.0f);
+	if (ds::isKeyPressed('W')) {
+		vel.y = 1.0f;
+		moved = true;
+	}
+	if (ds::isKeyPressed('S')) {
+		vel.y = -1.0f;
+		moved = true;
+	}
+	if (ds::isKeyPressed('A')) {
+		vel.x = -1.0f;
+		moved = true;
+	}
+	if (ds::isKeyPressed('D')) {
+		vel.x = 1.0f;
+		moved = true;
+	}
+	if (moved) {
+		_camera->position += vel * 4.0f * dt;
+		ds::rebuildCamera(_camera);
+	}
+}
+
 FPSCamera::FPSCamera(ds::Camera* camera) : _camera(camera) {
 	_lastMousePos = ds::getMousePosition();
 	_speed = 10.0f;
