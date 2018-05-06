@@ -25,8 +25,9 @@ void Billboards::init(RID textureID) {
 	sbInfo.textureID = NO_RID;
 	_structuredBufferId = ds::createStructuredBuffer(sbInfo);
 
-	_constantBuffer.screenDimension = ds::vec4(1024.0f, 768.0f, 1024.0f, 1024.0f);
-	_constantBuffer.screenCenter = ds::vec4(512.0f, 384.0f, 0.0f, 0.0f);
+	ds::vec2 size = ds::getTextureSize(textureID);
+	_constantBuffer.screenDimension = ds::vec4(static_cast<float>(ds::getScreenWidth()), static_cast<float>(ds::getScreenHeight()), size.x, size.y);
+	_constantBuffer.screenCenter = ds::vec4(static_cast<float>(ds::getScreenWidth()) * 0.5f, static_cast<float>(ds::getScreenHeight()) * 0.5f, 0.0f, 0.0f);
 	
 	RID stateGroup = ds::StateGroupBuilder()
 		.constantBuffer(cbid, vertexShader)

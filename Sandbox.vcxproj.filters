@@ -148,6 +148,9 @@
     <ClInclude Include="src\utils\DynamicPath.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\scenes\StarfieldScene.h">
+      <Filter>scenes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -216,6 +219,9 @@
       <Filter>gpuparticles</Filter>
     </ClCompile>
     <ClCompile Include="src\scenes\AsteroidsScene.cpp">
+      <Filter>scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\StarfieldScene.cpp">
       <Filter>scenes</Filter>
     </ClCompile>
   </ItemGroup>

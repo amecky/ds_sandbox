@@ -55,6 +55,7 @@
     <ClInclude Include="src\SandboxApp.h" />
     <ClInclude Include="src\scenes\AsteroidsScene.h" />
     <ClInclude Include="src\scenes\ParticlesTestScene.h" />
+    <ClInclude Include="src\scenes\StarfieldScene.h" />
     <ClInclude Include="src\scenes\TowerTestScene.h" />
     <ClInclude Include="src\utils\Camera.h" />
     <ClInclude Include="src\utils\common_math.h" />
@@ -85,6 +86,7 @@
     <ClCompile Include="src\SandboxApp.cpp" />
     <ClCompile Include="src\scenes\AsteroidsScene.cpp" />
     <ClCompile Include="src\scenes\ParticlesTestScene.cpp" />
+    <ClCompile Include="src\scenes\StarfieldScene.cpp" />
     <ClCompile Include="src\scenes\TowerTestScene.cpp" />
     <ClCompile Include="src\utils\Camera.cpp" />
     <ClCompile Include="src\utils\common_math.cpp" />

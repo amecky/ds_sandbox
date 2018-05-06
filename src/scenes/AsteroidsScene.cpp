@@ -7,14 +7,6 @@
 const ds::vec2 CENTER = ds::vec2(-11.5f, -6.5f);
 
 AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _gameContext(gameContext) {
-	_grid = new Grid(24, 14);
-	for (int i = 0; i < 24; ++i) {
-		for (int j = 0; j < 15; ++j) {
-			_grid->set(i, j, 0);
-		}
-	}	
-	_grid->plane = Plane(ds::vec3(0.0f, 0.0f, 1.0f), ds::vec3(0.0f, -1.0f, 0.0f));	
-	_selectedTower = 0;
 	_dbgCameraRotation = ds::vec3(0.0f);
 
 	_scalePath.add(0.0f, 0.2f);
@@ -24,10 +16,7 @@ AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _ga
 }
 
 AsteroidsScene::~AsteroidsScene() {
-	delete _grid;
 	delete _topDownCamera;
-	//delete _fpsCamera;
-	delete _gridItem;
 	delete _cursorItem;
 }
 
@@ -48,24 +37,9 @@ void AsteroidsScene::initialize() {
 	_lightDir[1] = ds::vec3(0.6f,-0.28f,0.34f);
 	_lightDir[2] = ds::vec3(-0.3f,0.7f,-0.2f);
 
-	_gridItem = new InstancedRenderItem("basic_floor", _gameContext->instancedAmbientmaterial, 24 * 14);
 
 	_enemiesItem = new InstancedRenderItem("square_border", _gameContext->instancedAmbientmaterial, 100);
-
-	for (int y = 0; y < _grid->height; ++y) {
-		for (int x = 0; x < _grid->width; ++x) {			
-			int type = _grid->get(x,y);
-			int idx = x + y * _grid->width;
-			if (type == 0) {
-				ds::vec3 p = ds::vec3(CENTER.x + x, CENTER.y + y, 1.0f);
-				_ids[idx] = _gridItem->add();
-				instance_item& item = _gridItem->get(_ids[idx]);
-				item.transform.position = p;
-
-			}
-		}
-	}
-
+	
 	addEnemy();
 
 	_cursorItem = new RenderItem("player", _gameContext->ambientMaterial);
@@ -224,8 +198,6 @@ void AsteroidsScene::render() {
 		_gameContext->instancedAmbientmaterial->setLightDirection(i, _lightDir[i]);
 		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
-
-	_gridItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 
 	_cursorItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 

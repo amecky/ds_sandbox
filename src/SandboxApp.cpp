@@ -59,8 +59,11 @@ void SandboxApp::initialize() {
 	_sceneListModel.add("Particle Test", _particlesTestScene);
 	_asteroidsScene = new AsteroidsScene(_gameContext);
 	_sceneListModel.add("Asteroids", _asteroidsScene);
+	_starfieldScene = new StarfieldScene(_gameContext);
+	_sceneListModel.add("Starfield", _starfieldScene);
 	//pushScene(_flowFieldScene);
 	//pushScene(_towerTestScene);
+	pushScene(_starfieldScene);
 	pushScene(_asteroidsScene);
 }
 
