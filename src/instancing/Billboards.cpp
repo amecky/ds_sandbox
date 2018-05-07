@@ -4,16 +4,27 @@
 
 void Billboards::init(RID textureID) {
 
-	ds::ShaderInfo vsInfo = { 0, Billboards_VS_Main, sizeof(Billboards_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID vertexShader = ds::createShader(vsInfo);
-	ds::ShaderInfo psInfo = { 0, Billboards_PS_Main, sizeof(Billboards_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	RID pixelShader = ds::createShader(psInfo);
+
+	RID vertexShader = ds::createShader(ds::ShaderDesc()
+		.Data(Billboards_VS_Main)
+		.DataSize(sizeof(Billboards_VS_Main))
+		.ShaderType(ds::ShaderType::ST_VERTEX_SHADER)
+	);
+
+	RID pixelShader = ds::createShader(ds::ShaderDesc()
+		.Data(Billboards_PS_Main)
+		.DataSize(sizeof(Billboards_PS_Main))
+		.ShaderType(ds::ShaderType::ST_PIXEL_SHADER)
+	);
 
 	RID cbid = ds::createConstantBuffer(sizeof(BillboardsConstantBuffer), &_constantBuffer);
 	int indices[] = { 0,1,2,1,3,2 };
 	RID idxBuffer = ds::createQuadIndexBuffer(MAX_BILLBOARDS, indices);
-	ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, ds::TextureFilters::LINEAR };
-	RID ssid = ds::createSamplerState(samplerInfo);
+	
+	RID ssid = ds::createSamplerState(ds::SamplerStateDesc()
+		.AddressMode(ds::TextureAddressModes::CLAMP)
+		.Filter(ds::TextureFilters::LINEAR)
+	);
 
 	ds::StructuredBufferInfo sbInfo;
 	sbInfo.cpuWritable = true;

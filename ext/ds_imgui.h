@@ -516,9 +516,11 @@ namespace gui {
 
 			RID constantBuffer = ds::createConstantBuffer(sizeof(GUIConstantBuffer), &ctx->sprites.constantBuffer);
 
-			ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, textureFilter };
-			RID ssid = ds::createSamplerState(samplerInfo);
-
+			RID ssid = ds::createSamplerState(ds::SamplerStateDesc()
+				.AddressMode(ds::TextureAddressModes::CLAMP)
+				.Filter(ds::TextureFilters::LINEAR)
+				);
+			
 			int indices[] = { 0,1,2,1,3,2 };
 			RID idxBuffer = ds::createQuadIndexBuffer(max, indices);
 

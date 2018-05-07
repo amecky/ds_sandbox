@@ -172,15 +172,28 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 
 	RID blendState = ds::createBlendState(blendStateInfo);
 
-	ds::ShaderInfo vsInfo = { 0, GPUParticles_VS_Main, sizeof(GPUParticles_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-	RID vertexShader = ds::createShader(vsInfo, "ParticlesVS");
-	ds::ShaderInfo psInfo = { 0, GPUParticles_PS_Main, sizeof(GPUParticles_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-	RID pixelShader = ds::createShader(psInfo, "ParticlesPS");
+	
+	RID vertexShader = ds::createShader(ds::ShaderDesc()
+		.Data(GPUParticles_VS_Main)
+		.DataSize(sizeof(GPUParticles_VS_Main))
+		.ShaderType(ds::ShaderType::ST_VERTEX_SHADER),
+		"ParticlesVS"
+	);
+
+	RID pixelShader = ds::createShader(ds::ShaderDesc()
+		.Data(GPUParticles_PS_Main)
+		.DataSize(sizeof(GPUParticles_PS_Main))
+		.ShaderType(ds::ShaderType::ST_PIXEL_SHADER),
+		"ParticlesPS"
+	);
 
 
 	RID constantBuffer = ds::createConstantBuffer(sizeof(ParticleConstantBuffer), &_constantBuffer);
-	ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, ds::TextureFilters::LINEAR };
-	RID samplerState = ds::createSamplerState(samplerInfo);
+
+	RID samplerState = ds::createSamplerState(ds::SamplerStateDesc()
+		.AddressMode(ds::TextureAddressModes::CLAMP)
+		.Filter(ds::TextureFilters::LINEAR)
+	);
 
 	int indices[] = { 0,1,2,1,3,2 };
 	RID idxBuffer = ds::createQuadIndexBuffer(descriptor.maxParticles, indices);

@@ -356,8 +356,10 @@ SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchBufferInfo& info) : _max(i
 	}
 	RID constantBuffer = ds::createConstantBuffer(sizeof(SpriteBatchConstantBuffer), &_constantBuffer);
 
-	ds::SamplerStateInfo samplerInfo = { ds::TextureAddressModes::CLAMP, info.textureFilter };
-	RID ssid = ds::createSamplerState(samplerInfo);
+	RID ssid = createSamplerState(ds::SamplerStateDesc()
+		.AddressMode(ds::TextureAddressModes::CLAMP)
+		.Filter(info.textureFilter)
+	);
 
 	int indices[] = { 0,1,2,1,3,2 };
 	RID idxBuffer = ds::createQuadIndexBuffer(_max, indices);

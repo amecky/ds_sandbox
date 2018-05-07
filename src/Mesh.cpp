@@ -160,8 +160,13 @@ RID Mesh::assemble() {
 		}		
 		offset += _streams[i].nComponents;
 	}
-	ds::VertexBufferInfo vbInfo = { ds::BufferType::STATIC, maxSize, totalComponents * sizeof(float), data };
-	RID rid = ds::createVertexBuffer(vbInfo);
+	
+	RID rid = ds::createVertexBuffer(ds::VertexBufferDesc()
+		.BufferType(ds::BufferType::STATIC)
+		.NumVertices(maxSize)
+		.VertexSize(totalComponents * sizeof(float))
+		.Data(data)
+	);
 	delete[] data;
 	return rid;
 }

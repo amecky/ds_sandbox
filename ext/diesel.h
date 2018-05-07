@@ -1594,6 +1594,34 @@ namespace ds {
 		BufferType type;
 		void* data;
 	};
+
+	class IndexBufferDesc {
+
+	public:
+		IndexBufferDesc& NumIndices(uint32_t num) {
+			_info.numIndices = num;
+			return *this;
+		}
+		IndexBufferDesc& BufferType(BufferType type) {
+			_info.type = type;
+			return *this;
+		}
+		IndexBufferDesc& IndexType(IndexType type) {
+			_info.indexType = type;
+			return *this;
+		}
+		IndexBufferDesc& Data(void* data) {
+			_info.data = data;
+			return *this;
+		}
+		const IndexBufferInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		IndexBufferInfo _info;
+	};
+
+	RID createIndexBuffer(const IndexBufferDesc& info, const char* name = "IndexBuffer");
 	
 	RID createIndexBuffer(const IndexBufferInfo& info, const char* name = "IndexBuffer");
 	
@@ -1608,7 +1636,37 @@ namespace ds {
 		uint32_t vertexSize;
 		void* data;
 	};
+
+	class VertexBufferDesc {
+
+	public:
+		VertexBufferDesc() {};
+		VertexBufferDesc& BufferType(BufferType type) {
+			_info.type = type;
+			return *this;
+		}
+		VertexBufferDesc& NumVertices(uint32_t num) {
+			_info.numVertices = num;
+			return *this;
+		}
+		VertexBufferDesc& VertexSize(uint32_t size) {
+			_info.vertexSize = size;
+			return *this;
+		}
+		VertexBufferDesc& Data(void* data) {
+			_info.data = data;
+			return *this;
+		}
+		const VertexBufferInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		VertexBufferInfo _info;
+	};
+
 	RID createVertexBuffer(const VertexBufferInfo& info, const char* name = "VertexBuffer");
+
+	RID createVertexBuffer(const VertexBufferDesc& desc, const char* name = "VertexBuffer");
 	
 	void mapBufferData(RID rid, void* data, uint32_t size);
 	
@@ -1638,8 +1696,46 @@ namespace ds {
 		float minLOD;
 		CompareFunctions compareFunction;
 	};
+
+	class SamplerStateDesc {
+	public:
+		SamplerStateDesc() {
+			_info.minLOD = 0.0f;
+			_info.borderColor = ds::Color(255, 255, 255, 255);
+			_info.addressMode = TextureAddressModes::CLAMP;
+			_info.filter = TextureFilters::LINEAR;
+			_info.compareFunction = CompareFunctions::CMP_GREATER_EQUAL;
+		}
+		SamplerStateDesc& AddressMode(TextureAddressModes addressMode) {
+			_info.addressMode = addressMode;
+			return *this;
+		}
+		SamplerStateDesc& Filter(TextureFilters filter) {
+			_info.filter = filter;
+			return *this;
+		}
+		SamplerStateDesc& BorderColor(const ds::Color& borderColor) {
+			_info.borderColor = borderColor;
+			return *this;
+		}
+		SamplerStateDesc& MinLOD(float minLod) {
+			_info.minLOD = minLod;
+			return *this;
+		}
+		SamplerStateDesc& CompareFunction(CompareFunctions function) {
+			_info.compareFunction = function;
+			return *this;
+		}
+		const SamplerStateInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		SamplerStateInfo _info;
+	};
 	
-	RID createSamplerState(const SamplerStateInfo& info, const char* name = "SamplerState");
+	//RID createSamplerState(const SamplerStateInfo& info, const char* name = "SamplerState");
+
+	RID createSamplerState(const SamplerStateDesc& info, const char* name = "SamplerState");
 
 	// FIXME: add blendOperation!!! and blendMask!!!
 	struct BlendStateInfo {
@@ -1666,7 +1762,40 @@ namespace ds {
 		ShaderType type;
 	};
 
-	RID createShader(const ShaderInfo& info, const char* name = "Shader");
+	class ShaderDesc {
+
+		public:
+			ShaderDesc() {
+				_info.csoName = 0; 
+				_info.data = 0;
+				_info.dataSize = 0;
+			}
+			ShaderDesc& CSOName(const char* csoName) {
+				_info.csoName = csoName;
+				return *this;
+			}
+			ShaderDesc& Data(const void* data) {
+				_info.data = data;
+				return *this;
+			}
+			ShaderDesc& DataSize(int dataSize) {
+				_info.dataSize = dataSize;
+				return *this;
+			}
+			ShaderDesc& ShaderType(ShaderType type) {
+				_info.type = type;
+				return *this;
+			}
+			const ShaderInfo& getInfo() const {
+				return _info;
+			}
+		private:
+			ShaderInfo _info;
+	};
+
+	RID createShader(const ShaderDesc& info, const char* name = "Shader");
+
+	//RID createShader(const ShaderInfo& info, const char* name = "Shader");
 
 	RID createVertexShader(const void* data,int dataSize, const char* name = "VertexShader");
 
@@ -1683,8 +1812,45 @@ namespace ds {
 		TextureFormat format;
 		uint16_t bindFlags;
 	};
+
+	class TextureDesc {
+
+		public:
+			TextureDesc() {}
+			TextureDesc& Width(uint16_t width) {
+				_info.width = width;
+				return *this;
+			}
+			TextureDesc& Height(uint16_t height) {
+				_info.height = height;
+				return *this;
+			}
+			TextureDesc& Channels(uint8_t channels) {
+				_info.channels = channels;
+				return *this;
+			}
+			TextureDesc& Data(void* data) {
+				_info.data = data;
+				return *this;
+			}
+			TextureDesc& Format(TextureFormat format) {
+				_info.format = format;
+				return *this;
+			}
+			TextureDesc&  BindFlags(uint16_t bindFlags) {
+				_info.bindFlags = bindFlags;
+				return *this;
+			}
+			const TextureInfo& getInfo() const {
+				return _info;
+			}
+		private:
+			TextureInfo _info;
+	};
 	
 	RID createTexture(const TextureInfo& info, const char* name = "Texture");
+
+	RID createTexture(const TextureDesc& desc, const char* name = "Texture");
 
 	ds::vec2 getTextureSize(RID rid);
 
@@ -3260,8 +3426,12 @@ namespace ds {
 		// create default state group
 		BlendStateInfo defaultBlendState = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
 		RID bs_id = ds::createBlendState( defaultBlendState, "DefaultBlendState");
-		SamplerStateInfo defaultSamplerInfo = { ds::TextureAddressModes::CLAMP, ds::TextureFilters::LINEAR };
-		RID ssid = ds::createSamplerState(defaultSamplerInfo, "DefaultSamplerState");
+
+		RID ssid = createSamplerState(SamplerStateDesc()
+			.AddressMode(TextureAddressModes::CLAMP)
+			.Filter(TextureFilters::LINEAR),
+			"DefaultSamplerState"
+		);
 		ds::RasterizerStateInfo rasterizerInfo = { ds::CullMode::BACK, ds::FillMode::SOLID, true, false, 0.0f, 0.0f };
 		RID rasterizerStateID = ds::createRasterizerState(rasterizerInfo, "DefaultRasterizerState");
 
@@ -3850,6 +4020,11 @@ namespace ds {
 		IndexBufferResource* res = new IndexBufferResource(buffer, INDEX_BUFFER_FORMATS[info.indexType], info.numIndices, info.type);
 		return addResource(res, RT_INDEX_BUFFER, name);
 	}
+
+	RID createIndexBuffer(const IndexBufferDesc& info, const char* name) {
+		return createIndexBuffer(info.getInfo(), name);
+	}
+	
 	// ------------------------------------------------------
 	// set index buffer
 	// ------------------------------------------------------
@@ -3940,6 +4115,10 @@ namespace ds {
 		}
 		VertexBufferResource* res = new VertexBufferResource(buffer, size, info.type, info.vertexSize);
 		return addResource(res, RT_VERTEX_BUFFER, name);
+	}
+
+	RID createVertexBuffer(const VertexBufferDesc& desc, const char* name) {
+		return createVertexBuffer(desc.getInfo(), name);
 	}
 
 	RID createInstancedBuffer(RID vertexBuffer, RID instanceBuffer, const char* name) {
@@ -4151,7 +4330,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// create sampler state
 	// ------------------------------------------------------
-	RID createSamplerState(const SamplerStateInfo& info, const char* name) {
+	static RID createSamplerState(const SamplerStateInfo& info, const char* name) {
 		D3D11_SAMPLER_DESC colorMapDesc;
 		ZeroMemory(&colorMapDesc, sizeof(colorMapDesc));
 		colorMapDesc.AddressU = TEXTURE_ADDRESSMODES[info.addressMode];
@@ -4171,6 +4350,10 @@ namespace ds {
 		assert_result(_ctx->d3dDevice->CreateSamplerState(&colorMapDesc, &sampler), "Failed to create SamplerState");
 		SamplerStateResource* res = new SamplerStateResource(sampler);
 		return addResource(res, RT_SAMPLER_STATE, name);
+	}
+
+	RID createSamplerState(const SamplerStateDesc& desc, const char* name) {
+		return createSamplerState(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -4422,7 +4605,7 @@ namespace ds {
 		return addResource(res, RT_GEOMETRY_SHADER, name);
 	}
 
-	RID createShader(const ShaderInfo& info, const char* name) {
+	static RID createShader(const ShaderInfo& info, const char* name) {
 		if (info.csoName == 0) {
 			if (info.type == ST_VERTEX_SHADER) {
 				return createVertexShader(info.data,info.dataSize, name);
@@ -4452,6 +4635,10 @@ namespace ds {
 			}
 		}
 		return NO_RID;
+	}
+
+	RID createShader(const ShaderDesc& desc, const char* name) {
+		return createShader(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -4581,6 +4768,10 @@ namespace ds {
 		assert_result(_ctx->d3dDevice->CreateShaderResourceView(tex->texture, &srvDesc, &tex->srv), "Failed to create resource view");
 		ShaderResourceViewResource* res = new ShaderResourceViewResource(tex);
 		return addResource(res, RT_SRV, name);
+	}
+
+	RID createTexture(const TextureDesc& desc, const char* name) {
+		return createTexture(desc.getInfo(), name);
 	}
 
 	ds::vec2 getTextureSize(RID rid) {
@@ -6436,8 +6627,11 @@ namespace ds {
 		RID cbid = createConstantBuffer(sizeof(DebugTextConstantBuffer), &_ctx->debugConstantBuffer, "DebugTextConstantBuffer");
 		ds::VertexBufferInfo vbInfo = { BufferType::DYNAMIC, MAX_DBG_TXT_VERTICES, sizeof(DebugTextVertex), 0 };
 		_ctx->debugVertexBufferID = createVertexBuffer(vbInfo, "DebugTextVertexBuffer");
-		SamplerStateInfo samplerInfo = { TextureAddressModes::CLAMP, TextureFilters::POINT };
-		RID ssid = createSamplerState(samplerInfo);
+		
+		RID ssid = createSamplerState(SamplerStateDesc()
+			.AddressMode(TextureAddressModes::CLAMP)
+			.Filter(TextureFilters::LINEAR)
+		);
 
 		//
 		// create state group
