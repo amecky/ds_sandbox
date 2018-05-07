@@ -1531,6 +1531,9 @@ namespace ds {
 		int num;
 	};
 
+	// ---------------------------------------------------
+	// Viewport
+	// ---------------------------------------------------
 	struct ViewportInfo {
 		int left;
 		int top;
@@ -1540,8 +1543,46 @@ namespace ds {
 		float maxDepth;
 	};
 
-	RID createViewport(const ViewportInfo& info, const char* name = "Viewport");
+	class ViewportDesc {
 
+	public:
+		ViewportDesc() {}
+		ViewportDesc& Left(int left) {
+			_info.left = left;
+			return *this;
+		}
+		ViewportDesc& Top(int top) {
+			_info.top = top;
+			return *this;
+		}
+		ViewportDesc& Width(int width) {
+			_info.width = width;
+			return *this;
+		}
+		ViewportDesc& Height(int height) {
+			_info.height = height;
+			return *this;
+		}
+		ViewportDesc& MinDepth(float minDepth) {
+			_info.minDepth = minDepth;
+			return *this;
+		}
+		ViewportDesc& MaxDepth(float maxDepth) {
+			_info.maxDepth = maxDepth;
+			return *this;
+		}
+		const ViewportInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		ViewportInfo _info;
+	};
+
+	RID createViewport(const ViewportDesc& desc, const char* name = "Viewport");
+
+	// ---------------------------------------------------
+	// RenderPass
+	// ---------------------------------------------------
 	struct RenderPass {
 		Camera* camera;
 		RID viewport;
@@ -1558,8 +1599,44 @@ namespace ds {
 		RID* renderTargets;
 		int numRenderTargets;
 	};
+
+	class RenderPassDesc {
+
+	public:
+		RenderPassDesc() {
+			_info.camera = 0;
+			_info.viewport = NO_RID;
+			_info.renderTargets = 0;
+			_info.numRenderTargets = 0;
+		}
+		RenderPassDesc& Camera(Camera* camera) {
+			_info.camera = camera;
+			return *this;
+		}
+		RenderPassDesc& Viewport(RID viewport) {
+			_info.viewport = viewport;
+			return *this;
+		}
+		RenderPassDesc& DepthBufferState(DepthBufferState depthBufferState) {
+			_info.depthBufferState = depthBufferState;
+			return *this;
+		}
+		RenderPassDesc& RenderTargets(RID* renderTargets) {
+			_info.renderTargets = renderTargets;
+			return *this;
+		}
+		RenderPassDesc& NumRenderTargets(int numRenderTargets) {
+			_info.numRenderTargets = numRenderTargets;
+			return *this;
+		}
+		const RenderPassInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		RenderPassInfo _info;
+	};
 	
-	RID createRenderPass(const RenderPassInfo& info, const char* name = "RenderPass");
+	RID createRenderPass(const RenderPassDesc& desc, const char* name = "RenderPass");
 
 	RID compile(const DrawCommand cmd, RID* groups, int num, const char* name = "UNKNOWN");
 	
@@ -1588,6 +1665,9 @@ namespace ds {
 
 	RID createConstantBuffer(int byteWidth, void* data = 0, const char* name = "ConstantBuffer");
 
+	// ---------------------------------------------------
+	// IndexBuffer
+	// ---------------------------------------------------
 	struct IndexBufferInfo {
 		uint32_t numIndices;
 		IndexType indexType;
@@ -1629,7 +1709,9 @@ namespace ds {
 
 	RID createQuadIndexBuffer(int numQuads, int* order, const char* name = "QuadIndexBuffer");
 
+	// ---------------------------------------------------
 	// vertex buffer
+	// ---------------------------------------------------
 	struct VertexBufferInfo {
 		BufferType type;
 		uint32_t numVertices;
@@ -1687,8 +1769,12 @@ namespace ds {
 		RID textureID;
 		RID renderTarget;
 	};
+
 	RID createStructuredBuffer(const StructuredBufferInfo& info, const char* name = "StructuredBuffer");
 
+	// ---------------------------------------------------
+	// SamplerState
+	// ---------------------------------------------------
 	struct SamplerStateInfo {
 		TextureAddressModes addressMode;
 		TextureFilters filter;
@@ -1733,10 +1819,11 @@ namespace ds {
 		SamplerStateInfo _info;
 	};
 	
-	//RID createSamplerState(const SamplerStateInfo& info, const char* name = "SamplerState");
-
 	RID createSamplerState(const SamplerStateDesc& info, const char* name = "SamplerState");
 
+	// ---------------------------------------------------
+	// Blendstate
+	// ---------------------------------------------------
 	// FIXME: add blendOperation!!! and blendMask!!!
 	struct BlendStateInfo {
 		BlendStates srcBlend;
@@ -1746,8 +1833,40 @@ namespace ds {
 		bool alphaEnabled;
 	};
 
-	RID createBlendState(const BlendStateInfo& info, const char* name = "BlendState");
+	class BlendStateDesc {
+	public:
+		BlendStateDesc() {}
+		BlendStateDesc& SrcBlend(BlendStates srcBlend) {
+			_info.srcBlend = srcBlend;
+			return *this;
+		}
+		BlendStateDesc& SrcAlphaBlend(BlendStates srcAlphaBlend) {
+			_info.srcAlphaBlend = srcAlphaBlend;
+			return *this;
+		}
+		BlendStateDesc& DestBlend(BlendStates destBlend) {
+			_info.destBlend = destBlend;
+			return *this;
+		}
+		BlendStateDesc& DestAlphaBlend(BlendStates destAlphaBlend) {
+			_info.destAlphaBlend = destAlphaBlend;
+			return *this;
+		}
+		BlendStateDesc& AlphaEnabled(bool alphaEnabled) {
+			return *this;
+		}
+		const BlendStateInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		BlendStateInfo _info;
+	};
 
+	RID createBlendState(const BlendStateDesc& desc, const char* name = "BlendState");
+
+	// ---------------------------------------------------
+	// Shader
+	// ---------------------------------------------------
 	enum ShaderType {
 		ST_VERTEX_SHADER,
 		ST_PIXEL_SHADER,
@@ -1795,15 +1914,15 @@ namespace ds {
 
 	RID createShader(const ShaderDesc& info, const char* name = "Shader");
 
-	//RID createShader(const ShaderInfo& info, const char* name = "Shader");
-
 	RID createVertexShader(const void* data,int dataSize, const char* name = "VertexShader");
 
 	RID createPixelShader(const void* data, int dataSize, const char* name = "PixelShader");
 
 	RID createGeometryShader(const void* data, int dataSize, const char* name = "GeometryShader");
 	
+	// ---------------------------------------------------
 	// texture
+	// ---------------------------------------------------
 	struct TextureInfo {
 		uint16_t width;
 		uint16_t height;
@@ -1848,29 +1967,51 @@ namespace ds {
 			TextureInfo _info;
 	};
 	
-	RID createTexture(const TextureInfo& info, const char* name = "Texture");
-
 	RID createTexture(const TextureDesc& desc, const char* name = "Texture");
 
 	ds::vec2 getTextureSize(RID rid);
 
 	byte* getBufferData(RID bufferID);
 
+	// ---------------------------------------------------
+	// RenderTarget
+	// ---------------------------------------------------
+
 	struct RenderTargetInfo {
 		uint16_t width;
 		uint16_t height;		
-		const ds::Color& clearColor;
+		Color clearColor;
 	};
 
-	RID createRenderTarget(const RenderTargetInfo& info, const char* name = "RenderTarget");
+	class RenderTargetDesc {
+	public:
+		RenderTargetDesc() {}
+		RenderTargetDesc& Width(uint16_t width) {
+			_info.width = width;
+			return *this;
+		}
+		RenderTargetDesc& Height(uint16_t height) {
+			_info.height = height;
+			return *this;
+		}
+		RenderTargetDesc& ClearColor(const Color& clearColor) {
+			_info.clearColor = clearColor;
+			return *this;
+		}
+		const RenderTargetInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		RenderTargetInfo _info;
+	};
+
+	RID createRenderTarget(const RenderTargetDesc& desc, const char* name = "RenderTarget");
 
 	RID createDepthRenderTarget(const RenderTargetInfo& info, const char* name = "DepthRenderTarget");
 
-	//void setRenderTarget(RID rtID);
-
-	//void restoreBackBuffer();
-
-	// rasterizer state
+	// ---------------------------------------------------
+	// Rasterizer State
+	// ---------------------------------------------------
 	struct RasterizerStateInfo {
 		CullMode cullMode;
 		FillMode fillMode;
@@ -1880,8 +2021,45 @@ namespace ds {
 		float slopeDepthBias;
 	};
 
-	RID createRasterizerState(const RasterizerStateInfo& info, const char* name = "RasterizerState");
+	class RasterizerStateDesc {
 
+	public:
+		RasterizerStateDesc() {}
+		RasterizerStateDesc& CullMode(CullMode cullMode) {
+			_info.cullMode = cullMode;
+			return *this;
+		}
+		RasterizerStateDesc& FillMode(FillMode fillMode) {
+			_info.fillMode = fillMode;
+			return *this;
+		}
+		RasterizerStateDesc& Multisample(bool multiSample) {
+			_info.multiSample = multiSample;
+			return *this;
+		}
+		RasterizerStateDesc& Scissor(bool scissor) {
+			_info.scissor = scissor;
+			return *this;
+		}
+		RasterizerStateDesc& DepthBias(float depthBias) {
+			_info.depthBias = depthBias;
+			return *this;
+		}
+		RasterizerStateDesc& SlopeDepthBias(float slopeDepthBias) {
+			_info.slopeDepthBias = slopeDepthBias;
+			return *this;
+		}
+		const RasterizerStateInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		RasterizerStateInfo _info;
+	};
+
+	RID createRasterizerState(const RasterizerStateDesc& desc, const char* name = "RasterizerState");
+
+	
+	
 	RID findResource(const StaticHash& hash, ResourceType type);
 
 	void rebuildCamera(Camera* camera);
@@ -3424,8 +3602,14 @@ namespace ds {
 		//_ctx->pipelineState = new PipelineState;
 
 		// create default state group
-		BlendStateInfo defaultBlendState = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
-		RID bs_id = ds::createBlendState( defaultBlendState, "DefaultBlendState");
+		RID bs_id = ds::createBlendState(ds::BlendStateDesc()
+			.SrcBlend(ds::BlendStates::SRC_ALPHA)
+			.SrcAlphaBlend(ds::BlendStates::SRC_ALPHA)
+			.DestBlend(ds::BlendStates::INV_SRC_ALPHA)
+			.DestAlphaBlend(ds::BlendStates::INV_SRC_ALPHA)
+			.AlphaEnabled(true), 
+			"DefaultBlendState"
+		);
 
 		RID ssid = createSamplerState(SamplerStateDesc()
 			.AddressMode(TextureAddressModes::CLAMP)
@@ -3433,7 +3617,15 @@ namespace ds {
 			"DefaultSamplerState"
 		);
 		ds::RasterizerStateInfo rasterizerInfo = { ds::CullMode::BACK, ds::FillMode::SOLID, true, false, 0.0f, 0.0f };
-		RID rasterizerStateID = ds::createRasterizerState(rasterizerInfo, "DefaultRasterizerState");
+		RID rasterizerStateID = ds::createRasterizerState(ds::RasterizerStateDesc()
+			.CullMode(ds::CullMode::BACK)
+			.FillMode(ds::FillMode::SOLID)
+			.Multisample(true)
+			.Scissor(false)
+			.DepthBias(0.0f)
+			.SlopeDepthBias(0.0f),				
+			"DefaultRasterizerState"
+		);
 
 		_ctx->currentDrawCall = 0;
 		_ctx->lastDrawCall = -1;
@@ -4404,7 +4596,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// create blend state
 	// ------------------------------------------------------
-	RID createBlendState(const BlendStateInfo& info, const char* name) {
+	static RID createBlendState(const BlendStateInfo& info, const char* name) {
 		D3D11_BLEND_DESC blendDesc;
 		ZeroMemory(&blendDesc, sizeof(blendDesc));
 		if (info.alphaEnabled) {
@@ -4426,6 +4618,10 @@ namespace ds {
 		assert_result(_ctx->d3dDevice->CreateBlendState(&blendDesc, &state), "Failed to create blendstate");
 		BlendStateResource* res = new BlendStateResource(state);
 		return addResource(res, RT_BLENDSTATE, name);
+	}
+
+	RID createBlendState(const BlendStateDesc& desc, const char* name) {
+		return createBlendState(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -4709,7 +4905,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// create texture
 	// ------------------------------------------------------	
-	RID createTexture(const TextureInfo& info, const char* name) {
+	static RID createTexture(const TextureInfo& info, const char* name) {
 
 		InternalTexture* tex = new InternalTexture;
 		tex->width = info.width;
@@ -4890,7 +5086,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// create rasterizer state
 	// ------------------------------------------------------
-	RID createRasterizerState(const RasterizerStateInfo& info, const char* name) {
+	static RID createRasterizerState(const RasterizerStateInfo& info, const char* name) {
 		D3D11_RASTERIZER_DESC desc;
 		desc.CullMode = (D3D11_CULL_MODE)info.cullMode;
 		desc.FillMode = (D3D11_FILL_MODE)info.fillMode;
@@ -4908,6 +5104,10 @@ namespace ds {
 		return addResource(res, RT_RASTERIZER_STATE, name);
 	}
 
+	RID createRasterizerState(const RasterizerStateDesc& desc, const char* name) {
+		return createRasterizerState(desc.getInfo(), name);
+	}
+
 	// ------------------------------------------------------
 	// set rasterizer state
 	// ------------------------------------------------------
@@ -4922,7 +5122,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// create render target
 	// ------------------------------------------------------
-	RID createRenderTarget(const RenderTargetInfo& info, const char* name) {
+	static RID createRenderTarget(const RenderTargetInfo& info, const char* name) {
 		RenderTarget* rt = new RenderTarget;
 		rt->clearColor = info.clearColor;
 		// Initialize the render target texture description.
@@ -4986,6 +5186,10 @@ namespace ds {
 		assert_result(_ctx->d3dDevice->CreateDepthStencilView(rt->depthTexture, &descDSV, &rt->depthStencilView),"Failed to create depth stencil view");
 		RenderTargetResource* res = new RenderTargetResource(rt);
 		return addResource(res,RT_RENDER_TARGET, name);
+	}
+
+	RID createRenderTarget(const RenderTargetDesc& desc, const char* name) {
+		return createRenderTarget(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -5576,7 +5780,7 @@ namespace ds {
 		}
 	}
 
-	RID createViewport(const ViewportInfo& info, const char* name) {
+	static RID createViewport(const ViewportInfo& info, const char* name) {
 		D3D11_VIEWPORT* vp = new D3D11_VIEWPORT;
 		vp->Height = static_cast<float>(info.height);
 		vp->Width = static_cast<float>(info.width);
@@ -5588,10 +5792,14 @@ namespace ds {
 		return addResource(res, RT_VIEWPORT, name);
 	}
 
+	RID createViewport(const ViewportDesc& desc, const char* name) {
+		return createViewport(desc.getInfo(), name);
+	}
+
 	// ******************************************************
 	// Render pass
 	// ******************************************************
-	RID createRenderPass(const RenderPassInfo& info, const char* name) {
+	static RID createRenderPass(const RenderPassInfo& info, const char* name) {
 		RenderPass* rp = new RenderPass();
 		rp->camera = info.camera;
 		int nr = info.numRenderTargets;
@@ -5606,6 +5814,10 @@ namespace ds {
 		rp->viewport = info.viewport;
 		RenderPassResource* res = new RenderPassResource(rp);
 		return addResource(res, RT_RENDER_PASS, name);
+	}
+
+	RID createRenderPass(const RenderPassDesc& desc, const char* name) {
+		return createRenderPass(desc.getInfo(), name);
 	}
 
 	Camera buildPerspectiveCamera(const vec3& pos) {

@@ -511,8 +511,13 @@ namespace gui {
 			ds::ShaderInfo psInfo = { 0 , gui_PS_Main, sizeof(gui_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
 			RID pixelShader = ds::createShader(psInfo, "GUI_PS");
 
-			ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
-			RID bs_id = ds::createBlendState(blendInfo);
+			RID bs_id = ds::createBlendState(ds::BlendStateDesc()
+				.SrcBlend(ds::BlendStates::SRC_ALPHA)
+				.SrcAlphaBlend(ds::BlendStates::SRC_ALPHA)
+				.DestBlend(ds::BlendStates::INV_SRC_ALPHA)
+				.DestAlphaBlend(ds::BlendStates::INV_SRC_ALPHA)
+				.AlphaEnabled(true)
+			);
 
 			RID constantBuffer = ds::createConstantBuffer(sizeof(GUIConstantBuffer), &ctx->sprites.constantBuffer);
 
@@ -565,8 +570,14 @@ namespace gui {
 				0.0f
 			};
 
-			ds::ViewportInfo vpInfo = { 0, 0, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
-			RID vp = ds::createViewport(vpInfo);
+			RID vp = ds::createViewport(ds::ViewportDesc()
+				.Top(0)
+				.Left(0)
+				.Width(ds::getScreenWidth())
+				.Height(ds::getScreenHeight())
+				.MinDepth(0.0f)
+				.MaxDepth(1.0f)
+			);
 
 			ds::RenderPassInfo rpInfo = { &camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
 			ctx->sprites.renderPass = ds::createRenderPass(rpInfo, "GUIOrthoPass");
@@ -621,7 +632,14 @@ namespace gui {
 			}
 
 			ds::TextureInfo texInfo = { 256, 256, 4, data, ds::TextureFormat::R8G8B8A8_UNORM, ds::BindFlag::BF_SHADER_RESOURCE };
-			RID textureID = ds::createTexture(texInfo);
+			RID textureID = ds::createTexture(ds::TextureDesc()
+				.Width(256)
+				.Height(256)
+				.Channels(4)
+				.Data(data)
+				.Format(ds::TextureFormat::R8G8B8A8_UNORM)
+				.BindFlags(ds::BindFlag::BF_SHADER_RESOURCE)
+			);
 			createBatchBuffer(ctx, 4096, textureID, ds::TextureFilters::POINT);
 			delete[] data;
 

@@ -16,11 +16,19 @@ StarfieldScene::~StarfieldScene() {
 // ----------------------------------------------------
 void StarfieldScene::initialize() {
 
-	ds::ViewportInfo vpInfo = { 450, 40, 1280, 720, 0.0f, 1.0f };
-	_gameViewPort = ds::createViewport(vpInfo);
+	_gameViewPort = ds::createViewport(ds::ViewportDesc()
+		.Top(40)
+		.Left(450)
+		.Width(1280)
+		.Height(720)
+		.MinDepth(0.0f)
+		.MaxDepth(1.0f)
+	);
 
-	ds::RenderPassInfo rpInfo = { &_camera, _gameViewPort, ds::DepthBufferState::ENABLED, 0, 0 };
-	_gameRenderPass = ds::createRenderPass(rpInfo);
+	_gameRenderPass = ds::createRenderPass(ds::RenderPassDesc()
+		.Camera(&_camera)
+		.Viewport(_gameViewPort)
+		.DepthBufferState(ds::DepthBufferState::ENABLED));
 
 	_billboards = new Billboards;
 	RID textureID = loadImageFromFile("content\\particles.png");

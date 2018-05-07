@@ -144,17 +144,33 @@ namespace ds {
 				_initialized = true;
 				_camera = ds::buildPerspectiveCamera(ds::vec3(0.0f, 3.0f, -6.0f));
 
-				ds::ViewportInfo vpInfo = { 0, 0, ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f };
-				_viewPort = ds::createViewport(vpInfo);
+				_viewPort = ds::createViewport(ds::ViewportDesc()
+					.Top(0)
+					.Left(0)
+					.Width(ds::getScreenWidth())
+					.Height(ds::getScreenHeight())
+					.MinDepth(0.0f)
+					.MaxDepth(1.0f)
+				);
 
-				ds::RenderPassInfo rpInfo = { &_camera, _viewPort, ds::DepthBufferState::ENABLED, 0, 0 };
-				_basicPass = ds::createRenderPass(rpInfo);
+				_basicPass = ds::createRenderPass(ds::RenderPassDesc()
+					.Camera(&_camera)
+					.Viewport(_viewPort)
+					.DepthBufferState(ds::DepthBufferState::ENABLED));
 
-				ds::RenderPassInfo noDepthInfo = { &_camera, _viewPort, ds::DepthBufferState::DISABLED, 0, 0 };
-				_noDepthPass = ds::createRenderPass(noDepthInfo);
+				_noDepthPass = ds::createRenderPass(ds::RenderPassDesc()
+					.Camera(&_camera)
+					.Viewport(_viewPort)
+					.DepthBufferState(ds::DepthBufferState::DISABLED)
+				);
 
-				ds::BlendStateInfo blendInfo = { ds::BlendStates::SRC_ALPHA, ds::BlendStates::SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, ds::BlendStates::INV_SRC_ALPHA, true };
-				_blendStateID = ds::createBlendState(blendInfo);
+				_blendStateID = ds::createBlendState(ds::BlendStateDesc()
+					.SrcBlend(ds::BlendStates::SRC_ALPHA)
+					.SrcAlphaBlend(ds::BlendStates::SRC_ALPHA)
+					.DestBlend(ds::BlendStates::INV_SRC_ALPHA)
+					.DestAlphaBlend(ds::BlendStates::INV_SRC_ALPHA)
+					.AlphaEnabled(true)
+				);
 			}
 		}
 	protected:

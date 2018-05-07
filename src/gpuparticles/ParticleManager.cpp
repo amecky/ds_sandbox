@@ -32,7 +32,12 @@ namespace particles {
 		descriptor.texture = textureID;
 		context->particleSystem = new GPUParticlesystem(descriptor);
 		ds::RenderTargetInfo info = { 1280,720,ds::Color(0.0f,0.0f,0.0f,0.0f) };
-		context->renderTarget = ds::createRenderTarget(info, "ParticlesRT");
+		context->renderTarget = ds::createRenderTarget(ds::RenderTargetDesc()
+			.Width(1280)
+			.Height(720)
+			.ClearColor(ds::Color(0,0,0,0))
+			, "ParticlesRT"
+		);
 
 
 		return context;
