@@ -1221,6 +1221,20 @@ namespace ds {
 		DYNAMIC
 	};
 
+	enum class CpuAccessFlag : unsigned char {
+		NONE = 0,
+		WRITE = 1,
+		READ = 2,
+		READ_WRITE = 3
+	};
+
+	enum class TextureType : unsigned char {
+		STATIC = 1,
+		DYNAMIC = 2,
+		DEFAULT = 3,
+		STAGING = 4
+	};
+
 	enum TextureAddressModes {
 		WRAP,
 		MIRROR,
@@ -1285,6 +1299,14 @@ namespace ds {
 		INV_SRC1_COLOR,
 		SRC1_ALPHA,
 		INV_SRC1_ALPHA
+	};
+
+	enum BlendOperation {
+		BOP_ADD = 0,
+		BOP_SUBTRACT = 1,
+		BOP_REV_SUBTRACT = 2,
+		BOP_MIN = 3,
+		BOP_MAX = 4
 	};
 
 	// ---------------------------------------------------
@@ -1646,13 +1668,44 @@ namespace ds {
 	
 	bool init(const RenderSettings& settings);
 
+	// ---------------------------------------------------
 	// vertex declaration / buffer input layout
+	// ---------------------------------------------------
 	struct InputLayoutInfo {
 		InputLayoutDefinition* declarations;
 		uint8_t numDeclarations;
 		RID vertexShaderId;
 	};
-	RID createInputLayout(const InputLayoutInfo& info, const char* name = "InputLayout");
+
+	class InputLayoutDesc {
+
+		public:
+			InputLayoutDesc() {
+				_info.numDeclarations = 0;
+				_info.declarations = 0;
+				_info.vertexShaderId = NO_RID;
+			}
+			InputLayoutDesc& Declarations(InputLayoutDefinition* declarations) {
+				_info.declarations = declarations;
+				return *this;
+			}
+			InputLayoutDesc& NumDeclarations(uint8_t num) {
+				_info.numDeclarations = num;
+				return *this;
+			}
+			InputLayoutDesc& VertexShader(RID shader) {
+				_info.vertexShaderId = shader;
+				return *this;
+			}
+			const InputLayoutInfo& getInfo() const {
+				return _info;
+			}
+		private:
+			InputLayoutInfo _info;
+	};
+
+
+	RID createInputLayout(const InputLayoutDesc& desc, const char* name = "InputLayout");
 
 	struct InstancedInputLayoutInfo {
 		InputLayoutDefinition* decl;
@@ -1661,7 +1714,40 @@ namespace ds {
 		uint8_t instNum;
 		RID shaderId;
 	};
-	RID createInstancedInputLayout(const InstancedInputLayoutInfo& info, const char* name = "InstancedInputLayout");
+
+	class InstancedInputLayoutDesc {
+
+		public:
+			InstancedInputLayoutDesc() {
+			}
+			InstancedInputLayoutDesc& LayoutDefinition(InputLayoutDefinition* decl) {
+				_info.decl = decl;
+				return *this;
+			}
+			InstancedInputLayoutDesc& Num(uint8_t num) {
+				_info.num = num;
+				return *this;
+			}
+			InstancedInputLayoutDesc& InstancedLayoutDefinition(InstancedInputLayoutDefinition* instDecl) {
+				_info.instDecl = instDecl;
+				return *this;
+			}
+			InstancedInputLayoutDesc& NumInstances(uint8_t instNum) {
+				_info.instNum = instNum;
+				return *this;
+			}
+			InstancedInputLayoutDesc& Shader(RID shaderId) {
+				_info.shaderId = shaderId;
+				return *this;
+			}
+			const InstancedInputLayoutInfo& getInfo() const {
+				return _info;
+			}
+		private:
+			InstancedInputLayoutInfo _info;
+	};
+
+	RID createInstancedInputLayout(const InstancedInputLayoutDesc& desc, const char* name = "InstancedInputLayout");
 
 	RID createConstantBuffer(int byteWidth, void* data = 0, const char* name = "ConstantBuffer");
 
@@ -1703,8 +1789,6 @@ namespace ds {
 
 	RID createIndexBuffer(const IndexBufferDesc& info, const char* name = "IndexBuffer");
 	
-	RID createIndexBuffer(const IndexBufferInfo& info, const char* name = "IndexBuffer");
-	
 	RID createQuadIndexBuffer(int numQuads, const char* name = "QuadIndexBuffer");
 
 	RID createQuadIndexBuffer(int numQuads, int* order, const char* name = "QuadIndexBuffer");
@@ -1722,7 +1806,12 @@ namespace ds {
 	class VertexBufferDesc {
 
 	public:
-		VertexBufferDesc() {};
+		VertexBufferDesc() {
+			_info.type = BufferType::STATIC;
+			_info.numVertices = 0;
+			_info.vertexSize = 0;
+			_info.data = 0;
+		}
 		VertexBufferDesc& BufferType(BufferType type) {
 			_info.type = type;
 			return *this;
@@ -1746,8 +1835,6 @@ namespace ds {
 		VertexBufferInfo _info;
 	};
 
-	RID createVertexBuffer(const VertexBufferInfo& info, const char* name = "VertexBuffer");
-
 	RID createVertexBuffer(const VertexBufferDesc& desc, const char* name = "VertexBuffer");
 	
 	void mapBufferData(RID rid, void* data, uint32_t size);
@@ -1770,7 +1857,53 @@ namespace ds {
 		RID renderTarget;
 	};
 
-	RID createStructuredBuffer(const StructuredBufferInfo& info, const char* name = "StructuredBuffer");
+	class StructuredBufferDesc {
+	public:
+		StructuredBufferDesc() {
+			_info.data = 0;
+			_info.elementSize = 0;
+			_info.cpuWritable = false;
+			_info.gpuWritable = false;
+			_info.textureID = NO_RID;
+			_info.renderTarget = NO_RID;
+		}
+		StructuredBufferDesc& NumElements(unsigned int numElements) {
+			_info.numElements = numElements;
+			return *this;
+		}
+		StructuredBufferDesc& ElementSize(int elementSize) {
+			_info.elementSize = elementSize;
+			return *this;
+		}
+		StructuredBufferDesc&  CpuWritable(bool cpuWritable) {
+			_info.cpuWritable = cpuWritable;
+			return *this;
+		}
+		StructuredBufferDesc& GpuWritable(bool gpuWritable) {
+			_info.gpuWritable = gpuWritable;
+			return *this;
+		}
+		StructuredBufferDesc& Data(void* data) {
+			_info.data = data;
+			return *this;
+		}
+		StructuredBufferDesc& Texture(RID textureID) {
+			_info.textureID = textureID;
+			return *this;
+		}
+		StructuredBufferDesc& RenderTarget(RID renderTarget) {
+			_info.renderTarget = renderTarget;
+			return *this;
+		}
+		const StructuredBufferInfo& getInfo() const {
+			return _info;
+		}
+	private:
+		StructuredBufferInfo _info;
+	};
+	
+
+	RID createStructuredBuffer(const StructuredBufferDesc& desc, const char* name = "StructuredBuffer");
 
 	// ---------------------------------------------------
 	// SamplerState
@@ -1824,18 +1957,26 @@ namespace ds {
 	// ---------------------------------------------------
 	// Blendstate
 	// ---------------------------------------------------
-	// FIXME: add blendOperation!!! and blendMask!!!
 	struct BlendStateInfo {
 		BlendStates srcBlend;
 		BlendStates srcAlphaBlend;
 		BlendStates destBlend;
 		BlendStates destAlphaBlend;
 		bool alphaEnabled;
+		unsigned char renderTargetWriteMask;
+		BlendOperation blendOp;
+		BlendOperation blendOpAlpha;
 	};
 
 	class BlendStateDesc {
+
 	public:
-		BlendStateDesc() {}
+		BlendStateDesc() {
+			_info.alphaEnabled = true;
+			_info.renderTargetWriteMask = 0x0f;
+			_info.blendOp = BlendOperation::BOP_ADD;
+			_info.blendOpAlpha = BlendOperation::BOP_ADD;
+		}
 		BlendStateDesc& SrcBlend(BlendStates srcBlend) {
 			_info.srcBlend = srcBlend;
 			return *this;
@@ -1853,6 +1994,15 @@ namespace ds {
 			return *this;
 		}
 		BlendStateDesc& AlphaEnabled(bool alphaEnabled) {
+			_info.alphaEnabled = alphaEnabled;
+			return *this;
+		}
+		BlendStateDesc& BlendOp(BlendOperation blendOp) {
+			_info.blendOp = blendOp;
+			return *this;
+		}
+		BlendStateDesc& BlendOpAlpha(BlendOperation blendOpAlpha) {
+			_info.blendOpAlpha = blendOpAlpha;
 			return *this;
 		}
 		const BlendStateInfo& getInfo() const {
@@ -1930,12 +2080,22 @@ namespace ds {
 		void* data;
 		TextureFormat format;
 		uint16_t bindFlags;
+		TextureType textureType;
+		CpuAccessFlag cpuAccessFlag;
 	};
 
 	class TextureDesc {
 
 		public:
-			TextureDesc() {}
+			TextureDesc() {
+				_info.data = 0;
+				_info.width = 0;
+				_info.height = 0;
+				_info.channels = 0;
+				_info.bindFlags = 0;
+				_info.textureType = TextureType::DYNAMIC;
+				_info.cpuAccessFlag = CpuAccessFlag::NONE;
+			}
 			TextureDesc& Width(uint16_t width) {
 				_info.width = width;
 				return *this;
@@ -1958,6 +2118,14 @@ namespace ds {
 			}
 			TextureDesc&  BindFlags(uint16_t bindFlags) {
 				_info.bindFlags = bindFlags;
+				return *this;
+			}
+			TextureDesc&  TextureType(TextureType type) {
+				_info.textureType = type;
+				return *this;
+			}
+			TextureDesc&  CpuAccessFlags(CpuAccessFlag flag) {
+				_info.cpuAccessFlag = flag;
 				return *this;
 			}
 			const TextureInfo& getInfo() const {
@@ -3978,7 +4146,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// input layout / vertex declaration
 	// ------------------------------------------------------
-	RID createInputLayout(const InputLayoutInfo& info, const char* name) {
+	static RID createInputLayout(const InputLayoutInfo& info, const char* name) {
 		D3D11_INPUT_ELEMENT_DESC* descriptors = new D3D11_INPUT_ELEMENT_DESC[info.numDeclarations];
 		uint32_t index = 0;
 		uint32_t counter = 0;
@@ -4010,7 +4178,11 @@ namespace ds {
 		return addResource(res, RT_INPUT_LAYOUT, name);
 	}
 
-	RID createInstancedInputLayout(const InstancedInputLayoutInfo& info, const char* name) {
+	RID createInputLayout(const InputLayoutDesc& desc, const char* name) {
+		return createInputLayout(desc.getInfo(), name);
+	}
+
+	static RID createInstancedInputLayout(const InstancedInputLayoutInfo& info, const char* name) {
 		int total = info.num + info.instNum;
 		D3D11_INPUT_ELEMENT_DESC* descriptors = new D3D11_INPUT_ELEMENT_DESC[total];
 		uint32_t index = 0;
@@ -4060,6 +4232,10 @@ namespace ds {
 		InputLayoutResource* res = new InputLayoutResource(layout, index);
 		delete[] descriptors;
 		return addResource(res, RT_INPUT_LAYOUT, name);
+	}
+
+	RID createInstancedInputLayout(const InstancedInputLayoutDesc& desc, const char* name) {
+		return createInstancedInputLayout(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -4189,7 +4365,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// index buffer with data
 	// ------------------------------------------------------
-	RID createIndexBuffer(const IndexBufferInfo& info, const char* name) {
+	static RID internalCreateIndexBuffer(const IndexBufferInfo& info, const char* name) {
 		D3D11_BUFFER_DESC bufferDesc;
 		if (info.type == BufferType::DYNAMIC) {
 			bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -4214,7 +4390,7 @@ namespace ds {
 	}
 
 	RID createIndexBuffer(const IndexBufferDesc& info, const char* name) {
-		return createIndexBuffer(info.getInfo(), name);
+		return internalCreateIndexBuffer(info.getInfo(), name);
 	}
 	
 	// ------------------------------------------------------
@@ -4250,7 +4426,7 @@ namespace ds {
 			cnt += 4;
 		}
 		IndexBufferInfo info = { size, ds::IndexType::UINT_32, ds::BufferType::STATIC, data };
-		RID rid = createIndexBuffer(info, name);
+		RID rid = internalCreateIndexBuffer(info, name);
 		delete[] data;
 		return rid;
 	}
@@ -4271,7 +4447,7 @@ namespace ds {
 			cnt += 4;
 		}
 		IndexBufferInfo info = { size, ds::IndexType::UINT_32, ds::BufferType::STATIC, data };
-		RID rid = createIndexBuffer(info, name);
+		RID rid = internalCreateIndexBuffer(info, name);
 		delete[] data;
 		return rid;
 	}
@@ -4279,7 +4455,7 @@ namespace ds {
 	// ------------------------------------------------------
 	// vertex buffer with optional data
 	// ------------------------------------------------------
-	RID createVertexBuffer(const VertexBufferInfo& info, const char* name) {
+	static RID internalCreateVertexBuffer(const VertexBufferInfo& info, const char* name) {
 		UINT size = info.numVertices * info.vertexSize;
 		D3D11_BUFFER_DESC bufferDesciption;
 		ZeroMemory(&bufferDesciption, sizeof(bufferDesciption));
@@ -4310,7 +4486,7 @@ namespace ds {
 	}
 
 	RID createVertexBuffer(const VertexBufferDesc& desc, const char* name) {
-		return createVertexBuffer(desc.getInfo(), name);
+		return internalCreateVertexBuffer(desc.getInfo(), name);
 	}
 
 	RID createInstancedBuffer(RID vertexBuffer, RID instanceBuffer, const char* name) {
@@ -4352,7 +4528,7 @@ namespace ds {
 	// createStructuredBuffer
 	// ------------------------------------------------------
 	// FIXME: do we need to add a paramter to info like SRV/UAV buffer?
-	RID createStructuredBuffer(const StructuredBufferInfo& info, const char* name) {
+	static RID internalCreateStructuredBuffer(const StructuredBufferInfo& info, const char* name) {
 		StructuredBuffer* sb = new StructuredBuffer;
 		sb->buffer = 0;
 		sb->uav = 0;
@@ -4422,6 +4598,10 @@ namespace ds {
 		BufferResource* res = new BufferResource(sb);
 		return addResource(res, RT_STRUCTURED_BUFFER, name);
 
+	}
+
+	RID createStructuredBuffer(const StructuredBufferDesc& desc, const char* name) {
+		return internalCreateStructuredBuffer(desc.getInfo(), name);
 	}
 
 	// ------------------------------------------------------
@@ -4593,6 +4773,13 @@ namespace ds {
 		D3D11_BLEND_INV_SRC1_ALPHA
 	};
 
+	static const D3D11_BLEND_OP BLEND_OP_MAPPINGS[] = {
+		D3D11_BLEND_OP_ADD,
+		D3D11_BLEND_OP_SUBTRACT,
+		D3D11_BLEND_OP_REV_SUBTRACT,
+		D3D11_BLEND_OP_MIN,
+		D3D11_BLEND_OP_MAX
+	};
 	// ------------------------------------------------------
 	// create blend state
 	// ------------------------------------------------------
@@ -4606,13 +4793,13 @@ namespace ds {
 			blendDesc.RenderTarget[0].BlendEnable = FALSE;
 			//blendDesc.RenderTarget[0].BlendEnable = (srcBlend != D3D11_BLEND_ONE) || (destBlend != D3D11_BLEND_ZERO);
 		}
-		blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].BlendOp = BLEND_OP_MAPPINGS[info.blendOp];
 		blendDesc.RenderTarget[0].SrcBlend = BLEND_STATEMAPPINGS[info.srcBlend];
 		blendDesc.RenderTarget[0].DestBlend = BLEND_STATEMAPPINGS[info.destBlend];
-		blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].BlendOpAlpha = BLEND_OP_MAPPINGS[info.blendOpAlpha];
 		blendDesc.RenderTarget[0].SrcBlendAlpha = BLEND_STATEMAPPINGS[info.srcAlphaBlend];
 		blendDesc.RenderTarget[0].DestBlendAlpha = BLEND_STATEMAPPINGS[info.destAlphaBlend];
-		blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0F;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = info.renderTargetWriteMask;
 
 		ID3D11BlendState* state;
 		assert_result(_ctx->d3dDevice->CreateBlendState(&blendDesc, &state), "Failed to create blendstate");
@@ -4902,6 +5089,19 @@ namespace ds {
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
 	};
 
+	static D3D11_USAGE convertTextureType(TextureType type) {
+		if (type == TextureType::DEFAULT) {
+			return D3D11_USAGE_DEFAULT;
+		}
+		else if (type == TextureType::STATIC) {
+			return D3D11_USAGE_IMMUTABLE;
+		}
+		else if (type == TextureType::STAGING) {
+			return D3D11_USAGE_STAGING;
+		}
+		return D3D11_USAGE_DYNAMIC;
+	}
+
 	// ------------------------------------------------------
 	// create texture
 	// ------------------------------------------------------	
@@ -4937,7 +5137,7 @@ namespace ds {
 		*/
 			//desc.Usage = D3D11_USAGE_IMMUTABLE;
 		//desc.Usage = D3D11_USAGE_DEFAULT;// D3D11_USAGE_DYNAMIC;
-		desc.Usage = D3D11_USAGE_DYNAMIC;
+		desc.Usage = convertTextureType(info.textureType);
 		if (info.data != 0) {
 			D3D11_SUBRESOURCE_DATA subres;
 			subres.pSysMem = info.data;
@@ -5780,7 +5980,7 @@ namespace ds {
 		}
 	}
 
-	static RID createViewport(const ViewportInfo& info, const char* name) {
+	static RID internalCreateViewport(const ViewportInfo& info, const char* name) {
 		D3D11_VIEWPORT* vp = new D3D11_VIEWPORT;
 		vp->Height = static_cast<float>(info.height);
 		vp->Width = static_cast<float>(info.width);
@@ -5793,7 +5993,7 @@ namespace ds {
 	}
 
 	RID createViewport(const ViewportDesc& desc, const char* name) {
-		return createViewport(desc.getInfo(), name);
+		return internalCreateViewport(desc.getInfo(), name);
 	}
 
 	// ******************************************************
@@ -6837,8 +7037,13 @@ namespace ds {
 		InputLayoutInfo layoutInfo = { decl, 3, vertexShader };
 		RID vertexDeclId = createInputLayout( layoutInfo, "PCC_Layout");
 		RID cbid = createConstantBuffer(sizeof(DebugTextConstantBuffer), &_ctx->debugConstantBuffer, "DebugTextConstantBuffer");
-		ds::VertexBufferInfo vbInfo = { BufferType::DYNAMIC, MAX_DBG_TXT_VERTICES, sizeof(DebugTextVertex), 0 };
-		_ctx->debugVertexBufferID = createVertexBuffer(vbInfo, "DebugTextVertexBuffer");
+		
+		_ctx->debugVertexBufferID = createVertexBuffer(ds::VertexBufferDesc()
+			.BufferType(ds::BufferType::DYNAMIC)
+			.NumVertices(MAX_DBG_TXT_VERTICES)
+			.VertexSize(sizeof(DebugTextVertex)), 
+			"DebugTextVertexBuffer"
+		);
 		
 		RID ssid = createSamplerState(SamplerStateDesc()
 			.AddressMode(TextureAddressModes::CLAMP)
@@ -6884,8 +7089,16 @@ namespace ds {
 			0.0f,
 			0.0f
 		};
-		ViewportInfo vpInfo = { getScreenWidth(), getScreenHeight(), 0.0f, 1.0f };
-		RID vp = createViewport(vpInfo, "DebugViewport");
+
+		RID vp = createViewport(ViewportDesc()
+			.Top(0)
+			.Left(0)
+			.Width(getScreenWidth())
+			.Height(getScreenHeight())
+			.MinDepth(0.0f)
+			.MaxDepth(1.0f)
+			, "DebugViewport"
+		);
 		RenderPassInfo orthoRP = { &_ctx->orthoCamera, vp, DepthBufferState::DISABLED, 0, 0 };
 		_ctx->debugOrthoPass = createRenderPass(orthoRP, "DebugTextOrthoPass");
 		_ctx->debugConstantBuffer.wvp = matTranspose(orthoView * orthoProjection);

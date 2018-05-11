@@ -4,6 +4,55 @@
 #include "..\GameContext.h"
 #include "..\gpuparticles\ParticleManager.h"
 
+void move_player(Player* player, float dt) {
+	bool moved = false;
+	ds::vec3 vel(0.0f);
+	float v = 4.0f;
+	if (ds::isKeyPressed('W')) {
+		vel.y = v;
+		moved = true;
+	}
+	if (ds::isKeyPressed('S')) {
+		vel.y = -v;
+		moved = true;
+	}
+	if (ds::isKeyPressed('A')) {
+		vel.x = -v;
+		moved = true;
+	}
+	if (ds::isKeyPressed('D')) {
+		vel.x = v;
+		moved = true;
+	}
+	player->renderItem->getTransform().rotation.x = 0.0f;
+	if (moved) {
+		player->position += vel * dt;
+		player->renderItem->getTransform().position = player->position;
+		if (vel.y > 0.0f) {
+			player->renderItem->getTransform().rotation.x = DEGTORAD(330.0f);
+		}
+		else if (vel.y < 0.0f) {
+			player->renderItem->getTransform().rotation.x = DEGTORAD(30.0f);
+		}
+	}
+}
+
+bool testBoxIntersection(const ds::vec3& p1, const ds::vec2& e1, const ds::vec3& p2, const ds::vec2& e2) {
+	float top = p1.y - e1.y * 0.5f;
+	float left = p1.x - e1.x * 0.5f;
+	float right = p1.x + e1.x * 0.5f;
+	float bottom = p1.y + e1.y * 0.5f;
+
+	float otherTop = p2.y - e2.y * 0.5f;
+	float otherLeft = p2.x - e2.x * 0.5f;
+	float otherRight = p2.x + e2.x * 0.5f;
+	float otherBottom = p2.y + e2.y * 0.5f;
+
+	if (right < otherLeft || left > otherRight) return false;
+	if (bottom < otherTop || top > otherBottom) return false;
+	return true;
+}
+
 const ds::vec2 CENTER = ds::vec2(-11.5f, -6.5f);
 
 AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _gameContext(gameContext) {
@@ -13,11 +62,13 @@ AsteroidsScene::AsteroidsScene(GameContext* gameContext) : ds::BaseScene() , _ga
 	_scalePath.add(0.5f, 1.5f);
 	_scalePath.add(0.75f, 0.6f);
 	_scalePath.add(1.0f, 1.0f);
+
 }
 
 AsteroidsScene::~AsteroidsScene() {
 	delete _topDownCamera;
-	delete _cursorItem;
+	delete _player.renderItem;
+	delete _bulletBillboards;
 }
 
 // ----------------------------------------------------
@@ -42,7 +93,7 @@ void AsteroidsScene::initialize() {
 	
 	addEnemy();
 
-	_cursorItem = new RenderItem("player", _gameContext->ambientMaterial);
+	_player.renderItem = new RenderItem("player", _gameContext->ambientMaterial);
 
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
@@ -65,6 +116,15 @@ void AsteroidsScene::initialize() {
 		.Viewport(_gameViewPort)
 		.DepthBufferState(ds::DepthBufferState::DISABLED));
 
+	_bulletBillboards = new Billboards;
+	RID textureID = loadImageFromFile("content\\particles.png");
+	_bulletBillboards->init(textureID);
+
+	_shooting = false;
+	_bulletTimer = 0.0f;
+
+	_autoEmitt = true;
+	_emittTimer = 0.0f;
 }
 
 // -------------------------------------------------------------
@@ -74,16 +134,23 @@ void AsteroidsScene::addEnemy() {
 	if (_enemies.numObjects < 100) {
 		ID id = _enemies.add();
 		Enemy& e = _enemies.get(id);
-		float angle = ds::random(0.0f, ds::TWO_PI);
+		//float angle = ds::random(0.0f, ds::TWO_PI);
 
 		e.instance_id = _enemiesItem->add();
 		instance_item& item = _enemiesItem->get(e.instance_id);
-		item.transform.position = ds::vec3(ds::random(-8.0f, 8.0f), ds::random(-4.0f, 4.0f), 0.0f);
-		item.transform.rotation = ds::vec3(cos(angle), sin(angle), 0.0f);
-		e.velocity = ds::vec3(cos(angle), sin(angle), 0.0f);
+		item.transform.position = ds::vec3(10.0f, ds::random(-4.0f, 4.0f), 0.0f);
+		e.velocity = ds::vec3(-4.0f, 0.0f, 0.0f);
 		e.timer = 0.0f;
 		e.animationFlags = 7;
 	}
+}
+
+void AsteroidsScene::addBullet() {
+	ID id = _bullets.add();
+	Bullet& b = _bullets.get(id);
+	b.pos = _player.position;
+	b.pos.x += 0.5f;
+	b.velocity = ds::vec3(6.0f, 0.0, 0.0f);
 }
 
 // ----------------------------------------------------
@@ -92,10 +159,10 @@ void AsteroidsScene::addEnemy() {
 void AsteroidsScene::update(float dt) {
 	
 	//_isoCamera->update(dt);
-	_topDownCamera->update(dt);
+	//_topDownCamera->update(dt);
 
-	_cursorItem->getTransform().position = _camera.position;
-	_cursorItem->getTransform().position.z = 0.0f;
+	//_cursorItem->getTransform().position = _camera.position;
+	//_cursorItem->getTransform().position.z = 0.0f;
 	/*
 	_gameContext->towers.tick(dt, _events);
 
@@ -107,6 +174,54 @@ void AsteroidsScene::update(float dt) {
 
 	_gameContext->towers.rotateTowers(ip);
 	*/
+
+	if (ds::isMouseButtonPressed(0) && !_shooting) {
+		_shooting = true;
+	}
+	if (!ds::isMouseButtonPressed(0) && _shooting) {
+		_shooting = false;
+	}
+
+	if (_shooting) {
+		_bulletTimer += dt;
+		if (_bulletTimer > 0.2f) {
+			addBullet();
+			_bulletTimer -= 0.2f;
+		}
+	}
+
+	if (_autoEmitt) {
+		_emittTimer += dt;
+		if (_emittTimer > 1.0f && _enemies.numObjects < 20) {
+			_emittTimer = 0.0f;
+			addEnemy();
+		}
+	}
+
+	for (int i = 0; i < _bullets.numObjects; ++i) {
+		_bullets.objects[i].pos += _bullets.objects[i].velocity * dt;
+		if (_bullets.objects[i].pos.x > 12.0f) {
+			_bullets.remove(_bullets.objects[i].id);
+		}
+	}
+
+	move_player(&_player, dt);
+
+	for (int i = 0; i < _bullets.numObjects; ++i) {
+		for (int j = 0; j < _enemies.numObjects; ++j) {
+			Enemy& e = _enemies.objects[j];
+			instance_item& item = _enemiesItem->get(e.instance_id);
+			if (testBoxIntersection(_bullets.objects[i].pos, ds::vec2(0.1f, 0.1f), item.transform.position, ds::vec2(0.5f))) {
+				DBG_LOG("WE HAVE A HIT - animationFlag %d",e.animationFlags);
+				_bullets.remove(_bullets.objects[i].id);
+				if ((e.animationFlags & 4) != 4) {
+					e.timer = 0.0f;
+					e.animationFlags |= 1 << 2;
+				}
+			}
+		}
+	}
+
 	for (int i = 0; i < _enemies.numObjects; ++i) {
 		Enemy& e = _enemies.objects[i];
 		e.force = ds::vec3(0.0f);
@@ -119,7 +234,7 @@ void AsteroidsScene::update(float dt) {
 			e.timer += dt;
 			float norm = e.timer / 0.5f;
 			if (norm >= 1.0f) {
-				e.animationFlags &= ~(1 << 3);
+				e.animationFlags &= ~4;
 				item.transform.scale = ds::vec3(1.0f);
 			}
 			else {
@@ -139,6 +254,7 @@ void AsteroidsScene::update(float dt) {
 	//
 	// separate enemies
 	//
+	/*
 	const float minDistance = 0.5f;
 	const float relaxation = 2.0f;
 
@@ -168,17 +284,20 @@ void AsteroidsScene::update(float dt) {
 			}
 		}
 	}
+	*/
 
 	for (int i = 0; i < _enemies.numObjects; ++i) {
 		Enemy& e = _enemies.objects[i];
 		instance_item& item = _enemiesItem->get(e.instance_id);
 		item.transform.position += e.force;
-		if (item.transform.position.x > 10.0f || item.transform.position.x < -10.0f) {
-			e.velocity.x *= -1.0f;
+		if (item.transform.position.x < -12.0f) {
+			//e.velocity.x *= -1.0f;
+			item.transform.position.y = ds::random(-5.0f, 5.0f);
+			item.transform.position.x = 11.5f;
 		}
-		if (item.transform.position.y > 5.8f || item.transform.position.y < -5.8f) {
-			e.velocity.y *= -1.0f;
-		}
+		//if (item.transform.position.y > 5.8f || item.transform.position.y < -5.8f) {
+			//e.velocity.y *= -1.0f;
+		//}
 	}
 
 	particles::tick(_gameContext->particleContext, dt);
@@ -209,7 +328,14 @@ void AsteroidsScene::render() {
 		_gameContext->ambientMaterial->setLightDirection(i, normalize(_lightDir[i]));
 	}
 
-	_cursorItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
+	_player.renderItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
+
+	_bulletBillboards->begin();
+	for (int i = 0; i < _bullets.numObjects; ++i) {
+		_bulletBillboards->add(_bullets.objects[i].pos, ds::vec2(0.25f, 0.25f), ds::vec4(0, 0, 128, 128),0.0f,ds::vec2(1.0f),ds::Color(255,255,0,255));
+	}
+	_bulletBillboards->end();
+	_bulletBillboards->render(_gameRenderPass, _camera.viewProjectionMatrix);
 
 	_enemiesItem->draw(_gameRenderPass, _camera.viewProjectionMatrix);
 
@@ -230,6 +356,9 @@ void AsteroidsScene::drawLeftPanel() {
 	if (gui::begin("Debug", &state)) {
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("Enemies", _enemies.numObjects);
+		gui::Value("Bullets", _bullets.numObjects);
+		gui::Value("Shooting", _shooting);
+		gui::Checkbox("Emitt enemies", &_autoEmitt);
 		if (gui::Button("Add Enemy")) {
 			addEnemy();
 		}

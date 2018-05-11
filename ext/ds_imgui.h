@@ -529,15 +529,11 @@ namespace gui {
 			int indices[] = { 0,1,2,1,3,2 };
 			RID idxBuffer = ds::createQuadIndexBuffer(max, indices);
 
-			ds::StructuredBufferInfo sbInfo;
-			sbInfo.cpuWritable = true;
-			sbInfo.data = 0;
-			sbInfo.elementSize = sizeof(GUIItem);
-			sbInfo.numElements = max;
-			sbInfo.gpuWritable = false;
-			sbInfo.renderTarget = NO_RID;
-			sbInfo.textureID = NO_RID;
-			ctx->sprites.structuredBufferId = ds::createStructuredBuffer(sbInfo);
+			ctx->sprites.structuredBufferId = ds::createStructuredBuffer(ds::StructuredBufferDesc()
+				.CpuWritable(true)
+				.ElementSize(sizeof(GUIItem))
+				.NumElements(max)
+				.GpuWritable(false));
 
 			RID basicGroup = ds::StateGroupBuilder()
 				.constantBuffer(constantBuffer, vertexShader)

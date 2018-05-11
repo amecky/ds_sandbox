@@ -26,15 +26,12 @@ void Billboards::init(RID textureID) {
 		.Filter(ds::TextureFilters::LINEAR)
 	);
 
-	ds::StructuredBufferInfo sbInfo;
-	sbInfo.cpuWritable = true;
-	sbInfo.data = 0;
-	sbInfo.elementSize = sizeof(Billboard);
-	sbInfo.numElements = MAX_BILLBOARDS;
-	sbInfo.gpuWritable = false;
-	sbInfo.renderTarget = NO_RID;
-	sbInfo.textureID = NO_RID;
-	_structuredBufferId = ds::createStructuredBuffer(sbInfo);
+	_structuredBufferId = ds::createStructuredBuffer(ds::StructuredBufferDesc()
+		.CpuWritable(true)
+		.ElementSize(sizeof(Billboard))
+		.NumElements(MAX_BILLBOARDS)
+		.GpuWritable(false)
+	);
 
 	ds::vec2 size = ds::getTextureSize(textureID);
 	_constantBuffer.screenDimension = ds::vec4(static_cast<float>(ds::getScreenWidth()), static_cast<float>(ds::getScreenHeight()), size.x, size.y);

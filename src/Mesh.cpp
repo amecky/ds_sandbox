@@ -279,8 +279,12 @@ RID Mesh::createInputLayout(RID vertexShaderId) {
 			decl[i] = { "COLOR", 0, ds::BufferAttributeType::FLOAT4 };
 		};
 	}
-	ds::InputLayoutInfo layoutInfo = { decl, _streams.size(), vertexShaderId };
-	RID rid = ds::createInputLayout(layoutInfo);
+	
+	RID rid = ds::createInputLayout(ds::InputLayoutDesc()
+		.Declarations(decl)
+		.NumDeclarations(_streams.size())
+		.VertexShader(vertexShaderId)
+	);
 	delete[] decl;
 	return rid;
 }

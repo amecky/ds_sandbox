@@ -13,14 +13,23 @@
 #include "..\flow\FlowFieldContext.h"
 #include <ds_base_app.h>
 #include "..\utils\DynamicPath.h"
+#include "..\instancing\Billboards.h"
 
 struct GameContext;
 
 struct Player {
-	RenderItem* _renderItem;
+	RenderItem* renderItem;
 	ds::vec3 position;
 	float angle;
 };
+
+struct Bullet {
+	ID id;
+	ds::vec3 pos;
+	ds::vec3 velocity;
+};
+
+void move_player(Player* player, float dt);
 
 struct Enemy {
 	ID id;
@@ -43,15 +52,23 @@ public:
 	void drawTopPanel();
 private:
 	void addEnemy();
+	void addBullet();
+
+	float _bulletTimer;
+	bool _shooting;
+
+	bool _autoEmitt;
+	float _emittTimer;
 
 	GameContext* _gameContext;
-	RenderItem* _cursorItem;
+	Billboards* _bulletBillboards;
 	TopDownCamera* _topDownCamera;
 	//FPSCamera* _fpsCamera;
 	ds::vec3 _lightDir[3];
 	InstancedRenderItem* _enemiesItem;
 	ds::DataArray<Enemy> _enemies;
-
+	ds::DataArray<Bullet> _bullets;
+	Player _player;
 	ds::vec3 _dbgCameraRotation;
 	RID _gameViewPort;
 	RID _gameRenderPass;

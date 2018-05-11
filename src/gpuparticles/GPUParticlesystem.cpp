@@ -200,15 +200,12 @@ GPUParticlesystem::GPUParticlesystem(const ParticlesystemDescriptor& descriptor)
 	int indices[] = { 0,1,2,1,3,2 };
 	RID idxBuffer = ds::createQuadIndexBuffer(descriptor.maxParticles, indices);
 
-	ds::StructuredBufferInfo sbInfo;
-	sbInfo.cpuWritable = true;
-	sbInfo.data = 0;
-	sbInfo.elementSize = sizeof(GPUParticle);
-	sbInfo.numElements = descriptor.maxParticles;
-	sbInfo.gpuWritable = false;
-	sbInfo.renderTarget = NO_RID;
-	sbInfo.textureID = NO_RID;
-	_structuredBufferId = ds::createStructuredBuffer(sbInfo);
+	_structuredBufferId = ds::createStructuredBuffer(ds::StructuredBufferDesc()
+		.CpuWritable(true)
+		.ElementSize(sizeof(GPUParticle))
+		.NumElements(descriptor.maxParticles)
+		.GpuWritable(false)
+	);
 
 	RID basicGroup = ds::StateGroupBuilder()
 		.blendState(blendState)

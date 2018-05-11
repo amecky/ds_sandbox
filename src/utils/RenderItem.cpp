@@ -77,8 +77,11 @@ void create_instanced_render_item(instanced_render_item* item, const char* objNa
 
 	RID cubeBuffer = item->mesh->assemble();
 
-	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, maxInstances, sizeof(RenderItemInstanceData) };
-	item->instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
+	item->instanceVertexBuffer = ds::createVertexBuffer(ds::VertexBufferDesc()
+		.BufferType(ds::BufferType::DYNAMIC)
+		.NumVertices(maxInstances)
+		.VertexSize(sizeof(RenderItemInstanceData))
+	);
 
 	item->instanceData = new RenderItemInstanceData[maxInstances];
 	//item->numInstances = 0;
@@ -99,7 +102,13 @@ void create_instanced_render_item(instanced_render_item* item, const char* objNa
 		{ "COLOR", 1, ds::BufferAttributeType::FLOAT4 }
 	};
 	ds::InstancedInputLayoutInfo iilInfo = { decl, 3, instDecl, 5, m->getVertexShaderID() };
-	RID rid = ds::createInstancedInputLayout(iilInfo);
+	RID rid = ds::createInstancedInputLayout(ds::InstancedInputLayoutDesc()
+		.LayoutDefinition(decl)
+		.Num(3)
+		.InstancedLayoutDefinition(instDecl)
+		.NumInstances(5)
+		.Shader(m->getVertexShaderID())
+	);
 
 	RID stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
@@ -190,8 +199,10 @@ InstancedRenderItem::InstancedRenderItem(const char* objName, Material* m, int m
 
 	RID cubeBuffer = _mesh->assemble();
 
-	ds::VertexBufferInfo ibInfo = { ds::BufferType::DYNAMIC, maxInstances, sizeof(RenderItemInstanceData) };
-	_instanceVertexBuffer = ds::createVertexBuffer(ibInfo);
+	_instanceVertexBuffer = ds::createVertexBuffer(ds::VertexBufferDesc()
+		.BufferType(ds::BufferType::DYNAMIC)
+		.NumVertices(maxInstances)
+		.VertexSize(sizeof(RenderItemInstanceData)));
 
 	_instanceData = new RenderItemInstanceData[maxInstances];
 	//item->numInstances = 0;
@@ -211,8 +222,13 @@ InstancedRenderItem::InstancedRenderItem(const char* objName, Material* m, int m
 		{ "WORLD", 3, ds::BufferAttributeType::FLOAT4 },
 		{ "COLOR", 1, ds::BufferAttributeType::FLOAT4 }
 	};
-	ds::InstancedInputLayoutInfo iilInfo = { decl, 3, instDecl, 5, m->getVertexShaderID() };
-	RID rid = ds::createInstancedInputLayout(iilInfo);
+	RID rid = ds::createInstancedInputLayout(ds::InstancedInputLayoutDesc()
+		.LayoutDefinition(decl)
+		.Num(3)
+		.InstancedLayoutDefinition(instDecl)
+		.NumInstances(5)
+		.Shader(m->getVertexShaderID())
+	);
 
 	RID stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
