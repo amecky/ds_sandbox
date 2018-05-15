@@ -97,23 +97,16 @@ void AsteroidsScene::initialize() {
 
 	_gameContext->towers.setWorldOffset(ds::vec2(-2.5f, -2.5f));
 	
-	_gameViewPort = ds::createViewport(ds::ViewportDesc()
-		.Top(40)
-		.Left(450)
-		.Width(1280)
-		.Height(720)
-		.MinDepth(0.0f)
-		.MaxDepth(1.0f)
-	);
+	
 
 	_gameRenderPass = ds::createRenderPass(ds::RenderPassDesc()
 		.Camera(&_camera)
-		.Viewport(_gameViewPort)
+		.Viewport(_gameContext->gameViewPort)
 		.DepthBufferState(ds::DepthBufferState::ENABLED));
 
 	_particleRenderPass = ds::createRenderPass(ds::RenderPassDesc()
 		.Camera(&_camera)
-		.Viewport(_gameViewPort)
+		.Viewport(_gameContext->gameViewPort)
 		.DepthBufferState(ds::DepthBufferState::DISABLED));
 
 	_bulletBillboards = new Billboards;

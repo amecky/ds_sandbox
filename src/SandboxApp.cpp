@@ -46,11 +46,25 @@ SandboxApp::~SandboxApp() {
 // ---------------------------------------------------------------
 void SandboxApp::initialize() {
 	ds::setLogHandler(my_debug);
+	//
+	// prepare game context
+	//
 	_gameContext->ambientMaterial = new AmbientLightningMaterial;
 	_gameContext->instancedAmbientmaterial = new InstancedAmbientLightningMaterial;
 	_gameContext->towers.init(_gameContext->ambientMaterial);
 	RID textureID = loadImageFromFile("content\\particles.png");
 	_gameContext->particleContext = particles::create_context(textureID);
+	_gameContext->gameViewPort = ds::createViewport(ds::ViewportDesc()
+		.Top(40)
+		.Left(0)
+		.Width(1280)
+		.Height(720)
+		.MinDepth(0.0f)
+		.MaxDepth(1.0f)
+	);
+	//
+	// create scenes
+	//
 	_flowFieldScene = new MainGameScene(_gameContext);
 	_sceneListModel.add("Flowfield", _flowFieldScene);
 	_towerTestScene = new TowerTestScene(_gameContext);

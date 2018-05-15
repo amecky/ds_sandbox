@@ -12,4 +12,5 @@ struct GameContext {
 	InstancedAmbientLightningMaterial* instancedAmbientmaterial;
 	ParticleSystemContext* particleContext;
 	RID particlePass;
+	RID gameViewPort;
 };

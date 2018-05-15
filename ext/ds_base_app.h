@@ -637,7 +637,7 @@ namespace ds {
 			//
 			// left panel
 			//
-			sp = p2i(10, ds::getScreenHeight() - 50);
+			sp = p2i(ds::getScreenWidth() - 385, ds::getScreenHeight() - 50);
 			gui::start(&sp, 385);
 			drawLeftPanel();
 			it = _scenes.begin();

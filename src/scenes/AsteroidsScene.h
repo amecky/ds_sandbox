@@ -70,7 +70,6 @@ private:
 	ds::DataArray<Bullet> _bullets;
 	Player _player;
 	ds::vec3 _dbgCameraRotation;
-	RID _gameViewPort;
 	RID _gameRenderPass;
 	RID _particleRenderPass;
 	ds::FloatPath _scalePath;

@@ -23,7 +23,6 @@ public:
 	void render();
 private:
 	GameContext* _gameContext;
-	RID _gameViewPort;
 	RID _gameRenderPass;
 	Billboards* _billboards;
 	Star _stars[TOTAL_STARS];
