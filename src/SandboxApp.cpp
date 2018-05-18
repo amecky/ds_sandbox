@@ -23,7 +23,7 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 	_settings.useIMGUI = true;
 	_settings.clearColor = ds::Color(16, 16, 16, 255);
 	_settings.guiToggleKey = 'O';
-	_settings.synchedFrame = true;
+	_settings.synchedFrame = true;	
 	_gameContext = new GameContext;
 	logpanel::init(32);
 	_showScenes = false;
@@ -62,6 +62,10 @@ void SandboxApp::initialize() {
 		.MinDepth(0.0f)
 		.MaxDepth(1.0f)
 	);
+
+	initializeSettings("content\\settings.json");
+	_gameContext->settings = new GameSettings;
+	loadSettings();
 	//
 	// create scenes
 	//

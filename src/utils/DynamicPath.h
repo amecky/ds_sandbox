@@ -140,6 +140,7 @@ namespace ds {
 	typedef AbstractPath<float> FloatPath;
 	typedef AbstractPath<ds::Color> ColorPath;
 	typedef AbstractPath<ds::vec2> Vec2Path;
+	typedef AbstractPath<ds::vec3> Vec3Path;
 
 }
 

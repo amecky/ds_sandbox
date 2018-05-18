@@ -25,6 +25,9 @@
     <Filter Include="animation">
       <UniqueIdentifier>{43fd843b-bab5-461e-8ea4-12eb26291993}</UniqueIdentifier>
     </Filter>
+    <Filter Include="entities">
+      <UniqueIdentifier>{e3512481-9d15-45da-b23d-994c74a280ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -151,6 +154,9 @@
     <ClInclude Include="src\scenes\StarfieldScene.h">
       <Filter>scenes</Filter>
     </ClInclude>
+    <ClInclude Include="src\entities\Bullets.h">
+      <Filter>entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -223,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="src\scenes\StarfieldScene.cpp">
       <Filter>scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entities\Bullets.cpp">
+      <Filter>entities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
