@@ -6,7 +6,7 @@
 
 enum TweakableType { ST_FLOAT, ST_INT, ST_UINT, ST_VEC2, ST_VEC3, ST_VEC4, ST_COLOR, ST_ARRAY, ST_NONE };
 
-struct Tweakable {
+struct TweakableVar {
 	TweakableType type;
 	const char* name;
 	union {
@@ -48,9 +48,9 @@ int twk_num_categories();
 
 const char* twk_get_category_name(int index);
 
-int twk_get_tweakables(int categoryIndex, Tweakable* ret, int max);
+int twk_get_tweakables(int categoryIndex, TweakableVar* ret, int max);
 
-int twk_get_tweakables(const char* category, Tweakable* ret, int max);
+int twk_get_tweakables(const char* category, TweakableVar* ret, int max);
 
 void twk_shutdown();
 
@@ -920,12 +920,12 @@ const char* twk_get_category_name(int index) {
 // -------------------------------------------------------
 // all tweakbales for one category
 // -------------------------------------------------------
-int twk_get_tweakables(int categoryIndex, Tweakable* ret, int max) {
+int twk_get_tweakables(int categoryIndex, TweakableVar* ret, int max) {
 	int cnt = 0;
 	for (size_t i = 0; i < _twkCtx->items.size(); ++i) {
 		const InternalTweakable& item = _twkCtx->items[i];
 		if (item.categoryIndex == categoryIndex && cnt < max) {
-			Tweakable& t = ret[cnt++];
+			TweakableVar& t = ret[cnt++];
 			t.type = item.type;
 			switch (item.type) {
 				case ST_FLOAT: t.ptr.fPtr = item.ptr.fPtr; break;
@@ -949,14 +949,14 @@ int twk_get_tweakables(int categoryIndex, Tweakable* ret, int max) {
 // -------------------------------------------------------
 // all tweakbales for one category
 // -------------------------------------------------------
-int twk_get_tweakables(const char* category, Tweakable* ret, int max) {
+int twk_get_tweakables(const char* category, TweakableVar* ret, int max) {
 	int cid = twk__find_category(category);
 	int cnt = 0;
 	if (cid != -1) {		
 		for (size_t i = 0; i < _twkCtx->items.size(); ++i) {
 			const InternalTweakable& item = _twkCtx->items[i];
 			if (item.categoryIndex == cid && cnt < max) {
-				Tweakable& t = ret[cnt++];
+				TweakableVar& t = ret[cnt++];
 				t.type = item.type;
 				switch (item.type) {
 				case ST_FLOAT: t.ptr.fPtr = item.ptr.fPtr; break;

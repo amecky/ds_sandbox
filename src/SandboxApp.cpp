@@ -32,6 +32,7 @@ SandboxApp::SandboxApp() : ds::BaseApp() {
 
 SandboxApp::~SandboxApp() {
 	particles::shutdown();
+	delete _gridScene;
 	delete _flowFieldScene;
 	delete _towerTestScene;
 	delete _gameContext->particleContext->particleSystem;
@@ -79,10 +80,13 @@ void SandboxApp::initialize() {
 	_sceneListModel.add("Asteroids", _asteroidsScene);
 	_starfieldScene = new StarfieldScene(_gameContext);
 	_sceneListModel.add("Starfield", _starfieldScene);
+	_gridScene = new WarpingGridScene(_gameContext);
+	_sceneListModel.add("WarpingGrid", _gridScene);
 	//pushScene(_flowFieldScene);
 	//pushScene(_towerTestScene);
-	pushScene(_starfieldScene);
-	pushScene(_asteroidsScene);
+	//pushScene(_starfieldScene);
+	//pushScene(_asteroidsScene);
+	pushScene(_gridScene);
 }
 
 // ---------------------------------------------------------------

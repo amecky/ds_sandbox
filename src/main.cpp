@@ -4,6 +4,8 @@
 #include <stb_image.h>
 #define SPRITE_IMPLEMENTATION
 #include <SpriteBatchBuffer.h>
+#define DS_TWEAKABLE_IMPLEMENTATION
+#include <ds_tv.h>
 #define GAMESETTINGS_IMPLEMENTATION
 #include <ds_tweakable.h>
 #define DS_PROFILER
@@ -21,6 +23,7 @@
 #define DS_LOG_PANEL
 #include <ds_logpanel.h>
 
+
 extern ds::BaseApp* app;
 
 
@@ -35,7 +38,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	perf::init();
 
+	double timers[64];
+	int num = 0;
+	
 	while (ds::isRunning() && app->isRunning()) {
+
+		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
 		perf::reset();
 
@@ -50,8 +58,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		ds::end();
 
 		perf::finalize();
+
+		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+		timers[num++] = std::chrono::duration<double, std::milli>(end - now).count();
+
+		if (num >= 64) {
+			num = 0;
+		}
 	}
 
+	for (int i = 0; i < num; ++i) {
+		int fps = 15.0f / timers[i] * 60.0f;
+		DBG_LOG("%d = %g %d", i, timers[i], fps);
+	}
 	ds::shutdown();
 
 	delete app;

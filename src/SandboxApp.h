@@ -9,6 +9,7 @@
 #include "scenes\ParticlesTestScene.h"
 #include "scenes\AsteroidsScene.h"
 #include "scenes\StarfieldScene.h"
+#include "grid\WarpingGridScene.h"
 #include "GameContext.h"
 
 struct SceneDescriptor {
@@ -58,6 +59,7 @@ private:
 	ParticlesTestScene* _particlesTestScene;
 	AsteroidsScene* _asteroidsScene;
 	StarfieldScene* _starfieldScene;
+	WarpingGridScene* _gridScene;
 	GameContext* _gameContext;
 	SceneListModel _sceneListModel;
 	bool _showScenes;

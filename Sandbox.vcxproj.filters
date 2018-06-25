@@ -28,6 +28,9 @@
     <Filter Include="entities">
       <UniqueIdentifier>{e3512481-9d15-45da-b23d-994c74a280ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="grid">
+      <UniqueIdentifier>{bc6ddb39-1c30-4683-a1b7-aa10abae9ee8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -157,6 +160,15 @@
     <ClInclude Include="src\entities\Bullets.h">
       <Filter>entities</Filter>
     </ClInclude>
+    <ClInclude Include="src\grid\WarpingGrid.h">
+      <Filter>grid</Filter>
+    </ClInclude>
+    <ClInclude Include="src\grid\WarpingGridScene.h">
+      <Filter>grid</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\ds_tv.h">
+      <Filter>ext</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -233,11 +245,25 @@
     <ClCompile Include="src\entities\Bullets.cpp">
       <Filter>entities</Filter>
     </ClCompile>
+    <ClCompile Include="src\grid\WarpingGrid.cpp">
+      <Filter>grid</Filter>
+    </ClCompile>
+    <ClCompile Include="src\grid\WarpingGridScene.cpp">
+      <Filter>grid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Sandbox.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="content\TextureArray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\grid\Grid_ps.hlsl">
+      <Filter>grid</Filter>
+    </FxCompile>
+    <FxCompile Include="src\grid\Grid_vs.hlsl">
+      <Filter>grid</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
