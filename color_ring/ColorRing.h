@@ -20,9 +20,10 @@ public:
 	virtual ~ColorRing() {}
 	void tick(float dt);
 	virtual void render(ds::Color* colors);
-	void markPart(float angle, int color);
+	int markPart(float angle, int color);
 	void debug();
 	void reset();
+	float rasterizeAngle(float input);
 protected:
 	virtual RID createVertexShader();
 	virtual RID createPixelShader();
@@ -31,9 +32,10 @@ private:
 	int _maxConcurrent;
 	int _activeCount;
 	void mapColors(ds::Color* colors);
-	void checkSegments();
+	int checkSegments();
 	void resetSegment(int index);
 	float _timer;
+	float _rotationStep;
 	int _colors[TOTAL_PARTS];
 	Segment _segments[NUM_SEGMENTS];
 };

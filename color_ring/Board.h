@@ -36,4 +36,5 @@ private:
 	float _bulletTimer;
 	ColorRing* _colorRing;
 	Player _player;
+	int _filled;
 };

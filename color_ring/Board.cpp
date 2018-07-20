@@ -32,6 +32,7 @@ void Board::reset() {
 	_numBullets = 0;
 	_colorRing->reset();
 	_player.rotation = 0.0f;
+	_filled = 0;
 }
 
 // -------------------------------------------------------
@@ -63,6 +64,20 @@ void Board::render() {
 	_sprites->begin();
 
 	_sprites->add(ds::vec2(512, 384), ds::vec4(0, 60, 52, 52), ds::vec2(1.0f), _player.rotation);
+
+	// show target indicator
+
+	float ra = _colorRing->rasterizeAngle(_player.rotation);
+
+	ds::dbgPrint(0, 0, "RA %g", RADTODEG(ra));
+
+	ds::dbgPrint(0, 1, "Fiiled %d", _filled);
+
+	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
+	_sprites->add(ds::vec2(512, 384) + p * 295.0f, ds::vec4(80, 50, 8, 12), ds::vec2(1.0f), ra);
+	_sprites->add(ds::vec2(512, 384) + p * 325.0f, ds::vec4(80, 50, 8, 12), ds::vec2(1.0f), ra);
+
+	// show separators
 	
 	// draw bullets
 	for (int i = 0; i < _numBullets; ++i) {
@@ -110,13 +125,14 @@ void Board::tick(float dt) {
 // -------------------------------------------------------
 void Board::shootBullets(float dt) {
 	_bulletTimer += dt;
-	if (_bulletTimer >= 0.2f) {
+	if (_bulletTimer >= 0.1f) {
 		Bullet& b = _bullets[_numBullets++];
 		b.pos = ds::vec2(512, 384);
-		b.velocity = ds::vec2(cosf(_player.rotation), sinf(_player.rotation)) * 500.0f;
-		b.rotation = _player.rotation;
+		float ra = _colorRing->rasterizeAngle(_player.rotation);
+		b.velocity = ds::vec2(cosf(ra), sinf(ra)) * 500.0f;
+		b.rotation = ra;
 		b.color = _selectedColor;
-		_bulletTimer -= 0.2f;
+		_bulletTimer -= 0.1f;
 	}
 }
 
@@ -140,7 +156,11 @@ void Board::moveBullets(float dt) {
 		b.pos += b.velocity * ds::getElapsedSeconds();
 		float l = sqr_length(ds::vec2(512, 384) - b.pos);
 		if (l > 300.0f * 300.0f) {
-			_colorRing->markPart(b.rotation, _selectedColor);
+			int filled = _colorRing->markPart(b.rotation, _selectedColor);
+			if (filled > 0) {
+				// do some more here
+				_filled += filled;
+			}
 			_bullets[i] = _bullets[_numBullets - 1];
 			--_numBullets;
 		}

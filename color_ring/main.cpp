@@ -1,5 +1,7 @@
 #define DS_IMPLEMENTATION
 #include <diesel.h>
+#define DS_IMGUI_IMPLEMENTATION
+#include <ds_imgui.h>
 #define DS_TWEAKABLE_IMPLEMENTATION
 #include <ds_tweakable.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -48,6 +50,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	rs.multisampling = 4;
 	rs.logHandler = my_debug;
+#ifdef DEBUG
+	rs.supportDebug = true;
+#endif
 	ds::init(rs);
 	
 	float reloadTimer = 0.0f;

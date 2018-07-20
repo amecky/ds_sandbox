@@ -18,7 +18,7 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 
 	float r1 = 300.0f;
 	float r2 = 325.0f;
-	float step = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
+	_rotationStep = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
 	float angle = 0.0f;
 	ds::vec2 center(512, 384);
 
@@ -30,13 +30,13 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 	for (int i = 0; i < TOTAL_PARTS; ++i) {
 		ds::vec2 p1 = center + ds::vec2(cos(angle), sin(angle)) * r1;
 		ds::vec2 p2 = center + ds::vec2(cos(angle), sin(angle)) * r2;
-		ds::vec2 p3 = center + ds::vec2(cos(angle - step), sin(angle - step)) * r2;
-		ds::vec2 p4 = center + ds::vec2(cos(angle - step), sin(angle - step)) * r1;
+		ds::vec2 p3 = center + ds::vec2(cos(angle - _rotationStep), sin(angle - _rotationStep)) * r2;
+		ds::vec2 p4 = center + ds::vec2(cos(angle - _rotationStep), sin(angle - _rotationStep)) * r1;
 		_vertices[cnt++] = { p1, ds::vec2(0.0f,v2), ds::Color(255,255,255,255) };
 		_vertices[cnt++] = { p2, ds::vec2(0.0f,0.0f), ds::Color(255,255,255,255) };
 		_vertices[cnt++] = { p3, ds::vec2(u2,0.0f), ds::Color(255,255,255,255) };
 		_vertices[cnt++] = { p4, ds::vec2(u2,v2), ds::Color(255,255,255,255) };
-		angle += step;
+		angle += _rotationStep;
 	}
 
 	for (int i = 0; i < NUM_SEGMENTS; ++i) {
@@ -107,6 +107,13 @@ void ColorRing::reset() {
 	for (int i = 0; i < NUM_SEGMENTS; ++i) {
 		resetSegment(i);
 	}
+}
+
+float ColorRing::rasterizeAngle(float input) {
+	float step = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
+	float fidx = input / step;
+	int idx = static_cast<int>(fidx);
+	return static_cast<float>(idx) * _rotationStep + _rotationStep * 0.5f;
 }
 
 // -------------------------------------------------------
@@ -205,7 +212,8 @@ void ColorRing::debug() {
 // -------------------------------------------------------
 // check segments
 // -------------------------------------------------------
-void ColorRing::checkSegments() {
+int ColorRing::checkSegments() {
+	int ret = 0;
 	for (int i = 0; i < NUM_SEGMENTS; ++i) {
 		int filled = 0;
 		for (int j = 0; j < NUM_PARTS_PER_SEGMENT; ++j) {
@@ -215,8 +223,10 @@ void ColorRing::checkSegments() {
 		}
 		if (filled == (NUM_PARTS_PER_SEGMENT - 1)) {
 			DBG_LOG("segment %d filled", i);
+			++ret;
 		}
 	}
+	return ret;
 }
 
 // -------------------------------------------------------
@@ -234,9 +244,8 @@ void ColorRing::render(ds::Color* colors) {
 // -------------------------------------------------------
 // mark part of a segment
 // -------------------------------------------------------
-void ColorRing::markPart(float angle, int color) {
-	float step = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
-	float fidx = angle / step;
+int ColorRing::markPart(float angle, int color) {
+	float fidx = ( angle + _rotationStep * 0.5f) /_rotationStep;
 	int idx = static_cast<int>(fidx);
 	bool match = false;
 	if (idx < TOTAL_PARTS) {
@@ -249,6 +258,7 @@ void ColorRing::markPart(float angle, int color) {
 		DBG_LOG("sidx %d pidx %d", sidx, pidx);
 	}
 	if (match) {
-		checkSegments();
+		return checkSegments();
 	}
+	return 0;
 }

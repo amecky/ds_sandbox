@@ -506,11 +506,18 @@ namespace gui {
 			ds::vec2 textureSize = ds::getTextureSize(textureID);
 			ctx->sprites.constantBuffer.screenCenter = ds::vec4(static_cast<float>(ds::getScreenWidth() / 2), static_cast<float>(ds::getScreenHeight() / 2), textureSize.x, textureSize.y);
 
-			ds::ShaderInfo vsInfo = { 0 , gui_VS_Main, sizeof(gui_VS_Main), ds::ShaderType::ST_VERTEX_SHADER };
-			RID vertexShader = ds::createShader(vsInfo, "GUI_VS");
-			ds::ShaderInfo psInfo = { 0 , gui_PS_Main, sizeof(gui_PS_Main), ds::ShaderType::ST_PIXEL_SHADER };
-			RID pixelShader = ds::createShader(psInfo, "GUI_PS");
-
+			RID vertexShader = ds::createShader(ds::ShaderDesc()
+				.Data(gui_VS_Main)
+				.DataSize(sizeof(gui_VS_Main))
+				.ShaderType(ds::ShaderType::ST_VERTEX_SHADER)
+				, "GUI_VS"
+			);
+			RID pixelShader = ds::createShader(ds::ShaderDesc()
+				.Data(gui_PS_Main)
+				.DataSize(sizeof(gui_PS_Main))
+				.ShaderType(ds::ShaderType::ST_PIXEL_SHADER)
+				, "GUI_PS"
+			);
 			RID bs_id = ds::createBlendState(ds::BlendStateDesc()
 				.SrcBlend(ds::BlendStates::SRC_ALPHA)
 				.SrcAlphaBlend(ds::BlendStates::SRC_ALPHA)
@@ -1119,6 +1126,25 @@ namespace gui {
 	}
 
 	// -------------------------------------------------------
+	// determine text size
+	// -------------------------------------------------------
+	static int findTextPos(const char* txt, int pos) {
+		size_t l = strlen(txt);
+		int x = 0;
+		for (int i = 0; i < l; ++i) {
+			if (x > pos) {
+				int r = i - 1;
+				if (r < 0) {
+					r = 0;
+				}
+				return r;
+			}
+			x += 8;
+		}
+		return l;
+	}
+
+	// -------------------------------------------------------
 	// initialize GUI
 	// -------------------------------------------------------
 	void init(IMGUISettings* settings) {
@@ -1246,8 +1272,11 @@ namespace gui {
 		p2i p = _guiCtx->currentPos;
 		checkItem(p, p2i(width, 20));
 		if (isClicked()) {
+			p2i mousePosition = _guiCtx->mousePosition;
+			int dx = mousePosition.x - p.x - 6; // 10 px offset - half font width
 			sprintf_s(_guiCtx->inputText, 256, "%s", v);
 			_guiCtx->caretPos = strlen(_guiCtx->inputText);
+			_guiCtx->caretPos = findTextPos(_guiCtx->inputText, dx);
 			_guiCtx->inputItem = _guiCtx->idStack.last();
 			_guiCtx->activeItem = _guiCtx->idStack.last();
 		}
@@ -1260,10 +1289,12 @@ namespace gui {
 			p2i textDim = textSize(_guiCtx->inputText);
 			p2i cp = p;
 			p2i cursorPos = limitedTextSize(_guiCtx->inputText, _guiCtx->caretPos);
-			cp.x += (width - textDim.x) /2 + cursorPos.x - 2;
+			//cp.x += (width - textDim.x) /2 + cursorPos.x - 2;
+			cp.x = cursorPos.x + 16;
 			cp.y -= 6;
 			renderer::add_box(_guiCtx->uiContext, cp, p2i(10, 3), ds::Color(192, 0, 192, 255));
-			p.x += (width - textDim.x) / 2;
+			//p.x += (width - textDim.x) / 2;
+			p.x += 10;
 			p.y -= 1;
 			renderer::add_text(_guiCtx->uiContext, p, _guiCtx->inputText, 0);
 			sprintf_s(v, maxLength, "%s", _guiCtx->inputText);
@@ -1273,7 +1304,8 @@ namespace gui {
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width, 16), _guiCtx->settings.inputBoxColor);
 			p2i textDim = textSize(_guiCtx->tmpBuffer);
 			p.y -= 1;
-			p.x += (width - textDim.x) / 2;
+			//p.x += (width - textDim.x) / 2;
+			p.x += 10;
 			renderer::add_text(_guiCtx->uiContext, p, _guiCtx->tmpBuffer, 0);
 		}
 		return ret;
