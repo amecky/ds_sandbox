@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox.vcxproj"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle", "triangle\Triangle.vcxproj", "{BD89CA49-B743-47FA-A3A2-2A9A600DE351}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ColorRing", "color_ring\ColorRing.vcxproj", "{CC466AB9-1E50-4D07-9FCC-4797813265E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{BD89CA49-B743-47FA-A3A2-2A9A600DE351}.Release|x64.Build.0 = Release|x64
 		{BD89CA49-B743-47FA-A3A2-2A9A600DE351}.Release|x86.ActiveCfg = Release|Win32
 		{BD89CA49-B743-47FA-A3A2-2A9A600DE351}.Release|x86.Build.0 = Release|Win32
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Debug|x64.ActiveCfg = Debug|x64
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Debug|x64.Build.0 = Debug|x64
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Debug|x86.ActiveCfg = Debug|Win32
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Debug|x86.Build.0 = Debug|Win32
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Release|x64.ActiveCfg = Release|x64
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Release|x64.Build.0 = Release|x64
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Release|x86.ActiveCfg = Release|Win32
+		{CC466AB9-1E50-4D07-9FCC-4797813265E7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

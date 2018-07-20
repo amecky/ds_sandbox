@@ -22,3 +22,4 @@ obj/Textures/satellite (Instance).png
 timing.txt
 triangle/Debug/
 triangle/Release/
+*.cso
