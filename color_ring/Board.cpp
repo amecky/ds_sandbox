@@ -71,7 +71,11 @@ void Board::render() {
 
 	ds::dbgPrint(0, 0, "RA %g", RADTODEG(ra));
 
-	ds::dbgPrint(0, 1, "Fiiled %d", _filled);
+	ds::dbgPrint(0, 1, "Filled %d", _filled);
+
+
+
+	ds::dbgPrint(0, 2, "Part %d", _colorRing->getPartIndex(_player.rotation));
 
 	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
 	_sprites->add(ds::vec2(512, 384) + p * 295.0f, ds::vec4(80, 50, 8, 12), ds::vec2(1.0f), ra);
@@ -156,7 +160,8 @@ void Board::moveBullets(float dt) {
 		b.pos += b.velocity * ds::getElapsedSeconds();
 		float l = sqr_length(ds::vec2(512, 384) - b.pos);
 		if (l > 300.0f * 300.0f) {
-			int filled = _colorRing->markPart(b.rotation, _selectedColor);
+			int idx = _colorRing->getPartIndex(_player.rotation);
+			int filled = _colorRing->markPart(idx, _selectedColor);
 			if (filled > 0) {
 				// do some more here
 				_filled += filled;

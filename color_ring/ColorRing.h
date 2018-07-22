@@ -21,9 +21,11 @@ public:
 	void tick(float dt);
 	virtual void render(ds::Color* colors);
 	int markPart(float angle, int color);
+	int markPart(int index, int color);
 	void debug();
 	void reset();
 	float rasterizeAngle(float input);
+	int getPartIndex(float input);
 protected:
 	virtual RID createVertexShader();
 	virtual RID createPixelShader();

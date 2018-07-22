@@ -28,10 +28,10 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 	float v2 = 36.0f / 512.0f;
 
 	for (int i = 0; i < TOTAL_PARTS; ++i) {
-		ds::vec2 p1 = center + ds::vec2(cos(angle), sin(angle)) * r1;
-		ds::vec2 p2 = center + ds::vec2(cos(angle), sin(angle)) * r2;
-		ds::vec2 p3 = center + ds::vec2(cos(angle - _rotationStep), sin(angle - _rotationStep)) * r2;
-		ds::vec2 p4 = center + ds::vec2(cos(angle - _rotationStep), sin(angle - _rotationStep)) * r1;
+		ds::vec2 p1 = center + ds::vec2(cos(angle + _rotationStep), sin(angle + _rotationStep)) * r1;
+		ds::vec2 p2 = center + ds::vec2(cos(angle + _rotationStep), sin(angle + _rotationStep)) * r2;
+		ds::vec2 p3 = center + ds::vec2(cos(angle), sin(angle)) * r2;
+		ds::vec2 p4 = center + ds::vec2(cos(angle), sin(angle)) * r1;
 		_vertices[cnt++] = { p1, ds::vec2(0.0f,v2), ds::Color(255,255,255,255) };
 		_vertices[cnt++] = { p2, ds::vec2(0.0f,0.0f), ds::Color(255,255,255,255) };
 		_vertices[cnt++] = { p3, ds::vec2(u2,0.0f), ds::Color(255,255,255,255) };
@@ -108,6 +108,13 @@ void ColorRing::reset() {
 		resetSegment(i);
 	}
 }
+
+int ColorRing::getPartIndex(float input) {
+	float step = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
+	float fidx = input / step;
+	return static_cast<int>(fidx);
+}
+
 
 float ColorRing::rasterizeAngle(float input) {
 	float step = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
@@ -223,6 +230,8 @@ int ColorRing::checkSegments() {
 		}
 		if (filled == (NUM_PARTS_PER_SEGMENT - 1)) {
 			DBG_LOG("segment %d filled", i);
+			resetSegment(i);
+			--_activeCount;
 			++ret;
 		}
 	}
@@ -256,6 +265,20 @@ int ColorRing::markPart(float angle, int color) {
 			match = true;
 		}
 		DBG_LOG("sidx %d pidx %d", sidx, pidx);
+	}
+	if (match) {
+		return checkSegments();
+	}
+	return 0;
+}
+
+int ColorRing::markPart(int index, int color) {
+	bool match = false;
+	int sidx = index / NUM_PARTS_PER_SEGMENT;
+	int pidx = index - sidx * NUM_PARTS_PER_SEGMENT;
+	if (_segments[sidx].fillingDegree[pidx] < 3 && _segments[sidx].color == color) {
+		++_segments[sidx].fillingDegree[pidx];
+		match = true;
 	}
 	if (match) {
 		return checkSegments();
