@@ -26,6 +26,8 @@ public:
 	void reset();
 	float rasterizeAngle(float input);
 	int getPartIndex(float input);
+	int getColor(int idx) const;
+	int getNumSegments() const;
 protected:
 	virtual RID createVertexShader();
 	virtual RID createPixelShader();

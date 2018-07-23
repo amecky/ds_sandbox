@@ -3,6 +3,19 @@
 #include "ColorRing.h"
 #include "math.h"
 
+static const ds::vec4 NUMBERS[] = {
+	ds::vec4(  0, 125, 13, 9),
+	ds::vec4( 13, 125,  6, 9),
+	ds::vec4( 19, 125, 12, 9),
+	ds::vec4( 31, 125, 12, 9),
+	ds::vec4( 43, 125, 12, 9),
+	ds::vec4( 55, 125, 12, 9),
+	ds::vec4( 67, 125, 13, 9),
+	ds::vec4( 80, 125, 12, 9),
+	ds::vec4( 92, 125, 13, 9),
+	ds::vec4(105, 125, 13, 9)
+};
+
 Board::Board(RID textureID) {
 	_sprites = new SpriteBatchBuffer(SpriteBatchDesc()
 		.MaxSprites(2048)
@@ -54,6 +67,25 @@ void Board::rebuildColors() {
 void Board::debug() {
 	_colorRing->debug();
 }
+
+void Board::drawNumber(int value, const ds::vec2& pos, float rotation) {
+	_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), rotation);
+}
+
+void Board::drawNumber(int value, int segment) {
+	if (value < 10) {
+		float step = ds::TWO_PI / 18.0f;
+		float ang = static_cast<float>(segment) * step + step * 0.5f;
+		DBG_LOG("segment: %d angle %g", segment, RADTODEG(ang));
+		ds::vec2 p = ds::vec2(cosf(ang), sinf(ang));
+		ds::vec2 pos = ds::vec2(512, 384) + p * 310.0f;
+		_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), ang - ds::PI * 0.5f);
+	}
+	else {
+
+	}
+}
+
 // -------------------------------------------------------
 // render
 // -------------------------------------------------------
@@ -63,7 +95,7 @@ void Board::render() {
 
 	_sprites->begin();
 
-	_sprites->add(ds::vec2(512, 384), ds::vec4(0, 60, 52, 52), ds::vec2(1.0f), _player.rotation);
+	_sprites->add(ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), _player.rotation);
 
 	// show target indicator
 
@@ -73,13 +105,19 @@ void Board::render() {
 
 	ds::dbgPrint(0, 1, "Filled %d", _filled);
 
+	for (int i = 0; i < _colorRing->getNumSegments(); ++i) {
+		int clr = _colorRing->getColor(i);
+		if (clr != -1) {
+			drawNumber(clr, i);
+		}
+	}
 
 
 	ds::dbgPrint(0, 2, "Part %d", _colorRing->getPartIndex(_player.rotation));
 
 	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
-	_sprites->add(ds::vec2(512, 384) + p * 295.0f, ds::vec4(80, 50, 8, 12), ds::vec2(1.0f), ra);
-	_sprites->add(ds::vec2(512, 384) + p * 325.0f, ds::vec4(80, 50, 8, 12), ds::vec2(1.0f), ra);
+	_sprites->add(ds::vec2(512, 384) + p * 296.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
+	_sprites->add(ds::vec2(512, 384) + p * 330.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
 
 	// show separators
 	

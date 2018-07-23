@@ -123,6 +123,13 @@ float ColorRing::rasterizeAngle(float input) {
 	return static_cast<float>(idx) * _rotationStep + _rotationStep * 0.5f;
 }
 
+int ColorRing::getNumSegments() const {
+	return NUM_SEGMENTS;
+}
+
+int ColorRing::getColor(int idx) const {
+	return _segments[idx].color;
+}
 // -------------------------------------------------------
 // tick
 // -------------------------------------------------------

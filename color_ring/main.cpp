@@ -47,7 +47,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.width = 1024;
 	rs.height = 768;
 	rs.title = "Color Ring";
-	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
+	rs.clearColor = ds::Color(20,0,0,255);
 	rs.multisampling = 4;
 	rs.logHandler = my_debug;
 #ifdef DEBUG
