@@ -27,7 +27,7 @@ public:
 	void reset();
 	void debug();
 private:
-	void drawNumber(int value, const ds::vec2& pos, float rotation);
+	void drawNumber(int index, const ds::vec2& pos, float rotation);
 	void drawNumber(int value, int segment);
 	void moveBullets(float dt);
 	ds::Color _colors[5];

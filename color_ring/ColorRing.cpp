@@ -130,6 +130,10 @@ int ColorRing::getNumSegments() const {
 int ColorRing::getColor(int idx) const {
 	return _segments[idx].color;
 }
+
+float ColorRing::getTimer(int idx) const {
+	return _segments[idx].timer;
+}
 // -------------------------------------------------------
 // tick
 // -------------------------------------------------------

@@ -4,16 +4,16 @@
 #include "math.h"
 
 static const ds::vec4 NUMBERS[] = {
-	ds::vec4(  0, 125, 13, 9),
-	ds::vec4( 13, 125,  6, 9),
-	ds::vec4( 19, 125, 12, 9),
-	ds::vec4( 31, 125, 12, 9),
-	ds::vec4( 43, 125, 12, 9),
-	ds::vec4( 55, 125, 12, 9),
-	ds::vec4( 67, 125, 13, 9),
-	ds::vec4( 80, 125, 12, 9),
-	ds::vec4( 92, 125, 13, 9),
-	ds::vec4(105, 125, 13, 9)
+	ds::vec4(  0, 135, 20, 15),
+	ds::vec4( 20, 135,  9, 15),
+	ds::vec4( 29, 135, 18, 15),
+	ds::vec4( 47, 135, 19, 15),
+	ds::vec4( 66, 135, 20, 15),
+	ds::vec4( 86, 135, 18, 15),
+	ds::vec4(106, 135, 20, 15),
+	ds::vec4(126, 135, 17, 15),
+	ds::vec4(143, 135, 20, 15),
+	ds::vec4(163, 135, 20, 15)
 };
 
 Board::Board(RID textureID) {
@@ -68,20 +68,26 @@ void Board::debug() {
 	_colorRing->debug();
 }
 
-void Board::drawNumber(int value, const ds::vec2& pos, float rotation) {
-	_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), rotation);
+void Board::drawNumber(int index, const ds::vec2& pos, float rotation) {
+	_sprites->add(pos, NUMBERS[index], ds::vec2(1.0f), rotation);
 }
 
 void Board::drawNumber(int value, int segment) {
+	float step = ds::TWO_PI / 18.0f;
+	float ang = static_cast<float>(segment) * step + step * 0.5f;
 	if (value < 10) {
-		float step = ds::TWO_PI / 18.0f;
-		float ang = static_cast<float>(segment) * step + step * 0.5f;
-		DBG_LOG("segment: %d angle %g", segment, RADTODEG(ang));
-		ds::vec2 p = ds::vec2(cosf(ang), sinf(ang));
-		ds::vec2 pos = ds::vec2(512, 384) + p * 310.0f;
+		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
 		_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 	}
 	else {
+		int upper = value / 10;
+		int lower = value - upper * 10;
+		ang -= DEGTORAD(2.0f);
+		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
+		_sprites->add(pos, NUMBERS[lower], ds::vec2(1.0f), ang - ds::PI * 0.5f);
+		ang += DEGTORAD(4.0f);
+		pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
+		_sprites->add(pos, NUMBERS[upper], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 
 	}
 }
@@ -108,7 +114,9 @@ void Board::render() {
 	for (int i = 0; i < _colorRing->getNumSegments(); ++i) {
 		int clr = _colorRing->getColor(i);
 		if (clr != -1) {
-			drawNumber(clr, i);
+			float t = _colorRing->getTimer(i);
+			int v = 10 - static_cast<int>(t);
+			drawNumber(v, i);
 		}
 	}
 
