@@ -7,6 +7,7 @@
     <ClCompile Include="math.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="colors.cpp" />
+    <ClCompile Include="HUD.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -20,5 +21,6 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="colors.h" />
+    <ClInclude Include="HUD.h" />
   </ItemGroup>
 </Project>
