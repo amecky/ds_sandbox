@@ -97,10 +97,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			rightPressed = false;
 			board.selectNextColor();
 		}
-
-		//if (_TV(true)) {
-			//colorRing.tick(ds::getElapsedSeconds());
-		//}
 		
 		board.render();
 

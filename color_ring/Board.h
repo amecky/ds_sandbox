@@ -1,5 +1,8 @@
 #include <diesel.h>
 #include <SpriteBatchBuffer.h>
+#include <memory>
+#include <vector>
+#include "HUD.h"
 
 struct Bullet {
 	ds::vec2 pos;
@@ -31,12 +34,12 @@ private:
 	void drawNumber(int value, int segment);
 	void moveBullets(float dt);
 	ds::Color _colors[5];
-	SpriteBatchBuffer* _sprites;
+	std::unique_ptr<SpriteBatchBuffer> _sprites;
 	int _selectedColor;
-	Bullet _bullets[64];
-	int _numBullets;
+	std::vector<Bullet> _bullets;
 	float _bulletTimer;
-	ColorRing* _colorRing;
+	std::unique_ptr<ColorRing> _colorRing;
 	Player _player;
 	int _filled;
+	HUD _hud;
 };
