@@ -28,6 +28,7 @@ public:
 	int getPartIndex(float input);
 	int getColor(int idx) const;
 	int getNumSegments() const;
+	int getNumPartsPerSegment() const;
 	float getTimer(int idx) const;
 protected:
 	virtual RID createVertexShader();

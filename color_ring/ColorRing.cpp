@@ -123,6 +123,10 @@ float ColorRing::rasterizeAngle(float input) {
 	return static_cast<float>(idx) * _rotationStep + _rotationStep * 0.5f;
 }
 
+int ColorRing::getNumPartsPerSegment() const {
+	return NUM_PARTS_PER_SEGMENT;
+}
+
 int ColorRing::getNumSegments() const {
 	return NUM_SEGMENTS;
 }
@@ -231,7 +235,7 @@ void ColorRing::debug() {
 // check segments
 // -------------------------------------------------------
 int ColorRing::checkSegments() {
-	int ret = 0;
+	int ret = -1;
 	for (int i = 0; i < NUM_SEGMENTS; ++i) {
 		int filled = 0;
 		for (int j = 0; j < NUM_PARTS_PER_SEGMENT; ++j) {
@@ -241,9 +245,9 @@ int ColorRing::checkSegments() {
 		}
 		if (filled == (NUM_PARTS_PER_SEGMENT - 1)) {
 			DBG_LOG("segment %d filled", i);
+			ret = _segments[i].color;
 			resetSegment(i);
 			--_activeCount;
-			++ret;
 		}
 	}
 	return ret;
@@ -294,5 +298,5 @@ int ColorRing::markPart(int index, int color) {
 	if (match) {
 		return checkSegments();
 	}
-	return 0;
+	return -1;
 }

@@ -7,7 +7,9 @@
     <ClCompile Include="math.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="colors.cpp" />
-    <ClCompile Include="HUD.cpp" />
+    <ClCompile Include="particles\ParticleManager.cpp">
+      <Filter>particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -21,6 +23,13 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="colors.h" />
-    <ClInclude Include="HUD.h" />
+    <ClInclude Include="particles\ParticleManager.h">
+      <Filter>particles</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="particles">
+      <UniqueIdentifier>{1d9cb00b-6baf-4c63-bddc-467503184924}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

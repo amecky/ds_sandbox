@@ -82,6 +82,7 @@ public:
 	void add(const ds::vec2& pos, const ds::vec4& textureRect, const ds::vec2& scaling = ds::vec2(1, 1), float rotation = 0.0f, const ds::Color& color = ds::Color(255, 255, 255, 255));
 	void add(const Sprite& sprite);
 	void flush();
+	RID getRenderPass();
 private:
 	unsigned int _max;
 	unsigned int _current;
@@ -496,6 +497,10 @@ SpriteBatchBuffer::~SpriteBatchBuffer() {
 
 void SpriteBatchBuffer::begin() {
 	_current = 0;
+}
+
+RID SpriteBatchBuffer::getRenderPass() {
+	return _renderPass;
 }
 
 void SpriteBatchBuffer::add(const ds::vec2& position, const ds::vec4& rect, const ds::vec2& scale, float rotation, const ds::Color& clr) {

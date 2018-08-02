@@ -2233,6 +2233,8 @@ namespace ds {
 	void rebuildCamera(Camera* camera);
 
 	Camera buildPerspectiveCamera(const vec3& pos);
+
+	Camera buildOrthographicCamera();
 	
 	// drawing
 	
@@ -6031,6 +6033,24 @@ namespace ds {
 			vec3(0,0,1),
 			vec3(0,1,0),
 			vec3(1,0,0),
+			0.0f,
+			0.0f,
+			0.0f
+		};
+		return camera;
+	}
+
+	Camera buildOrthographicCamera() {
+		ds::matrix orthoView = ds::matIdentity();
+		ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
+		ds::Camera camera = {
+			orthoView,
+			orthoProjection,
+			orthoView * orthoProjection,
+			ds::vec3(0,0,0),
+			ds::vec3(0,0,1),
+			ds::vec3(0,1,0),
+			ds::vec3(1,0,0),
 			0.0f,
 			0.0f,
 			0.0f
