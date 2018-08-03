@@ -30,6 +30,7 @@ public:
 	int getNumSegments() const;
 	int getNumPartsPerSegment() const;
 	float getTimer(int idx) const;
+	void buildRingVertices();
 protected:
 	virtual RID createVertexShader();
 	virtual RID createPixelShader();
@@ -44,5 +45,9 @@ private:
 	float _rotationStep;
 	int _colors[TOTAL_PARTS];
 	Segment _segments[NUM_SEGMENTS];
+	//GridVertex* _ringVertices;
+	std::vector<GridVertex> _ringVertices;
+	RID _ringBufferID;
+	RID _ringDrawItem;
 };
 

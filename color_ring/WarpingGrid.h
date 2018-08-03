@@ -71,6 +71,7 @@ protected:
 	virtual RID createVertexShader();
 	virtual RID createPixelShader();
 	int _numVertices;
+	RID _stateGroup;
 	GridConstantBuffer _constantBuffer;
 	RID _vertexBufferID;
 	RID _orthoPass;

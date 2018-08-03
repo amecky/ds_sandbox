@@ -16,8 +16,8 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 
 	int cnt = 0;
 
-	float r1 = 300.0f;
-	float r2 = 325.0f;
+	float r1 = 288.0f;
+	float r2 = 320.0f;
 	_rotationStep = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
 	float angle = 0.0f;
 	ds::vec2 center(512, 384);
@@ -43,7 +43,46 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 		resetSegment(i);
 		//_segments[i].color = ds::random(-1.9f, 3.9f);
 	}
+}
 
+void ColorRing::buildRingVertices() {
+	_ringVertices.reserve(TOTAL_PARTS * 4);
+	float r1 = 270.0f;
+	float r2 = 340.0f;
+	_rotationStep = ds::TWO_PI / static_cast<float>(TOTAL_PARTS);
+	float angle = 0.0f;
+	ds::vec2 center(512, 384);
+	for (int i = 0; i < TOTAL_PARTS; ++i) {
+		int c = i % NUM_PARTS_PER_SEGMENT;
+		ds::vec4 tube(284, 296, 50, 96);
+		tube.x -= c * 12.0f;
+		tube.y -= c * 12.0f;
+		tube /= 512.0f;
+		ds::vec2 p1 = center + ds::vec2(cos(angle + _rotationStep), sin(angle + _rotationStep)) * r1;
+		ds::vec2 p2 = center + ds::vec2(cos(angle + _rotationStep), sin(angle + _rotationStep)) * r2;
+		ds::vec2 p3 = center + ds::vec2(cos(angle), sin(angle)) * r2;
+		ds::vec2 p4 = center + ds::vec2(cos(angle), sin(angle)) * r1;
+		_ringVertices.push_back({ p1, ds::vec2(tube.x,tube.w), ds::Color(255,255,255,255) });
+		_ringVertices.push_back({ p2, ds::vec2(tube.x,tube.z), ds::Color(255,255,255,255) });
+		_ringVertices.push_back({ p3, ds::vec2(tube.y,tube.z), ds::Color(255,255,255,255) });
+		_ringVertices.push_back({ p4, ds::vec2(tube.y,tube.w), ds::Color(255,255,255,255) });
+		angle += _rotationStep;
+	}
+
+	_ringBufferID = ds::createVertexBuffer(ds::VertexBufferDesc()
+		.BufferType(ds::BufferType::STATIC)
+		.Data(&_ringVertices[0])
+		.NumVertices(_ringVertices.size())
+		.VertexSize(sizeof(GridVertex))
+	);
+
+	RID ringStateGroup = ds::StateGroupBuilder()
+		.vertexBuffer(_ringBufferID)
+		.build();
+
+	ds::DrawCommand drawCmd = { 100, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST, 0 };
+	RID groups[] = { _stateGroup, ringStateGroup };
+	_ringDrawItem = ds::compile(drawCmd, groups, 2);
 }
 
 // -------------------------------------------------------
@@ -204,7 +243,7 @@ void ColorRing::mapColors(ds::Color* colors) {
 			color = 4;
 		}
 		for (int j = 0; j < NUM_PARTS_PER_SEGMENT; ++j) {
-			float offset = static_cast<float>(_segments[i].fillingDegree[j]) * PIX_OFFSET;
+			float offset = static_cast<float>(3 - _segments[i].fillingDegree[j]) * PIX_OFFSET;
 			for (int k = 0; k < 4; ++k) {
 				ds::vec2 uv = UVS[k];
 				uv *= PIX_STEP;
@@ -263,6 +302,8 @@ void ColorRing::render(ds::Color* colors) {
 	ds::mapBufferData(_vertexBufferID, _vertices, _numVertices * sizeof(GridVertex));
 
 	ds::submit(_orthoPass, _drawItem, _numVertices / 4 * 6);
+
+	ds::submit(_orthoPass, _ringDrawItem, _numVertices / 4 * 6);
 }
 
 // -------------------------------------------------------

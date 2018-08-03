@@ -8,6 +8,8 @@
 #include <stb_image.h>
 #define SPRITE_IMPLEMENTATION
 #include <SpriteBatchBuffer.h>
+#define DS_TWEENING_IMPLEMENTATION
+#include <ds_tweening.h>
 #include "WarpingGrid.h"
 #include "ColorRing.h"
 #include "math.h"

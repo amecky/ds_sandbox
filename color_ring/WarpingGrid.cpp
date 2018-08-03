@@ -50,7 +50,7 @@ void WarpingGrid::createDrawItem(RID textureID) {
 		.DestBlend(ds::BlendStates::INV_SRC_ALPHA)
 		.DestAlphaBlend(ds::BlendStates::INV_SRC_ALPHA)
 		.AlphaEnabled(true)
-	);
+		);
 
 	RID vertexShader = createVertexShader();
 
@@ -68,7 +68,7 @@ void WarpingGrid::createDrawItem(RID textureID) {
 		.Declarations(decl)
 		.NumDeclarations(3)
 		.VertexShader(vertexShader)
-	);
+		);
 
 	// create orthographic view
 	ds::matrix orthoView = ds::matIdentity();
@@ -86,7 +86,7 @@ void WarpingGrid::createDrawItem(RID textureID) {
 		0.0f
 	};
 
-	
+
 
 	RID viewport = ds::createViewport(ds::ViewportDesc()
 		.Top(0)
@@ -95,13 +95,13 @@ void WarpingGrid::createDrawItem(RID textureID) {
 		.Height(768)
 		.MinDepth(0.0f)
 		.MaxDepth(1.0f)
-	);
+		);
 
 	_orthoPass = ds::createRenderPass(ds::RenderPassDesc()
 		.Camera(&camera)
 		.DepthBufferState(ds::DepthBufferState::DISABLED)
 		.Viewport(viewport)
-	);
+		);
 
 	_constantBuffer.viewprojectionMatrix = ds::matTranspose(orthoView * orthoProjection);
 	_constantBuffer.worldMatrix = ds::matTranspose(ds::matIdentity());
@@ -113,29 +113,33 @@ void WarpingGrid::createDrawItem(RID textureID) {
 		.BufferType(ds::BufferType::DYNAMIC)
 		.NumVertices(_numVertices)
 		.VertexSize(sizeof(GridVertex))
-	);
+		);
 
 	RID ssid = ds::createSamplerState(ds::SamplerStateDesc()
 		.AddressMode(ds::TextureAddressModes::CLAMP)
 		.Filter(ds::TextureFilters::LINEAR)
-	);
+		);
 
 
 
-	RID stateGroup = ds::StateGroupBuilder()
+	_stateGroup = ds::StateGroupBuilder()
 		.inputLayout(rid)
 		.vertexShader(vertexShader)
 		.pixelShader(pixelShader)
-		.texture(textureID,pixelShader,0)
+		.texture(textureID, pixelShader, 0)
 		.constantBuffer(cbid, vertexShader, 0)
-		.samplerState(ssid,pixelShader,0)
-		.vertexBuffer(_vertexBufferID)
+		.samplerState(ssid, pixelShader, 0)
 		.indexBuffer(indexBufferID)
+		.build();
+
+	RID myStateGroup = ds::StateGroupBuilder()
+		.vertexBuffer(_vertexBufferID)
 		.build();
 
 	ds::DrawCommand drawCmd = { 100, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST, 0 };
 
-	_drawItem = ds::compile(drawCmd, stateGroup);
+	RID groups[] = { _stateGroup, myStateGroup };
+	_drawItem = ds::compile(drawCmd, groups, 2);
 
 }
 // -------------------------------------------------------

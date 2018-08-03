@@ -1,5 +1,6 @@
 #include <diesel.h>
 #include <SpriteBatchBuffer.h>
+#include <ds_tweening.h>
 #include <memory>
 #include <vector>
 #include "particles\ParticleManager.h"
@@ -22,6 +23,25 @@ struct HUD {
 	float timer;
 };
 
+struct HUDAnimation {
+	float value;
+	float start;
+	float end;
+	float timer;
+	float ttl;
+	tweening::TweeningType type;
+};
+
+struct AnimatedLetter {
+	ds::vec2 start;
+	ds::vec2 end;
+	ds::vec2 pos;
+	float timer;
+	float ttl;
+	int texureIndex;
+	tweening::TweeningType type;
+};
+
 class ColorRing;
 
 class Board {
@@ -40,7 +60,7 @@ private:
 	void rebound(const ds::vec2& p, float angle, const ds::Color& clr);
 	void showFilled(int segment, const ds::Color& clr);
 	void drawHUD();
-	void drawBigNumber(const ds::vec2& pos, int value, int digits);
+	void drawBigNumber(const ds::vec2& pos, int value, int digits, float scale = 1.0f);
 	void drawNumber(int index, const ds::vec2& pos, float rotation);
 	void drawNumber(int value, int segment);
 	void moveBullets(float dt);
@@ -55,4 +75,6 @@ private:
 	Player _player;
 	HUD _hud;
 	bool _pressed;
+	std::vector<AnimatedLetter> _animatedLetters;
+	HUDAnimation _hudAnimations[3];
 };

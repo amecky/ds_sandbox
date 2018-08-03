@@ -4,27 +4,46 @@
 #include "math.h"
 #include <algorithm>
 
+const static float BULLET_OUTER_RADIUS = 280.0f;
+const static float SQR_BULLET_OUTER_RADIUS = BULLET_OUTER_RADIUS * BULLET_OUTER_RADIUS;
+
 enum TextureNames {
 	TN_PARTICLE,
-	TN_STAR
+	TN_STAR,
+	TN_G,
+	TN_A,
+	TN_M,
+	TN_E,
+	TN_O,
+	TN_V,
+	TN_R
 };
 
+const TextureNames GAME_OVER_TEXTURES[] = { TN_G,TN_A,TN_M,TN_E,TN_O,TN_V,TN_E,TN_R };
+
 const static ds::vec4 TEXTURES[] = {
-	ds::vec4(40, 50, 16, 16),
-	ds::vec4(0, 75, 26, 26)
+	ds::vec4( 40,  50, 16, 16),
+	ds::vec4(  0,  75, 26, 26),
+	ds::vec4(  0, 180, 53, 42), // G
+	ds::vec4( 60, 180, 63, 42), // A
+	ds::vec4(126, 180, 69, 42), // M
+	ds::vec4(203, 180, 51, 42), // E
+	ds::vec4(262, 180, 54, 42), // O
+	ds::vec4(320, 180, 63, 42), // V
+	ds::vec4(446, 180, 54, 42), // R
 };
 
 const static ds::vec4 BIG_NUMBERS[] = {
-	ds::vec4(0, 150, 31, 31),
-	ds::vec4(30, 150, 15, 31),
-	ds::vec4(45, 150, 28, 31),
-	ds::vec4(73, 150, 28, 31),
-	ds::vec4(101, 150, 29, 31),
-	ds::vec4(130, 150, 28, 31),
-	ds::vec4(158, 150, 30, 31),
-	ds::vec4(188, 150, 29, 31),
-	ds::vec4(217, 150, 30, 31),
-	ds::vec4(247, 150, 30, 31)
+	ds::vec4(0, 150, 31, 30),
+	ds::vec4(30, 150, 15, 30),
+	ds::vec4(45, 150, 28, 30),
+	ds::vec4(73, 150, 28, 30),
+	ds::vec4(101, 150, 29, 30),
+	ds::vec4(130, 150, 28, 30),
+	ds::vec4(158, 150, 30, 30),
+	ds::vec4(188, 150, 29, 30),
+	ds::vec4(217, 150, 30, 30),
+	ds::vec4(247, 150, 30, 30)
 };
 
 static const ds::vec4 NUMBERS[] = {
@@ -51,10 +70,21 @@ Board::Board(RID textureID) {
 	_selectedColor = 0;
 	_colorRing = std::make_unique<ColorRing>();
 	_colorRing->createDrawItem(textureID);
+	_colorRing->buildRingVertices();
 	_colorRing->reset();
 	_player.rotation = 0.0f;
 	_camera = ds::buildOrthographicCamera();
 	_pressed = false;
+
+	for (int i = 0; i < 3; ++i) {
+		HUDAnimation& ha = _hudAnimations[i];
+		ha.value = 1.0f;
+		ha.start = 2.0f;
+		ha.end = 1.0f;
+		ha.timer = 0.0f;
+		ha.ttl = 0.0f;
+		ha.type = tweening::easeInOutElastic;
+	}
 }
 
 Board::~Board() {
@@ -100,7 +130,7 @@ void Board::debug() {
 // -------------------------------------------------------
 // draw big numbers
 // -------------------------------------------------------
-void Board::drawBigNumber(const ds::vec2& pos, int value, int digits) {
+void Board::drawBigNumber(const ds::vec2& pos, int value, int digits, float scale) {
 	int s = pow(10, digits - 1);
 	int tmp = value;
 	int sx = pos.x - digits * 20;
@@ -108,8 +138,9 @@ void Board::drawBigNumber(const ds::vec2& pos, int value, int digits) {
 	for (int i = 0; i < digits; ++i) {
 		int t = tmp / s;
 		tmp = tmp - s * t;
-		_sprites->add(ds::vec2(sx + i * 40, sy), BIG_NUMBERS[t]);
+		_sprites->add(ds::vec2(sx, sy), BIG_NUMBERS[t], ds::vec2(scale));
 		s /= 10;
+		sx += 40.0f * scale;
 	}
 }
 
@@ -127,17 +158,17 @@ void Board::drawNumber(int value, int segment) {
 	float step = ds::TWO_PI / 18.0f;
 	float ang = static_cast<float>(segment) * step + step * 0.5f;
 	if (value < 10) {
-		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
+		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
 		_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 	}
 	else {
 		int upper = value / 10;
 		int lower = value - upper * 10;
 		ang -= DEGTORAD(2.0f);
-		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
+		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
 		_sprites->add(pos, NUMBERS[lower], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 		ang += DEGTORAD(4.0f);
-		pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 335.0f;
+		pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
 		_sprites->add(pos, NUMBERS[upper], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 
 	}
@@ -147,9 +178,9 @@ void Board::drawNumber(int value, int segment) {
 // draw HUD
 // -------------------------------------------------------
 void Board::drawHUD() {
-	drawBigNumber(ds::vec2(150, 720), _hud.score, 6);
-	drawBigNumber(ds::vec2(950, 720), _hud.filled, 2);
-	drawBigNumber(ds::vec2(950, 100), _hud.time, 2);
+	drawBigNumber(ds::vec2(150, 720), _hud.score, 6, _hudAnimations[0].value);
+	drawBigNumber(ds::vec2(950, 720), _hud.filled, 2, _hudAnimations[1].value);
+	drawBigNumber(ds::vec2(950, 100), _hud.time, 2, _hudAnimations[2].value);
 
 	drawBigNumber(ds::vec2(150, 200), _particles->numAlive(), 6);
 }
@@ -180,8 +211,8 @@ void Board::render() {
 
 
 	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
-	_sprites->add(ds::vec2(512, 384) + p * 296.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
-	_sprites->add(ds::vec2(512, 384) + p * 330.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
+	_sprites->add(ds::vec2(512, 384) + p * 278.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
+	_sprites->add(ds::vec2(512, 384) + p * 332.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
 
 	// show separators
 	
@@ -205,9 +236,15 @@ void Board::render() {
 
 	drawHUD();
 
+	for (auto& letter : _animatedLetters) {
+		_sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
+	}
+
 	_sprites->flush();
 
 	_particles->render(_sprites->getRenderPass(), _camera.viewProjectionMatrix);
+
+	
 }
 
 // -------------------------------------------------------
@@ -232,6 +269,8 @@ void Board::tick(float dt) {
 		if (_hud.timer >= 1.0f) {
 			--_hud.time;
 			_hud.timer -= 1.0f;
+			_hudAnimations[2].timer = 0.0f;
+			_hudAnimations[2].ttl = 0.5f;
 		}
 	}
 
@@ -241,8 +280,42 @@ void Board::tick(float dt) {
 		_pressed = true;
 	}
 	else if ( _pressed) {
-		//showFilled(3);
+		_animatedLetters.clear();
+		float start = (1024.0f - 538.0f + 53.0f) * 0.5f;
+		for (int i = 0; i < 8; ++i) {
+			AnimatedLetter letter;
+			letter.start = ds::vec2(start, 900.0f + ds::random(0,150));
+			letter.end = ds::vec2(letter.start.x, 384.0f);
+			letter.texureIndex = GAME_OVER_TEXTURES[i];
+			start += TEXTURES[GAME_OVER_TEXTURES[i]].z;
+			start += 10.0f;
+			letter.timer = 0.0f;
+			letter.ttl = 2.0f + ds::random(-0.5f,0.5f);
+			letter.type = tweening::easeOutElastic;
+			_animatedLetters.push_back(letter);
+		}
 		_pressed = false;
+	}
+
+	for (auto& letter : _animatedLetters) {
+		if (letter.timer <= letter.ttl) {
+			letter.timer += dt;
+			letter.pos = tweening::interpolate(letter.type, letter.start, letter.end, letter.timer, letter.ttl);
+			if (letter.timer >= letter.ttl) {
+				letter.pos = letter.end;
+			}
+		}
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		HUDAnimation& ha = _hudAnimations[i];
+		if (ha.timer >= ha.ttl) {
+			ha.value = ha.end;
+		}
+		else {
+			ha.timer += dt;
+			ha.value = tweening::interpolate(ha.type, ha.start, ha.end, ha.timer, ha.ttl);
+		}
 	}
 
 }
@@ -336,7 +409,7 @@ void Board::moveBullets(float dt) {
 	for (auto& b : _bullets) {
 		b.pos += b.velocity * ds::getElapsedSeconds();
 		float l = sqr_length(ds::vec2(512, 384) - b.pos);
-		if (l > 300.0f * 300.0f) {
+		if (l > SQR_BULLET_OUTER_RADIUS) {
 			rebound(b.pos, b.rotation, _colors[b.color]);
 			int idx = _colorRing->getPartIndex(_player.rotation);
 			int filled = _colorRing->markPart(idx, _selectedColor);
@@ -356,6 +429,6 @@ void Board::moveBullets(float dt) {
 	_bullets.erase(std::remove_if(_bullets.begin(), _bullets.end(),
 		[](const Bullet& b) {
 		float l = sqr_length(ds::vec2(512, 384) - b.pos);
-		return l > 300.0f * 300.0f;
+		return l > SQR_BULLET_OUTER_RADIUS;
 	}), _bullets.end());
 }
