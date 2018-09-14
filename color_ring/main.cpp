@@ -10,6 +10,8 @@
 #include <SpriteBatchBuffer.h>
 #define DS_TWEENING_IMPLEMENTATION
 #include <ds_tweening.h>
+#define DS_PROFILER
+#include <ds_profiler.h>
 #include "WarpingGrid.h"
 #include "ColorRing.h"
 #include "math.h"
@@ -56,6 +58,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.supportDebug = true;
 #endif
 	ds::init(rs);
+
+	perf::init();
 	
 	float reloadTimer = 0.0f;
 
@@ -69,29 +73,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	while (ds::isRunning()) {
 
+		perf::reset();
+
 		ds::begin();
 
-		board.tick(ds::getElapsedSeconds());
+		{
+			perf::ZoneTracker("Tick");
+			board.tick(ds::getElapsedSeconds());
+		}
 
 		if (ds::isKeyPressed('A')) {
 			board.debug();
 		}
-		/*
-		ds::vec2 vel = ds::vec2(0.0f);
-		if (ds::isKeyPressed('A')) {
-			vel.x -= 100.0f;
-		}
-		if (ds::isKeyPressed('D')) {
-			vel.x += 100.0f;
-		}
-		if (ds::isKeyPressed('W')) {
-			vel.y += 100.0f;
-		}
-		if (ds::isKeyPressed('S')) {
-			vel.y -= 100.0f;
-		}
 
-		*/
 		if (ds::isMouseButtonPressed(1)) {
 			rightPressed = true;
 		}
@@ -100,9 +94,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			board.selectNextColor();
 		}
 		
-		board.render();
+		{
+			perf::ZoneTracker("Render");
+			board.render();
+		}
+
+		{
+			perf::ZoneTracker("Debug");
+			ds::dbgPrint(0, 36, "     FPS: %d", ds::getFramesPerSecond());
+			int p = 35;
+			for (int i = 0; i < perf::num_events(); ++i) {
+				ds::dbgPrint(0, p, "%8s: %2.6f ms", perf::get_name(i), perf::avg(i));
+				--p;
+			}
+		}
 
 		ds::end();
+
+		perf::finalize();
 
 		reloadTimer += ds::getElapsedSeconds();
 		if (reloadTimer >= 0.3f) {

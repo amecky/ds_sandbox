@@ -27,54 +27,85 @@ struct Vertex {
 
 };
 
+int createBox(Vertex* v, int offset, float width, float depth, const ds::vec3& center, float r1, float r2,float angle, float step, const ds::Color& c) {
+	int cnt = offset;
+	ds::vec3 p1 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r1;
+	ds::vec3 p2 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r2;
+	ds::vec3 p3 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r2;
+	ds::vec3 p4 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r1;
+	v[cnt++] = { p1, c };
+	v[cnt++] = { p2, c };
+	v[cnt++] = { p3, c };
+	v[cnt++] = { p4, c };
+
+	p1 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r2;
+	p2 = center + ds::vec3(cos(angle), sin(angle), depth) * r2;
+	p3 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r2;
+	p4 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r2;
+	v[cnt++] = { p1, c };
+	v[cnt++] = { p2, c };
+	v[cnt++] = { p3, c };
+	v[cnt++] = { p4, c };
+
+	p1 = center + ds::vec3(cos(angle), sin(angle), depth) * r1;
+	p2 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r1;
+	p3 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r1;
+	p4 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r1;
+	v[cnt++] = { p1, c };
+	v[cnt++] = { p2, c };
+	v[cnt++] = { p3, c };
+	v[cnt++] = { p4, c };
+
+	p4 = center + ds::vec3(cos(angle), sin(angle), depth) * r1;
+	p3 = center + ds::vec3(cos(angle), sin(angle), depth) * r2;
+	p2 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r2;
+	p1 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r1;
+	v[cnt++] = { p1, c };
+	v[cnt++] = { p2, c };
+	v[cnt++] = { p3, c };
+	v[cnt++] = { p4, c };
+	return cnt;
+}
+
+int createTorus(Vertex* v, int offset, float width, float depth, const ds::vec3& center, float r1, float r2, float angle, float step, const ds::Color& c) {
+	int cnt = offset;
+	float w = 0.5f;
+	float ts = ds::TWO_PI / static_cast<float>(16);
+	float ta = 0.0f;
+	ds::vec3 rd1 = center;
+	ds::vec3 rd2 = center;
+	for (int i = 0; i < 1; ++i) {
+		rd1 = center + ds::vec3(cos(ta) * i, sin(ta) * i, 0.0f);
+		rd2 = center + ds::vec3(cos(ta + ts) * i, sin(ta + ts) * i, 0.0f);
+
+		ds::vec3 p1 = ds::vec3(cos(angle), sin(angle), 0.0f) * w + rd1;
+		ds::vec3 p2 = ds::vec3(cos(angle), sin(angle), 0.0f) * w + rd2;
+		ds::vec3 p3 = ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * w + rd2;
+		ds::vec3 p4 = ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * w + rd1;
+		v[cnt++] = { p1, c };
+		v[cnt++] = { p2, c };
+		v[cnt++] = { p3, c };
+		v[cnt++] = { p4, c };
+		ta += ts;
+	}
+	return cnt;
+}
+
 void createTorus(Vertex* v, int maxVertices, int segments, float width, float depth) {
 	int cnt = 0;
 	float r1 = 1.0f;
 	float r2 = r1 + width;
-	float step = ds::TWO_PI / 32.0f;
+	float step = ds::TWO_PI / static_cast<float>(segments);
 	float angle = 0.0f;
 	ds::Color c(255, 0, 0, 255);
 	ds::vec3 center(0.0f, 0.0f,1.0f);
 	for (int i = 0; i < segments; ++i) {
 		int idx = i % 5;
 		c = COLORS[idx];
-		// front
-		ds::vec3 p1 = center + ds::vec3(cos(angle), sin(angle),0.0f) * r1;
-		ds::vec3 p2 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r2;
-		ds::vec3 p3 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r2;
-		ds::vec3 p4 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r1;
-		v[cnt++] = { p1, c };
-		v[cnt++] = { p2, c };
-		v[cnt++] = { p3, c };
-		v[cnt++] = { p4, c };
-
-		p1 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r2;
-		p2 = center + ds::vec3(cos(angle), sin(angle), depth) * r2;
-		p3 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r2;
-		p4 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r2;
-		v[cnt++] = { p1, c };
-		v[cnt++] = { p2, c };
-		v[cnt++] = { p3, c };
-		v[cnt++] = { p4, c };
-
-		p1 = center + ds::vec3(cos(angle), sin(angle), depth) * r1;
-		p2 = center + ds::vec3(cos(angle), sin(angle), 0.0f) * r1;
-		p3 = center + ds::vec3(cos(angle - step), sin(angle - step), 0.0f) * r1;
-		p4 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r1;
-		v[cnt++] = { p1, c };
-		v[cnt++] = { p2, c };
-		v[cnt++] = { p3, c };
-		v[cnt++] = { p4, c };
-
-		p4 = center + ds::vec3(cos(angle), sin(angle), depth) * r1;
-		p3 = center + ds::vec3(cos(angle), sin(angle), depth) * r2;
-		p2 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r2;
-		p1 = center + ds::vec3(cos(angle - step), sin(angle - step), depth) * r1;
-		v[cnt++] = { p1, c };
-		v[cnt++] = { p2, c };
-		v[cnt++] = { p3, c };
-		v[cnt++] = { p4, c };
-
+		center = ds::vec3(0.0f, 0.0f, 1.0f);
+		cnt = createTorus(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
+		//center = ds::vec3(0.0f, 0.0f, 0.0f);
+		//cnt = createBox(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
 		angle += step;
 	}
 }
@@ -152,9 +183,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	};
 
 	const int segments = 32;
-	const int numVertices = segments * 16;
+	const int numVertices = segments * 16 * 2;
 	Vertex v[numVertices];
-	createTorus(v, numVertices, segments, 0.2f, 0.2f);
+	createTorus(v, numVertices, segments, 0.1f, 0.2f);
 	
 	
 	RID rid = ds::createInputLayout(ds::InputLayoutDesc()

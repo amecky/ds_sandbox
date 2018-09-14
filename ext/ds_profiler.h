@@ -20,6 +20,8 @@ namespace perf {
 
 	double get_total_seconds();
 
+	float get_frame_time();
+
 	int num_events();
 
 	float dt(int idx);
@@ -115,6 +117,8 @@ namespace perf {
 		uint64_t totalTicks;
 		LARGE_INTEGER lastTime;
 		uint16_t frameCount;
+		LARGE_INTEGER frameTimer;
+		float totalFrameTime;
 	};
 
 	static ZoneTrackerContext* zoneTrackerCtx = 0;
@@ -158,7 +162,7 @@ namespace perf {
 	static void tick_timers() {
 		LARGE_INTEGER currentTime;
 		QueryPerformanceCounter(&currentTime);
-
+		QueryPerformanceCounter(&zoneTrackerCtx->frameTimer);
 		uint64_t timeDelta = currentTime.QuadPart - zoneTrackerCtx->lastTime.QuadPart;
 
 		zoneTrackerCtx->lastTime = currentTime;
@@ -171,6 +175,10 @@ namespace perf {
 		// Variable timestep update logic. 
 		zoneTrackerCtx->totalTicks += timeDelta;
 
+	}
+
+	float get_frame_time() {
+		return zoneTrackerCtx->totalFrameTime;
 	}
 
 	double get_total_seconds() {
@@ -193,6 +201,16 @@ namespace perf {
 	// -----------------------------------------------------------
 	void finalize() {
 		end(zoneTrackerCtx->root_event);
+
+		LARGE_INTEGER started = zoneTrackerCtx->frameTimer;
+		LARGE_INTEGER EndingTime;
+		QueryPerformanceCounter(&EndingTime);
+		uint64_t timeDelta = EndingTime.QuadPart - started.QuadPart;
+		timeDelta *= TicksPerSecond;
+		timeDelta /= zoneTrackerCtx->frequency.QuadPart;
+
+		zoneTrackerCtx->totalFrameTime = timeDelta / 10000.0f;
+
 		++zoneTrackerCtx->frames;
 		if ((get_total_seconds() > zoneTrackerCtx->beginAverage + 0.5f)) {
 			for (int i = 0; i < MAX_ENTRIES; ++i) {

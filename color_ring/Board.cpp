@@ -33,6 +33,8 @@ const static ds::vec4 TEXTURES[] = {
 	ds::vec4(446, 180, 54, 42), // R
 };
 
+float static FIXED_FONT_WIDTH = 32.0f;
+
 const static ds::vec4 BIG_NUMBERS[] = {
 	ds::vec4(0, 150, 31, 30),
 	ds::vec4(30, 150, 15, 30),
@@ -79,8 +81,8 @@ Board::Board(RID textureID) {
 	for (int i = 0; i < 3; ++i) {
 		HUDAnimation& ha = _hudAnimations[i];
 		ha.value = 1.0f;
-		ha.start = 2.0f;
-		ha.end = 1.0f;
+		ha.start = 1.0f;
+		ha.end = 1.4f;
 		ha.timer = 0.0f;
 		ha.ttl = 0.0f;
 		ha.type = tweening::easeInOutElastic;
@@ -133,14 +135,14 @@ void Board::debug() {
 void Board::drawBigNumber(const ds::vec2& pos, int value, int digits, float scale) {
 	int s = pow(10, digits - 1);
 	int tmp = value;
-	int sx = pos.x - digits * 20;
+	int sx = pos.x - digits * FIXED_FONT_WIDTH * 0.5f + (1.0f - scale) * BIG_NUMBERS[0].z;
 	int sy = pos.y;
 	for (int i = 0; i < digits; ++i) {
 		int t = tmp / s;
 		tmp = tmp - s * t;
 		_sprites->add(ds::vec2(sx, sy), BIG_NUMBERS[t], ds::vec2(scale));
 		s /= 10;
-		sx += 40.0f * scale;
+		sx += FIXED_FONT_WIDTH * scale;
 	}
 }
 
@@ -154,7 +156,7 @@ void Board::drawNumber(int index, const ds::vec2& pos, float rotation) {
 // -------------------------------------------------------
 // draw segment timer
 // -------------------------------------------------------
-void Board::drawNumber(int value, int segment) {
+void Board::drawSegmentTimer(int value, int segment) {
 	float step = ds::TWO_PI / 18.0f;
 	float ang = static_cast<float>(segment) * step + step * 0.5f;
 	if (value < 10) {
@@ -181,8 +183,6 @@ void Board::drawHUD() {
 	drawBigNumber(ds::vec2(150, 720), _hud.score, 6, _hudAnimations[0].value);
 	drawBigNumber(ds::vec2(950, 720), _hud.filled, 2, _hudAnimations[1].value);
 	drawBigNumber(ds::vec2(950, 100), _hud.time, 2, _hudAnimations[2].value);
-
-	drawBigNumber(ds::vec2(150, 200), _particles->numAlive(), 6);
 }
 
 // -------------------------------------------------------
@@ -194,28 +194,25 @@ void Board::render() {
 
 	_sprites->begin();
 
+	// player
 	_sprites->add(ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), _player.rotation);
-
-	// show target indicator
-
-	float ra = _colorRing->rasterizeAngle(_player.rotation);
-
+	
+	// draw timer of each segment
 	for (int i = 0; i < _colorRing->getNumSegments(); ++i) {
 		int clr = _colorRing->getColor(i);
 		if (clr != -1) {
 			float t = _colorRing->getTimer(i);
 			int v = 10 - static_cast<int>(t);
-			drawNumber(v, i);
+			drawSegmentTimer(v, i);
 		}
 	}
 
-
+	// show target indicator
+	float ra = _colorRing->rasterizeAngle(_player.rotation);
 	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
 	_sprites->add(ds::vec2(512, 384) + p * 278.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
 	_sprites->add(ds::vec2(512, 384) + p * 332.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
 
-	// show separators
-	
 	// draw bullets
 	for (auto& b: _bullets) {
 		float d = length(ds::vec2(512, 384) - b.pos) / 300.0f;
@@ -234,14 +231,17 @@ void Board::render() {
 		colorPos.x += 60;
 	}
 
+	// HUD
 	drawHUD();
 
+	// animated letter
 	for (auto& letter : _animatedLetters) {
 		_sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
 	}
 
 	_sprites->flush();
 
+	// particles
 	_particles->render(_sprites->getRenderPass(), _camera.viewProjectionMatrix);
 
 	

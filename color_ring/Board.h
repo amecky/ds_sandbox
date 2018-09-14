@@ -62,7 +62,7 @@ private:
 	void drawHUD();
 	void drawBigNumber(const ds::vec2& pos, int value, int digits, float scale = 1.0f);
 	void drawNumber(int index, const ds::vec2& pos, float rotation);
-	void drawNumber(int value, int segment);
+	void drawSegmentTimer(int value, int segment);
 	void moveBullets(float dt);
 	ds::Camera _camera;
 	std::unique_ptr<ParticleManager> _particles;
