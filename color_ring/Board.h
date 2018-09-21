@@ -3,6 +3,7 @@
 #include <ds_tweening.h>
 #include <memory>
 #include <vector>
+#include "HUD.h"
 #include "particles\ParticleManager.h"
 
 struct Bullet {
@@ -14,22 +15,6 @@ struct Bullet {
 
 struct Player {
 	float rotation;
-};
-
-struct HUD {
-	int score;
-	int filled;
-	int time;
-	float timer;
-};
-
-struct HUDAnimation {
-	float value;
-	float start;
-	float end;
-	float timer;
-	float ttl;
-	tweening::TweeningType type;
 };
 
 struct AnimatedLetter {
@@ -59,8 +44,6 @@ public:
 private:
 	void rebound(const ds::vec2& p, float angle, const ds::Color& clr);
 	void showFilled(int segment, const ds::Color& clr);
-	void drawHUD();
-	void drawBigNumber(const ds::vec2& pos, int value, int digits, float scale = 1.0f);
 	void drawNumber(int index, const ds::vec2& pos, float rotation);
 	void drawSegmentTimer(int value, int segment);
 	void moveBullets(float dt);
@@ -76,5 +59,5 @@ private:
 	HUD _hud;
 	bool _pressed;
 	std::vector<AnimatedLetter> _animatedLetters;
-	HUDAnimation _hudAnimations[3];
+	
 };

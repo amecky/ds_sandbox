@@ -10,6 +10,7 @@
     <ClCompile Include="particles\ParticleManager.cpp">
       <Filter>particles</Filter>
     </ClCompile>
+    <ClCompile Include="HUD.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -26,6 +27,7 @@
     <ClInclude Include="particles\ParticleManager.h">
       <Filter>particles</Filter>
     </ClInclude>
+    <ClInclude Include="HUD.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="particles">

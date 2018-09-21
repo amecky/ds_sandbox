@@ -147,6 +147,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="ColorRing.cpp" />
     <ClCompile Include="colors.cpp" />
+    <ClCompile Include="HUD.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="particles\ParticleManager.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="Board.h" />
     <ClInclude Include="ColorRing.h" />
     <ClInclude Include="colors.h" />
+    <ClInclude Include="HUD.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="particles\ParticleManager.h" />
     <ClInclude Include="WarpingGrid.h" />

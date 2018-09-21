@@ -33,20 +33,7 @@ const static ds::vec4 TEXTURES[] = {
 	ds::vec4(446, 180, 54, 42), // R
 };
 
-float static FIXED_FONT_WIDTH = 32.0f;
 
-const static ds::vec4 BIG_NUMBERS[] = {
-	ds::vec4(0, 150, 31, 30),
-	ds::vec4(30, 150, 15, 30),
-	ds::vec4(45, 150, 28, 30),
-	ds::vec4(73, 150, 28, 30),
-	ds::vec4(101, 150, 29, 30),
-	ds::vec4(130, 150, 28, 30),
-	ds::vec4(158, 150, 30, 30),
-	ds::vec4(188, 150, 29, 30),
-	ds::vec4(217, 150, 30, 30),
-	ds::vec4(247, 150, 30, 30)
-};
 
 static const ds::vec4 NUMBERS[] = {
 	ds::vec4(  0, 135, 20, 15),
@@ -76,17 +63,7 @@ Board::Board(RID textureID) {
 	_colorRing->reset();
 	_player.rotation = 0.0f;
 	_camera = ds::buildOrthographicCamera();
-	_pressed = false;
-
-	for (int i = 0; i < 3; ++i) {
-		HUDAnimation& ha = _hudAnimations[i];
-		ha.value = 1.0f;
-		ha.start = 1.0f;
-		ha.end = 1.4f;
-		ha.timer = 0.0f;
-		ha.ttl = 0.0f;
-		ha.type = tweening::easeInOutElastic;
-	}
+	_pressed = false;	
 }
 
 Board::~Board() {
@@ -100,10 +77,7 @@ void Board::reset() {
 	_selectedColor = 0;
 	_colorRing->reset();
 	_player.rotation = 0.0f;
-	_hud.filled = 0;
-	_hud.score = 0;
-	_hud.time = 60;
-	_hud.timer = 0.0f;
+	_hud.reset();
 }
 
 // -------------------------------------------------------
@@ -127,23 +101,6 @@ void Board::rebuildColors() {
 // -------------------------------------------------------
 void Board::debug() {
 	_colorRing->debug();
-}
-
-// -------------------------------------------------------
-// draw big numbers
-// -------------------------------------------------------
-void Board::drawBigNumber(const ds::vec2& pos, int value, int digits, float scale) {
-	int s = pow(10, digits - 1);
-	int tmp = value;
-	int sx = pos.x - digits * FIXED_FONT_WIDTH * 0.5f + (1.0f - scale) * BIG_NUMBERS[0].z;
-	int sy = pos.y;
-	for (int i = 0; i < digits; ++i) {
-		int t = tmp / s;
-		tmp = tmp - s * t;
-		_sprites->add(ds::vec2(sx, sy), BIG_NUMBERS[t], ds::vec2(scale));
-		s /= 10;
-		sx += FIXED_FONT_WIDTH * scale;
-	}
 }
 
 // -------------------------------------------------------
@@ -176,14 +133,6 @@ void Board::drawSegmentTimer(int value, int segment) {
 	}
 }
 
-// -------------------------------------------------------
-// draw HUD
-// -------------------------------------------------------
-void Board::drawHUD() {
-	drawBigNumber(ds::vec2(150, 720), _hud.score, 6, _hudAnimations[0].value);
-	drawBigNumber(ds::vec2(950, 720), _hud.filled, 2, _hudAnimations[1].value);
-	drawBigNumber(ds::vec2(950, 100), _hud.time, 2, _hudAnimations[2].value);
-}
 
 // -------------------------------------------------------
 // render
@@ -221,7 +170,7 @@ void Board::render() {
 	}
 
 	// draw color selection bars
-	ds::vec2 colorPos = ds::vec2(200, 740);
+	ds::vec2 colorPos = ds::vec2(200, 300);
 	colorPos.x = (1024.0f - 20.0f - _selectedColor * 100.0f) / 2;
 	for (int i = 0; i < 4; ++i) {
 		if (i == _selectedColor) {
@@ -232,7 +181,7 @@ void Board::render() {
 	}
 
 	// HUD
-	drawHUD();
+	_hud.render(_sprites);
 
 	// animated letter
 	for (auto& letter : _animatedLetters) {
@@ -263,16 +212,6 @@ void Board::tick(float dt) {
 	}
 
 	_colorRing->tick(dt);
-
-	if (_hud.time > 0) {
-		_hud.timer += dt;
-		if (_hud.timer >= 1.0f) {
-			--_hud.time;
-			_hud.timer -= 1.0f;
-			_hudAnimations[2].timer = 0.0f;
-			_hudAnimations[2].ttl = 0.5f;
-		}
-	}
 
 	_particles->tick(dt);
 
@@ -307,16 +246,7 @@ void Board::tick(float dt) {
 		}
 	}
 
-	for (int i = 0; i < 3; ++i) {
-		HUDAnimation& ha = _hudAnimations[i];
-		if (ha.timer >= ha.ttl) {
-			ha.value = ha.end;
-		}
-		else {
-			ha.timer += dt;
-			ha.value = tweening::interpolate(ha.type, ha.start, ha.end, ha.timer, ha.ttl);
-		}
-	}
+	_hud.tick(dt);
 
 }
 
@@ -416,12 +346,7 @@ void Board::moveBullets(float dt) {
 			if (filled != -1) {
 				int segment = idx / _colorRing->getNumPartsPerSegment();
 				showFilled(segment, _colors[filled]);
-				// do some more here
-				_hud.filled += filled;
-				_hud.time += 5;
-				if (_hud.time > 60) {
-					_hud.time = 60;
-				}
+				_hud.incrementFilled(filled);				
 			}
 		}
 	}
