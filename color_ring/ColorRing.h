@@ -45,9 +45,10 @@ private:
 	float _rotationStep;
 	int _colors[TOTAL_PARTS];
 	Segment _segments[NUM_SEGMENTS];
-	//GridVertex* _ringVertices;
-	std::vector<GridVertex> _ringVertices;
 	RID _ringBufferID;
 	RID _ringDrawItem;
+
+	ds::RenderItem _ringItem;
+	ds::RenderItem _tubeItem;
 };
 

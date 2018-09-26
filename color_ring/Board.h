@@ -1,19 +1,27 @@
 #include <diesel.h>
-#include <SpriteBatchBuffer.h>
 #include <ds_tweening.h>
 #include <memory>
 #include <vector>
 #include "HUD.h"
-#include "particles\ParticleManager.h"
 
 struct Bullet {
-	ds::vec2 pos;
 	ds::vec2 velocity;
 	int color;
-	float rotation;
+	Sprite sprite;
+};
+
+struct DirectionIndicator {
+	Sprite inner;
+	Sprite outer;
+};
+
+struct ColorSelection {
+	Sprite boxes[4];
+	Sprite borders[4];
 };
 
 struct Player {
+	Sprite sprite;
 	float rotation;
 };
 
@@ -28,11 +36,12 @@ struct AnimatedLetter {
 };
 
 class ColorRing;
+struct RenderEnvironment;
 
 class Board {
 
 public:
-	Board(RID textureID);
+	Board(RenderEnvironment* env);
 	~Board();
 	void rebuildColors();
 	void render();
@@ -42,15 +51,11 @@ public:
 	void reset();
 	void debug();
 private:
-	void rebound(const ds::vec2& p, float angle, const ds::Color& clr);
-	void showFilled(int segment, const ds::Color& clr);
 	void drawNumber(int index, const ds::vec2& pos, float rotation);
 	void drawSegmentTimer(int value, int segment);
 	void moveBullets(float dt);
-	ds::Camera _camera;
-	std::unique_ptr<ParticleManager> _particles;
+	RenderEnvironment* _env;
 	ds::Color _colors[5];
-	std::unique_ptr<SpriteBatchBuffer> _sprites;
 	int _selectedColor;
 	std::vector<Bullet> _bullets;
 	float _bulletTimer;
@@ -59,5 +64,8 @@ private:
 	HUD _hud;
 	bool _pressed;
 	std::vector<AnimatedLetter> _animatedLetters;
+
+	DirectionIndicator _directionIndicator;
+	ColorSelection _colorSelection;
 	
 };

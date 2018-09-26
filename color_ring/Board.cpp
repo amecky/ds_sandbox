@@ -1,8 +1,12 @@
 #include "Board.h"
+#include <SpriteBatchBuffer.h>
+#include "common.h"
 #include "colors.h"
 #include "ColorRing.h"
 #include "math.h"
 #include <algorithm>
+#include "particles\ParticleManager.h"
+#include "particle_effects.h"
 
 const static float BULLET_OUTER_RADIUS = 280.0f;
 const static float SQR_BULLET_OUTER_RADIUS = BULLET_OUTER_RADIUS * BULLET_OUTER_RADIUS;
@@ -10,6 +14,7 @@ const static float SQR_BULLET_OUTER_RADIUS = BULLET_OUTER_RADIUS * BULLET_OUTER_
 enum TextureNames {
 	TN_PARTICLE,
 	TN_STAR,
+	TN_BULLET,
 	TN_G,
 	TN_A,
 	TN_M,
@@ -22,8 +27,9 @@ enum TextureNames {
 const TextureNames GAME_OVER_TEXTURES[] = { TN_G,TN_A,TN_M,TN_E,TN_O,TN_V,TN_E,TN_R };
 
 const static ds::vec4 TEXTURES[] = {
-	ds::vec4( 40,  50, 16, 16),
-	ds::vec4(  0,  75, 26, 26),
+	ds::vec4(40,  50, 16, 16),
+	ds::vec4(0,  75, 26, 26),
+	ds::vec4(80, 50, 12, 12), // bullet
 	ds::vec4(  0, 180, 53, 42), // G
 	ds::vec4( 60, 180, 63, 42), // A
 	ds::vec4(126, 180, 69, 42), // M
@@ -48,22 +54,29 @@ static const ds::vec4 NUMBERS[] = {
 	ds::vec4(163, 135, 20, 15)
 };
 
-Board::Board(RID textureID) {
-	_sprites = std::make_unique<SpriteBatchBuffer>(SpriteBatchDesc()
-		.MaxSprites(2048)
-		.Texture(textureID)
-	);
-	_particles = std::make_unique<ParticleManager>(textureID);
+Board::Board(RenderEnvironment* env) : _env(env) {
 	_colors[4] = ds::Color(32, 32, 32, 255);
-	rebuildColors();
-	_selectedColor = 0;
 	_colorRing = std::make_unique<ColorRing>();
-	_colorRing->createDrawItem(textureID);
+	_colorRing->createDrawItem(_env->textureId);
 	_colorRing->buildRingVertices();
 	_colorRing->reset();
 	_player.rotation = 0.0f;
-	_camera = ds::buildOrthographicCamera();
 	_pressed = false;	
+
+	_directionIndicator.inner = { ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+	_directionIndicator.outer = { ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+
+	_player.sprite = { ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+
+	ds::vec2 colorPos = ds::vec2(200, 300);
+	colorPos.x = (1024.0f - 4 * 50.0f + 60.0f) / 2;
+	for (int i = 0; i < 4; ++i) {
+		_colorSelection.borders[i] = { colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(32, 32, 32, 255) };
+		_colorSelection.boxes[i] = { colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i] };
+		colorPos.x += 60;
+	}
+
+	reset();	
 }
 
 Board::~Board() {
@@ -78,6 +91,10 @@ void Board::reset() {
 	_colorRing->reset();
 	_player.rotation = 0.0f;
 	_hud.reset();
+	_colorSelection.borders[0].color = ds::Color(255,255,255,255);
+	for (int i = 0; i < 4; ++i) {
+		_colorSelection.boxes[i].color = _colors[i];
+	}
 }
 
 // -------------------------------------------------------
@@ -107,7 +124,7 @@ void Board::debug() {
 // draw number
 // -------------------------------------------------------
 void Board::drawNumber(int index, const ds::vec2& pos, float rotation) {
-	_sprites->add(pos, NUMBERS[index], ds::vec2(1.0f), rotation);
+	_env->sprites->add(pos, NUMBERS[index], ds::vec2(1.0f), rotation);
 }
 
 // -------------------------------------------------------
@@ -118,17 +135,17 @@ void Board::drawSegmentTimer(int value, int segment) {
 	float ang = static_cast<float>(segment) * step + step * 0.5f;
 	if (value < 10) {
 		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
-		_sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), ang - ds::PI * 0.5f);
+		_env->sprites->add(pos, NUMBERS[value], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 	}
 	else {
 		int upper = value / 10;
 		int lower = value - upper * 10;
 		ang -= DEGTORAD(2.0f);
 		ds::vec2 pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
-		_sprites->add(pos, NUMBERS[lower], ds::vec2(1.0f), ang - ds::PI * 0.5f);
+		_env->sprites->add(pos, NUMBERS[lower], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 		ang += DEGTORAD(4.0f);
 		pos = ds::vec2(512, 384) + ds::vec2(cosf(ang), sinf(ang)) * 305.0f;
-		_sprites->add(pos, NUMBERS[upper], ds::vec2(1.0f), ang - ds::PI * 0.5f);
+		_env->sprites->add(pos, NUMBERS[upper], ds::vec2(1.0f), ang - ds::PI * 0.5f);
 
 	}
 }
@@ -141,10 +158,10 @@ void Board::render() {
 
 	_colorRing->render(_colors);
 
-	_sprites->begin();
+	_env->sprites->begin();
 
 	// player
-	_sprites->add(ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), _player.rotation, _colors[_selectedColor]);
+	_env->sprites->add(_player.sprite);
 	
 	// draw timer of each segment
 	for (int i = 0; i < _colorRing->getNumSegments(); ++i) {
@@ -156,47 +173,31 @@ void Board::render() {
 		}
 	}
 
-	// show target indicator
-	float ra = _colorRing->rasterizeAngle(_player.rotation);
-	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
-	_sprites->add(ds::vec2(512, 384) + p * 278.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
-	_sprites->add(ds::vec2(512, 384) + p * 332.0f, ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), ra);
+	_env->sprites->add(_directionIndicator.inner);
+	_env->sprites->add(_directionIndicator.outer);
 
 	// draw bullets
 	for (auto& b: _bullets) {
-		float d = length(ds::vec2(512, 384) - b.pos) / 300.0f;
-		float scaleY = 0.8f - d * 0.6f;
-		_sprites->add(b.pos, ds::vec4(80, 50, 12, 12), ds::vec2(1.0f, scaleY), b.rotation, _colors[b.color]);
+		_env->sprites->add(b.sprite);
 	}
 
-	// draw color selection bars
-	ds::vec2 colorPos = ds::vec2(200, 300);
-	//colorPos.x = (1024.0f - 20.0f - _selectedColor * 100.0f) / 2;
-	colorPos.x = (1024.0f - 4 * 50.0f + 60.0f) / 2;
 	for (int i = 0; i < 4; ++i) {
-		if (i == _selectedColor) {			
-			_sprites->add(colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i]);
-			_sprites->add(colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(255, 255, 255, 255));
-		}
-		else {
-			_sprites->add(colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i]);
-			_sprites->add(colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f),0.0f,ds::Color(32,32,32,255));
-		}
-		colorPos.x += 60;
+		_env->sprites->add(_colorSelection.boxes[i]);
+		_env->sprites->add(_colorSelection.borders[i]);
 	}
 
 	// HUD
-	_hud.render(_sprites);
+	_hud.render(_env->sprites);
 
 	// animated letter
 	for (auto& letter : _animatedLetters) {
-		_sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
+		_env->sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
 	}
 
-	_sprites->flush();
+	_env->sprites->flush();
 
 	// particles
-	_particles->render(_sprites->getRenderPass(), _camera.viewProjectionMatrix);
+	_env->particles->render(_env->sprites->getRenderPass(), _env->camera.viewProjectionMatrix);
 
 	
 }
@@ -218,7 +219,7 @@ void Board::tick(float dt) {
 
 	_colorRing->tick(dt);
 
-	_particles->tick(dt);
+	_env->particles->tick(dt);
 
 	if (ds::isKeyPressed('P')) {
 		_pressed = true;
@@ -253,58 +254,17 @@ void Board::tick(float dt) {
 
 	_hud.tick(dt);
 
-}
+	// update direction indicator
+	float ra = _colorRing->rasterizeAngle(_player.rotation);
+	ds::vec2 p = ds::vec2(cosf(ra), sinf(ra));
+	_directionIndicator.inner.position = ds::vec2(512, 384) + p * 278.0f;
+	_directionIndicator.inner.rotation = ra;
+	_directionIndicator.outer.position = ds::vec2(512, 384) + p * 332.0f;
+	_directionIndicator.outer.rotation = ra;
 
-// -------------------------------------------------------
-// emitt partciles for filled segment
-// -------------------------------------------------------
-void Board::showFilled(int segment, const ds::Color& clr) {
-	float rotationStep = ds::TWO_PI / static_cast<float>(segment);
-	float step = ds::TWO_PI / static_cast<float>(_colorRing->getNumSegments()) / 16.0f;
-	float current = ds::TWO_PI / static_cast<float>(_colorRing->getNumSegments()) * static_cast<float>(segment);
-	float var = step * 0.1f;
-	ParticleDesc desc[16];
-	for (int i = 0; i < 16; ++i) {
-		float angle = current + ds::random(-var, var);
-		desc[i].position = ds::vec2(cos(angle), sin(angle)) * 315.0f + ds::vec2(512,384);
-		desc[i].acceleration = ds::vec2(0.0f);
-		desc[i].textureRect = TEXTURES[TN_STAR];
-		desc[i].rotation = 0.0f;
-		desc[i].rotationSpeed = 0.0f;
-		desc[i].startColor = clr;
-		desc[i].endColor = ds::Color(clr.r, clr.g, clr.b, 0.2f);
-		desc[i].scale = ds::vec2(ds::random(0.6f, 0.9f));
-		desc[i].ttl = ds::random(0.5f, 0.8f);
-		angle = current + ds::random(-ds::PI * 0.5f, ds::PI * 0.5f);
-		desc[i].velocity = ds::vec2(cos(angle), sin(angle)) * ds::random(-150.0f, 150.0f);
-		current += step;
-	}
-	_particles->add(desc, 16);
-}
-
-// -------------------------------------------------------
-// emitt partciles for dying bullets
-// -------------------------------------------------------
-void Board::rebound(const ds::vec2& p, float angle, const ds::Color& clr) {
-	float step = ds::PI * 0.75f / 16.0f;
-	float current = angle - ds::PI * 0.25f + ds::PI;
-	float var = step * 0.1f;
-	ParticleDesc desc[16];
-	for (int i = 0; i < 16; ++i) {
-		float angle = current + ds::random(-var, var);
-		desc[i].position = ds::vec2(cos(angle), sin(angle)) + p;
-		desc[i].acceleration = ds::vec2(0.0f);
-		desc[i].textureRect = TEXTURES[TN_PARTICLE];
-		desc[i].rotation = 0.0f;
-		desc[i].rotationSpeed = 0.0f;
-		desc[i].startColor = clr;
-		desc[i].endColor = ds::Color(clr.r,clr.g,clr.b,0.2f);
-		desc[i].scale = ds::vec2(ds::random(0.6f,0.9f));
-		desc[i].ttl = ds::random(0.5f,0.8f);
-		desc[i].velocity = ds::vec2(cos(angle), sin(angle)) * ds::random(150.0f,250.0f);
-		current += step;
-	}
-	_particles->add(desc,16);
+	// update player
+	_player.sprite.rotation = _player.rotation;
+	_player.sprite.color = _colors[_selectedColor];
 }
 
 // -------------------------------------------------------
@@ -315,10 +275,9 @@ void Board::shootBullets(float dt) {
 	if (_bulletTimer >= 0.1f) {
 		if (_bullets.size() < 64) {
 			Bullet b;
-			b.pos = ds::vec2(512, 384);
 			float ra = _colorRing->rasterizeAngle(_player.rotation);
+			b.sprite = { ds::vec2(512, 384), TEXTURES[TN_BULLET], ds::vec2(1.0f,1.0f),ra,_colors[_selectedColor] };
 			b.velocity = ds::vec2(cosf(ra), sinf(ra)) * 500.0f;
-			b.rotation = ra;
 			b.color = _selectedColor;
 			_bullets.push_back(b);
 		}
@@ -330,10 +289,12 @@ void Board::shootBullets(float dt) {
 // select next color
 // -------------------------------------------------------
 void Board::selectNextColor() {
+	_colorSelection.borders[_selectedColor].color = ds::Color(32, 32, 32, 255);
 	++_selectedColor;
 	if (_selectedColor > 3) {
 		_selectedColor = 0;
 	}
+	_colorSelection.borders[_selectedColor].color = ds::Color(255, 255, 255, 255);
 }
 
 // -------------------------------------------------------
@@ -342,23 +303,26 @@ void Board::selectNextColor() {
 void Board::moveBullets(float dt) {
 
 	for (auto& b : _bullets) {
-		b.pos += b.velocity * ds::getElapsedSeconds();
-		float l = sqr_length(ds::vec2(512, 384) - b.pos);
+		b.sprite.position += b.velocity * ds::getElapsedSeconds();
+		float l = sqr_length(ds::vec2(512, 384) - b.sprite.position);
 		if (l > SQR_BULLET_OUTER_RADIUS) {
-			rebound(b.pos, b.rotation, _colors[b.color]);
+			rebound(_env, b.sprite.position, b.sprite.rotation, _colors[b.color]);
 			int idx = _colorRing->getPartIndex(_player.rotation);
 			int filled = _colorRing->markPart(idx, _selectedColor);
 			if (filled != -1) {
 				int segment = idx / _colorRing->getNumPartsPerSegment();
-				showFilled(segment, _colors[filled]);
+				showFilled(_env, segment, _colorRing->getNumSegments(), _colors[filled]);
 				_hud.incrementFilled(filled);				
 			}
 		}
+		float d = length(ds::vec2(512, 384) - b.sprite.position) / 300.0f;
+		float scaleY = 0.8f - d * 0.6f;
+		b.sprite.scaling = ds::vec2(1.0f, scaleY);
 	}
 
 	_bullets.erase(std::remove_if(_bullets.begin(), _bullets.end(),
 		[](const Bullet& b) {
-		float l = sqr_length(ds::vec2(512, 384) - b.pos);
+		float l = sqr_length(ds::vec2(512, 384) - b.sprite.position);
 		return l > SQR_BULLET_OUTER_RADIUS;
 	}), _bullets.end());
 }

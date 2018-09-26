@@ -16,6 +16,7 @@
 #include "ColorRing.h"
 #include "math.h"
 #include "Board.h"
+#include "common.h"
 
 void my_debug(const LogLevel& level, const char* message) {
 	OutputDebugString(message);
@@ -63,9 +64,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	
 	float reloadTimer = 0.0f;
 
-	RID tid = loadImageFromFile("Textures.png");
+	
 
-	Board board(tid);
+	RID vertexShader = ds::createShader(ds::ShaderDesc()
+		.CSOName("Solid_vs.cso")
+		.ShaderType(ds::ShaderType::ST_VERTEX_SHADER)
+		);
+	RID pixelShader = ds::createShader(ds::ShaderDesc()
+		.CSOName("Solid_ps.cso")
+		.ShaderType(ds::ShaderType::ST_PIXEL_SHADER)
+		);
+
+	RenderEnvironment env;
+	env.textureId = loadImageFromFile("Textures.png");
+	prepareRenderEnvironment(&env, vertexShader, pixelShader, 144 * 4);
+
+	Board board(&env);
 
 	bool rightPressed = false;
 
@@ -119,6 +133,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			ReloadChangedTweakableValues();
 		}
 	}
+
+	delete env.sprites;
+	delete env.particles;
 
 	ds::shutdown();
 }

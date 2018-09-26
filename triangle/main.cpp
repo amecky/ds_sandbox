@@ -102,10 +102,13 @@ void createTorus(Vertex* v, int maxVertices, int segments, float width, float de
 	for (int i = 0; i < segments; ++i) {
 		int idx = i % 5;
 		c = COLORS[idx];
-		center = ds::vec3(0.0f, 0.0f, 1.0f);
-		cnt = createTorus(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
+		//center = ds::vec3(0.0f, 0.0f, 1.0f);
+
+		center = ds::vec3(cos(angle), sin(angle), 1.0f);
+
+		//cnt = createTorus(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
 		//center = ds::vec3(0.0f, 0.0f, 0.0f);
-		//cnt = createBox(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
+		cnt = createBox(v, cnt, width, 0.2f, center, r1, r2, angle, step, c);
 		angle += step;
 	}
 }
@@ -182,7 +185,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		{ "COLOR", 0, ds::BufferAttributeType::FLOAT4 }
 	};
 
-	const int segments = 32;
+	// ---------------------------------------------------
+	// create tube
+	// ---------------------------------------------------
+	const int segments = 128;
 	const int numVertices = segments * 16 * 2;
 	Vertex v[numVertices];
 	createTorus(v, numVertices, segments, 0.1f, 0.2f);

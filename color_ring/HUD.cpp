@@ -37,7 +37,7 @@ void HUD::reset() {
 // -------------------------------------------------------
 // draw big numbers
 // -------------------------------------------------------
-void HUD::drawBigNumber(std::unique_ptr<SpriteBatchBuffer>& sprites,const ds::vec2& pos, int value, int digits, float scale) {
+void HUD::drawBigNumber(SpriteBatchBuffer* sprites,const ds::vec2& pos, int value, int digits, float scale) {
 	int s = pow(10, digits - 1);
 	int tmp = value;
 	int sx = pos.x - digits * FIXED_FONT_WIDTH * 0.5f + (1.0f - scale) * BIG_NUMBERS[0].z;
@@ -92,7 +92,7 @@ void HUD::incrementFilled(int filled) {
 // -------------------------------------------------------
 // render
 // -------------------------------------------------------
-void HUD::render(std::unique_ptr<SpriteBatchBuffer>& sprites) {
+void HUD::render(SpriteBatchBuffer* sprites) {
 	drawBigNumber(sprites, ds::vec2(150, 720), _score, 6, _hudAnimations[0].value);
 	drawBigNumber(sprites, ds::vec2(950, 720), _filled, 2, _hudAnimations[1].value);
 	drawBigNumber(sprites, ds::vec2(950, 100), _time, 2, _hudAnimations[2].value);

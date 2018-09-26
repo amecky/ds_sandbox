@@ -19,11 +19,11 @@ public:
 	HUD();
 	~HUD() {}
 	void reset();
-	void render(std::unique_ptr<SpriteBatchBuffer>& sprites);
+	void render(SpriteBatchBuffer* sprites);
 	void tick(float dt);
 	void incrementFilled(int value);
 private:
-	void drawBigNumber(std::unique_ptr<SpriteBatchBuffer>& sprites,const ds::vec2& pos, int value, int digits, float scale);
+	void drawBigNumber(SpriteBatchBuffer* sprites,const ds::vec2& pos, int value, int digits, float scale);
 	int _score;
 	int _filled;
 	int _time;

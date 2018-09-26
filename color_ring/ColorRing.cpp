@@ -46,6 +46,7 @@ ColorRing::ColorRing() : WarpingGrid() , _timer(0.0f) {
 }
 
 void ColorRing::buildRingVertices() {
+	std::vector<GridVertex> _ringVertices;
 	_ringVertices.reserve(TOTAL_PARTS * 4);
 	float r1 = 270.0f;
 	float r2 = 340.0f;
@@ -83,6 +84,8 @@ void ColorRing::buildRingVertices() {
 	ds::DrawCommand drawCmd = { 100, ds::DrawType::DT_INDEXED, ds::PrimitiveTypes::TRIANGLE_LIST, 0 };
 	RID groups[] = { _stateGroup, ringStateGroup };
 	_ringDrawItem = ds::compile(drawCmd, groups, 2);
+
+	_ringItem = { _orthoPass, _ringDrawItem, _numVertices / 4 * 6, -1 };
 }
 
 // -------------------------------------------------------
@@ -303,7 +306,7 @@ void ColorRing::render(ds::Color* colors) {
 
 	ds::submit(_orthoPass, _drawItem, _numVertices / 4 * 6);
 
-	ds::submit(_orthoPass, _ringDrawItem, _numVertices / 4 * 6);
+	ds::submit(_ringItem);
 }
 
 // -------------------------------------------------------

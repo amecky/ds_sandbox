@@ -1665,6 +1665,15 @@ namespace ds {
 	RID compile(const DrawCommand cmd, RID group, const char* name = "UNKNOWN");
 
 	void submit(RID renderPass, RID drawItemID, int numElements = -1, int numInstances = -1);
+
+	struct RenderItem {
+		RID renderPass;
+		RID drawItemId;
+		int numElements;
+		int numInstances;
+	};
+
+	void submit(const RenderItem& item);
 	
 	bool init(const RenderSettings& settings);
 
@@ -5967,6 +5976,10 @@ namespace ds {
 		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };
 		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);		
 		_ctx->currentPass = pidx;
+	}
+
+	void submit(const RenderItem& item) {
+		submit(item.renderPass, item.drawItemId, item.numElements, item.numInstances);
 	}
 
 	static void apply(PipelineState* pipelineState, RID groupID) {

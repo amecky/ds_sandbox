@@ -11,6 +11,8 @@
       <Filter>particles</Filter>
     </ClCompile>
     <ClCompile Include="HUD.cpp" />
+    <ClCompile Include="common.cpp" />
+    <ClCompile Include="particle_effects.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -28,6 +30,8 @@
       <Filter>particles</Filter>
     </ClInclude>
     <ClInclude Include="HUD.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="particle_effects.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="particles">
