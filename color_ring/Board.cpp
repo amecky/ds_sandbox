@@ -63,16 +63,16 @@ Board::Board(RenderEnvironment* env) : _env(env) {
 	_player.rotation = 0.0f;
 	_pressed = false;	
 
-	_directionIndicator.inner = { ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
-	_directionIndicator.outer = { ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+	_directionIndicator.inner = { 0, ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+	_directionIndicator.outer = { 0, ds::vec2(512, 384), ds::vec4(170, 0, 4, 12), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
 
-	_player.sprite = { ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
+	_player.sprite = { 0, ds::vec2(512, 384), ds::vec4(120, 50, 50, 50), ds::vec2(1.0f), 0.0f, ds::Color(255,255,255,255) };
 
 	ds::vec2 colorPos = ds::vec2(200, 300);
 	colorPos.x = (1024.0f - 4 * 50.0f + 60.0f) / 2;
 	for (int i = 0; i < 4; ++i) {
-		_colorSelection.borders[i] = { colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(32, 32, 32, 255) };
-		_colorSelection.boxes[i] = { colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i] };
+		_colorSelection.borders[i] = { 0, colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(32, 32, 32, 255) };
+		_colorSelection.boxes[i] = { 0, colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i] };
 		colorPos.x += 60;
 	}
 
@@ -276,7 +276,7 @@ void Board::shootBullets(float dt) {
 		if (_bullets.size() < 64) {
 			Bullet b;
 			float ra = _colorRing->rasterizeAngle(_player.rotation);
-			b.sprite = { ds::vec2(512, 384), TEXTURES[TN_BULLET], ds::vec2(1.0f,1.0f),ra,_colors[_selectedColor] };
+			b.sprite = { 0, ds::vec2(512, 384), TEXTURES[TN_BULLET], ds::vec2(1.0f,1.0f),ra,_colors[_selectedColor] };
 			b.velocity = ds::vec2(cosf(ra), sinf(ra)) * 500.0f;
 			b.color = _selectedColor;
 			_bullets.push_back(b);

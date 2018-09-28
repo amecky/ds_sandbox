@@ -7,6 +7,7 @@ struct BasicConstantBuffer {
 };
 
 class ParticleManager;
+struct SpriteArray;
 class SpriteBatchBuffer;
 
 struct RenderEnvironment {
@@ -25,6 +26,7 @@ struct RenderEnvironment {
 	SpriteBatchBuffer* sprites;
 	ParticleManager* particles;
 	RID textureId;
+	SpriteArray* spriteArray;
 };
 
 void prepareRenderEnvironment(RenderEnvironment* env, RID vertexShader, RID pixelShader, int numVertices);

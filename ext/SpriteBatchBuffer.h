@@ -7,7 +7,10 @@ struct SpriteBatchConstantBuffer {
 	ds::matrix wvp;
 };
 
+typedef unsigned int SPID;
+
 struct Sprite {
+	SPID id;
 	ds::vec2 position;
 	ds::vec4 textureRect;
 	ds::vec2 scaling;
@@ -25,6 +28,42 @@ struct SpriteBatchBufferInfo {
 	RID pixelShader;
 	RID constantBuffer;
 };
+
+struct SpriteArrayIndex {
+	SPID id;
+	unsigned short index;
+	unsigned short next;
+};
+
+
+struct SpriteArray {
+	unsigned int maxObjects;
+	unsigned int numObjects;
+	SpriteArrayIndex* indices;
+	Sprite* objects;
+	unsigned short free_enqueue;
+	unsigned short free_dequeue;
+};
+
+namespace sprites {
+
+	void initialize(SpriteArray& array, int maxSprites);
+
+	void shutdown(SpriteArray& array);
+
+	bool contains(SpriteArray& array, SPID id);
+
+	Sprite& get(SpriteArray& array, SPID id);
+
+	SPID add(SpriteArray& array);
+
+	SPID add(SpriteArray& array, const Sprite& sprite);
+
+	SPID add(SpriteArray& array, const ds::vec2& pos, const ds::vec4& textureRect, const ds::vec2& scale = ds::vec2(1.0f), float rotation = 0.0f, const ds::Color& clr = ds::Color(255, 255, 255, 255));
+
+	void remove(SpriteArray& array, SPID id);
+
+}
 
 class SpriteBatchDesc {
 
@@ -83,7 +122,9 @@ public:
 	void add(const Sprite& sprite);
 	void flush();
 	RID getRenderPass();
+	void render(const SpriteArray& array);
 private:
+	bool _rendering;
 	unsigned int _max;
 	unsigned int _current;
 	RID _drawItem;
@@ -385,7 +426,7 @@ const BYTE Sprites_PS_Main[] =
 
 
 SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchDesc& desc) : _current(0) {
-
+	_rendering = false;
 	const SpriteBatchBufferInfo& info = desc.getInfo();
 	_max = info.maxSprites;
 	_buffer = new Sprite[_max];
@@ -424,7 +465,7 @@ SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchDesc& desc) : _current(0) 
 	if (constantBuffer == NO_RID) {
 		constantBuffer = ds::createConstantBuffer(sizeof(SpriteBatchConstantBuffer), &_constantBuffer);
 	}
-	RID ssid = createSamplerState(ds::SamplerStateDesc()
+	RID sSPID = createSamplerState(ds::SamplerStateDesc()
 		.AddressMode(ds::TextureAddressModes::CLAMP)
 		.Filter(info.textureFilter)
 	);
@@ -447,7 +488,7 @@ SpriteBatchBuffer::SpriteBatchBuffer(const SpriteBatchDesc& desc) : _current(0) 
 		.vertexShader(vertexShader)
 		.indexBuffer(idxBuffer)
 		.pixelShader(pixelShader)
-		.samplerState(ssid, pixelShader)
+		.samplerState(sSPID, pixelShader)
 		.texture(info.textureID, pixelShader, 0)
 		.build();
 
@@ -497,6 +538,7 @@ SpriteBatchBuffer::~SpriteBatchBuffer() {
 
 void SpriteBatchBuffer::begin() {
 	_current = 0;
+	_rendering = true;
 }
 
 RID SpriteBatchBuffer::getRenderPass() {
@@ -507,7 +549,17 @@ void SpriteBatchBuffer::add(const ds::vec2& position, const ds::vec4& rect, cons
 	if ((_current + 1) >= _max) {
 		flush();
 	}
-	_buffer[_current++] = { position, rect, scale, rotation, clr };
+	_buffer[_current++] = { 0, position, rect, scale, rotation, clr };
+}
+
+void SpriteBatchBuffer::render(const SpriteArray& array) {
+	if (!_rendering) {
+		begin();
+	}
+	for (unsigned int i = 0; i < array.numObjects; ++i) {
+		add(array.objects[i]);
+	}
+	flush();
 }
 
 void SpriteBatchBuffer::add(const Sprite& sprite) {
@@ -523,7 +575,88 @@ void SpriteBatchBuffer::flush() {
 		ds::submit(_renderPass, _drawItem, _current * 6);
 		_current = 0;
 	}
+	_rendering = false;
 }
 
+#define INDEX_MASK 0xffff
+
+namespace sprites {
+
+	void initialize(SpriteArray& array, int maxSprites) {
+		array.maxObjects = maxSprites;
+		array.numObjects = 0;
+		array.indices = new SpriteArrayIndex[maxSprites];
+		array.objects = new Sprite[maxSprites];
+		for (unsigned short i = 0; i < maxSprites; ++i) {
+			array.indices[i].id = i;
+			array.indices[i].next = i + 1;
+		}
+		array.free_dequeue = 0;
+		array.free_enqueue = maxSprites - 1;
+	}
+
+	bool contains(SpriteArray& array, SPID id) {
+		const SpriteArrayIndex& in = array.indices[id & INDEX_MASK];
+		return in.id == id && in.index != USHRT_MAX;
+	}
+
+	Sprite& get(SpriteArray& array, SPID id) {
+		assert(id != UINT_MAX);
+		unsigned short index = array.indices[id & INDEX_MASK].index;
+		assert(index != USHRT_MAX);
+		return array.objects[index];
+	}
+
+	SPID add(SpriteArray& array) {
+		assert(array.numObjects != array.maxObjects);
+		SpriteArrayIndex& in = array.indices[array.free_dequeue];
+		array.free_dequeue = in.next;
+		//in.id += NEW_OBJECT_ID_ADD;
+		in.index = array.numObjects++;
+		Sprite& o = array.objects[in.index];
+		o.id = in.id;
+		return o.id;
+	}
+
+	SPID add(SpriteArray& array, const Sprite& sprite) {
+		SPID id = add(array);
+		Sprite& sp = get(array,id);
+		sp.position = sprite.position;
+		sp.textureRect = sprite.textureRect;
+		sp.scaling = sprite.scaling;
+		sp.rotation = sprite.rotation;
+		sp.color = sprite.color;
+		return id;
+	}
+
+	SPID add(SpriteArray& array, const ds::vec2& pos, const ds::vec4& textureRect, const ds::vec2& scale, float rotation, const ds::Color& clr) {
+		SPID id = add(array);
+		Sprite& sp = get(array,id);
+		sp.position = pos;
+		sp.textureRect = textureRect;
+		sp.scaling = scale;
+		sp.rotation = rotation;
+		sp.color = clr;
+		return id;
+	}
+
+	void remove(SpriteArray& array, SPID id) {
+		SpriteArrayIndex &in = array.indices[id & INDEX_MASK];
+		assert(in.index != USHRT_MAX);
+		int current = in.index;
+		Sprite& o = array.objects[in.index];
+		o = array.objects[--array.numObjects];
+		array.indices[o.id & INDEX_MASK].index = in.index;
+		in.index = USHRT_MAX;
+		array.indices[array.free_enqueue].next = id & INDEX_MASK;
+		array.free_enqueue = id & INDEX_MASK;
+	}
+
+	void shutdown(SpriteArray& array) {
+		delete[] array.objects;
+		delete[] array.indices;
+	}
+
+}
 
 #endif

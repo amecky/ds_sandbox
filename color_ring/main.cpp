@@ -70,6 +70,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		.CSOName("Solid_vs.cso")
 		.ShaderType(ds::ShaderType::ST_VERTEX_SHADER)
 		);
+
 	RID pixelShader = ds::createShader(ds::ShaderDesc()
 		.CSOName("Solid_ps.cso")
 		.ShaderType(ds::ShaderType::ST_PIXEL_SHADER)
@@ -136,6 +137,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	delete env.sprites;
 	delete env.particles;
+	sprites::shutdown(*env.spriteArray);
 
 	ds::shutdown();
 }

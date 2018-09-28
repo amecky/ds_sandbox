@@ -83,4 +83,6 @@ void prepareRenderEnvironment(RenderEnvironment* env, RID vertexShader, RID pixe
 		);
 
 	env->particles = new ParticleManager(env->textureId);
+	env->spriteArray = new SpriteArray;
+	sprites::initialize(*env->spriteArray, 4096);
 }
