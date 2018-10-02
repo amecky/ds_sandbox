@@ -24,3 +24,5 @@ triangle/Debug/
 triangle/Release/
 *.cso
 *.vspx
+*.suo
+*.sdf

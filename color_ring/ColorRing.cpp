@@ -1,6 +1,6 @@
 #include "ColorRing.h"
 #include <ds_tweakable.h>
-#include "math.h"
+#include "common\math.h"
 
 static const int NO_COLOR = -1;
 

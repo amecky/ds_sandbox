@@ -16,7 +16,7 @@
 #include "ColorRing.h"
 #include "math.h"
 #include "Board.h"
-#include "common.h"
+#include "common\common.h"
 
 void my_debug(const LogLevel& level, const char* message) {
 	OutputDebugString(message);
@@ -52,7 +52,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.width = 1024;
 	rs.height = 768;
 	rs.title = "Color Ring";
-	rs.clearColor = ds::Color(70,70,70,255);
+	rs.clearColor = ds::Color(10,10,10,255);
 	rs.multisampling = 4;
 	rs.logHandler = my_debug;
 #ifdef DEBUG

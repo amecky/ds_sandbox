@@ -1,6 +1,6 @@
 #include "particle_effects.h"
-#include "common.h"
-#include "particles\ParticleManager.h"
+#include "..\common\common.h"
+#include "ParticleManager.h"
 
 const static ds::vec4 STAR_TEXTURE = ds::vec4(40, 50, 16, 16);
 const static ds::vec4 TEXTURE = ds::vec4(0, 75, 26, 26);

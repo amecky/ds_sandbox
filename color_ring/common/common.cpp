@@ -1,6 +1,6 @@
 #include "common.h"
 #include <SpriteBatchBuffer.h>
-#include "particles\ParticleManager.h"
+#include "..\particles\ParticleManager.h"
 
 void prepareRenderEnvironment(RenderEnvironment* env, RID vertexShader, RID pixelShader, int numVertices) {
 

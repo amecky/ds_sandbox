@@ -2,7 +2,8 @@
 #include <ds_tweening.h>
 #include <memory>
 #include <vector>
-#include "HUD.h"
+#include "items\HUD.h"
+#include "items\Player.h"
 
 struct Bullet {
 	ds::vec2 velocity;
@@ -10,19 +11,9 @@ struct Bullet {
 	Sprite sprite;
 };
 
-struct DirectionIndicator {
-	Sprite inner;
-	Sprite outer;
-};
-
 struct ColorSelection {
 	Sprite boxes[4];
 	Sprite borders[4];
-};
-
-struct Player {
-	Sprite sprite;
-	float rotation;
 };
 
 struct AnimatedLetter {
@@ -65,7 +56,6 @@ private:
 	bool _pressed;
 	std::vector<AnimatedLetter> _animatedLetters;
 
-	DirectionIndicator _directionIndicator;
 	ColorSelection _colorSelection;
 	
 };
