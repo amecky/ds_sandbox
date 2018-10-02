@@ -47,9 +47,28 @@ const char* MENU_ONE_ITEMS[] = { "Open","Close","Three","Four" };
 // ---------------------------------------------------------------
 int showDialog(TestSettings* settings) {
 	int ret = 0;
-	p2i p(20, 720);
+	p2i p(20, 710);
 	gui::start(&p, 500);
 	
+	if (gui::BeginMenuBar()) {
+		settings->menu = 100;
+		if (gui::MenuItem("First")) {
+			settings->menu = 1;
+		}
+		if (gui::MenuItem("Second")) {
+			settings->menu = 2;
+		}
+		if (gui::MenuItem("Third")) {
+			settings->menu = 3;
+		}
+		if (gui::MenuItem("Fourth")) {
+			settings->menu = 4;
+		}
+	}
+	else {
+		settings->menu = -1;
+	}
+	/*
 	gui::BeginMenu(ITEMS, 4, &settings->menu);
 	if (settings->menu == 1) {
 		if (gui::MenuItems(MENU_ONE_ITEMS, 4, &settings->menuItem)) {
@@ -59,6 +78,7 @@ int showDialog(TestSettings* settings) {
 			}
 		}
 	}
+	*(
 	/*
 	if (gui::MenuBar("First")) {
 		settings->menu = 1;
@@ -73,7 +93,7 @@ int showDialog(TestSettings* settings) {
 		settings->menu = 4;
 	}
 	*/
-	gui::EndMenu();
+	gui::EndMenuBar();
 
 	const char* TABS[] = { "Basic","Values","Diagram"};
 
@@ -130,7 +150,7 @@ int showDialog(TestSettings* settings) {
 
 int showSimpleDialog(TestSettings* settings) {
 	int ret = 0;
-	p2i p(20, 720);
+	p2i p(20, 710);
 	gui::start(&p, 500);
 	gui::begin("Basic elements", &settings->state);
 	gui::Button("Button");

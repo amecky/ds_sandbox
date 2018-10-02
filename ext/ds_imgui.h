@@ -178,7 +178,13 @@ namespace gui {
 
 	bool MenuItems(const char** entries, int num, int* selected);
 
+	bool BeginMenuBar();
+
+	bool MenuItem(const char* text);
+
 	void EndMenu();
+
+	void EndMenuBar();
 
 	void pushID(int id);
 
@@ -2371,6 +2377,48 @@ namespace gui {
 		return changed;
 	}
 
+	bool BeginMenuBar() {
+		start_overlay();
+		pushID("Menu");
+		p2i p = _guiCtx->currentPos;
+		p.x -= 10;
+		int tab_size = (_guiCtx->width - 10);
+		_guiCtx->menuPos = p;
+		bool hot = isHot(p, p2i(tab_size, 20));
+		popID();
+		//return hot;
+		return true;
+	}
+
+	bool MenuItem(const char* text) {
+		bool changed = false;
+		pushID("MenuItems", text);
+		p2i p = _guiCtx->menuPos;
+		p.y -= 20;
+		int height = 0;
+		int tab_size = 0;
+		p2i ts = textSize(text);
+		tab_size = ts.x;
+		tab_size += 30;
+		ts.x += 20;
+		checkItem(p, p2i(ts.x, 20));
+		bool hot = isHot(p, p2i(ts.x, 20));
+		if (isClicked()) {
+			// FIXME: return true
+		}
+		if (hot) {
+			renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(43, 126, 196, 255));
+		}
+		else {
+			renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(54, 61, 69, 255));
+		}
+		p.x += 5;
+		renderer::add_text(_guiCtx->uiContext, p, text);
+		_guiCtx->menuPos.x += tab_size;
+		popID();
+		return hot;
+	}
+
 	bool BeginMenu(const char** entries, int num, int* selected) {
 		start_overlay();
 		bool changed = false;
@@ -2453,6 +2501,12 @@ namespace gui {
 
 	void EndMenu() {
 		end_overlay();
+		moveForward(p2i(300, 26));
+	}
+
+	void EndMenuBar() {
+		end_overlay();
+		moveForward(p2i(300, 26));
 	}
 
 	// -------------------------------------------------------
