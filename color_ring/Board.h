@@ -8,12 +8,8 @@
 struct Bullet {
 	ds::vec2 velocity;
 	int color;
-	Sprite sprite;
-};
-
-struct ColorSelection {
-	Sprite boxes[4];
-	Sprite borders[4];
+	SPID id;
+	bool alive;
 };
 
 struct AnimatedLetter {
@@ -56,6 +52,6 @@ private:
 	bool _pressed;
 	std::vector<AnimatedLetter> _animatedLetters;
 
-	ColorSelection _colorSelection;
+	SPID _colorSelectionIds[8];
 	
 };

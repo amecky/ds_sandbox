@@ -154,6 +154,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="particles\ParticleManager.cpp" />
     <ClCompile Include="particles\particle_effects.cpp" />
+    <ClCompile Include="utils\PerfPanel.cpp" />
     <ClCompile Include="WarpingGrid.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -208,6 +209,7 @@
     <ClInclude Include="items\Player.h" />
     <ClInclude Include="particles\ParticleManager.h" />
     <ClInclude Include="particles\particle_effects.h" />
+    <ClInclude Include="utils\PerfPanel.h" />
     <ClInclude Include="WarpingGrid.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -36,6 +36,8 @@ struct recti {
 
 namespace gui {
 
+	typedef uint32_t HashedId;
+
 	struct IMGUISettings {
 		ds::Color headerBoxColor;
 		ds::Color buttonColor;
@@ -166,7 +168,7 @@ namespace gui {
 
 	void Separator();
 
-	void Histogram(float* values, int num, float minValue, float maxValue, float step, int width = 200, int height = 100);
+	void Histogram(float* values, int num, float minValue, float maxValue, float step, int barSize = 10, int height = 100);
 
 	void Diagram(float* values, int num, float minValue, float maxValue, float step, int width = 200, int height = 100);
 
@@ -180,19 +182,19 @@ namespace gui {
 
 	bool BeginMenuBar();
 
-	bool MenuItem(const char* text);
+	bool Menu(const char* text);
 
 	void EndMenu();
 
 	void EndMenuBar();
 
-	void pushID(int id);
+	HashedId pushID(int id);
 
-	void pushID(const char* text);
+	HashedId pushID(const char* text);
 
-	void pushID(const char* text, const char* suffix);
+	HashedId pushID(const char* text, const char* suffix);
 
-	void pushID(const char* text, int id);
+	HashedId pushID(const char* text, int id);
 
 	void popID();
 
@@ -432,7 +434,7 @@ const unsigned char DS_IMGUI_FONT[128][16] = {
 
 namespace gui {
 
-	typedef uint32_t HashedId;
+	
 
 	static HashedId NULL_HASH = 0;
 
@@ -798,7 +800,7 @@ namespace gui {
 		// --------------------------------------------------------
 		// internal add box
 		// --------------------------------------------------------
-		void add_box(UIContext* ctx, const p2i& p, const p2i& size, const ds::Color& color, ResizeType resize = ResizeType::RT_NONE) {
+		void add_box(UIContext* ctx, const p2i& p, const p2i& size, const ds::Color& color, ResizeType resize = ResizeType::RT_NONE, bool fixedAlpha = false) {
 			p2i pos = p;
 			pos.x += size.x / 2;
 			ds::vec2 scale = ds::vec2(1.0f, 1.0f);
@@ -812,7 +814,9 @@ namespace gui {
 				scale.y = static_cast<float>(size.y) / static_cast<float>(WHITE_RECT.height);
 			}
 			ds::Color tmpColor = color;
-			tmpColor.a = ctx->alpha;
+			if (!fixedAlpha) {
+				tmpColor.a = ctx->alpha;
+			}
 			add_to_buffer(ctx, pos, recti(256, 0, sz.x, sz.y), scale, tmpColor, resize);
 			if (size.x > ctx->size.x) {
 				ctx->size.x = size.x;
@@ -903,22 +907,28 @@ namespace gui {
 			}			
 		}
 
-		void push(int id) {
+		HashedId push(int id) {
 			if (top < STACK_MAX_ENTRIES) {
 				append_int(id, 0);
 				append(_tmp);
-				ids[++top] = fnv1a(buffer);
+				HashedId hid = fnv1a(buffer);
+				ids[++top] = hid;
+				return hid;
 			}
+			return NULL_HASH;
 		}
 
-		void push(const char* text) {
+		HashedId push(const char* text) {
 			if (top < STACK_MAX_ENTRIES) {
 				append(text);
-				ids[++top] = fnv1a(buffer);
+				HashedId hid = fnv1a(buffer);
+				ids[++top] = hid;
+				return hid;
 			}
+			return NULL_HASH;
 		}
 
-		void push(const char* text, const char* suffix) {
+		HashedId push(const char* text, const char* suffix) {
 			if (top < STACK_MAX_ENTRIES) {
 				const char* t = text;
 				int cnt = 0;
@@ -933,11 +943,14 @@ namespace gui {
 				}
 				_tmp[cnt] = '\0';
 				append(_tmp);
-				ids[++top] = fnv1a(buffer);
+				HashedId hid = fnv1a(buffer);
+				ids[++top] = hid;
+				return hid;
 			}
+			return NULL_HASH;
 		}
 
-		void push(const char* text, int id) {
+		HashedId push(const char* text, int id) {
 			if (top < STACK_MAX_ENTRIES) {
 				const char* t = text;
 				int cnt = 0;
@@ -947,14 +960,20 @@ namespace gui {
 				}
 				append_int(id, cnt);
 				append(_tmp);
-				ids[++top] = fnv1a(buffer);
+				HashedId hid = fnv1a(buffer);
+				ids[++top] = hid;
+				return hid;
 			}
+			return NULL_HASH;
 		}
 
-		void push(HashedId id) {
+		HashedId push(HashedId id) {
 			if (top < STACK_MAX_ENTRIES) {
-				ids[top++] = id;
+				HashedId hid = fnv1a(buffer);
+				ids[++top] = hid;
+				return hid;
 			}
+			return NULL_HASH;
 		}
 
 		bool empty() {
@@ -1024,6 +1043,8 @@ namespace gui {
 		IDStack idStack;
 		int width;
 		p2i menuPos;
+		p2i menuItemPos;
+		HashedId selectedMenu;
 	};
 
 	static GUIContext* _guiCtx = 0;
@@ -1040,6 +1061,9 @@ namespace gui {
 	// check if mouse cursor is inside box
 	// -------------------------------------------------------
 	bool isHot(const p2i& p, const p2i& dim) {
+		if (_guiCtx->hotItem != NULL_HASH && !_guiCtx->uiContext->use_overlay) {
+			return false;
+		}
 		p2i mp = _guiCtx->mousePosition;
 		int half_y = dim.y / 2;
 		if (mp.x < p.x) {
@@ -1053,6 +1077,9 @@ namespace gui {
 		}
 		if (mp.y > (p.y + half_y)) {
 			return false;
+		}
+		if (!_guiCtx->uiContext->use_overlay) {
+			_guiCtx->hotItem = _guiCtx->idStack.last();
 		}
 		return true;
 	}
@@ -1171,6 +1198,7 @@ namespace gui {
 		_guiCtx->activeItem = 0;
 		_guiCtx->inputItem = 0;
 		_guiCtx->menuPos = p2i(0, 0);
+		_guiCtx->menuItemPos = p2i(0, 0);
 	}
 
 	// --------------------------------------------------------
@@ -1415,17 +1443,25 @@ namespace gui {
 		p2i np = _guiCtx->currentPos;
 		np.x += 20;
 		checkItem(np, p2i(_guiCtx->width - 20, 20));
-		p2i pos = _guiCtx->currentPos;
+		p2i pos = _guiCtx->currentPos;		
 		// header
-		pos.x += 5;
-		renderer::add_box(_guiCtx->uiContext, pos, _guiCtx->width, 20, _guiCtx->settings.headerBoxColor);
+		int w = _guiCtx->width;
+		if (state != 0) {
+			pos.x += 5;
+			renderer::add_box(_guiCtx->uiContext, pos, w, 20, _guiCtx->settings.headerBoxColor);
+		}
+		else {
+			//pos.x -= 10;
+			//w += 40;
+			renderer::add_box(_guiCtx->uiContext, pos, w, 20, _guiCtx->settings.headerBoxColor, renderer::ResizeType::RT_X);
+		}
 		pos.x += 30;
 		renderer::add_text(_guiCtx->uiContext, pos, header);
 		// open/close
-		pos = _guiCtx->currentPos;
-		pos.x -= 10;
-		renderer::add_box(_guiCtx->uiContext, pos, 20, 20, _guiCtx->settings.buttonColor);
 		if (state != 0) {
+			pos = _guiCtx->currentPos;
+			pos.x -= 10;
+			renderer::add_box(_guiCtx->uiContext, pos, 20, 20, _guiCtx->settings.buttonColor);
 			if (*state == 0) {
 				renderer::add_text(_guiCtx->uiContext, pos, "+");
 			}
@@ -1454,7 +1490,7 @@ namespace gui {
 	// --------------------------------------------------------
 	void endGroup() {
 		_guiCtx->grouping = false;
-		moveForward(p2i(10, 20));
+		moveForward(p2i(10, 30));
 	}
 
 	// --------------------------------------------------------
@@ -1934,7 +1970,7 @@ namespace gui {
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x = _guiCtx->currentPos.x + 320;
-		renderer::add_box(_guiCtx->uiContext, p, p2i(20, 20), *v);
+		renderer::add_box(_guiCtx->uiContext, p, p2i(20, 20), *v,renderer::ResizeType::RT_NONE,true);
 		p.x = _guiCtx->currentPos.x + 350;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 26));
@@ -2096,10 +2132,10 @@ namespace gui {
 	// -------------------------------------------------------
 	// Histogram
 	// -------------------------------------------------------	
-	void Histogram(float* values, int num, float minValue, float maxValue, float step, int width, int height) {
+	void Histogram(float* values, int num, float minValue, float maxValue, float step, int barSize, int height) {
 		p2i p = _guiCtx->currentPos;
-		
-		int barWidth = 10;
+		int barWidth = barSize;
+		int width = barSize * num;
 		p.y -= height / 2;
 		float delta = maxValue - minValue;
 		if (delta == 0.0f) {
@@ -2111,8 +2147,11 @@ namespace gui {
 		if (bw < 2) {
 			bw = 2;
 		}
+		// background
 		renderer::add_box(_guiCtx->uiContext, p, p2i(width, height), ds::Color(51, 51, 51, 255));
 		char buffer[16];
+		// the individual bars
+		int hoverValue = -1;
 		for (int i = 0; i < num; ++i) {
 			float v = values[i];
 			if (v > maxValue) {
@@ -2121,13 +2160,17 @@ namespace gui {
 			if (v < minValue) {
 				v = minValue;
 			}
-			int current = (v - minValue) / delta;
+			float current = (v - minValue) / delta;
 			int yp = current * height;
 			p = _guiCtx->currentPos;
 			p.y -= (height - yp / 2);
 			p.x += i * bw + 2;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(bw - 1, yp), ds::Color(192, 0, 0, 255));
+			if (isHot(p, p2i(bw - 1, yp))) {
+				hoverValue = i;
+			}
 		}
+		// lines
 		float steps = delta / step;
 		int stp = static_cast<int>(steps);
 		float hs = height / steps;
@@ -2136,11 +2179,20 @@ namespace gui {
 			p.y -= (stp - i) * hs;
 			renderer::add_box(_guiCtx->uiContext, p, p2i(width + barWidth, 1), ds::Color(16, 16, 16, 255));
 		}
+		// text markers at every line
 		for (int i = 0; i < stp + 1; ++i) {
 			p = _guiCtx->currentPos;
 			p.y -= (stp - i) * hs;
 			p.x += width + 20;
 			sprintf_s(buffer, 16, "%g", (step * i));
+			renderer::add_text(_guiCtx->uiContext, p, buffer);
+		}
+		if (hoverValue != -1) {
+			sprintf_s(buffer, 16, "%g", values[hoverValue]);
+			p = _guiCtx->currentPos;
+			p2i textDim = textSize(buffer);
+			p.x += (width - textDim.x) / 2;
+			p.y -= 10;
 			renderer::add_text(_guiCtx->uiContext, p, buffer);
 		}
 		moveForward(p2i(width, height + 30));
@@ -2377,36 +2429,45 @@ namespace gui {
 		return changed;
 	}
 
+	// -------------------------------------------------------
+	// Begin Menu Bar
+	// -------------------------------------------------------	
 	bool BeginMenuBar() {
 		start_overlay();
-		pushID("Menu");
+		pushID("MenuBar");
 		p2i p = _guiCtx->currentPos;
 		p.x -= 10;
 		int tab_size = (_guiCtx->width - 10);
 		_guiCtx->menuPos = p;
+		_guiCtx->menuItemPos = p;
 		bool hot = isHot(p, p2i(tab_size, 20));
 		popID();
-		//return hot;
 		return true;
 	}
 
-	bool MenuItem(const char* text) {
-		bool changed = false;
-		pushID("MenuItems", text);
+	// -------------------------------------------------------
+	// Menu
+	// -------------------------------------------------------	
+	bool Menu(const char* text) {
+		HashedId hid = pushID("Menu", text);
 		p2i p = _guiCtx->menuPos;
-		p.y -= 20;
 		int height = 0;
 		int tab_size = 0;
 		p2i ts = textSize(text);
 		tab_size = ts.x;
 		tab_size += 30;
 		ts.x += 20;
-		checkItem(p, p2i(ts.x, 20));
+		checkItem(p, p2i(ts.x, 20));		
 		bool hot = isHot(p, p2i(ts.x, 20));
 		if (isClicked()) {
-			// FIXME: return true
-		}
-		if (hot) {
+			if (_guiCtx->selectedMenu == hid) {
+				_guiCtx->selectedMenu = 0;
+			}
+			else {
+				_guiCtx->selectedMenu = hid;
+			}
+		} 
+		if (_guiCtx->selectedMenu == hid || hot) {
 			renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(43, 126, 196, 255));
 		}
 		else {
@@ -2414,9 +2475,13 @@ namespace gui {
 		}
 		p.x += 5;
 		renderer::add_text(_guiCtx->uiContext, p, text);
+		_guiCtx->menuItemPos = _guiCtx->menuPos;
 		_guiCtx->menuPos.x += tab_size;
 		popID();
-		return hot;
+		if (_guiCtx->selectedMenu == hid) {
+			return true;
+		}
+		return false;
 	}
 
 	bool BeginMenu(const char** entries, int num, int* selected) {
@@ -2451,14 +2516,14 @@ namespace gui {
 			popID();
 		}
 		popID();
-		moveForward(p2i(300, 26));
+		moveForward(p2i(300, 20));
 		return changed;
 	}
 
 	bool MenuItems(const char** entries, int num, int* selected) {
 		bool changed = false;
 		pushID("MenuItems", entries[0]);
-		p2i p = _guiCtx->menuPos;
+		p2i p = _guiCtx->menuItemPos;
 		p.y -= 20;
 		int height = 0;
 		int tab_size = 0;
@@ -2474,15 +2539,16 @@ namespace gui {
 			p2i ts = textSize(entries[i]);
 			ts.x += 20;
 			checkItem(p, p2i(ts.x, 20));
-			bool hot = isHot(p, p2i(ts.x, 20));
+			bool hot = isHot(p, p2i(tab_size, 20));
 			if (isClicked()) {
 				if (*selected != i) {
 					changed = true;
 				}
 				*selected = i;
-				_guiCtx->menuPos = p;
+				//_guiCtx->menuPos = p;
+				_guiCtx->selectedMenu = 0;
 			}			
-			if (*selected == i || hot) {
+			if (hot) {
 				renderer::add_box(_guiCtx->uiContext, p, p2i(tab_size, 20), ds::Color(43, 126, 196, 255));
 			}
 			else {
@@ -2506,7 +2572,7 @@ namespace gui {
 
 	void EndMenuBar() {
 		end_overlay();
-		moveForward(p2i(300, 26));
+		moveForward(p2i(300, 20));
 	}
 
 	// -------------------------------------------------------
@@ -2602,29 +2668,29 @@ namespace gui {
 	// --------------------------------------------------------
 	// push int as ID
 	// --------------------------------------------------------
-	void pushID(int id) {
-		_guiCtx->idStack.push(id);
+	HashedId pushID(int id) {
+		return _guiCtx->idStack.push(id);
 	}
 
 	// --------------------------------------------------------
 	// push text as ID
 	// --------------------------------------------------------
-	void pushID(const char* text) {
-		_guiCtx->idStack.push(text);
+	HashedId pushID(const char* text) {
+		return _guiCtx->idStack.push(text);
 	}
 
 	// --------------------------------------------------------
 	// push text and suffix as ID
 	// --------------------------------------------------------
-	void pushID(const char* text, const char* suffix) {
-			_guiCtx->idStack.push(text,suffix);
+	HashedId pushID(const char* text, const char* suffix) {
+		return _guiCtx->idStack.push(text,suffix);
 	}
 
 	// --------------------------------------------------------
 	// push text and int as ID
 	// --------------------------------------------------------
-	void pushID(const char* text, int id) {
-		_guiCtx->idStack.push(text,id);
+	HashedId pushID(const char* text, int id) {
+		return _guiCtx->idStack.push(text,id);
 	}
 
 	// --------------------------------------------------------

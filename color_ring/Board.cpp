@@ -63,14 +63,6 @@ Board::Board(RenderEnvironment* env) : _env(env) , _player(env) , _hud(env) {
 	
 	_pressed = false;	
 
-	ds::vec2 colorPos = ds::vec2(200, 300);
-	colorPos.x = (1024.0f - 4 * 50.0f + 60.0f) / 2;
-	for (int i = 0; i < 4; ++i) {
-		_colorSelection.borders[i] = { 0, colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(32, 32, 32, 255) };
-		_colorSelection.boxes[i] = { 0, colorPos, ds::vec4(172, 2, 40, 30), ds::vec2(1.0f), 0.0f, _colors[i] };
-		colorPos.x += 60;
-	}
-
 	reset();	
 }
 
@@ -87,10 +79,20 @@ void Board::reset() {
 	_colorRing->reset();
 	_player.reset();
 	_hud.reset();
-	_colorSelection.borders[0].color = ds::Color(255,255,255,255);
+
+	ds::vec2 colorPos = ds::vec2(200, 300);
+	colorPos.x = (1024.0f - 4 * 50.0f + 60.0f) / 2;
 	for (int i = 0; i < 4; ++i) {
-		_colorSelection.boxes[i].color = _colors[i];
+		if (i == 0) {
+			_colorSelectionIds[i] = sprites::add(*_env->spriteArray, colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(255, 255, 255, 255));
+		}
+		else {
+			_colorSelectionIds[i] = sprites::add(*_env->spriteArray, colorPos, ds::vec4(300, 0, 50, 30), ds::vec2(1.0f), 0.0f, ds::Color(32, 32, 32, 255));
+		}
+		_colorSelectionIds[i + 4] = sprites::add(*_env->spriteArray, colorPos, ds::vec4(172, 2, 40, 20), ds::vec2(1.0f), 0.0f, _colors[i]);
+		colorPos.x += 60;
 	}
+	
 	_player.setColor(_colors[_selectedColor]);
 }
 
@@ -169,20 +171,10 @@ void Board::render() {
 		}
 	}
 
-	// draw bullets
-	for (auto& b: _bullets) {
-		_env->sprites->add(b.sprite);
-	}
-
-	for (int i = 0; i < 4; ++i) {
-		_env->sprites->add(_colorSelection.boxes[i]);
-		_env->sprites->add(_colorSelection.borders[i]);
-	}
-
 	// animated letter
-	for (auto& letter : _animatedLetters) {
-		_env->sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
-	}
+	//for (auto& letter : _animatedLetters) {
+		//_env->sprites->add(letter.pos, TEXTURES[letter.texureIndex]);
+	//}
 
 	_env->sprites->flush();
 
@@ -252,9 +244,10 @@ void Board::shootBullets(float dt) {
 		if (_bullets.size() < 64) {
 			Bullet b;
 			float ra = _colorRing->rasterizeAngle(_player.getRotation());
-			b.sprite = { 0, ds::vec2(512, 384), TEXTURES[TN_BULLET], ds::vec2(1.0f,1.0f),ra,_colors[_selectedColor] };
+			b.id = sprites::add(*_env->spriteArray,ds::vec2(512, 384), TEXTURES[TN_BULLET], ds::vec2(1.0f,1.0f),ra,_colors[_selectedColor]);
 			b.velocity = ds::vec2(cosf(ra), sinf(ra)) * 500.0f;
 			b.color = _selectedColor;
+			b.alive = true;
 			_bullets.push_back(b);
 		}
 		_bulletTimer -= 0.1f;
@@ -265,13 +258,14 @@ void Board::shootBullets(float dt) {
 // select next color
 // -------------------------------------------------------
 void Board::selectNextColor() {
-	_colorSelection.borders[_selectedColor].color = ds::Color(32, 32, 32, 255);
+	Sprite& current = sprites::get(*_env->spriteArray, _colorSelectionIds[_selectedColor]);
+	current.color = ds::Color(32, 32, 32, 255);
 	++_selectedColor;
 	if (_selectedColor > 3) {
 		_selectedColor = 0;
 	}
-	_colorSelection.borders[_selectedColor].color = ds::Color(255, 255, 255, 255);
-	_player.setColor(_colors[_selectedColor]);
+	Sprite& next = sprites::get(*_env->spriteArray, _colorSelectionIds[_selectedColor]);
+	next.color = ds::Color(255, 255, 255, 255);
 }
 
 // -------------------------------------------------------
@@ -280,10 +274,11 @@ void Board::selectNextColor() {
 void Board::moveBullets(float dt) {
 
 	for (auto& b : _bullets) {
-		b.sprite.position += b.velocity * ds::getElapsedSeconds();
-		float l = sqr_length(ds::vec2(512, 384) - b.sprite.position);
+		Sprite& sprite = sprites::get(*_env->spriteArray, b.id);
+		sprite.position += b.velocity * ds::getElapsedSeconds();
+		float l = sqr_length(ds::vec2(512, 384) - sprite.position);
 		if (l > SQR_BULLET_OUTER_RADIUS) {
-			rebound(_env, b.sprite.position, b.sprite.rotation, _colors[b.color]);
+			rebound(_env, sprite.position, sprite.rotation, _colors[b.color]);
 			int idx = _colorRing->getPartIndex(_player.getRotation());
 			int filled = _colorRing->markPart(idx, _selectedColor);
 			if (filled != -1) {
@@ -291,15 +286,19 @@ void Board::moveBullets(float dt) {
 				showFilled(_env, segment, _colorRing->getNumSegments(), _colors[filled]);
 				_hud.incrementFilled(filled);				
 			}
+			sprites::remove(*_env->spriteArray, b.id);
+			b.alive = false;
 		}
-		float d = length(ds::vec2(512, 384) - b.sprite.position) / 300.0f;
-		float scaleY = 0.8f - d * 0.6f;
-		b.sprite.scaling = ds::vec2(1.0f, scaleY);
+		else {
+			float ln = length(ds::vec2(512, 384) - sprite.position);
+			float d = ln / 300.0f;
+			float scaleY = 0.8f - d * 0.6f;
+			sprite.scaling = ds::vec2(1.0f, scaleY);
+		}
 	}
 
 	_bullets.erase(std::remove_if(_bullets.begin(), _bullets.end(),
 		[](const Bullet& b) {
-		float l = sqr_length(ds::vec2(512, 384) - b.sprite.position);
-		return l > SQR_BULLET_OUTER_RADIUS;
+			return !b.alive;
 	}), _bullets.end());
 }

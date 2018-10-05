@@ -26,6 +26,9 @@
     <ClCompile Include="common\colors.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="utils\PerfPanel.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -58,6 +61,9 @@
     <ClInclude Include="common\colors.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="utils\PerfPanel.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="particles">
@@ -68,6 +74,9 @@
     </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{1f9e9cc8-506b-40c3-980e-a282bdbaf6f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{0abc300f-a255-40c9-81bb-5d2b1d65b21d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

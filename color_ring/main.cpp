@@ -17,6 +17,7 @@
 #include "math.h"
 #include "Board.h"
 #include "common\common.h"
+#include "utils\PerfPanel.h"
 
 void my_debug(const LogLevel& level, const char* message) {
 	OutputDebugString(message);
@@ -60,6 +61,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 #endif
 	ds::init(rs);
 
+	gui::init();
+
+	gui::setAlphaLevel(0.2f);
+
 	perf::init();
 	
 	float reloadTimer = 0.0f;
@@ -86,6 +91,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	board.reset();
 
+	PerfPanel perfPanel;
+
+	int perfPanelState = 1;
+
+	bool running = true;
+
+	int spriteIndex = -1;
+
 	while (ds::isRunning()) {
 
 		perf::reset();
@@ -94,7 +107,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 		{
 			perf::ZoneTracker("Tick");
-			board.tick(ds::getElapsedSeconds());
+			if (running) {
+				board.tick(ds::getElapsedSeconds());
+			}
 		}
 
 		if (ds::isKeyPressed('A')) {
@@ -113,7 +128,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			perf::ZoneTracker("Render");
 			board.render();
 		}
-
+		/*
 		{
 			perf::ZoneTracker("Debug");
 			ds::dbgPrint(0, 36, "     FPS: %d", ds::getFramesPerSecond());
@@ -123,6 +138,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 				--p;
 			}
 		}
+		*/
+
+		p2i p(10, 758);
+		gui::start(&p, 250);
+
+		perfPanel.tick(ds::getElapsedSeconds());
+
+		perfPanel.render();
+
+		gui::begin("Game", 0);
+		gui::Checkbox("Running", &running);
+		gui::Value("Sprites", env.spriteArray->numObjects);
+		gui::Slider("Index", &spriteIndex,0,env.spriteArray->numObjects-1);
+		if (spriteIndex != -1) {
+			Sprite& sp = env.spriteArray->objects[spriteIndex];
+			gui::Value("ID", sp.id);
+			gui::Input("Pos", &sp.position);
+			gui::Input("Scale", &sp.scaling);
+			gui::SliderAngle("Rotation", &sp.rotation);
+			gui::Input("Texture", &sp.textureRect);
+			gui::Input("Color", &sp.color);
+		}
+
+		gui::end();
 
 		ds::end();
 
@@ -138,6 +177,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	delete env.sprites;
 	delete env.particles;
 	sprites::shutdown(*env.spriteArray);
+	gui::shutdown();
 
 	ds::shutdown();
 }
