@@ -24,6 +24,7 @@
     <ClInclude Include="ext\ds_imgui.h" />
     <ClInclude Include="ext\ds_logpanel.h" />
     <ClInclude Include="ext\ds_profiler.h" />
+    <ClInclude Include="ext\ds_sprites.h" />
     <ClInclude Include="ext\ds_string.h" />
     <ClInclude Include="ext\ds_tv.h" />
     <ClInclude Include="ext\ds_tweakable.h" />

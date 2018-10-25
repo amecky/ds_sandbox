@@ -2291,6 +2291,8 @@ namespace ds {
 
 	uint32_t getFramesPerSecond();
 
+	int numDrawCalls();
+
 	// GPU profiling
 
 	namespace gpu {
@@ -3405,7 +3407,7 @@ namespace ds {
 		DebugTextVertex debugVertices[MAX_DBG_TXT_VERTICES];
 		RID debugVertexBufferID;
 		int debugItemCount;
-
+		int numDrawCalls;
 		CharBuffer* charBuffer;
 
 	} InternalContext;
@@ -3515,6 +3517,10 @@ namespace ds {
 	// Get the current framerate. 
 	uint32_t getFramesPerSecond() { 
 		return _ctx->framesPerSecond;
+	}
+
+	int numDrawCalls() {
+		return _ctx->numDrawCalls;
 	}
 
 	// ------------------------------------------------------
@@ -4106,6 +4112,7 @@ namespace ds {
 		if (_ctx->supportDebug) {
 			dbgBegin();
 		}
+		_ctx->numDrawCalls = 0;
 		_ctx->currentPass = NO_RID;
 		_ctx->d3dContext->OMSetRenderTargets(1, &_ctx->backBufferTarget, _ctx->depthStencilView);
 		_ctx->d3dContext->ClearRenderTargetView(_ctx->backBufferTarget, _ctx->clearColor);
@@ -5972,6 +5979,7 @@ namespace ds {
 			case DT_INDEXED: _ctx->d3dContext->DrawIndexed(num, 0, 0); break;
 			case DT_INSTANCED: _ctx->d3dContext->DrawInstanced(num, ni, 0, 0); break;
 		}
+		++_ctx->numDrawCalls;
 		// FIXME: is this correct? At least it removes the warnings when using render targets as textures
 		ID3D11ShaderResourceView *const pSRV[2] = { NULL, NULL };
 		_ctx->d3dContext->PSSetShaderResources(0, 2, pSRV);		
