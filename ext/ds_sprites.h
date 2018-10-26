@@ -1,6 +1,6 @@
 #pragma once
 #include <diesel.h>
-#define SPRITE_IMPLEMENTATION
+//#define SPRITE_IMPLEMENTATION
 
 struct SpriteBatchConstantBuffer {
 	ds::vec4 screenCenter;

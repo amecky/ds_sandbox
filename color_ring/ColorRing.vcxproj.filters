@@ -29,6 +29,7 @@
     <ClCompile Include="utils\PerfPanel.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Grid_ps.hlsl" />
@@ -64,6 +65,7 @@
     <ClInclude Include="utils\PerfPanel.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="particles">

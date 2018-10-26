@@ -2,9 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Boids.cpp" />
+    <ClCompile Include="math.cpp" />
+    <ClCompile Include="Obstacles.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Boids.h" />
+    <ClInclude Include="math.h" />
+    <ClInclude Include="Obstacles.h" />
   </ItemGroup>
 </Project>

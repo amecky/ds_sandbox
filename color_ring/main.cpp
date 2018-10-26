@@ -18,6 +18,7 @@
 #include "Board.h"
 #include "common\common.h"
 #include "utils\PerfPanel.h"
+#include "Scene.h"
 
 void my_debug(const LogLevel& level, const char* message) {
 	OutputDebugString(message);
@@ -99,6 +100,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	int spriteIndex = -1;
 
+	ds::Scene gameScene;
+
+	ds::SpritesNode spritesNode("Sprites",env.textureId);
+
+	gameScene.addNode(&spritesNode);
+
 	while (ds::isRunning()) {
 
 		perf::reset();
@@ -127,6 +134,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		{
 			perf::ZoneTracker("Render");
 			board.render();
+		}
+		{
+			perf::ZoneTracker("Scene::render");
+			gameScene.render();
 		}
 		/*
 		{
