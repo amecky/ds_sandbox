@@ -661,6 +661,15 @@ namespace ds {
 		return sqr_length(sub);
 	}
 
+	inline vec2 limit(const ds::vec2& v, float max) {
+		if (sqr_length(v) > max * max) {
+			ds::vec2 n = normalize(v);
+			n *= max;
+			return n;
+		}
+		return v;
+	}
+
 	inline vec3 cross(const vec3& u, const vec3& v) {
 		return{
 			u.y * v.z - u.z * v.y,

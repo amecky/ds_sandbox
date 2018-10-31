@@ -1,20 +1,30 @@
 #include "Obstacles.h"
 #include <ds_sprites.h>
 
-const ds::vec4 OBSTACLE_RECT = ds::vec4();
+const ds::vec4 OBSTACLE_RECT = ds::vec4(0, 260, 30, 30);
 
-Obstacles::Obstacles(RID textureId) : _textureId(textureId) {
-}
+namespace obstacles {
 
-Obstacles::~Obstacles() {
-}
+	void intialize(ObstaclesContainer* container, RID textureId, int maxObstacles) {
+		container->num = 0;
+		container->max = maxObstacles;
+		container->positions = new ds::vec2[maxObstacles];
+		container->textureId = textureId;
+	}
 
-void Obstacles::add(const ds::vec2 & pos) {
-	_positions.push_back(pos);
-}
+	void add(ObstaclesContainer* container, const ds::vec2& pos) {
+		if (container->num + 1 < container->max) {
+			container->positions[container->num++] = pos;
+		}
+	}
 
-void Obstacles::render() {
-	for (int i = 0; i < _positions.size(); ++i) {
-		sprites::draw(_textureId, _positions[i], OBSTACLE_RECT);
+	void render(ObstaclesContainer* container) {
+		for (int i = 0; i < container->num; ++i) {
+			sprites::draw(container->textureId, container->positions[i], OBSTACLE_RECT);
+		}
+	}
+
+	void shutdown(ObstaclesContainer* container) {
+		delete[] container->positions;
 	}
 }

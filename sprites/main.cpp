@@ -87,44 +87,80 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		exit(-1);
 	}
 
-	BoidSettings settings;
-	settings.minDistance = 20.0f;
-	settings.relaxation = 1.0f;
-	settings.separate = true;
-	settings.seek = true;
-	settings.seekVelocity = 20.0f;
-	Boids boids(textureId, &settings);
+	ds::vec2 target(512, 384);
+
+	BoidContainer boidContainer;
+	boid::initialize(&boidContainer, 512);
+	boidContainer.settings.minDistance = 20.0f;
+	boidContainer.settings.relaxation = 100.0f;
+	boidContainer.settings.separate = true;
+	boidContainer.settings.seek = true;
+	boidContainer.settings.seekVelocity = 150.0f;
+	boidContainer.settings.textureId = textureId;
+	boid::add(&boidContainer, 1, target);
 
 	RID nextTextureId = loadImageFromFile("test.png");
 
-	ds::vec2 target(512, 384);
+	
 
-	int addCount = 20;
+	int addCount = 4;
 
-	Obstacles obstacles(textureId);
+	ObstaclesContainer obstacles;
+	obstacles::intialize(&obstacles, textureId, 128);
+	obstacles::add(&obstacles, ds::vec2(300, 300));
+	obstacles::add(&obstacles, ds::vec2(400, 384));
+	obstacles::add(&obstacles, ds::vec2(600, 384));
+	obstacles::add(&obstacles, ds::vec2(400, 300));
+	obstacles::add(&obstacles, ds::vec2(400, 500));
+
+	bool update = true;
+
+	bool dragging = false;
+
+	bool pressed = false;
+
+	float rtimer = 0.0f;
 
 	while (ds::isRunning()) {
 
 		ds::begin();
 
-		if (ds::isMouseButtonClicked(0)) {
-			target = ds::getMousePosition();
+		if (ds::isMouseButtonPressed(0)) {
+			if (is_inside(ds::getMousePosition(), target, ds::vec2(30.0f))) {
+				dragging = true;
+			}
+			else {
+				rtimer += ds::getElapsedSeconds();
+				if (rtimer >= 0.1f) {
+					rtimer -= 0.1f;
+					boid::add(&boidContainer, ds::getMousePosition(), target);
+				}
+				dragging = false;
+			}
+		}
+		if (dragging && !ds::isMouseButtonPressed(0)) {
+			dragging = false;
 		}
 
-		if (ds::isMouseButtonClicked(1)) {
-			obstacles.add(ds::getMousePosition());
+		if (dragging) {
+			target = ds::getMousePosition();
 		}
 
 		sprites::begin();
 
-		sprites::draw(nextTextureId, ds::vec2(100, 200), ds::vec4(0, 0, 200, 100));
+		sprites::draw(textureId, target, ds::vec4(0, 300, 30, 30));
 
-		sprites::draw(textureId, target,ds::vec4(40,75,40,40));
+		obstacles::render(&obstacles);		
 
-		obstacles.render();
+		boid::reset_forces(&boidContainer);
+		boid::move(&boidContainer, target, ds::getElapsedSeconds());
+		boid::avoid(&boidContainer, &obstacles);
+		if (update) {
+			boid::apply_forces(&boidContainer, ds::getElapsedSeconds());
+		}
+		boid::kill_boids(&boidContainer, target, 15.0f);
+		boid::render(&boidContainer);
 
-		boids.move(target, ds::getElapsedSeconds());
-		boids.render();
 
 		sprites::flush();
 
@@ -133,15 +169,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		gui::begin("Sprites", 0);
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("DrawCalls", ds::numDrawCalls());
-		gui::Input("Min Dist", &settings.minDistance);
-		gui::Input("Relaxation", &settings.relaxation);
-		gui::Input("Seek Vel", &settings.seekVelocity);
-		gui::Checkbox("Separate", &settings.separate);
-		gui::Checkbox("Seek", &settings.seek);
+		gui::Value("Dragging", dragging);
+		gui::Value("Target", target);
+		gui::Input("Min Dist", &boidContainer.settings.minDistance);
+		gui::Input("Relaxation", &boidContainer.settings.relaxation);
+		gui::Input("Seek Vel", &boidContainer.settings.seekVelocity);
+		gui::Checkbox("Separate", &boidContainer.settings.separate);
+		gui::Checkbox("Seek", &boidContainer.settings.seek);
+		gui::Value("Boids", boidContainer.num);
+		gui::Checkbox("Update", &update);
 		gui::Input("Add count", &addCount);
 		if (gui::Button("Add boids")) {
-			boids.add(addCount);
+			boid::add(&boidContainer,addCount, target);
 		}
+		
 		gui::end();
 		
 		ds::end();

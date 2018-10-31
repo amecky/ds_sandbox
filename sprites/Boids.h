@@ -2,35 +2,52 @@
 #include <diesel.h>
 #include <ds_sprites.h>
 
-struct BoidContainer {
-	ds::vec2* positions;
-	ds::vec2* velocities;
-	ds::vec2* forces;
-	float* rotations;
-};
-
 struct BoidSettings {
 	float minDistance;
 	float relaxation;
 	bool separate;
 	bool seek;
 	float seekVelocity;
+	RID textureId;
 };
 
-class Boids {
-
-public:
-	Boids(RID textureID, BoidSettings* settings);
-	~Boids();
-	void add(int count);
-	void move(const ds::vec2& target, float dt);
-	void render();
-private:
-	void separate(float minDistance, float relaxation, float dt);
-	void seek(const ds::vec2& target, float velocity, float dt);
-	RID _textureID;
-	BoidContainer _boids;
-	int _num;
-	BoidSettings* _settings;
+struct BoidContainer {
+	ds::vec2* positions;
+	ds::vec2* velocities;
+	ds::vec2* accelerations;
+	float* rotations;
+	int* states;
+	int num;
+	int max;
+	BoidSettings settings;
 };
 
+typedef void(*BoidMoveFunc)(BoidContainer*, BoidSettings*, const ds::vec2&);
+
+struct ObstaclesContainer;
+
+namespace boid {
+
+	void seekFunc(BoidContainer* container, BoidSettings* settings, const ds::vec2& target);
+
+	void kill_boids(BoidContainer* container, const ds::vec2& target, float dist);
+
+	void initialize(BoidContainer* container, int maxBoids);
+
+	void shutdown(BoidContainer* container);
+
+	void add(BoidContainer* container, int count, const ds::vec2& target);
+
+	void add(BoidContainer* container, const ds::vec2& p, const ds::vec2& target);
+
+	void reset_forces(BoidContainer* container);
+
+	void apply_forces(BoidContainer* container, float dt);
+
+	void move(BoidContainer* container, const ds::vec2& target, float dt);
+
+	void avoid(BoidContainer* container, ObstaclesContainer* obstacles);
+
+	void render(BoidContainer* container);
+
+}

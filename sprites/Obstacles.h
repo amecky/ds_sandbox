@@ -2,15 +2,20 @@
 #include <diesel.h>
 #include <vector>
 
-class Obstacles {
-
-public:
-	Obstacles(RID textureId);
-	~Obstacles();
-	void add(const ds::vec2& pos);
-	void render();
-private:
-	RID _textureId;
-	std::vector<ds::vec2> _positions;
+struct ObstaclesContainer {
+	ds::vec2* positions;
+	int num;
+	int max;
+	RID textureId;
 };
 
+namespace obstacles {
+
+	void intialize(ObstaclesContainer* container, RID textureId, int maxObstacles);
+
+	void add(ObstaclesContainer* container, const ds::vec2& pos);
+
+	void render(ObstaclesContainer* container);
+
+	void shutdown(ObstaclesContainer* container);
+}

@@ -26,3 +26,16 @@ float calculate_rotation(const ds::vec2& v) {
 		return 0.0f;
 	}
 }
+
+bool is_inside(const ds::vec2& pos, const ds::vec2& p, const ds::vec2& r) {
+	float xmin = p.x - r.x * 0.5f;
+	float xmax = p.x + r.x * 0.5f;
+	float ymin = p.y - r.y * 0.5f;
+	float ymax = p.y + r.y * 0.5f;
+	if (pos.x >= xmin && pos.x <= xmax) {
+		if (pos.y >= ymin && pos.y <= ymax) {
+			return true;
+		}
+	}
+	return false;
+}

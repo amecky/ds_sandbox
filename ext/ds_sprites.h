@@ -381,6 +381,9 @@ namespace sprites {
 	}
 
 	static bool spr__requiresFlush(RID textureID) {
+		if (_ctx->currentTexture == NO_RID) {
+			return false;
+		}
 		return ((_ctx->current + 1) >= _ctx->max || textureID != _ctx->currentTexture);
 	}
 
