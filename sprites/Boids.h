@@ -8,6 +8,7 @@ struct BoidSettings {
 	bool separate;
 	bool seek;
 	float seekVelocity;
+	float avoidVelocity;
 	RID textureId;
 };
 
@@ -17,6 +18,7 @@ struct BoidContainer {
 	ds::vec2* accelerations;
 	float* rotations;
 	int* states;
+	ds::Color* colors;
 	int num;
 	int max;
 	BoidSettings settings;
@@ -32,6 +34,8 @@ namespace boid {
 
 	void kill_boids(BoidContainer* container, const ds::vec2& target, float dist);
 
+	void kill_boid(BoidContainer* container, int index);
+
 	void initialize(BoidContainer* container, int maxBoids);
 
 	void shutdown(BoidContainer* container);
@@ -44,7 +48,7 @@ namespace boid {
 
 	void apply_forces(BoidContainer* container, float dt);
 
-	void move(BoidContainer* container, const ds::vec2& target, float dt);
+	void move(BoidContainer* container, const ds::vec2& target, ObstaclesContainer* obstacles, float dt);
 
 	void avoid(BoidContainer* container, ObstaclesContainer* obstacles);
 

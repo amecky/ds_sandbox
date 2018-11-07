@@ -4,16 +4,20 @@
 
 struct ObstaclesContainer {
 	ds::vec2* positions;
+	float* scales;
 	int num;
 	int max;
 	RID textureId;
+	int* grid;
+	int dimX;
+	int dimY;
 };
 
 namespace obstacles {
 
-	void intialize(ObstaclesContainer* container, RID textureId, int maxObstacles);
+	void intialize(ObstaclesContainer* container, RID textureId, int dimX, int dimY);
 
-	void add(ObstaclesContainer* container, const ds::vec2& pos);
+	void add(ObstaclesContainer* container, int x, int y);
 
 	void render(ObstaclesContainer* container);
 

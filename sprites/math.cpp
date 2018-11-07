@@ -39,3 +39,25 @@ bool is_inside(const ds::vec2& pos, const ds::vec2& p, const ds::vec2& r) {
 	}
 	return false;
 }
+
+namespace math {
+
+	bool collides(const ds::vec2& p1, float r1, const ds::vec2& p2, float r2) {
+		ds::vec2 d = p1 - p2;
+		float sr = (r1 + r2) * (r1 + r2);
+		return sqr_length(d) < sr;
+	}
+
+	bool line_circle_intersection(const ds::vec2& O,const ds::vec2& D,const ds::vec2& C, float radius) {
+		ds::vec2 d = O - C;
+		float a = dot(D, D);
+		float b = dot(d, D);
+		float c = dot(d, d) - radius * radius;
+
+		float disc = b * b - a * c;
+		if (disc < 0.0f) {
+			return false;
+		}
+		return true;
+	}
+}

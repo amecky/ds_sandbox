@@ -9,6 +9,7 @@
 #include "Boids.h"
 #include "Obstacles.h"
 #include "math.h"
+#include "player.h"
 
 const int kNUM_SPRITES = 256;
 
@@ -31,34 +32,24 @@ RID loadImageFromFile(const char* name) {
 	return NO_RID;
 }
 
-struct Blocks {
-	ds::vec2* positions;
-	ds::vec2* velocities;
-	float* rotations;
-};
+bool check_collision(const ds::vec2& p, float radius, Bullets* bullets) {
+	for (int j = 0; j < bullets->num; ++j) {
+		if (math::collides(p, radius, bullets->positions[j], 8.0f)) {
+			bullets::remove(bullets, j);
+			return true;
+		}
+	}
+	return false;
+}
 
-void move(ds::vec2* positions, ds::vec2* velocities, float* rotations, int num, const ds::vec4& boundingRect) {
-	for (int i = 0; i < num; ++i) {
-		positions[i] += velocities[i] * ds::getElapsedSeconds();
-		bool bounced = false;
-		if (positions[i].x < boundingRect.x || positions[i].x > boundingRect.z) {
-			velocities[i].x *= -1.0f;
-			bounced = true;
-		}
-		if (positions[i].y < boundingRect.y || positions[i].y > boundingRect.w) {
-			velocities[i].y *= -1.0f;
-			bounced = true;
-		}
-		if (bounced) {
-			rotations[i] = calculate_rotation(velocities[i]);
-			positions[i] += velocities[i] * ds::getElapsedSeconds();
+void check_collisions(BoidContainer* boids, Bullets* bullets) {
+	for (int i = 0; i < boids->num; ++i) {
+		ds::vec2 bp = boids->positions[i];
+		if (check_collision(bp, 10.0f, bullets)) {
+			boid::kill_boid(boids, i);
 		}
 	}
 }
-
-struct Obstacle {
-	ds::vec2 position;
-};
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
@@ -70,7 +61,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.width = 1024;
 	rs.height = 768;
 	rs.title = "Triangle demo";
-	rs.clearColor = ds::Color(0.1f, 0.1f, 0.1f, 1.0f);
+	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	rs.multisampling = 4;
 	rs.useGPUProfiling = false;
 	rs.supportDebug = false;
@@ -86,8 +77,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	if (textureId == NO_RID) {
 		exit(-1);
 	}
+	//ds::vec2 target(512, 384);
+	RID nextTextureId = loadImageFromFile("test.png");
 
-	ds::vec2 target(512, 384);
+	Player player;
+	player.rotation = 0.0f;
+	player.textureId = textureId;
+	player.pos = ds::vec2(700, 384);
+
+	Bullets bullets;
+	bullets::initialize(&bullets, 256);
+	bullets.textureId = textureId;
 
 	BoidContainer boidContainer;
 	boid::initialize(&boidContainer, 512);
@@ -97,21 +97,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	boidContainer.settings.seek = true;
 	boidContainer.settings.seekVelocity = 150.0f;
 	boidContainer.settings.textureId = textureId;
-	boid::add(&boidContainer, 1, target);
-
-	RID nextTextureId = loadImageFromFile("test.png");
-
-	
+	boidContainer.settings.avoidVelocity = 400.0f;
+	boid::add(&boidContainer, ds::vec2(100,100), player.pos);
 
 	int addCount = 4;
 
 	ObstaclesContainer obstacles;
-	obstacles::intialize(&obstacles, textureId, 128);
-	obstacles::add(&obstacles, ds::vec2(300, 300));
-	obstacles::add(&obstacles, ds::vec2(400, 384));
-	obstacles::add(&obstacles, ds::vec2(600, 384));
-	obstacles::add(&obstacles, ds::vec2(400, 300));
-	obstacles::add(&obstacles, ds::vec2(400, 500));
+	obstacles::intialize(&obstacles, textureId, 40, 20);
+	obstacles::add(&obstacles,  9, 10);
+	obstacles::add(&obstacles, 10, 10);
+	obstacles::add(&obstacles, 11, 10);
+	obstacles::add(&obstacles, 12, 10);
+	obstacles::add(&obstacles, 12, 11);
+	obstacles::add(&obstacles, 12, 9);
+	obstacles::add(&obstacles, 13, 10);
+	obstacles::add(&obstacles, 14, 10);
+	obstacles::add(&obstacles, 15, 10);
 
 	bool update = true;
 
@@ -126,41 +127,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		ds::begin();
 
 		if (ds::isMouseButtonPressed(0)) {
-			if (is_inside(ds::getMousePosition(), target, ds::vec2(30.0f))) {
-				dragging = true;
-			}
-			else {
-				rtimer += ds::getElapsedSeconds();
-				if (rtimer >= 0.1f) {
-					rtimer -= 0.1f;
-					boid::add(&boidContainer, ds::getMousePosition(), target);
-				}
-				dragging = false;
+			rtimer += ds::getElapsedSeconds();
+			if (rtimer >= 0.1f) {
+				rtimer -= 0.1f;
+				boid::add(&boidContainer, ds::getMousePosition(), player.pos);
+				bullets::add(&bullets, &player);
 			}
 		}
-		if (dragging && !ds::isMouseButtonPressed(0)) {
-			dragging = false;
-		}
+		
+		player::move(&player, ds::getElapsedSeconds());
 
-		if (dragging) {
-			target = ds::getMousePosition();
-		}
+		bullets::move(&bullets, &obstacles, ds::getElapsedSeconds());
 
 		sprites::begin();
 
-		sprites::draw(textureId, target, ds::vec4(0, 300, 30, 30));
+		obstacles::render(&obstacles);	
 
-		obstacles::render(&obstacles);		
+		bullets::render(&bullets);
+
+		player::render(&player);
 
 		boid::reset_forces(&boidContainer);
-		boid::move(&boidContainer, target, ds::getElapsedSeconds());
+		boid::move(&boidContainer, player.pos, &obstacles, ds::getElapsedSeconds());
 		boid::avoid(&boidContainer, &obstacles);
 		if (update) {
 			boid::apply_forces(&boidContainer, ds::getElapsedSeconds());
 		}
-		boid::kill_boids(&boidContainer, target, 15.0f);
+		boid::kill_boids(&boidContainer, player.pos, 15.0f);
 		boid::render(&boidContainer);
 
+		check_collisions(&boidContainer, &bullets);
 
 		sprites::flush();
 
@@ -169,18 +165,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		gui::begin("Sprites", 0);
 		gui::Value("FPS", ds::getFramesPerSecond());
 		gui::Value("DrawCalls", ds::numDrawCalls());
-		gui::Value("Dragging", dragging);
-		gui::Value("Target", target);
+		//gui::Value("Target", target);
 		gui::Input("Min Dist", &boidContainer.settings.minDistance);
 		gui::Input("Relaxation", &boidContainer.settings.relaxation);
 		gui::Input("Seek Vel", &boidContainer.settings.seekVelocity);
 		gui::Checkbox("Separate", &boidContainer.settings.separate);
 		gui::Checkbox("Seek", &boidContainer.settings.seek);
+		gui::Input("Avoid Vel", &boidContainer.settings.avoidVelocity);
 		gui::Value("Boids", boidContainer.num);
+		gui::Value("Bullets", bullets.num);
 		gui::Checkbox("Update", &update);
 		gui::Input("Add count", &addCount);
 		if (gui::Button("Add boids")) {
-			boid::add(&boidContainer,addCount, target);
+			boid::add(&boidContainer,addCount, player.pos);
 		}
 		
 		gui::end();
@@ -189,6 +186,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	}
 	gui::shutdown();
 	sprites::shutdown();
+	bullets::shutdown(&bullets);
 	ds::shutdown();
 	return 0;
 }

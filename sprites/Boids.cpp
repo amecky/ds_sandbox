@@ -38,12 +38,14 @@ namespace boid {
 		container->velocities = new ds::vec2[maxBoids];
 		container->rotations = new float[maxBoids];
 		container->states = new int[maxBoids];
+		container->colors = new ds::Color[maxBoids];
 	}
 
 	// -----------------------------------------------------------------------
 	// shutdown
 	// -----------------------------------------------------------------------
 	void shutdown(BoidContainer* container) {
+		delete[] container->colors;
 		delete[] container->accelerations;
 		delete[] container->positions;
 		delete[] container->velocities;
@@ -61,6 +63,7 @@ namespace boid {
 			container->rotations[container->num] = angle;
 			container->velocities[container->num] = df;
 			container->states[container->num] = 1;
+			container->colors[container->num] = ds::Color(255, 0, 0, 255);
 			++container->num;
 		}
 	}
@@ -130,48 +133,68 @@ namespace boid {
 	// -----------------------------------------------------------------------
 	// seek
 	// -----------------------------------------------------------------------
-	static void seek(BoidContainer* container, const ds::vec2& target, float velocity) {
+	static void seek(BoidContainer* container, const ds::vec2& target, ObstaclesContainer* obstacles, float velocity) {
 		for (int i = 0; i < container->num; ++i) {
+			bool spotting = true;
 			ds::vec2 desired = target - container->positions[i];
-			ds::vec2 n = normalize(desired);
-			ds::vec2 df = n * velocity;
-			ds::vec2 steer = df - container->velocities[i];
-			container->accelerations[i] += steer;
+			for (int j = 0; j < obstacles->num; ++j) {
+				float r = obstacles->scales[j] * 30.0f * 0.5f;
+				if (math::line_circle_intersection(container->positions[i], desired, obstacles->positions[j], r)) {
+					spotting = false;
+					container->colors[i] = ds::Color(0, 0, 255, 255);
+				}
+			}
+			if (spotting) {
+				ds::vec2 n = normalize(desired);
+				ds::vec2 df = n * velocity;
+				ds::vec2 steer = df - container->velocities[i];
+				container->accelerations[i] += steer;
+				container->colors[i] = ds::Color(255, 0, 255, 255);
+			}
 		}
 	}
 
 	// -----------------------------------------------------------------------
 	// move
 	// -----------------------------------------------------------------------
-	void move(BoidContainer* container, const ds::vec2& target, float dt) {
+	void move(BoidContainer* container, const ds::vec2& target, ObstaclesContainer* obstacles, float dt) {
 		
 		if (container->settings.separate) {
-			separate(container, container->settings.minDistance, container->settings.relaxation);
+			//separate(container, container->settings.minDistance, container->settings.relaxation);
 		}
-		if (!container->settings.seek) {
-			for (int i = 0; i <container->num; ++i) {
-				ds::vec2 p = container->positions[i] + container->velocities[i];
-				bool bounced = false;
-				if (p.x < BOUNDING_RECT.x || p.x > BOUNDING_RECT.z) {
-					container->velocities[i].x *= -1.0f;
-					bounced = true;
-				}
-				if (p.y < BOUNDING_RECT.y || p.y > BOUNDING_RECT.w) {
-					container->velocities[i].y *= -1.0f;
-					bounced = true;
-				}
-				if (bounced) {
-					container->rotations[i] = calculate_rotation(container->velocities[i]);
-					container->accelerations[i] += container->velocities[i] * dt;
-				}
-			}
-		}
+		
 		if (container->settings.seek) {
-			seek(container, target, container->settings.seekVelocity);
+			seek(container, target, obstacles, container->settings.seekVelocity);
+		}
+
+		for (int i = 0; i <container->num; ++i) {
+			ds::vec2 p = container->positions[i] + container->velocities[i];
+			bool bounced = false;
+			if (p.x < BOUNDING_RECT.x || p.x > BOUNDING_RECT.z) {
+				container->velocities[i].x *= -1.0f;
+				bounced = true;
+			}
+			if (p.y < BOUNDING_RECT.y || p.y > BOUNDING_RECT.w) {
+				container->velocities[i].y *= -1.0f;
+				bounced = true;
+			}
+			if (bounced) {
+				container->rotations[i] = calculate_rotation(container->velocities[i]);
+			}
 		}
 		
 	}
 
+	void kill_boid(BoidContainer* container, int index) {
+		if (container->num > 0) {
+			container->positions[index] = container->positions[container->num - 1];
+			container->rotations[index] = container->rotations[container->num - 1];
+			container->velocities[index] = container->velocities[container->num - 1];
+			container->accelerations[index] = container->accelerations[container->num - 1];
+			container->colors[index] = container->colors[container->num - 1];
+		}
+		--container->num;
+	}
 	// -----------------------------------------------------------------------
 	// kill boids close to target
 	// -----------------------------------------------------------------------
@@ -185,6 +208,7 @@ namespace boid {
 					container->rotations[i] = container->rotations[container->num - 1];
 					container->velocities[i] = container->velocities[container->num - 1];
 					container->accelerations[i] = container->accelerations[container->num - 1];
+					container->colors[i] = container->colors[container->num - 1];
 				}
 				--container->num;
 			}
@@ -196,7 +220,7 @@ namespace boid {
 	// -----------------------------------------------------------------------
 	void render(BoidContainer* container) {
 		for (int i = 0; i < container->num; ++i) {
-			sprites::draw(container->settings.textureId, container->positions[i], BOID_RECT, ds::vec2(1.0f), container->rotations[i]);
+			sprites::draw(container->settings.textureId, container->positions[i], BOID_RECT, ds::vec2(1.0f), container->rotations[i], container->colors[i]);
 		}
 	}
 
@@ -217,7 +241,7 @@ namespace boid {
 			if (idx != -1) {
 				ds::vec2 desired = obstacles->positions[idx] - container->positions[i];
 				ds::vec2 n = normalize(desired);
-				ds::vec2 df = n * 300.0f;
+				ds::vec2 df = n * container->settings.avoidVelocity;
 				ds::vec2 steer = df - container->velocities[i];
 				container->accelerations[i] -= steer;
 			}
