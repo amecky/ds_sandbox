@@ -4063,6 +4063,8 @@ namespace ds {
 		}
 		_ctx->mouseButtonState[0] = 0;
 		_ctx->mouseButtonState[1] = 0;
+		_ctx->mouseButtonClicked[0] = false;
+		_ctx->mouseButtonClicked[1] = false;
 
 		init_random(GetTickCount());
 

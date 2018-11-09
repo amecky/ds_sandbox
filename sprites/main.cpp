@@ -50,6 +50,40 @@ void check_collisions(BoidContainer* boids, Bullets* bullets) {
 		}
 	}
 }
+
+void load_grid(ObstaclesContainer* obstacles) {
+	char buffer[255];
+	FILE* fp = fopen("grid.txt", "r");
+	obstacles::clear(obstacles);
+	int x = 0;
+	int y = 0;
+	int r = 0;
+	if (fp) {
+		while (fgets(buffer, 255, (FILE*)fp)) {
+			printf("%s\n", buffer);
+			sscanf(buffer, "%d %d %d", &x, &y, &r);
+			obstacles::add(obstacles, x, y, r);
+		}
+		fclose(fp);
+	}
+
+}
+
+void save_grid(ObstaclesContainer* obstacles) {
+	char buffer[255];
+	FILE* fp = fopen("grid.txt", "w");
+	if (fp) {
+		for ( int x = 0; x < obstacles->dimX; ++x) {
+			for (int y = 0; y < obstacles->dimY; ++y) {
+				if (obstacles::contains(obstacles, x, y)) {
+					fprintf(fp, "%d %d %d\n", x, y, obstacles->grid[x + y * obstacles->dimX]);
+				}
+			}
+		}
+		fclose(fp);
+	}
+
+}
 // ---------------------------------------------------------------
 // main method
 // ---------------------------------------------------------------
@@ -104,15 +138,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	ObstaclesContainer obstacles;
 	obstacles::intialize(&obstacles, textureId, 40, 20);
-	obstacles::add(&obstacles,  9, 10);
-	obstacles::add(&obstacles, 10, 10);
-	obstacles::add(&obstacles, 11, 10);
-	obstacles::add(&obstacles, 12, 10);
-	obstacles::add(&obstacles, 12, 11);
-	obstacles::add(&obstacles, 12, 9);
-	obstacles::add(&obstacles, 13, 10);
-	obstacles::add(&obstacles, 14, 10);
-	obstacles::add(&obstacles, 15, 10);
+	load_grid(&obstacles);
 
 	bool update = true;
 
@@ -122,66 +148,103 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	float rtimer = 0.0f;
 
+	bool editorActive = false;
+
+	ObstabcleEditorContext obstacleEditorCtx;
+	obstacleEditorCtx.rightButtonPressed = false;
+	obstacleEditorCtx.leftButtonPressed = false;
+	obstacleEditorCtx.gx = 0;
+	obstacleEditorCtx.gy = 0;
+	obstacleEditorCtx.rectIndex = 0;
+
 	while (ds::isRunning()) {
 
 		ds::begin();
 
-		if (ds::isMouseButtonPressed(0)) {
-			rtimer += ds::getElapsedSeconds();
-			if (rtimer >= 0.1f) {
-				rtimer -= 0.1f;
-				boid::add(&boidContainer, ds::getMousePosition(), player.pos);
-				bullets::add(&bullets, &player);
+		if (editorActive) {
+			sprites::begin();
+			
+			obstacles::edit(&obstacles, &obstacleEditorCtx);
+
+			obstacles::render(&obstacles);
+
+			sprites::flush();
+
+			p2i p(10, 758);
+			gui::start(&p, 400);
+			gui::begin("Grid", 0);
+			gui::Value("Grid Pos", p2i(obstacleEditorCtx.gx, obstacleEditorCtx.gy));
+			gui::Value("Rect Idx", obstacleEditorCtx.rectIndex);
+			gui::beginGroup();
+			if (gui::Button("Load")) {
+				load_grid(&obstacles);
 			}
+			if (gui::Button("Save")) {
+				save_grid(&obstacles);
+			}
+			if (gui::Button("Clear")) {
+				obstacles::clear(&obstacles);
+			}
+			gui::endGroup();
+			gui::end();
 		}
-		
-		player::move(&player, ds::getElapsedSeconds());
+		else {
+			if (ds::isMouseButtonPressed(0)) {
+				rtimer += ds::getElapsedSeconds();
+				if (rtimer >= 0.1f) {
+					rtimer -= 0.1f;
+					boid::add(&boidContainer, ds::getMousePosition(), player.pos);
+					bullets::add(&bullets, &player);
+				}
+			}
 
-		bullets::move(&bullets, &obstacles, ds::getElapsedSeconds());
+			player::move(&player, ds::getElapsedSeconds());
 
-		sprites::begin();
+			bullets::move(&bullets, &obstacles, ds::getElapsedSeconds());
 
-		obstacles::render(&obstacles);	
+			sprites::begin();
 
-		bullets::render(&bullets);
+			obstacles::render(&obstacles);
 
-		player::render(&player);
+			bullets::render(&bullets);
 
-		boid::reset_forces(&boidContainer);
-		boid::move(&boidContainer, player.pos, &obstacles, ds::getElapsedSeconds());
-		boid::avoid(&boidContainer, &obstacles);
-		if (update) {
-			boid::apply_forces(&boidContainer, ds::getElapsedSeconds());
+			player::render(&player);
+
+			boid::reset_forces(&boidContainer);
+			boid::move(&boidContainer, player.pos, &obstacles, ds::getElapsedSeconds());
+			boid::avoid(&boidContainer, &obstacles);
+			if (update) {
+				boid::apply_forces(&boidContainer, ds::getElapsedSeconds());
+			}
+			boid::kill_boids(&boidContainer, player.pos, 15.0f);
+			boid::render(&boidContainer);
+
+			check_collisions(&boidContainer, &bullets);
+
+			sprites::flush();
+
+			p2i p(10, 758);
+			gui::start(&p, 250);
+			gui::begin("Sprites", 0);
+			gui::Value("FPS", ds::getFramesPerSecond());
+			gui::Value("DrawCalls", ds::numDrawCalls());
+			//gui::Value("Target", target);
+			gui::Input("Min Dist", &boidContainer.settings.minDistance);
+			gui::Input("Relaxation", &boidContainer.settings.relaxation);
+			gui::Input("Seek Vel", &boidContainer.settings.seekVelocity);
+			gui::Checkbox("Separate", &boidContainer.settings.separate);
+			gui::Checkbox("Seek", &boidContainer.settings.seek);
+			gui::Input("Avoid Vel", &boidContainer.settings.avoidVelocity);
+			gui::Value("Boids", boidContainer.num);
+			gui::Value("Bullets", bullets.num);
+			gui::Checkbox("Update", &update);
+			gui::Input("Add count", &addCount);
+			if (gui::Button("Add boids")) {
+				boid::add(&boidContainer, addCount, player.pos);
+			}
+
+			gui::end();
 		}
-		boid::kill_boids(&boidContainer, player.pos, 15.0f);
-		boid::render(&boidContainer);
-
-		check_collisions(&boidContainer, &bullets);
-
-		sprites::flush();
-
-		p2i p(10, 758);
-		gui::start(&p, 250);
-		gui::begin("Sprites", 0);
-		gui::Value("FPS", ds::getFramesPerSecond());
-		gui::Value("DrawCalls", ds::numDrawCalls());
-		//gui::Value("Target", target);
-		gui::Input("Min Dist", &boidContainer.settings.minDistance);
-		gui::Input("Relaxation", &boidContainer.settings.relaxation);
-		gui::Input("Seek Vel", &boidContainer.settings.seekVelocity);
-		gui::Checkbox("Separate", &boidContainer.settings.separate);
-		gui::Checkbox("Seek", &boidContainer.settings.seek);
-		gui::Input("Avoid Vel", &boidContainer.settings.avoidVelocity);
-		gui::Value("Boids", boidContainer.num);
-		gui::Value("Bullets", bullets.num);
-		gui::Checkbox("Update", &update);
-		gui::Input("Add count", &addCount);
-		if (gui::Button("Add boids")) {
-			boid::add(&boidContainer,addCount, player.pos);
-		}
-		
-		gui::end();
-		
 		ds::end();
 	}
 	gui::shutdown();
