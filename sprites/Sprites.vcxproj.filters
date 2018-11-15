@@ -6,11 +6,15 @@
     <ClCompile Include="math.cpp" />
     <ClCompile Include="Obstacles.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="sprite_editor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Boids.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="Obstacles.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="sprite_editor.h" />
+    <ClInclude Include="sprites_def.h" />
+    <ClInclude Include="sprites_definitions.h" />
   </ItemGroup>
 </Project>

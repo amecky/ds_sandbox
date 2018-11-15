@@ -10,8 +10,15 @@
 #include "Obstacles.h"
 #include "math.h"
 #include "player.h"
+#include "sprite_editor.h"
 
 const int kNUM_SPRITES = 256;
+
+enum SceneType {
+	SC_GAME,
+	SC_OBSTACLES_EDITOR,
+	SC_SPRITE_EDITOR
+};
 
 RID loadImageFromFile(const char* name) {
 	int x, y, n;
@@ -148,7 +155,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	float rtimer = 0.0f;
 
-	bool editorActive = false;
+	SceneType sceneType = SceneType::SC_SPRITE_EDITOR;
 
 	ObstabcleEditorContext obstacleEditorCtx;
 	obstacleEditorCtx.rightButtonPressed = false;
@@ -157,36 +164,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	obstacleEditorCtx.gy = 0;
 	obstacleEditorCtx.rectIndex = 0;
 
+	editor::SpriteEditorContext spriteEditorCtx;
+	spriteEditorCtx.textureId = textureId;
+	spriteEditorCtx.rect = ds::vec4(0, 0, 256, 256);
+	spriteEditorCtx.scale = 1.0f;
+	spriteEditorCtx.selection = -1;
+	sprintf(spriteEditorCtx.name, "Sprite1");
+	spriteEditorCtx.sprites.add("Test", ds::vec4(75, 0, 26, 26));
+	spriteEditorCtx.dragging = false;
+	spriteEditorCtx.textureOffset = ds::vec2(0.0f);
+
 	while (ds::isRunning()) {
 
 		ds::begin();
 
-		if (editorActive) {
-			sprites::begin();
-			
+		sprites::begin();
+
+		if (sceneType == SceneType::SC_OBSTACLES_EDITOR) {
 			obstacles::edit(&obstacles, &obstacleEditorCtx);
-
 			obstacles::render(&obstacles);
-
-			sprites::flush();
-
-			p2i p(10, 758);
-			gui::start(&p, 400);
-			gui::begin("Grid", 0);
-			gui::Value("Grid Pos", p2i(obstacleEditorCtx.gx, obstacleEditorCtx.gy));
-			gui::Value("Rect Idx", obstacleEditorCtx.rectIndex);
-			gui::beginGroup();
-			if (gui::Button("Load")) {
-				load_grid(&obstacles);
-			}
-			if (gui::Button("Save")) {
-				save_grid(&obstacles);
-			}
-			if (gui::Button("Clear")) {
-				obstacles::clear(&obstacles);
-			}
-			gui::endGroup();
-			gui::end();
+			
+		}
+		else if (sceneType == SceneType::SC_SPRITE_EDITOR) {			
+			editor::render(&spriteEditorCtx);
 		}
 		else {
 			if (ds::isMouseButtonPressed(0)) {
@@ -218,14 +218,50 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 			boid::kill_boids(&boidContainer, player.pos, 15.0f);
 			boid::render(&boidContainer);
-
 			check_collisions(&boidContainer, &bullets);
+		}
 
-			sprites::flush();
+		sprites::flush();
+		//
+		// GUI
+		//
+		p2i p(10, 758);
+		gui::start(&p, 280);
+		gui::begin("Grid", 0);
+		gui::beginGroup();
+		if (gui::Button("GM",20)) {
+			sceneType = SceneType::SC_GAME;
+		}
+		if (gui::Button("OE",20)) {
+			sceneType = SceneType::SC_OBSTACLES_EDITOR;
+		}
+		if (gui::Button("SE",20)) {
+			sceneType = SceneType::SC_SPRITE_EDITOR;
+		}
+		gui::endGroup();
+		
 
-			p2i p(10, 758);
-			gui::start(&p, 250);
-			gui::begin("Sprites", 0);
+		if (sceneType == SceneType::SC_OBSTACLES_EDITOR) {
+			
+			gui::Value("Grid Pos", p2i(obstacleEditorCtx.gx, obstacleEditorCtx.gy));
+			gui::Value("Rect Idx", obstacleEditorCtx.rectIndex);
+			gui::beginGroup();
+			if (gui::Button("Load")) {
+				load_grid(&obstacles);
+			}
+			if (gui::Button("Save")) {
+				save_grid(&obstacles);
+			}
+			if (gui::Button("Clear")) {
+				obstacles::clear(&obstacles);
+			}
+			gui::endGroup();
+			
+		}
+		else if (sceneType == SceneType::SC_SPRITE_EDITOR) {
+			editor::renderGUI(&spriteEditorCtx);
+		}
+		else {
 			gui::Value("FPS", ds::getFramesPerSecond());
 			gui::Value("DrawCalls", ds::numDrawCalls());
 			//gui::Value("Target", target);
@@ -242,9 +278,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			if (gui::Button("Add boids")) {
 				boid::add(&boidContainer, addCount, player.pos);
 			}
-
-			gui::end();
 		}
+		gui::end();
 		ds::end();
 	}
 	gui::shutdown();

@@ -98,7 +98,7 @@ namespace gui {
 
 	void end_overlay();
 
-	bool Button(const char* text);
+	bool Button(const char* text, int width = 120);
 
 	void Text(const char* text);
 
@@ -160,7 +160,7 @@ namespace gui {
 
 	bool DropDownBox(const char* label, const char** entries, int num, int* state, int* selected, int *offset, int max, bool closeOnSelection = false);
 
-	void Slider(const char* label, int* v, int minValue, int maxValue, int width = 200);
+	void Slider(const char* label, int* v, int minValue, int maxValue, bool useStepper = false, int width = 200);
 
 	void Slider(const char* label, float* v, float minValue, float maxValue, int precision = 0, int width = 200);
 
@@ -1509,15 +1509,18 @@ namespace gui {
 	// --------------------------------------------------------
 	// Button
 	// --------------------------------------------------------
-	bool Button(const char* text) {
+	bool Button(const char* text, int width) {
 		pushID(text);
-		p2i p = _guiCtx->currentPos;
-		checkItem(p, p2i(120, 20));
-		bool clicked = isClicked();
-		renderer::add_box(_guiCtx->uiContext, p, 120, 20, _guiCtx->settings.buttonColor);
-		p2i dim = p2i(120, 20);
 		p2i textDim = textSize(text);
-		p.x += (120 - textDim.x) / 2;
+		if (width < (textDim.x + 40)) {
+			width = textDim.x + 40;
+		}
+		p2i p = _guiCtx->currentPos;
+		checkItem(p, p2i(width, 20));
+		bool clicked = isClicked();
+		renderer::add_box(_guiCtx->uiContext, p, width, 20, _guiCtx->settings.buttonColor);
+		p2i dim = p2i(width, 20);
+		p.x += (width - textDim.x) / 2;
 		renderer::add_text(_guiCtx->uiContext, p, text, 0);
 		dim.y = 20;
 		p2i buttonPos = _guiCtx->currentPos;
@@ -1800,9 +1803,10 @@ namespace gui {
 	// -------------------------------------------------------
 	bool Input(const char* label, char* str, int maxLength) {
 		pushID(label);
-		bool ret = InputScalar(0, str, maxLength, 500);
+		int w = maxLength * 10;
+		bool ret = InputScalar(0, str, maxLength, w);
 		p2i p = _guiCtx->currentPos;
-		p.x += 560;
+		p.x += ( w + 20);
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
 		popID();
@@ -2026,6 +2030,7 @@ namespace gui {
 				*v = maxValue;
 			}
 		}
+		popID();
 		renderer::add_text(_guiCtx->uiContext, p, "+");
 		// label
 		p.x += 30;
@@ -2038,14 +2043,28 @@ namespace gui {
 	// -------------------------------------------------------
 	// Slider
 	// -------------------------------------------------------	
-	void Slider(const char* label, int* v, int minValue, int maxValue, int width) {
+	void Slider(const char* label, int* v, int minValue, int maxValue, bool useStepper, int width) {
 		pushID(label);
 		p2i p = _guiCtx->currentPos;
+		int val = *v;
+		if (useStepper) {
+			pushID("-");
+			checkItem(p, p2i(20, 20));
+			renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
+			if (isClicked()) {
+				val -= 1;
+				if (val < minValue) {
+					val = minValue;
+				}
+			}
+			renderer::add_text(_guiCtx->uiContext, p, "-");
+			p.x += 20.0f;
+			popID();
+		}
 		checkItem(p, p2i(width, 20));
-		renderer::add_box(_guiCtx->uiContext, _guiCtx->currentPos, p2i(width, 20), _guiCtx->settings.labelBoxColor);
+		renderer::add_box(_guiCtx->uiContext, p, p2i(width, 20), _guiCtx->settings.labelBoxColor);
 		// calculate offset
 		int d = maxValue - minValue;
-		int val = *v;
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
@@ -2055,13 +2074,27 @@ namespace gui {
 			ds::vec2 mp = ds::getMousePosition();
 			float dx = mp.x - p.x;
 			val = minValue + static_cast<int>(dx * d / width);
-		}
+		}		
 		*v = val;
 		if (*v < minValue) {
 			*v = minValue;
 		}
 		if (*v > maxValue) {
 			*v = maxValue;
+		}
+		if (useStepper) {
+			p.x += width;
+			pushID("+");
+			checkItem(p, p2i(20, 20));
+			renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
+			if (isClicked()) {
+				*v += 1;
+				if (*v > maxValue) {
+					*v = maxValue;
+				}
+			}
+			renderer::add_text(_guiCtx->uiContext, p, "+");
+			popID();
 		}
 		p.x += static_cast<float>(*v - minValue) / static_cast<float>(d) * width;
 		renderer::add_box(_guiCtx->uiContext, p, p2i(8, 24), _guiCtx->settings.sliderColor);
@@ -2072,6 +2105,9 @@ namespace gui {
 		renderer::add_text(_guiCtx->uiContext, p, _guiCtx->tmpBuffer);
 		p = _guiCtx->currentPos;
 		p.x += width + 10;
+		if (useStepper) {
+			p.x += 40;
+		}
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(width + ts.x + 20, 28));
 		popID();
