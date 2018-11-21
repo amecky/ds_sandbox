@@ -2047,6 +2047,7 @@ namespace gui {
 		pushID(label);
 		p2i p = _guiCtx->currentPos;
 		int val = *v;
+		int x_offset = 0;
 		if (useStepper) {
 			pushID("-");
 			checkItem(p, p2i(20, 20));
@@ -2058,7 +2059,8 @@ namespace gui {
 				}
 			}
 			renderer::add_text(_guiCtx->uiContext, p, "-");
-			p.x += 20.0f;
+			p.x += 20;
+			x_offset += 20;
 			popID();
 		}
 		checkItem(p, p2i(width, 20));
@@ -2083,7 +2085,7 @@ namespace gui {
 			*v = maxValue;
 		}
 		if (useStepper) {
-			p.x += width;
+			p.x += width + 10;
 			pushID("+");
 			checkItem(p, p2i(20, 20));
 			renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
@@ -2096,8 +2098,11 @@ namespace gui {
 			renderer::add_text(_guiCtx->uiContext, p, "+");
 			popID();
 		}
+		p = _guiCtx->currentPos;
+		p.x += x_offset;
 		p.x += static_cast<float>(*v - minValue) / static_cast<float>(d) * width;
 		renderer::add_box(_guiCtx->uiContext, p, p2i(8, 24), _guiCtx->settings.sliderColor);
+
 		p = _guiCtx->currentPos;
 		sprintf_s(_guiCtx->tmpBuffer, 256, "%d", *v);
 		p2i textDim = textSize(_guiCtx->tmpBuffer);
