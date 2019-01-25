@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+#include <xmmintrin.h>
 //
 // Diesel - A DirectX 11 renderer
 //
@@ -40,6 +41,21 @@
 // ------------------------------------------------------------------------------------
 
 //#define DS_IMPLEMENTATION
+
+#define DS_USE_SIMD
+
+#define VM_INLINE   __forceinline 
+#define SHUFFLE3(V, X,Y,Z) vec(_mm_shuffle_ps((V).m, (V).m, _MM_SHUFFLE(Z,Z,Y,X)))
+
+#if defined(_MSC_VER) && !defined(_M_ARM) && !defined(_M_ARM64) && !defined(_M_HYBRID_X86_ARM64) && (!_MANAGED) && (!_M_CEE) && (!defined(_M_IX86_FP) || (_M_IX86_FP > 1)) && !defined(_XM_NO_INTRINSICS_) && !defined(_XM_VECTORCALL_)
+#define _XM_VECTORCALL_ 1
+#endif
+
+#if _XM_VECTORCALL_
+#define XM_CALLCONV __vectorcall
+#else
+#define XM_CALLCONV __fastcall
+#endif
 
 typedef unsigned char BYTE;
 typedef unsigned char byte;
@@ -96,33 +112,62 @@ namespace ds {
 	// vec2
 	// ----------------------------------------------------
 	struct vec2 {
-		union {
-			struct {
-				float x, y;
-			};
-			float data[2];
-		};
 
-		vec2() : x(0.0f), y(0.0f) {}
-		explicit vec2(float v) : x(v), y(v) {}
-		vec2(float xx, float yy) : x(xx), y(yy) {}
-		vec2(int v) {
-			x = static_cast<float>(v);
-			y = static_cast<float>(v);
-		}
-		vec2(int xx, int yy) {
-			x = static_cast<float>(xx);
-			y = static_cast<float>(yy);
-		}
-		vec2(const vec2& other) {
-			x = other.x;
-			y = other.y;
-		}
+		VM_INLINE vec2() { m = _mm_set_ps(0.0f, 0.0f, 0.0f, 0.0f); }
+		VM_INLINE explicit vec2(float v) { m = _mm_set_ps(0.0f, 0.0f, v, v); }
+		VM_INLINE explicit vec2(const float *p) { m = _mm_set_ps(0.0f, 0.0f, p[1], p[0]); }
+		VM_INLINE explicit vec2(float x, float y) { m = _mm_set_ps(0.0f, 0.0f, y, x); }
+		VM_INLINE explicit vec2(int x, int y) { m = _mm_set_ps(0.0f, 0.0f, static_cast<float>(y), static_cast<float>(x)); }
+		VM_INLINE explicit vec2(__m128 v) { m = v; }
 
+		VM_INLINE float x() const { return _mm_cvtss_f32(m); }
+		VM_INLINE float y() const { return _mm_cvtss_f32(_mm_shuffle_ps(m, m, _MM_SHUFFLE(1, 1, 1, 1))); }
+
+		//VM_INLINE vec yzx() const { return SHUFFLE3(*this, 1, 2, 0); }
+		//VM_INLINE vec zxy() const { return SHUFFLE3(*this, 2, 0, 1); }
+
+		VM_INLINE void store(float *p) const { p[0] = x(); p[1] = y();  }
+
+		void setX(float x) {
+			m = _mm_move_ss(m, _mm_set_ss(x));
+		}
+		void setY(float y) {
+			__m128 t = _mm_move_ss(m, _mm_set_ss(y));
+			t = _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 2, 0, 0));
+			m = _mm_move_ss(t, m);
+		}
+		
+		VM_INLINE float operator[] (size_t i) const { return m.m128_f32[i]; };
+		VM_INLINE float& operator[] (size_t i) { return m.m128_f32[i]; };
 		const float* operator() () const {
-			return &data[0];
+			return &m.m128_f32[0];
 		}
+		__m128 m;
 	};
+
+	VM_INLINE vec2 XM_CALLCONV operator+ (vec2 a, vec2 b) { a.m = _mm_add_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator- (vec2 a, vec2 b) { a.m = _mm_sub_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator* (vec2 a, vec2 b) { a.m = _mm_mul_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator/ (vec2 a, vec2 b) { a.m = _mm_div_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator* (vec2 a, float b) { a.m = _mm_mul_ps(a.m, _mm_set1_ps(b)); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator/ (vec2 a, float b) { a.m = _mm_div_ps(a.m, _mm_set1_ps(b)); return a; }
+	VM_INLINE vec2 XM_CALLCONV operator* (float a, vec2 b) { b.m = _mm_mul_ps(_mm_set1_ps(a), b.m); return b; }
+	VM_INLINE vec2 XM_CALLCONV operator/ (float a, vec2 b) { b.m = _mm_div_ps(_mm_set1_ps(a), b.m); return b; }
+	VM_INLINE vec2& XM_CALLCONV operator+= (vec2 &a, vec2 b) { a = a + b; return a; }
+	VM_INLINE vec2& XM_CALLCONV operator-= (vec2 &a, vec2 b) { a = a - b; return a; }
+	VM_INLINE vec2& XM_CALLCONV operator*= (vec2 &a, vec2 b) { a = a * b; return a; }
+	VM_INLINE vec2& XM_CALLCONV operator/= (vec2 &a, vec2 b) { a = a / b; return a; }
+	VM_INLINE vec2& XM_CALLCONV operator*= (vec2 &a, float b) { a = a * b; return a; }
+	VM_INLINE vec2& XM_CALLCONV operator/= (vec2 &a, float b) { a = a / b; return a; }
+	VM_INLINE vec2 min(vec2 a, vec2 b) { a.m = _mm_min_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 max(vec2 a, vec2 b) { a.m = _mm_max_ps(a.m, b.m); return a; }
+	VM_INLINE vec2 clamp(vec2 t, vec2 a, vec2 b) { return min(max(t, a), b); }
+	VM_INLINE float XM_CALLCONV sum(vec2 v) { return v.x() + v.y(); }
+	VM_INLINE float XM_CALLCONV dot(vec2 a, vec2 b) { return sum(a*b); }
+	VM_INLINE float XM_CALLCONV length(vec2 v) { return sqrtf(dot(v, v)); }
+	VM_INLINE float XM_CALLCONV sqr_length(vec2 v) { return dot(v, v); }
+	VM_INLINE vec2 XM_CALLCONV normalize(vec2 v) { return v * (1.0f / length(v)); }
+	VM_INLINE vec2 XM_CALLCONV lerp(vec2 a, vec2 b, float t) { return a + (b - a)*t; }
 
 	// ----------------------------------------------------
 	// vec3
@@ -137,7 +182,7 @@ namespace ds {
 		vec3() : x(0.0f), y(0.0f), z(0.0f) {}
 		explicit vec3(float v) : x(v), y(v), z(v) {}
 		vec3(float xx, float yy) : x(xx), y(yy), z(0.0f) {}
-		vec3(const vec2& v) : x(v.x), y(v.y), z(0.0f) {}
+		vec3(const vec2& v) : x(v.x()), y(v.y()), z(0.0f) {}
 		vec3(float xx, float yy, float zz) : x(xx), y(yy), z(zz) {}
 		vec3(int v) {
 			x = static_cast<float>(v);
@@ -178,7 +223,7 @@ namespace ds {
 		vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 		explicit vec4(float v) : x(v), y(v), z(v), w(v) {}
 		vec4(float xx, float yy) : x(xx), y(yy), z(0.0f), w(0.0f) {}
-		vec4(const vec2& v) : x(v.x), y(v.y), z(0.0f), w(0.0f) {}
+		vec4(const vec2& v) : x(v.x()), y(v.y()), z(0.0f), w(0.0f) {}
 		vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(0.0f) {}
 		vec4(float xx, float yy, float zz) : x(xx), y(yy), z(zz), w(0.0f) {}
 		vec4(float xx, float yy, float zz, float ww) : x(xx), y(yy), z(zz), w(ww) {}
@@ -362,7 +407,7 @@ namespace ds {
 	};
 	*/
 	inline bool operator == (const vec2& u, const vec2& v) {
-		return u.x == v.x && u.y == v.y;
+		return u.x() == v.x() && u.y() == v.y();
 	}
 
 	inline bool operator == (const vec3& u, const vec3& v) {
@@ -374,7 +419,7 @@ namespace ds {
 	}
 
 	inline bool operator != (const vec2& u, const vec2& v) {
-		return u.x != v.x || u.y != v.y;
+		return u.x() != v.x() || u.y() != v.y();
 	}
 
 	inline bool operator != (const vec3& u, const vec3& v) {
@@ -385,9 +430,8 @@ namespace ds {
 		return u.x != v.x || u.y != v.y || u.z != v.z || u.w != v.w;
 	}
 
-	inline vec2 operator - (const vec2& v) {
-		return{ -v.x, -v.y };
-	}
+	
+
 
 	inline vec3 operator - (const vec3& v) {
 		return{ -v.x, -v.y, -v.z };
@@ -397,9 +441,7 @@ namespace ds {
 		return{ -v.x, -v.y, -v.z, -v.w };
 	}
 
-	inline vec2 operator - (const vec2& u, const vec2& v) {
-		return{ u.x - v.x, u.y - v.y };
-	}
+	
 
 	inline vec3 operator - (const vec3& u, const vec3& v) {
 		return{ u.x - v.x, u.y - v.y, u.z - v.z };
@@ -409,11 +451,7 @@ namespace ds {
 		return{ u.x - v.x, u.y - v.y, u.z - v.z, u.w - v.w };
 	}
 
-	inline vec2 operator += (vec2& u, const vec2& v) {
-		u.x += v.x;
-		u.y += v.y;
-		return u;
-	}
+	
 
 	inline vec3 operator += (vec3& u, const vec3& v) {
 		u.x += v.x;
@@ -430,10 +468,7 @@ namespace ds {
 		return u;
 	}
 
-	inline vec2 operator + (const vec2& u, const vec2& v) {
-		vec2 ret = u;
-		return ret += v;
-	}
+	
 
 	inline vec3 operator + (const vec3& u, const vec3& v) {
 		vec3 ret = u;
@@ -445,11 +480,7 @@ namespace ds {
 		return ret += v;
 	}
 
-	inline vec2& operator /= (vec2& u, float other) {
-		u.x /= other;
-		u.y /= other;
-		return u;
-	}
+	
 
 	inline vec3& operator /= (vec3& u, float other) {
 		u.x /= other;
@@ -466,11 +497,7 @@ namespace ds {
 		return u;
 	}
 
-	inline vec2 operator *= (vec2& u, float other) {
-		u.x *= other;
-		u.y *= other;
-		return u;
-	}
+	
 
 	inline vec3 operator *= (vec3& u, float other) {
 		u.x *= other;
@@ -487,11 +514,7 @@ namespace ds {
 		return u;
 	}
 
-	inline vec2& operator -= (vec2& u, const vec2& v) {
-		u.x -= v.x;
-		u.y -= v.y;
-		return u;
-	}
+	
 
 	inline vec3& operator -= (vec3& u, const vec3& v) {
 		u.x -= v.x;
@@ -508,9 +531,7 @@ namespace ds {
 		return u;
 	}
 
-	inline vec2 operator -= (const vec2& u, const vec2& v) {
-		return{ u.x - v.x,u.y - v.y };
-	}
+	
 
 	inline vec3 operator -= (const vec3& u, const vec3& v) {
 		return{ u.x - v.x,u.y - v.y, u.z - v.z };
@@ -520,9 +541,7 @@ namespace ds {
 		return{ u.x - v.x,u.y - v.y, u.z - v.z, u.w - v.w };
 	}
 
-	inline vec2 operator * (const vec2& u, float v) {
-		return{ u.x * v, u.y * v };
-	}
+	
 
 	inline vec3 operator * (const vec3& u, float v) {
 		return{ u.x * v, u.y * v, u.z * v };
@@ -532,9 +551,7 @@ namespace ds {
 		return{ u.x * v, u.y * v, u.z * v, u.w * v };
 	}
 
-	inline vec2 operator * (float v, const vec2& u) {
-		return{ u.x * v, u.y * v };
-	}
+	
 
 	inline vec3 operator * (float v, const vec3& u) {
 		return{ u.x * v, u.y * v, u.z * v };
@@ -544,10 +561,7 @@ namespace ds {
 		return{ u.x * v, u.y * v, u.z * v, u.w * v };
 	}
 
-	inline vec2 operator / (const vec2& u, const float& v) {
-		vec2 ret = u;
-		return ret /= v;
-	}
+	
 
 	inline vec3 operator / (const vec3& u, const float& v) {
 		vec3 ret = u;
@@ -559,13 +573,7 @@ namespace ds {
 		return ret /= v;
 	}
 
-	inline float dot(const vec2& v, const vec2& u) {
-		float t = 0.0f;
-		for (int i = 0; i < 2; ++i) {
-			t += v.data[i] * u.data[i];
-		}
-		return t;
-	}
+	
 
 	inline float dot(const vec3& v, const vec3& u) {
 		float t = 0.0f;
@@ -583,9 +591,7 @@ namespace ds {
 		return t;
 	}
 
-	inline float length(const vec2& v) {
-		return static_cast<float>(sqrt(v.x * v.x + v.y * v.y));
-	}
+	
 
 	inline float length(const vec3& v) {
 		return static_cast<float>(sqrt(dot(v, v)));
@@ -595,9 +601,7 @@ namespace ds {
 		return static_cast<float>(sqrt(dot(v, v)));
 	}
 
-	inline float sqr_length(const vec2& v) {
-		return v.x * v.x + v.y * v.y;
-	}
+	
 
 	inline float sqr_length(const vec3& v) {
 		return dot(v, v);
@@ -607,13 +611,7 @@ namespace ds {
 		return dot(v, v);
 	}
 
-	inline vec2 normalize(const vec2& u) {
-		float len = length(u);
-		if (len == 0.0f) {
-			return{ 0.0f, 0.0f };
-		}
-		return u / len;
-	}
+	
 
 	inline vec3 normalize(const vec3& u) {
 		float len = length(u);
@@ -631,10 +629,7 @@ namespace ds {
 		return u / len;
 	}
 
-	inline float distance(const vec2& u, const vec2& v) {
-		vec2 sub = u - v;
-		return length(sub);
-	}
+	
 
 	inline float distance(const vec3& u, const vec3& v) {
 		vec3 sub = u - v;
@@ -646,10 +641,7 @@ namespace ds {
 		return length(sub);
 	}
 
-	inline float sqr_distance(const vec2& u, const vec2& v) {
-		vec2 sub = u - v;
-		return sqr_length(sub);
-	}
+	
 
 	inline float sqr_distance(const vec3& u, const vec3& v) {
 		vec3 sub = u - v;
@@ -661,14 +653,7 @@ namespace ds {
 		return sqr_length(sub);
 	}
 
-	inline vec2 limit(const ds::vec2& v, float max) {
-		if (sqr_length(v) > max * max) {
-			ds::vec2 n = normalize(v);
-			n *= max;
-			return n;
-		}
-		return v;
-	}
+	
 
 	inline vec3 cross(const vec3& u, const vec3& v) {
 		return{
@@ -678,15 +663,7 @@ namespace ds {
 		};
 	}
 
-	inline vec2 lerp(const vec2& u, const vec2& v, float time) {
-		float norm = time;
-		norm = (norm > 1.0f ? 1.0f : norm);
-		norm = (norm < 0.0f ? 0.0f : norm);
-		return{
-			u.x * (1.0f - norm) + v.x * norm,
-			u.y * (1.0f - norm) + v.y * norm
-		};
-	}
+	
 
 	inline vec3 lerp(const vec3& u, const vec3& v, float time) {
 		float norm = time;
@@ -711,12 +688,7 @@ namespace ds {
 		};
 	}
 
-	inline vec2 vec_min(const vec2& u, const vec2& v) {
-		return{
-			u.x < v.x ? u.x : v.x,
-			u.y < v.y ? u.y : v.y
-		};
-	}
+	
 
 	inline vec3 vec_min(const vec3& u, const vec3& v) {
 		return{
@@ -735,12 +707,7 @@ namespace ds {
 		};
 	}
 
-	inline vec2 vec_max(const vec2& u, const vec2& v) {
-		return{
-			u.x > v.x ? u.x : v.x,
-			u.y > v.y ? u.y : v.y
-		};
-	}
+	
 
 	inline vec3 vec_max(const vec3& u, const vec3& v) {
 		return{
@@ -759,19 +726,7 @@ namespace ds {
 		};
 	}
 
-	inline vec2 clamp(const vec2& u, const vec2& min, const vec2& max) {
-		vec2 ret;
-		for (int i = 0; i < 2; ++i) {
-			ret.data[i] = u.data[i];
-			if (u.data[i] > max.data[i]) {
-				ret.data[i] = max.data[i];
-			}
-			else if (u.data[i] < min.data[i]) {
-				ret.data[i] = min.data[i];
-			}
-		}
-		return ret;
-	}
+	
 
 	inline vec3 clamp(const vec3& u, const vec3& min, const vec3& max) {
 		vec3 ret;
@@ -801,9 +756,7 @@ namespace ds {
 		return ret;
 	}
 
-	inline vec2 saturate(const vec2& u) {
-		return clamp(u, vec2(0.0f), vec2(1.0f));
-	}
+	
 
 	inline vec3 saturate(const vec3& u) {
 		return clamp(u, vec3(0.0f), vec3(1.0f));
@@ -3906,13 +3859,13 @@ namespace ds {
 					ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
 					D3D11_VIEWPORT* vp = vpRes->get();
 					if (p.x > vp->TopLeftX && p.y >= vp->TopLeftY) {
-						mp.x = static_cast<float>(p.x- vp->TopLeftX);
-						mp.y = static_cast<float>(ds::_ctx->screenHeight - p.y - vp->TopLeftY);
+						mp.setX(static_cast<float>(p.x- vp->TopLeftX));
+						mp.setY(static_cast<float>(ds::_ctx->screenHeight - p.y - vp->TopLeftY));
 					}
 				}
 				else {
-					mp.x = static_cast<float>(p.x);
-					mp.y = static_cast<float>(ds::_ctx->screenHeight - p.y);
+					mp.setX(static_cast<float>(p.x));
+					mp.setY(static_cast<float>(ds::_ctx->screenHeight - p.y));
 				}
 			}
 		}
@@ -4202,6 +4155,10 @@ namespace ds {
 		VertexShader* s = sres->get();
 		ID3D11InputLayout* layout = 0;
 		assert_result(_ctx->d3dDevice->CreateInputLayout(descriptors, info.numDeclarations, s->vertexShaderBuffer, s->bufferSize, &layout), "Failed to create input layout");
+		if (layout == 0) {
+			delete[] descriptors;
+			return NO_RID;
+		}
 		InputLayoutResource* res = new InputLayoutResource(layout, index);
 		delete[] descriptors;
 		return addResource(res, RT_INPUT_LAYOUT, name);
@@ -7118,7 +7075,7 @@ namespace ds {
 			.build();
 
 		vec2 textureSize = ds::getTextureSize(_ctx->debugTextureID);
-		_ctx->debugConstantBuffer.screenDimension = vec4(static_cast<float>(ds::getScreenWidth()), static_cast<float>(ds::getScreenHeight()), textureSize.x, textureSize.y);
+		_ctx->debugConstantBuffer.screenDimension = vec4(static_cast<float>(ds::getScreenWidth()), static_cast<float>(ds::getScreenHeight()), textureSize.x(), textureSize.y());
 		//
 		// create draw command
 		//

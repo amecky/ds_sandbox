@@ -101,6 +101,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d11.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -133,7 +134,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlockArray.cpp" />
     <ClCompile Include="Boids.cpp" />
+    <ClCompile Include="border.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="Obstacles.cpp" />
@@ -141,10 +144,14 @@
     <ClCompile Include="sprite_editor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlockArray.h" />
     <ClInclude Include="Boids.h" />
+    <ClInclude Include="border.h" />
+    <ClInclude Include="fixed_array.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="Obstacles.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="simd_vec.h" />
     <ClInclude Include="sprites_def.h" />
     <ClInclude Include="sprites_definitions.h" />
     <ClInclude Include="sprite_editor.h" />

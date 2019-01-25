@@ -9,9 +9,9 @@ namespace editor {
 	static void check_dragging(SpriteEditorContext* ctx) {
 		if (ds::isMouseButtonPressed(0)) {
 			ds::vec2 mp = ds::getMousePosition();
-			mp.x -= 300.0f;
-			if (mp.x >= ctx->rect.x && mp.x <= (ctx->rect.x + ctx->rect.z)) {
-				if (mp.y <= (768.0f - ctx->rect.y) && mp.y >= (768.0f - ctx->rect.y - ctx->rect.w)) {					
+			mp[0] -= 300.0f;
+			if (mp[0] >= ctx->rect.x && mp[0] <= (ctx->rect.x + ctx->rect.z)) {
+				if (mp[1] <= (768.0f - ctx->rect.y) && mp[1] >= (768.0f - ctx->rect.y - ctx->rect.w)) {
 					if (!ctx->dragging) {
 						ds::vec2 center = ds::vec2(ctx->rect.x, 768.0f - ctx->rect.y);
 						ctx->draggingPos = mp - center;
@@ -29,10 +29,10 @@ namespace editor {
 
 		if (ctx->dragging) {
 			ds::vec2 mp = ds::getMousePosition();
-			mp.x -= 300.0f;
+			mp[0] -= 300.0f;
 			ds::vec2 delta = mp - ctx->draggingPos;
-			ctx->rect.x = delta.x;
-			ctx->rect.y = 768.0f - delta.y;
+			ctx->rect.x = delta.x();
+			ctx->rect.y = 768.0f - delta.y();
 		}
 	}
 
@@ -162,6 +162,9 @@ namespace editor {
 	// ---------------------------------------------------------------------------
 	void renderGUI(SpriteEditorContext* ctx) {
 		gui::Value("FPS", ds::getFramesPerSecond());
+		if (gui::Input("Center", &ctx->center)) {
+			sprites::set_screen_center(ctx->center);
+		}
 		gui::Value("Dragging", ctx->dragging);
 		gui::Value("Dragging Pos", ctx->draggingPos);
 		int rx = ctx->rect.x;

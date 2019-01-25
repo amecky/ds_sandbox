@@ -16,7 +16,7 @@ float calculate_rotation(const ds::vec2& v) {
 	if (vn != right) {
 		float dt = clamp(dot(vn, right), -1.0f, 1.0f);
 		float tmp = acos(dt);
-		float cross = -1.0f * vn.y;
+		float cross = -1.0f * vn.y();
 		if (cross > 0.0f) {
 			tmp = 2.0f * ds::PI - tmp;
 		}
@@ -28,12 +28,12 @@ float calculate_rotation(const ds::vec2& v) {
 }
 
 bool is_inside(const ds::vec2& pos, const ds::vec2& p, const ds::vec2& r) {
-	float xmin = p.x - r.x * 0.5f;
-	float xmax = p.x + r.x * 0.5f;
-	float ymin = p.y - r.y * 0.5f;
-	float ymax = p.y + r.y * 0.5f;
-	if (pos.x >= xmin && pos.x <= xmax) {
-		if (pos.y >= ymin && pos.y <= ymax) {
+	float xmin = p.x() - r.x() * 0.5f;
+	float xmax = p.x() + r.x() * 0.5f;
+	float ymin = p.y() - r.y() * 0.5f;
+	float ymax = p.y() + r.y() * 0.5f;
+	if (pos.x() >= xmin && pos.x() <= xmax) {
+		if (pos.y() >= ymin && pos.y() <= ymax) {
 			return true;
 		}
 	}

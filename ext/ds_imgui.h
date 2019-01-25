@@ -1,4 +1,5 @@
 #pragma once
+#define DS_USE_SIMD
 #include <diesel.h>
 
 //#define DS_IMGUI_IMPLEMENTATION
@@ -479,9 +480,9 @@ namespace gui {
 		};
 
 		struct GUIItem {
-			ds::vec2 position;
+			float position[2];
 			ds::vec4 textureRect;
-			ds::vec2 scaling;
+			float scaling[2];
 			ds::Color color;
 
 		};
@@ -512,7 +513,7 @@ namespace gui {
 			ctx->sprites.current = 0;
 			ctx->sprites.items = new GUIItem[max];
 			ds::vec2 textureSize = ds::getTextureSize(textureID);
-			ctx->sprites.constantBuffer.screenCenter = ds::vec4(static_cast<float>(ds::getScreenWidth() / 2), static_cast<float>(ds::getScreenHeight() / 2), textureSize.x, textureSize.y);
+			ctx->sprites.constantBuffer.screenCenter = ds::vec4(static_cast<float>(ds::getScreenWidth() / 2), static_cast<float>(ds::getScreenHeight() / 2), textureSize.x(), textureSize.y());
 
 			RID vertexShader = ds::createShader(ds::ShaderDesc()
 				.Data(gui_VS_Main)
@@ -590,8 +591,15 @@ namespace gui {
 				.MaxDepth(1.0f)
 			);
 
-			ds::RenderPassInfo rpInfo = { &camera, vp, ds::DepthBufferState::DISABLED, 0, 0 };
-			ctx->sprites.renderPass = ds::createRenderPass(rpInfo, "GUIOrthoPass");
+			ctx->sprites.renderPass = ds::createRenderPass(ds::RenderPassDesc()
+				.Camera(&camera)
+				.Viewport(vp)
+				.DepthBufferState(ds::DepthBufferState::DISABLED)
+				.RenderTargets(0)
+				.NumRenderTargets(0),
+				"GUIOrthoPass"
+			);
+
 			ctx->sprites.constantBuffer.wvp = camera.viewProjectionMatrix;
 		}
 
@@ -696,10 +704,9 @@ namespace gui {
 				flush_items(ctx);
 			}
 			GUIItem& sp = ctx->sprites.items[ctx->sprites.current++];
-			sp.position.x = position.x;
-			sp.position.y = position.y;
+			position.store(sp.position);
 			sp.textureRect = rect;
-			sp.scaling = scale;
+			scale.store(sp.scaling);
 			sp.color = clr;
 		}
 
@@ -718,22 +725,22 @@ namespace gui {
 				ds::vec2 s = buffer->scales[i];
 				if (buffer->resize[i] == ResizeType::RT_X) {
 					rect.width = 128;
-					p.x = bpx;
-					s.x = sx;
+					p.setX(bpx);
+					s.setX(sx);
 				}
 				else if (buffer->resize[i] == ResizeType::RT_Y) {
 					rect.height = 128;
-					p.y = bpy;
-					s.x = sx;
-					s.y = sy;
+					p.setY(bpy);
+					s.setX(sx);
+					s.setY(sy);
 				}
 				else if (buffer->resize[i] == ResizeType::RT_BOTH) {
 					rect.width = 128;
 					rect.height = 128;
-					p.x = bpx;
-					p.y = bpy;
-					s.x = sx;
-					s.y = sy;
+					p.setX(bpx);
+					p.setY(bpy);
+					s.setX(sx);
+					s.setY(sy);
 				}
 				add_item(ctx, p, rect.convert(), s, buffer->colors[i]);
 			}
@@ -755,8 +762,8 @@ namespace gui {
 			if ((buffer->num + 1) >= buffer->capacity) {
 				draw_buffer(ctx);
 			}
-			buffer->positions[buffer->num].x = p.x;
-			buffer->positions[buffer->num].y = p.y;
+			buffer->positions[buffer->num].setX(p.x);
+			buffer->positions[buffer->num].setY(p.y);
 			buffer->scales[buffer->num] = scale;
 			buffer->rectangles[buffer->num] = rect;
 			buffer->colors[buffer->num] = color;
@@ -807,11 +814,11 @@ namespace gui {
 			p2i sz = size;
 			if (size.x > WHITE_RECT.width) {
 				sz.x = WHITE_RECT.width;
-				scale.x = static_cast<float>(size.x) / static_cast<float>(WHITE_RECT.width);
+				scale.setX(static_cast<float>(size.x) / static_cast<float>(WHITE_RECT.width));
 			}
 			if (size.y > WHITE_RECT.height) {
 				sz.y = WHITE_RECT.height;
-				scale.y = static_cast<float>(size.y) / static_cast<float>(WHITE_RECT.height);
+				scale.setY(static_cast<float>(size.y) / static_cast<float>(WHITE_RECT.height));
 			}
 			ds::Color tmpColor = color;
 			if (!fixedAlpha) {
@@ -838,7 +845,7 @@ namespace gui {
 	}
 	static const IMGUISettings DEFAULT_SETTINGS = {
 		ds::Color( 40,117,114, 255), // header
-		ds::Color( 81, 83, 96, 255), // button
+		ds::Color( 21, 60, 85, 255), // button
 		ds::Color( 24, 24, 24, 255), // background
 		ds::Color( 39, 39, 49, 255), // label 
 		ds::Color(  0, 192, 0, 255), // enabled
@@ -1401,7 +1408,7 @@ namespace gui {
 		renderer::reset(_guiCtx->uiContext);
 		_guiCtx->idStack.reset();
 		ds::vec2 mp = ds::getMousePosition();
-		_guiCtx->mousePosition = p2i(static_cast<int>(mp.x), static_cast<int>(mp.y));
+		_guiCtx->mousePosition = p2i(static_cast<int>(mp.x()), static_cast<int>(mp.y()));
 		_guiCtx->hotItem = 0;
 		_guiCtx->clicked = false;
 		if (ds::isMouseButtonPressed(0)) {
@@ -1518,7 +1525,13 @@ namespace gui {
 		p2i p = _guiCtx->currentPos;
 		checkItem(p, p2i(width, 20));
 		bool clicked = isClicked();
-		renderer::add_box(_guiCtx->uiContext, p, width, 20, _guiCtx->settings.buttonColor);
+		p2i button = p;
+		button.y += 10;
+		renderer::add_box(_guiCtx->uiContext, button, width, 2, ds::Color(14,39,55,255));
+		button.y -= 9;
+		renderer::add_box(_guiCtx->uiContext, button, width, 16, _guiCtx->settings.buttonColor);
+		button.y -= 9;
+		renderer::add_box(_guiCtx->uiContext, button, width, 2, ds::Color(14, 39, 55, 255));
 		p2i dim = p2i(width, 20);
 		p.x += (width - textDim.x) / 2;
 		renderer::add_text(_guiCtx->uiContext, p, text, 0);
@@ -1611,7 +1624,7 @@ namespace gui {
 	// Value - vec2
 	// --------------------------------------------------------
 	void Value(const char* label, const ds::vec2& v) {
-		sprintf_s(_guiCtx->tmpBuffer, 256, "%g %g", v.x, v.y);
+		sprintf_s(_guiCtx->tmpBuffer, 256, "%g %g", v.x(), v.y());
 		Label(label, _guiCtx->tmpBuffer);
 	}
 
@@ -1863,15 +1876,19 @@ namespace gui {
 	// -------------------------------------------------------
 	bool Input(const char* label, ds::vec2* v) {
 		pushID(label, "##X");
-		bool fr = InputScalar(0, &v->x, "%g", 70);
+		float x = v->x();
+		float y = v->y();
+		bool fr = InputScalar(0, &x, "%g", 70);
 		_guiCtx->idStack.pop();
 		pushID(label, "##Y");
-		bool sr = InputScalar(1, &v->y, "%g", 70);
+		bool sr = InputScalar(1, &y, "%g", 70);
 		popID();
 		p2i p = _guiCtx->currentPos;
 		p.x += 160;
 		p2i ts = renderer::add_text(_guiCtx->uiContext, p, label);
 		moveForward(p2i(150 + ts.x + 10, 22));
+		v->setX(x);
+		v->setY(y);
 		return fr || sr;
 	}
 
@@ -1930,12 +1947,12 @@ namespace gui {
 		int d = 255;
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			val = static_cast<int>(dx * d / width);
 		}
 		if (isDragging()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			val = static_cast<int>(dx * d / width);
 		}
 		if (val < 0) {
@@ -2051,30 +2068,30 @@ namespace gui {
 		if (useStepper) {
 			pushID("-");
 			checkItem(p, p2i(20, 20));
-			renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
+			//renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
 			if (isClicked()) {
 				val -= 1;
 				if (val < minValue) {
 					val = minValue;
 				}
 			}
-			renderer::add_text(_guiCtx->uiContext, p, "-");
+			//renderer::add_text(_guiCtx->uiContext, p, "-");
 			p.x += 20;
 			x_offset += 20;
 			popID();
 		}
 		checkItem(p, p2i(width, 20));
-		renderer::add_box(_guiCtx->uiContext, p, p2i(width, 20), _guiCtx->settings.labelBoxColor);
+		renderer::add_box(_guiCtx->uiContext, p, p2i(width, 16), ds::Color(30,65,31,255));
 		// calculate offset
 		int d = maxValue - minValue;
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			val = minValue + static_cast<int>(dx * d / width);
 		}
 		if (isDragging()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			val = minValue + static_cast<int>(dx * d / width);
 		}		
 		*v = val;
@@ -2088,14 +2105,14 @@ namespace gui {
 			p.x += width + 10;
 			pushID("+");
 			checkItem(p, p2i(20, 20));
-			renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
+			//renderer::add_box(_guiCtx->uiContext, p, 20, 20, _guiCtx->settings.buttonColor);
 			if (isClicked()) {
 				*v += 1;
 				if (*v > maxValue) {
 					*v = maxValue;
 				}
 			}
-			renderer::add_text(_guiCtx->uiContext, p, "+");
+			//renderer::add_text(_guiCtx->uiContext, p, "+");
 			popID();
 		}
 		p = _guiCtx->currentPos;
@@ -2130,12 +2147,12 @@ namespace gui {
 		float d = maxValue - minValue;
 		if (isClicked()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			*v = minValue + dx * d / width;
 		}
 		if (isDragging()) {
 			ds::vec2 mp = ds::getMousePosition();
-			float dx = mp.x - p.x;
+			float dx = mp.x() - p.x;
 			*v = minValue + dx * d / width;
 		}
 		if (*v < minValue) {

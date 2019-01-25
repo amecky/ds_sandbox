@@ -38,8 +38,8 @@ namespace obstacles {
 	}
 
 	static p2i convert_to_grid(ObstaclesContainer* container, const ds::vec2& pos) {
-		int x = (pos.x - 100.0f) / 30.0f;
-		int y = (pos.y - 100.0f) / 30.0f;
+		int x = (pos.x() - 100.0f) / 30.0f;
+		int y = (pos.y() - 100.0f) / 30.0f;
 		if (x < 0) {
 			x = 0;
 		}

@@ -53,6 +53,7 @@ namespace editor {
 		char name[20];
 		bool dragging;
 		ds::vec2 draggingPos;
+		ds::vec2 center;
 	};
 
 	void render(SpriteEditorContext* ctx);

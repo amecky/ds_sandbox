@@ -11,6 +11,10 @@
 #include "math.h"
 #include "player.h"
 #include "sprite_editor.h"
+#include "simd_vec.h"
+#include "border.h"
+#define QUAD_BATCH_IMPLEMENTATION
+#include <ds_squares.h>
 
 const int kNUM_SPRITES = 256;
 
@@ -40,7 +44,7 @@ RID loadImageFromFile(const char* name) {
 }
 
 bool check_collision(const ds::vec2& p, float radius, Bullets* bullets) {
-	for (int j = 0; j < bullets->num; ++j) {
+	for (int j = 0; j < bullets->array->size; ++j) {
 		if (math::collides(p, radius, bullets->positions[j], 8.0f)) {
 			bullets::remove(bullets, j);
 			return true;
@@ -102,7 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.width = 1024;
 	rs.height = 768;
 	rs.title = "Triangle demo";
-	rs.clearColor = ds::Color(0.0f, 0.0f, 0.0f, 1.0f);
+	rs.clearColor = ds::Color(0.05f, 0.05f, 0.05f, 1.0f);
 	rs.multisampling = 4;
 	rs.useGPUProfiling = false;
 	rs.supportDebug = false;
@@ -112,7 +116,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	//gui::setAlphaLevel(0.2f);
 
-	sprites::initialize(SpriteBatchDesc().MaxSprites(2048));
+	sprites::initialize(SpriteBatchDesc().MaxSprites(4096));
 
 	RID textureId = loadImageFromFile("Textures.png");
 	if (textureId == NO_RID) {
@@ -145,7 +149,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	ObstaclesContainer obstacles;
 	obstacles::intialize(&obstacles, textureId, 40, 20);
-	load_grid(&obstacles);
+	//load_grid(&obstacles);
 
 	bool update = true;
 
@@ -155,7 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	float rtimer = 0.0f;
 
-	SceneType sceneType = SceneType::SC_SPRITE_EDITOR;
+	SceneType sceneType = SceneType::SC_GAME;
 
 	ObstabcleEditorContext obstacleEditorCtx;
 	obstacleEditorCtx.rightButtonPressed = false;
@@ -173,6 +177,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	spriteEditorCtx.sprites.add("Test", ds::vec4(75, 0, 26, 26));
 	spriteEditorCtx.dragging = false;
 	spriteEditorCtx.textureOffset = ds::vec2(0.0f);
+	spriteEditorCtx.center = ds::vec2(512, 384);
+
+	TrailPieces trailPieces;
+	trailPieces.settings.ttl = 0.3f;
+	trails::initialize(&trailPieces, 2048);
+	trailPieces.textureId = textureId;
+	
+	float addTimer = 0.0f;
+	bool addBoids = false;
+
+	float bulletTime = 0.2f;
+
+	float trailTimer = 0.0f;
+	float trailTTL = 0.1f;
+
+	quads::initialize(QuadBatchDesc().MaxSprites(1024));
+
+	Border border;
+	initialize_border(&border);
+	
+	float bt = 0.0f;
+
+	float fixedTimeStep = 1.0f / 60.0f;
+	float accumulator = 0.0f;
+	float gameTimer = 0.0f;
 
 	while (ds::isRunning()) {
 
@@ -191,40 +220,87 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		else {
 			if (ds::isMouseButtonPressed(0)) {
 				rtimer += ds::getElapsedSeconds();
-				if (rtimer >= 0.1f) {
-					rtimer -= 0.1f;
-					boid::add(&boidContainer, ds::getMousePosition(), player.pos);
+				if (rtimer >= bulletTime) {
+					rtimer -= bulletTime;
 					bullets::add(&bullets, &player);
 				}
 			}
 
+			if (addBoids && sceneType == SceneType::SC_GAME) {
+				addTimer += ds::getElapsedSeconds();
+				if (addTimer >= 0.1f) {
+					addTimer -= 0.1f;
+					boid::add(&boidContainer, ds::getMousePosition(), player.pos);
+				}
+			}
+
 			player::move(&player, ds::getElapsedSeconds());
+			if (update) {
 
-			bullets::move(&bullets, &obstacles, ds::getElapsedSeconds());
+				float delta = ds::getElapsedSeconds();
+				if (delta > 0.5f) {
+					delta = 0.5f;
+				}
+				gameTimer += delta;
+				while (gameTimer >= fixedTimeStep) {
 
+					bullets::move(&bullets, &obstacles, fixedTimeStep);
+
+					boid::reset_forces(&boidContainer);
+					boid::move(&boidContainer, player.pos, &obstacles, fixedTimeStep);
+					boid::avoid(&boidContainer, &obstacles);
+					if (update) {
+						boid::apply_forces(&boidContainer, fixedTimeStep);
+					}
+					boid::kill_boids(&boidContainer, player.pos, 15.0f);
+
+					check_collisions(&boidContainer, &bullets);
+
+					for (int i = 0; i < bullets.array->size; ++i) {
+						ds::vec2 d = bullets.positions[i] - bullets.prevPositions[i];
+						if (sqr_length(d) > 16.0f) {
+							trails::add(&trailPieces, bullets.prevPositions[i], bullets.rotations[i]);
+							bullets.prevPositions[i] = bullets.positions[i];
+						}
+					}
+					trails::tick(&trailPieces, fixedTimeStep);
+
+					check_collisions(&border, &bullets);
+
+					update_border(&border, gameTimer);
+
+					gameTimer -= fixedTimeStep;
+				}
+
+			}
+			
 			sprites::begin();
+
+			trails::render(&trailPieces);
 
 			obstacles::render(&obstacles);
 
 			bullets::render(&bullets);
-
-			player::render(&player);
-
-			boid::reset_forces(&boidContainer);
-			boid::move(&boidContainer, player.pos, &obstacles, ds::getElapsedSeconds());
-			boid::avoid(&boidContainer, &obstacles);
-			if (update) {
-				boid::apply_forces(&boidContainer, ds::getElapsedSeconds());
-			}
-			boid::kill_boids(&boidContainer, player.pos, 15.0f);
+			
 			boid::render(&boidContainer);
-			check_collisions(&boidContainer, &bullets);
+			
+			player::render(&player);
+			
 		}
 
 		sprites::flush();
+
+		
+
+		quads::begin();		
+
+		render_border(&border, textureId);
+		
+		quads::flush();
 		//
 		// GUI
 		//
+		/*
 		p2i p(10, 758);
 		gui::start(&p, 280);
 		gui::begin("Grid", 0);
@@ -272,14 +348,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			gui::Checkbox("Seek", &boidContainer.settings.seek);
 			gui::Input("Avoid Vel", &boidContainer.settings.avoidVelocity);
 			gui::Value("Boids", boidContainer.num);
-			gui::Value("Bullets", bullets.num);
+			gui::Value("Bullets", bullets.array->size);
+			gui::Value("Trails", trailPieces.array->size);
+			gui::Input("Bullet time", &bulletTime);
 			gui::Checkbox("Update", &update);
+			gui::Checkbox("Add boids", &addBoids);
 			gui::Input("Add count", &addCount);
 			if (gui::Button("Add boids")) {
 				boid::add(&boidContainer, addCount, player.pos);
 			}
 		}
 		gui::end();
+		*/
 		ds::end();
 	}
 	gui::shutdown();

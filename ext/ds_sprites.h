@@ -33,9 +33,9 @@ struct Sprite {
 };
 
 struct InternalSprite {
-	ds::vec2 position;
+	float position[2];
 	ds::vec4 textureRect;
-	ds::vec2 scaling;
+	float scaling[2];
 	float rotation;
 	ds::Color color;
 };
@@ -85,6 +85,8 @@ namespace sprites {
 	SPID add(SpriteArray& array, const ds::vec2& pos, const ds::vec4& textureRect, const ds::vec2& scale = ds::vec2(1.0f), float rotation = 0.0f, const ds::Color& clr = ds::Color(255, 255, 255, 255));
 
 	void remove(SpriteArray& array, SPID id);
+
+	void set_screen_center(const ds::vec2& center);
 
 }
 
@@ -259,6 +261,8 @@ struct SpritesContext {
 	SpriteBatchConstantBuffer constantBuffer;
 	std::vector<SpriteDrawItem> drawItems;
 	RID pixelShader;
+	ds::vec2 screenCenter;
+	ds::Camera camera;
 };
 
 static SpritesContext* _ctx = 0;
@@ -336,7 +340,7 @@ namespace sprites {
 		// create orthographic view
 		ds::matrix orthoView = ds::matIdentity();
 		ds::matrix orthoProjection = ds::matOrthoLH(ds::getScreenWidth(), ds::getScreenHeight(), 0.0f, 1.0f);
-		ds::Camera camera = {
+		_ctx->camera = {
 			orthoView,
 			orthoProjection,
 			orthoView * orthoProjection,
@@ -359,14 +363,19 @@ namespace sprites {
 			);
 
 		_ctx->renderPass = ds::createRenderPass(ds::RenderPassDesc()
-			.Camera(&camera)
+			.Camera(&_ctx->camera)
 			.Viewport(vp)
 			.DepthBufferState(ds::DepthBufferState::DISABLED)
 			.RenderTargets(0)
 			.NumRenderTargets(0),
 			"SpritesOrthoPass"
 			);
-		_ctx->constantBuffer.wvp = ds::matTranspose(camera.viewProjectionMatrix);
+		_ctx->constantBuffer.wvp = ds::matTranspose(_ctx->camera.viewProjectionMatrix);
+		_ctx->screenCenter = ds::vec2(ds::getScreenWidth() * 0.5f, ds::getScreenHeight() * 0.5f);
+	}
+
+	void set_screen_center(const ds::vec2& center) {
+		_ctx->screenCenter = center;
 	}
 
 	void shutdown() {
@@ -403,7 +412,17 @@ namespace sprites {
 			flush();
 		}
 		_ctx->currentTexture = textureID;
-		_ctx->buffer[_ctx->current++] = { position, rect, scale, rotation, clr };
+		//_ctx->buffer[_ctx->current++] = { position, rect, scale, rotation, clr };
+		//_ctx->buffer[_ctx->current].position[0] = position.x();
+		//_ctx->buffer[_ctx->current].position[1] = position.y();
+		position.store(_ctx->buffer[_ctx->current].position);
+		_ctx->buffer[_ctx->current].textureRect = rect;
+		//_ctx->buffer[_ctx->current].scaling[0] = scale.x();
+		//_ctx->buffer[_ctx->current].scaling[1] = scale.y();
+		scale.store(_ctx->buffer[_ctx->current].scaling);
+		_ctx->buffer[_ctx->current].rotation = rotation;
+		_ctx->buffer[_ctx->current].color = clr;
+		++_ctx->current;
 	}
 
 	void draw(const SpriteArray& array) {
@@ -431,7 +450,13 @@ namespace sprites {
 			flush();
 		}
 		_ctx->currentTexture = sprite.textureID;
-		_ctx->buffer[_ctx->current++] = { sprite.position, sprite.textureRect, sprite.scaling, sprite.rotation, sprite.color };
+		//_ctx->buffer[_ctx->current++] = { sprite.position, sprite.textureRect, sprite.scaling, sprite.rotation, sprite.color };
+		sprite.position.store(_ctx->buffer[_ctx->current].position);
+		_ctx->buffer[_ctx->current].textureRect = sprite.textureRect;
+		sprite.scaling.store(_ctx->buffer[_ctx->current].scaling);
+		_ctx->buffer[_ctx->current].rotation = sprite.rotation;
+		_ctx->buffer[_ctx->current].color = sprite.color;
+		++_ctx->current;
 	}
 
 	static int spr__findDrawItemIndex(RID textureId) {
@@ -446,8 +471,9 @@ namespace sprites {
 	void flush() {
 		if (_ctx->current > 0) {
 			ds::vec2 textureSize = ds::getTextureSize(_ctx->currentTexture);
-			_ctx->constantBuffer.screenCenter = { static_cast<float>(ds::getScreenWidth()) / 2.0f, static_cast<float>(ds::getScreenHeight()) / 2.0f, textureSize.x, textureSize.y };
-			ds::mapBufferData(_ctx->structuredBufferId, _ctx->buffer, _ctx->current * sizeof(Sprite));
+			//_ctx->constantBuffer.screenCenter = { static_cast<float>(ds::getScreenWidth()) / 2.0f, static_cast<float>(ds::getScreenHeight()) / 2.0f, textureSize.x, textureSize.y };
+			_ctx->constantBuffer.screenCenter = { _ctx->screenCenter.x(),  _ctx->screenCenter.y(), textureSize.x(), textureSize.y() };
+			ds::mapBufferData(_ctx->structuredBufferId, _ctx->buffer, _ctx->current * sizeof(InternalSprite));
 			int idx = spr__findDrawItemIndex(_ctx->currentTexture);
 			if (idx == -1) {
 				idx = spr__createDrawItem(_ctx->currentTexture);

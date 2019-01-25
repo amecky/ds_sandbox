@@ -7,6 +7,8 @@
     <ClCompile Include="Obstacles.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="sprite_editor.cpp" />
+    <ClCompile Include="BlockArray.cpp" />
+    <ClCompile Include="border.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Boids.h" />
@@ -16,5 +18,9 @@
     <ClInclude Include="sprite_editor.h" />
     <ClInclude Include="sprites_def.h" />
     <ClInclude Include="sprites_definitions.h" />
+    <ClInclude Include="BlockArray.h" />
+    <ClInclude Include="simd_vec.h" />
+    <ClInclude Include="border.h" />
+    <ClInclude Include="fixed_array.h" />
   </ItemGroup>
 </Project>

@@ -83,7 +83,8 @@ namespace boid {
 	// -----------------------------------------------------------------------
 	void reset_forces(BoidContainer* container) {
 		for (int i = 0; i < container->num; ++i) {
-			container->accelerations[i] = 0.0f;
+			container->accelerations[i].setX(0.0f);
+			container->accelerations[i].setY(0.0f);
 		}
 	}
 
@@ -94,7 +95,7 @@ namespace boid {
 		float maxAngle = ds::TWO_PI - ds::TWO_PI * 0.2f;
 		for (int i = 0; i < container->num; ++i) {
 			container->velocities[i] += container->accelerations[i] * dt;
-			container->velocities[i] = limit(container->velocities[i], 120.0f);
+			//container->velocities[i] = limit(container->velocities[i], 120.0f);
 			float angle = calculate_rotation(container->velocities[i]);
 			container->rotations[i] = angle;
 			container->positions[i] += container->velocities[i] * dt;
@@ -170,12 +171,12 @@ namespace boid {
 		for (int i = 0; i <container->num; ++i) {
 			ds::vec2 p = container->positions[i] + container->velocities[i];
 			bool bounced = false;
-			if (p.x < BOUNDING_RECT.x || p.x > BOUNDING_RECT.z) {
-				container->velocities[i].x *= -1.0f;
+			if (p.x() < BOUNDING_RECT.x || p.x() > BOUNDING_RECT.z) {
+				container->velocities[i].setX(container->velocities[i].x() * -1.0f);
 				bounced = true;
 			}
-			if (p.y < BOUNDING_RECT.y || p.y > BOUNDING_RECT.w) {
-				container->velocities[i].y *= -1.0f;
+			if (p.y() < BOUNDING_RECT.y || p.y() > BOUNDING_RECT.w) {
+				container->velocities[i].setY(container->velocities[i].y() * -1.0f);
 				bounced = true;
 			}
 			if (bounced) {
