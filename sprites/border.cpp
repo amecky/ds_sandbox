@@ -71,7 +71,7 @@ static void brd__render(const FixedArray<LinePoint>& linePoints, const ds::vec2&
 // -------------------------------------------------------------------------
 // update line points
 // -------------------------------------------------------------------------
-static void brd__update_line(const FixedArray<LinePoint>& linePoints, float dt) {
+static void brd__update_line(FixedArray<LinePoint>& linePoints, float dt) {
 
 	float lDeltas[512];
 	float rDeltas[512];
@@ -114,10 +114,20 @@ static void brd__update_line(const FixedArray<LinePoint>& linePoints, float dt) 
 // render border
 // -------------------------------------------------------------------------
 void render_border(Border* border, RID textureId) {
-	brd__render(border->topLine, ds::vec2(20.0f, 700.0f), textureId, BorderDirection::VERTICAL);
-	brd__render(border->bottomLine, ds::vec2(20.0f, 20.0f), textureId, BorderDirection::VERTICAL);
+	brd__render(border->topLine, ds::vec2(40.0f, 710.0f), textureId, BorderDirection::VERTICAL);
+	brd__render(border->bottomLine, ds::vec2(40.0f, 20.0f), textureId, BorderDirection::VERTICAL);
 	brd__render(border->leftLine, ds::vec2(10.0f, 30.0f), textureId, BorderDirection::HORIZONTAL);
-	brd__render(border->rightLine, ds::vec2(970.0f, 30.0f), textureId, BorderDirection::HORIZONTAL);
+	brd__render(border->rightLine, ds::vec2(950.0f, 30.0f), textureId, BorderDirection::HORIZONTAL);
+
+	ds::vec2 quad[] = { ds::vec2(0.0f,0.0f),ds::vec2(0.0f,20.0f),ds::vec2(20.0f,20.0f),ds::vec2(20.0f,0.0f) };
+	ds::vec2 points[4];
+	ds::vec2 positions[4] = { ds::vec2(30.0f,20.f),ds::vec2(30.0f,710.0f),ds::vec2(970.0f,710.0f),ds::vec2(970.0f,20.0f) };
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			points[j] = quad[j] + positions[i];
+		}
+		quads::draw(textureId, points, ds::vec4(120, 0, 20, 20), ds::vec2(1.0f), 0.0f, ds::Color(0.5f, 0.25f, 0.0f, 1.0f));
+	}
 }
 
 // -------------------------------------------------------------------------
@@ -157,7 +167,7 @@ void check_collisions(Border* border, Bullets* bullets) {
 				brd__splash(border->topLine, idx, -15.0f);
 			hit = true;
 		}
-		if (bp.x() <= 20.0f) {
+		if (bp.x() <= 40.0f) {
 			idx = (bp.y() - 30.0f) / 10.0f;
 			if (idx >= 0 && idx < 70) {
 				brd__splash(border->leftLine, idx, -15.0f);

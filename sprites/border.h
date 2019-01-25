@@ -22,7 +22,7 @@ struct Border {
 	FixedArray<LinePoint> leftLine;
 	FixedArray<LinePoint> rightLine;
 
-	Border() : bottomLine(100), topLine(100) , leftLine(70), rightLine(70) {
+	Border() : bottomLine(95), topLine(95) , leftLine(70), rightLine(70) {
 
 	}
 };

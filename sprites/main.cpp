@@ -15,6 +15,7 @@
 #include "border.h"
 #define QUAD_BATCH_IMPLEMENTATION
 #include <ds_squares.h>
+#include <ds_particles_2D.h>
 
 const int kNUM_SPRITES = 256;
 
@@ -203,9 +204,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	float accumulator = 0.0f;
 	float gameTimer = 0.0f;
 
+	ParticleArray particles;
+
 	while (ds::isRunning()) {
 
 		ds::begin();
+
+		
 
 		sprites::begin();
 
@@ -267,7 +272,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 					check_collisions(&border, &bullets);
 
-					update_border(&border, gameTimer);
+					update_border(&border, fixedTimeStep);
 
 					gameTimer -= fixedTimeStep;
 				}
@@ -291,12 +296,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 		sprites::flush();
 
 		
+		if (sceneType == SceneType::SC_GAME) {
+			quads::begin();
 
-		quads::begin();		
+			render_border(&border, textureId);
 
-		render_border(&border, textureId);
+			quads::flush();
+		}
 		
-		quads::flush();
 		//
 		// GUI
 		//
