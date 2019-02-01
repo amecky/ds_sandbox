@@ -140,6 +140,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="Obstacles.cpp" />
+    <ClCompile Include="particles\Particlesystem.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="sprite_editor.cpp" />
   </ItemGroup>
@@ -150,6 +151,9 @@
     <ClInclude Include="fixed_array.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="Obstacles.h" />
+    <ClInclude Include="particles\Particlesystem.h" />
+    <ClInclude Include="particles\Particles_PS_Main.h" />
+    <ClInclude Include="particles\Particles_VS_Main.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="simd_vec.h" />
     <ClInclude Include="sprites_def.h" />

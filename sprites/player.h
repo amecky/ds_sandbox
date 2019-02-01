@@ -33,7 +33,7 @@ namespace bullets {
 
 	void initialize(Bullets* bullets, int max);
 
-	void move(Bullets* bullets, ObstaclesContainer* obstacles, float dt);
+	void move(Bullets* bullets, ObstaclesContainer* obstacles, int particleSystem, int emitter, float dt);
 
 	void render(Bullets* bullets);
 

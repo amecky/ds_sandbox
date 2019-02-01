@@ -2,6 +2,20 @@
 #include <diesel.h>
 #include <ds_sprites.h>
 
+struct QueueEntry {
+	ds::vec2 pos;
+	float rotation;
+	int state;
+	float timerOffset;
+	float timer;
+	float ttl;
+};
+
+struct EmitterQueue {
+	QueueEntry entries[64];
+	int num;
+};
+
 struct BoidSettings {
 	float minDistance;
 	float relaxation;
@@ -22,7 +36,10 @@ struct BoidContainer {
 	int num;
 	int max;
 	BoidSettings settings;
+	EmitterQueue queue;
 };
+
+
 
 typedef void(*BoidMoveFunc)(BoidContainer*, BoidSettings*, const ds::vec2&);
 
@@ -47,6 +64,8 @@ namespace boid {
 	void reset_forces(BoidContainer* container);
 
 	void apply_forces(BoidContainer* container, float dt);
+
+	void tick_queue(BoidContainer* container, float dt);
 
 	void move(BoidContainer* container, const ds::vec2& target, ObstaclesContainer* obstacles, float dt);
 

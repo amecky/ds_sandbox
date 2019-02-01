@@ -2,8 +2,9 @@
 #include <ds_sprites.h>
 #include "math.h"
 #include "Obstacles.h"
+#include "particles/Particlesystem.h"
 
-const static ds::vec4 PLAYER_RECT = ds::vec4(150, 250, 48, 48);
+const static ds::vec4 PLAYER_RECT = ds::vec4(260, 240, 60, 60);
 //const static ds::vec4 BULLET_RECT = ds::vec4(80, 50, 12, 12);
 const static ds::vec4 BULLET_RECT = ds::vec4(0, 375, 40, 40);
 const static ds::vec4 PARTICLE_RECT = ds::vec4(0, 375, 40, 40);
@@ -25,7 +26,7 @@ namespace player {
 		if (ds::isKeyPressed('W')) {
 			v.setY(1.0f);
 		}
-		player->pos += v * 150.0f * dt;
+		player->pos += v * 200.0f * dt;
 		player->rotation = calculate_rotation(ds::getMousePosition() - player->pos);
 	}
 
@@ -76,7 +77,7 @@ namespace bullets {
 		}
 	}
 
-	void move(Bullets* bullets, ObstaclesContainer* obstacles, float dt) {
+	void move(Bullets* bullets, ObstaclesContainer* obstacles, int particleSystem, int emitter, float dt) {
 		
 		for (int i = 0; i < bullets->array->size; ++i) {
 			bullets->timers[i] += dt;
@@ -86,6 +87,8 @@ namespace bullets {
 			bullets->positions[i] += bullets->velocities[i] * dt;
 			//if (is_outside(bullets->positions[i]) || hits_obstacle(bullets->positions[i], obstacles)) {
 			if (hits_obstacle(bullets->positions[i], obstacles)) {
+				const EmitterSettings& settings = particles_get_emitter(emitter);
+				particles_emitt(particleSystem, bullets->positions[i], settings);
 				remove(bullets, i);					
 			}
 		}

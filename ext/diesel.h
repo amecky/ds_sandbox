@@ -5903,6 +5903,13 @@ namespace ds {
 			uint16_t vpidx = getResourceIndex(pass->viewport, RT_VIEWPORT);
 			ViewportResource* vpRes = (ViewportResource*)_ctx->_resources[vpidx];
 			_ctx->d3dContext->RSSetViewports(1, vpRes->get());
+			D3D11_VIEWPORT* vp = vpRes->get();
+			D3D11_RECT rects[1];
+			rects[0].left = vp->TopLeftX;
+			rects[0].right = vp->TopLeftX + vp->Width;
+			rects[0].top = vp->TopLeftY;
+			rects[0].bottom = vp->TopLeftY + vp->Height;
+			_ctx->d3dContext->RSSetScissorRects(1, rects);
 		}
 		Camera* camera = pass->camera;
 		if (camera != 0) {
@@ -5910,6 +5917,7 @@ namespace ds {
 			_ctx->basicConstantBuffer.projectionMatrix = matTranspose(camera->projectionMatrix);
 			_ctx->basicConstantBuffer.viewProjectionMatrix = matTranspose(camera->viewProjectionMatrix);
 		}
+
 		// FIXME: how to handle world matrix???
 		setDepthBufferState(pass->depthState);
 		uint16_t ridx = getResourceIndex(drawItemID, RT_DRAW_ITEM);

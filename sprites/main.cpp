@@ -15,7 +15,7 @@
 #include "border.h"
 #define QUAD_BATCH_IMPLEMENTATION
 #include <ds_squares.h>
-#include <ds_particles_2D.h>
+#include "particles\Particlesystem.h"
 
 const int kNUM_SPRITES = 256;
 
@@ -54,11 +54,13 @@ bool check_collision(const ds::vec2& p, float radius, Bullets* bullets) {
 	return false;
 }
 
-void check_collisions(BoidContainer* boids, Bullets* bullets) {
+void check_collisions(BoidContainer* boids, Bullets* bullets, int explosionSystem, int explosionEmitter) {
 	for (int i = 0; i < boids->num; ++i) {
 		ds::vec2 bp = boids->positions[i];
 		if (check_collision(bp, 10.0f, bullets)) {
 			boid::kill_boid(boids, i);
+			const EmitterSettings& settings = particles_get_emitter(explosionEmitter);
+			particles_emitt(explosionSystem, bp, settings);
 		}
 	}
 }
@@ -110,7 +112,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	rs.clearColor = ds::Color(0.05f, 0.05f, 0.05f, 1.0f);
 	rs.multisampling = 4;
 	rs.useGPUProfiling = false;
-	rs.supportDebug = false;
+	rs.supportDebug = true;
 	ds::init(rs);
 
 	gui::init();
@@ -125,6 +127,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	}
 	//ds::vec2 target(512, 384);
 	RID nextTextureId = loadImageFromFile("test.png");
+
+	RID particleTextureId = loadImageFromFile("particles.png");
 
 	Player player;
 	player.rotation = 0.0f;
@@ -146,7 +150,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	boidContainer.settings.avoidVelocity = 400.0f;
 	boid::add(&boidContainer, ds::vec2(100,100), player.pos);
 
-	int addCount = 4;
+	int addCount = 9;
 
 	ObstaclesContainer obstacles;
 	obstacles::intialize(&obstacles, textureId, 40, 20);
@@ -204,7 +208,54 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	float accumulator = 0.0f;
 	float gameTimer = 0.0f;
 
-	ParticleArray particles;
+	particles_intialize(4096, particleTextureId);
+
+	int bulletExplosionSystem = particles_create_system(ParticleSystemDesc()
+		.MaxParticles(4096)
+		.Dimension(ds::vec2(64, 64))
+		.StartColor(ds::Color(230, 230, 180, 255))
+		.EndColor(ds::Color(230, 230, 180, 32))
+		.TextureRect(0.0f,0.0f,1.0f,1.0f)
+	);
+
+	int explosionSystem = particles_create_system(ParticleSystemDesc()
+		.MaxParticles(4096)
+		.Dimension(ds::vec2(64, 64))
+		.StartColor(ds::Color(255, 0, 255, 255))
+		.EndColor(ds::Color(255, 0, 255, 32))
+		.TextureRect(0.0f, 0.0f, 1.0f, 1.0f)
+	);
+
+	int bulletExplosionEmitter = particles_create_emitter(EmitterDesc()
+		.Count(18)
+		.AngleVariance(0.5f)
+		.Radius(4.0f)
+		.RadiusVariance(1.0f)
+		.RadialVelocity(200.0f)
+		.RadialAcceleration(-120.0f)
+		.TTL(0.6f,0.9f)
+		.Size(0.2f,0.2f)
+		.SizeVariance(0.05f,0.05f)
+		.Growth(-0.1f,-0.1f)
+	);
+
+	int explosionEmitter = particles_create_emitter(EmitterDesc()
+		.Count(48)
+		.AngleVariance(0.25f)
+		.Radius(10.0f)
+		.RadiusVariance(4.0f)
+		.RadialVelocity(200.0f)
+		.RadialAcceleration(-120.0f)
+		.TTL(0.6f, 0.9f)
+		.Size(0.2f, 0.2f)
+		.SizeVariance(0.05f, 0.05f)
+		.Growth(-0.1f, -0.1f)
+	);
+
+	float boidEmitTimer = 0.0f;
+	float boidEmitTTL = 2.0f;
+	bool emitingBoids = true;
+	
 
 	while (ds::isRunning()) {
 
@@ -240,6 +291,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 
 			player::move(&player, ds::getElapsedSeconds());
+
 			if (update) {
 
 				float delta = ds::getElapsedSeconds();
@@ -247,19 +299,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 					delta = 0.5f;
 				}
 				gameTimer += delta;
+
 				while (gameTimer >= fixedTimeStep) {
 
-					bullets::move(&bullets, &obstacles, fixedTimeStep);
+					bullets::move(&bullets, &obstacles, bulletExplosionSystem, bulletExplosionEmitter, fixedTimeStep);
 
 					boid::reset_forces(&boidContainer);
+					
 					boid::move(&boidContainer, player.pos, &obstacles, fixedTimeStep);
+					
 					boid::avoid(&boidContainer, &obstacles);
+					
 					if (update) {
 						boid::apply_forces(&boidContainer, fixedTimeStep);
 					}
+					
 					boid::kill_boids(&boidContainer, player.pos, 15.0f);
+					
+					boid::tick_queue(&boidContainer, fixedTimeStep);
 
-					check_collisions(&boidContainer, &bullets);
+					check_collisions(&boidContainer, &bullets, explosionSystem, explosionEmitter);
 
 					for (int i = 0; i < bullets.array->size; ++i) {
 						ds::vec2 d = bullets.positions[i] - bullets.prevPositions[i];
@@ -270,9 +329,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 					}
 					trails::tick(&trailPieces, fixedTimeStep);
 
-					check_collisions(&border, &bullets);
+					check_collisions(&border, &bullets, bulletExplosionSystem, bulletExplosionEmitter);
 
 					update_border(&border, fixedTimeStep);
+
+					particles_tick(fixedTimeStep);
+
+					if (emitingBoids) {
+						boidEmitTimer += fixedTimeStep;
+						if (boidEmitTimer >= boidEmitTTL) {
+							boidEmitTimer -= boidEmitTTL;
+							boid::add(&boidContainer, 9, player.pos);
+						}
+					}
 
 					gameTimer -= fixedTimeStep;
 				}
@@ -303,11 +372,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 			quads::flush();
 		}
+
+		if (ds::isMouseButtonClicked(1)) {
+			float radius = ds::random(25.0f, 100.0f);
+			float px = ds::random(200.0f, 800.0f);
+			float py = ds::random(200.0, 500.0f);
+			const EmitterSettings& settings = particles_get_emitter(bulletExplosionEmitter);
+			particles_emitt(explosionSystem, ds::getMousePosition(), settings);
+		}
+
+		particles_render();
+
+		//ds::dbgPrint(0, 0, "FPS: %d", ds::getFramesPerSecond());
+		//ds::dbgPrint(0, 1, "Particles %d", particles.numAlive(explosionID));
 		
 		//
 		// GUI
 		//
-		/*
 		p2i p(10, 758);
 		gui::start(&p, 280);
 		gui::begin("Grid", 0);
@@ -366,7 +447,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 			}
 		}
 		gui::end();
-		*/
+		
 		ds::end();
 	}
 	gui::shutdown();

@@ -9,6 +9,9 @@
     <ClCompile Include="sprite_editor.cpp" />
     <ClCompile Include="BlockArray.cpp" />
     <ClCompile Include="border.cpp" />
+    <ClCompile Include="particles\Particlesystem.cpp">
+      <Filter>particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Boids.h" />
@@ -22,5 +25,19 @@
     <ClInclude Include="simd_vec.h" />
     <ClInclude Include="border.h" />
     <ClInclude Include="fixed_array.h" />
+    <ClInclude Include="particles\Particlesystem.h">
+      <Filter>particles</Filter>
+    </ClInclude>
+    <ClInclude Include="particles\Particles_PS_Main.h">
+      <Filter>particles</Filter>
+    </ClInclude>
+    <ClInclude Include="particles\Particles_VS_Main.h">
+      <Filter>particles</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="particles">
+      <UniqueIdentifier>{abab4e6c-87c4-435b-9d0e-6e3d135901f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

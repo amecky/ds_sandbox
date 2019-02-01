@@ -38,4 +38,4 @@ void render_border(Border* border, RID textureId);
 
 void update_border(Border* border, float dt);
 
-void check_collisions(Border* border, Bullets* bullets);
+void check_collisions(Border* border, Bullets* bullets, int particleSystem, int emitter);

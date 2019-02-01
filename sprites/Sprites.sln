@@ -9,7 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ext", "ext", "{E3035ED8-C5D
 	ProjectSection(SolutionItems) = preProject
 		..\ext\diesel.h = ..\ext\diesel.h
 		..\ext\ds_imgui.h = ..\ext\ds_imgui.h
-		..\ext\ds_particles_2D.h = ..\ext\ds_particles_2D.h
 		..\ext\ds_sprites.h = ..\ext\ds_sprites.h
 		..\ext\ds_squares.h = ..\ext\ds_squares.h
 		..\ext\stb_image.h = ..\ext\stb_image.h

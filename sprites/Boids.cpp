@@ -2,7 +2,7 @@
 #include "math.h"
 #include "Obstacles.h"
 
-const static ds::vec4 BOID_RECT = ds::vec4(0, 225, 30, 30);
+const static ds::vec4 BOID_RECT = ds::vec4(260, 300, 60, 60);
 const static ds::vec4 BOUNDING_RECT = ds::vec4(50.0f, 50.0f, 900.0f, 650.0f);
 
 
@@ -39,6 +39,7 @@ namespace boid {
 		container->rotations = new float[maxBoids];
 		container->states = new int[maxBoids];
 		container->colors = new ds::Color[maxBoids];
+		container->queue.num = 0;
 	}
 
 	// -----------------------------------------------------------------------
@@ -67,13 +68,40 @@ namespace boid {
 			++container->num;
 		}
 	}
+
+	const ds::vec2 STARTING_POINTS[] = {ds::vec2(100,600),ds::vec2(500,600),ds::vec2(900,600),ds::vec2(900,350),ds::vec2(900,100),ds::vec2(500,100),ds::vec2(100,100),ds::vec2(100,350)};
 	// -----------------------------------------------------------------------
 	// add
 	// -----------------------------------------------------------------------
 	void add(BoidContainer* container, int count, const ds::vec2& target) {
-		for (int i = 0; i < count; ++i) {
+		int rnd = ds::random(0.0f, 7.9f);
+		ds::vec2 start = STARTING_POINTS[rnd];
+
+		ds::vec2 desired = target - start;
+		float angle = calculate_rotation(desired);
+
+		QueueEntry& sqe = container->queue.entries[container->queue.num++];
+		sqe.state = 1;
+		sqe.timer = 0.0f;
+		sqe.timerOffset = 0.0f;
+		sqe.ttl = 0.6f;
+		sqe.pos = start;
+		sqe.rotation = angle;
+		//add(container, start, target);
+		float step = ds::TWO_PI * 0.25f;
+		float an = 0.0f;
+		for (int i = 1; i < count; ++i) {
 			if (container->num < container->max) {
-				add(container, ds::vec2(ds::random(100.0f, 900.0f), ds::random(100.0f, 600.0f)), target);
+				ds::vec2 cur = start + 40.0f * (ds::vec2(cos(an), sin(an)));
+				//add(container, cur, target);
+				QueueEntry& sqe = container->queue.entries[container->queue.num++];
+				sqe.state = 1;
+				sqe.timer = 0.0f;
+				sqe.timerOffset = i * 0.2f;
+				sqe.ttl = 0.6f;
+				sqe.pos = start + 40.0f * (ds::vec2(cos(an), sin(an)));
+				sqe.rotation = angle;
+				++an;
 			}
 		}
 	}
@@ -161,7 +189,7 @@ namespace boid {
 	void move(BoidContainer* container, const ds::vec2& target, ObstaclesContainer* obstacles, float dt) {
 		
 		if (container->settings.separate) {
-			//separate(container, container->settings.minDistance, container->settings.relaxation);
+			separate(container, container->settings.minDistance, container->settings.relaxation);
 		}
 		
 		if (container->settings.seek) {
@@ -184,6 +212,23 @@ namespace boid {
 			}
 		}
 		
+	}
+
+	void tick_queue(BoidContainer* container, float dt) {
+		for (int i = 0; i < container->queue.num; ++i) {
+			QueueEntry& qe = container->queue.entries[i];
+			if (qe.timerOffset > 0.0f) {
+				qe.timerOffset -= dt;
+			}
+			else {
+				qe.timer += dt;
+				if (qe.timer >= qe.ttl) {
+					add(container, qe.pos, ds::vec2(512, 384));
+					container->queue.entries[i] = container->queue.entries[container->queue.num - 1];
+					--container->queue.num;
+				}
+			}
+		}
 	}
 
 	void kill_boid(BoidContainer* container, int index) {
@@ -222,6 +267,11 @@ namespace boid {
 	void render(BoidContainer* container) {
 		for (int i = 0; i < container->num; ++i) {
 			sprites::draw(container->settings.textureId, container->positions[i], BOID_RECT, ds::vec2(1.0f), container->rotations[i], container->colors[i]);
+		}
+		for (int i = 0; i < container->queue.num; ++i) {
+			QueueEntry& qe = container->queue.entries[i];
+			float sx = 0.5f + sin(ds::TWO_PI*qe.timer / qe.ttl);
+			sprites::draw(container->settings.textureId, qe.pos, BOID_RECT, ds::vec2(sx), qe.rotation, ds::Color(255,0,255,255));
 		}
 	}
 

@@ -2,6 +2,7 @@
 #include <ds_sprites.h>
 #include "player.h"
 #include <ds_squares.h>
+#include "particles/Particlesystem.h"
 
 const float Tension = 0.025f;
 const float Dampening = 0.025f;
@@ -149,7 +150,7 @@ static void brd__splash(const FixedArray<LinePoint>& linePoints, int index, floa
 // -------------------------------------------------------------------------
 // check collision between bullets and border
 // -------------------------------------------------------------------------
-void check_collisions(Border* border, Bullets* bullets) {
+void check_collisions(Border* border, Bullets* bullets, int particleSystem, int emitter) {
 	for (int i = 0; i < bullets->array->size; ++i) {
 		ds::vec2& bp = bullets->positions[i];
 		int idx = -1;
@@ -182,6 +183,8 @@ void check_collisions(Border* border, Bullets* bullets) {
 			}
 		}
 		if (hit) {
+			const EmitterSettings& settings = particles_get_emitter(emitter);
+			particles_emitt(particleSystem, bp, settings);
 			bullets::remove(bullets, i);
 		}
 	}
